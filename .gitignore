@@ -1,1 +1,25 @@
-**/venv/**
+# Node
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.vite/
+
+# Python virtual environment
+venv/
+
+# System files
+__pycache__/
+*.pyc
+
+# Environment variables and secrets
+.env
+*.env
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
