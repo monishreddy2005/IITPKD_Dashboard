@@ -1,52 +1,61 @@
 import os
 import psycopg2.errors
-# DO NOT import bcrypt here (it's imported from __init__)
 import jwt
 import datetime
+from datetime import timezone  # <-- IMPORT timezone
 from functools import wraps
 from flask import Blueprint, request, jsonify, current_app
 
 # --- Import extensions from the app factory ---
 from .db import get_db_connection 
-from . import bcrypt # <-- THE FIX: Import the shared bcrypt object
+from . import bcrypt 
 
 # --- Blueprint Setup ---
 auth_bp = Blueprint('auth', __name__)
-# (We no longer create a new Bcrypt object here)
 
 # --- Token Helper Functions ---
 
 def encode_auth_token(user_id, role_id):
-    """Generates the Auth Token."""
+    """
+    Generates the Auth Token.
+    Returns a token string on success, or None on failure.
+    """
     try:
         payload = {
-            # 'exp': datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1),
-            # 'iat': datetime.datetime.now(datetime.UTC),
-            'exp': int((datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)).timestamp()),
-            'iat': int(datetime.datetime.now(datetime.UTC).timestamp()),
+            # USE timezone.utc (not datetime.UTC)
+            'exp': int((datetime.datetime.now(timezone.utc) + datetime.timedelta(days=1)).timestamp()),
+            'iat': int(datetime.datetime.now(timezone.utc).timestamp()),
             'sub': user_id,
             'role': role_id
         }
         secret_key = current_app.config.get('SECRET_KEY')
-        # DEBUG: Let's see the key being used
+        
+        # Add check for missing secret key
+        if not secret_key:
+            print("--- CRITICAL ERROR: JWT_SECRET_KEY is not set! ---")
+            return None 
+
         print(f"--- ENCODING with key: {secret_key[:5]}...{secret_key[-5:]}") 
-        return jwt.encode(
+        
+        # PyJWT returns a string, not bytes (in this version)
+        token = jwt.encode(
             payload,
             secret_key,
             algorithm='HS256'
         )
+        return token
+        
     except Exception as e:
         print(f"Error encoding token: {e}")
-        return e
+        return None # <-- Return None on any error
 
 
 def decode_auth_token(auth_token):
     """Decodes the auth token."""
     try:
         secret_key = current_app.config.get('SECRET_KEY')
-        # DEBUG: Let's see the key being used
         print(f"--- DECODING with key: {secret_key[:5]}...{secret_key[-5:]}") 
-        payload = jwt.decode(auth_token, secret_key, algorithms=['HS256'])
+        payload = jwt.decode(auth_token, secret_key, algorithms=['HS256'],leeway=10)
         return payload['sub'] # Return the user ID
     except jwt.ExpiredSignatureError:
         return 'Token expired. Please log in again.'
@@ -61,6 +70,7 @@ def token_required(f):
         token = None
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
+            print("--- DEBUG: Received Auth Header ---", auth_header)
             parts = auth_header.split()
             if len(parts) == 2 and parts[0].lower() == 'bearer':
                 token = parts[1]
@@ -94,7 +104,6 @@ def signup():
     display_name = data.get('display_name', None) 
     username = data.get('username', None) 
     
-    # Use the correctly imported bcrypt object
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     conn = None
@@ -117,9 +126,13 @@ def signup():
         
         auth_token = encode_auth_token(new_user['id'], new_user['role_id'])
         
+        # --- ROBUSTNESS CHECK ---
+        if not auth_token:
+            return jsonify({'message': 'Error generating authentication token.'}), 500
+        
         return jsonify({
             'message': 'User created successfully!',
-            'token': auth_token,
+            'token': auth_token, # This is now guaranteed to be a valid token or an error
             'user': new_user
         }), 201
 
@@ -164,7 +177,6 @@ def login():
         if not user:
             return jsonify({'message': 'Email not found.'}), 404
 
-        # Use the correctly imported bcrypt object
         if bcrypt.check_password_hash(user['password_hash'], password):
             cur.execute(
                 "UPDATE users SET last_login_at = NOW(), failed_login_attempts = 0 WHERE id = %s;", 
@@ -173,11 +185,16 @@ def login():
             conn.commit()
 
             auth_token = encode_auth_token(user['id'], user['role_id'])
+
+            # --- ROBUSTNESS CHECK ---
+            if not auth_token:
+                return jsonify({'message': 'Error generating authentication token.'}), 500
+
             del user['password_hash'] 
             
             return jsonify({
                 'message': 'Login successful!',
-                'token': auth_token,
+                'token': auth_token, # This is now guaranteed to be a valid token or an error
                 'user': user
             }), 200
         else:
@@ -196,4 +213,3 @@ def login():
         if conn:
             cur.close()
             conn.close()
-

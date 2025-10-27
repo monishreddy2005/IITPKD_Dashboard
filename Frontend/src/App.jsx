@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
+import Login from './components/Login';
+import UploadForm from './components/UploadForm';
 
 function App() {
-  const [count, setCount] = useState(0)
+  // State to hold the authentication token
+  const [token, setToken] = useState(null);
+  
+  // State to hold user info (optional, but good for UI)
+  const [user, setUser] = useState(null);
+
+  // This `useEffect` hook runs once when the app loads
+  // It checks if a token is already saved in localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('authUser');
+    
+    if (storedToken) {
+      setToken(storedToken);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }
+  }, []);
+
+  /**
+   * Callback function passed to the Login component.
+   * Saves the token and user to state and localStorage.
+   */
+  const handleLoginSuccess = (receivedToken, receivedUser) => {
+    setToken(receivedToken);
+    setUser(receivedUser);
+    localStorage.setItem('authToken', receivedToken);
+    localStorage.setItem('authUser', JSON.stringify(receivedUser));
+  };
+
+  /**
+   * Clears the token and user from state and localStorage.
+   */
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {/* This is a simple header that shows who is logged in */}
+      {user && (
+         <p className="read-the-docs">
+           Logged in as: {user.display_name || user.email}
+         </p>
+      )}
+      
+      {/* This is the core logic:
+        - If there is NO token, show the <Login /> component.
+        - If there IS a token, show the <UploadForm /> component.
+      */}
+      {!token ? (
+        <Login onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <UploadForm token={token} onLogout={handleLogout} />
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
