@@ -1,0 +1,87 @@
+python run.py
+
+You should see it running on `http://127.0.0.1:5000`. Leave this running.
+
+#### Terminal 2: Test the Routes with `curl`
+
+In your second terminal, you will run the following commands.
+
+**Step A: Test Signup**
+
+This command sends a `POST` request with JSON data to your signup route.
+
+```bash
+curl -X POST http://127.0.0.1:5000/auth/signup \
+-H "Content-Type: application/json" \
+-d '{
+    "email": "testuser@example.com",
+    "password": "mypassword123",
+    "display_name": "Test User",
+    "username": "testuser"
+}'
+
+**✅ If it works,** you'll get a response like this, which includes your new token:
+
+```json
+{
+  "message": "User created successfully!",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAi...",
+  "user": { ... }
+}
+
+**Step B: Test Login**
+
+Now let's log in with the user you just created.
+
+```bash
+curl -X POST http://127.0.0.1:5000/auth/login \
+-H "Content-Type: application/json" \
+-d '{
+    "email": "testuser@example.com",
+    "password": "mypassword123"
+}'
+
+**✅ If it works,** you'll get a new token. **Copy this token!**
+
+```json
+{
+  "message": "Login successful!",
+  "token": "COPY_THIS_ENTIRE_LONG_TOKEN_STRING",
+  "user": { ... }
+}
+
+**Step C: Test the Protected Dashboard (This is the key test!)**
+
+Now, try to access the dashboard. You *must* pass the token you copied from Step B in the `Authorization` header.
+
+Replace `YOUR_TOKEN_HERE` with the token you copied.
+
+```bash
+curl -X GET http://127.0.0.1:5000/api/dashboard \
+-H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+**✅ If it works,** you'll get your protected user data:
+
+```json
+{
+  "message": "Welcome to your dashboard!",
+  "user": {
+    "id": 1,
+    "email": "testuser@example.com",
+    ...
+  }
+}
+
+**Step D: (Optional) Test Dashboard *Without* a Token**
+
+Run this command to see what happens if you forget the token.
+
+```bash
+curl -X GET http://127.0.0.1:5000/api/dashboard
+
+**❌ This will correctly fail,** proving your `@token_required` decorator is working:
+
+```json
+{
+  "message": "Token is missing!"
+}

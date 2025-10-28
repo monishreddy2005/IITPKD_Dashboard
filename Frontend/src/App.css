@@ -1,0 +1,27 @@
+/* ... (all your existing CSS) ... */
+
+.csv-preview {
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  overflow-x: auto; /* Allows table to scroll horizontally if needed */
+}
+
+.csv-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9em;
+  text-align: left;
+}
+
+.csv-preview th,
+.csv-preview td {
+  border: 1px solid #444;
+  padding: 0.5rem 0.75rem;
+  white-space: nowrap; /* Prevents long text from wrapping */
+}
+
+.csv-preview th {
+  background-color: #333;
+}
