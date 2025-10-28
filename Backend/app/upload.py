@@ -30,7 +30,7 @@ UPDATABLE_TABLES = {
 upload_bp = Blueprint('upload', __name__)
 
 @upload_bp.route('/upload-csv', methods=['POST'])
-# @token_required
+@token_required
 def upload_csv():
     """
     Handles CSV file upload to update a specified database table.
