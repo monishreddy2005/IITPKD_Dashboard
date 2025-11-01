@@ -29,7 +29,14 @@ def create_app():
     app.config['DATABASE_URL'] = data_base_url
     
     # Initialize extensions with the app
-    cors.init_app(app)
+    # Configure CORS to explicitly allow Authorization header for file uploads
+    cors.init_app(app, resources={
+        r"/*": {
+            "origins": "*",
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
     bcrypt.init_app(app)
     
     # --- Import and Register Blueprints ---

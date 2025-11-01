@@ -25,7 +25,8 @@ def encode_auth_token(user_id, role_id):
             # USE timezone.utc (not datetime.UTC)
             'exp': int((datetime.datetime.now(timezone.utc) + datetime.timedelta(days=1)).timestamp()),
             'iat': int(datetime.datetime.now(timezone.utc).timestamp()),
-            'sub': user_id,
+            # PyJWT requires 'sub' to be a string, so convert user_id to string
+            'sub': str(user_id),
             'role': role_id
         }
         secret_key = current_app.config.get('SECRET_KEY')
@@ -54,13 +55,27 @@ def decode_auth_token(auth_token):
     """Decodes the auth token."""
     try:
         secret_key = current_app.config.get('SECRET_KEY')
-        print(f"--- DECODING with key: {secret_key[:5]}...{secret_key[-5:]}") 
-        payload = jwt.decode(auth_token, secret_key, algorithms=['HS256'],leeway=10)
-        return payload['sub'] # Return the user ID
-    except jwt.ExpiredSignatureError:
+        if not secret_key:
+            print("--- CRITICAL ERROR: SECRET_KEY is missing from app config! ---")
+            return 'Server configuration error. Please contact administrator.'
+        
+        print(f"--- DECODING token with key: {secret_key[:5]}...{secret_key[-5:] if len(secret_key) > 10 else 'short'} ---")
+        print(f"--- Token preview: {auth_token[:30]}...{auth_token[-30:] if len(auth_token) > 60 else auth_token} ---")
+        
+        payload = jwt.decode(auth_token, secret_key, algorithms=['HS256'], leeway=10)
+        # Convert user_id back to integer since we store it as string in the token
+        user_id = int(payload['sub'])
+        print(f"--- SUCCESS: Token decoded. User ID: {user_id}, Role: {payload.get('role')} ---")
+        return user_id # Return the user ID as integer
+    except jwt.ExpiredSignatureError as e:
+        print(f"--- ERROR: Token has expired - {str(e)} ---")
         return 'Token expired. Please log in again.'
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        print(f"--- ERROR: Invalid token - {str(e)} ---")
         return 'Invalid token. Please log in again.'
+    except Exception as e:
+        print(f"--- ERROR: Unexpected error decoding token - {type(e).__name__}: {str(e)} ---")
+        return 'Error validating token. Please log in again.'
 
 # --- Auth Decorator ---
 def token_required(f):
@@ -68,22 +83,35 @@ def token_required(f):
     @wraps(f) 
     def decorated(*args, **kwargs):
         token = None
+        
+        # Debug: Print all headers to see what we're receiving
+        print(f"--- DEBUG: Request method: {request.method} ---")
+        print(f"--- DEBUG: Request headers: {dict(request.headers)} ---")
+        
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
-            print("--- DEBUG: Received Auth Header ---", auth_header)
+            print(f"--- DEBUG: Received Auth Header: {auth_header[:50]}... ---")
             parts = auth_header.split()
             if len(parts) == 2 and parts[0].lower() == 'bearer':
                 token = parts[1]
+                print(f"--- DEBUG: Token extracted successfully ---")
             else:
+                print(f"--- ERROR: Invalid Authorization header format. Expected 'Bearer <token>', got: {auth_header[:50]} ---")
                 return jsonify({'message': 'Invalid Authorization header format!'}), 401
+        else:
+            print("--- ERROR: Authorization header is missing! ---")
+            print(f"--- DEBUG: Available headers: {list(request.headers.keys())} ---")
+            return jsonify({'message': 'Token is missing! Please log in again.'}), 401
 
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
 
         user_id = decode_auth_token(token)
         if isinstance(user_id, str): # If it's an error message
+            print(f"--- ERROR: Token validation failed: {user_id} ---")
             return jsonify({'message': user_id}), 401
         
+        print(f"--- SUCCESS: Token validated for user_id: {user_id} ---")
         kwargs['current_user_id'] = user_id
         return f(*args, **kwargs)
 

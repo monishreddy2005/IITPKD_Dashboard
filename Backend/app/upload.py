@@ -30,13 +30,16 @@ UPDATABLE_TABLES = {
 upload_bp = Blueprint('upload', __name__)
 
 @upload_bp.route('/upload-csv', methods=['POST'])
-# @token_required
-def upload_csv():
+@token_required
+def upload_csv(current_user_id):
     """
     Handles CSV file upload to update a specified database table.
     1. Validates the table name against a whitelist.
     2. Validates the CSV headers against the table's columns.
     3. Performs a bulk "upsert" (INSERT ON CONFLICT UPDATE).
+    
+    Args:
+        current_user_id: The ID of the authenticated user (injected by @token_required decorator)
     """
     
     # 1. --- Validation: Check for table_name and file ---
