@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 // The Login component receives a prop `onLoginSuccess` from App.jsx
 // which it will call with the token and user data after a successful login/signup.
 function Login({ onLoginSuccess }) {
+  const navigate = useNavigate();
   // This state toggles between Login and Sign Up forms
   const [isLoginView, setIsLoginView] = useState(true);
 
@@ -38,6 +40,9 @@ function Login({ onLoginSuccess }) {
       // On success, call the function passed from App.jsx
       // This will set the token in the parent component and update the UI
       onLoginSuccess(response.data.token, response.data.user);
+      
+      // Navigate to home page after successful login
+      navigate('/');
 
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {

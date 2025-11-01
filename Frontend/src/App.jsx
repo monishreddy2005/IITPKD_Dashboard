@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import Login from './components/Login';
+import Home from './components/Home';
+import HomePage from './components/HomePage';
+import PeopleCampus from './components/PeopleCampus';
+import Research from './components/Research';
+import Education from './components/Education';
+import IndustryConnect from './components/IndustryConnect';
+import InnovationEntrepreneurship from './components/InnovationEntrepreneurship';
+import OutreachExtension from './components/OutreachExtension';
+import Profile from './components/Profile';
 import UploadForm from './components/UploadForm';
 
 function App() {
@@ -45,25 +55,46 @@ function App() {
     localStorage.removeItem('authUser');
   };
 
+  // Protected Route wrapper
+  const ProtectedRoute = ({ children }) => {
+    return token ? children : <Navigate to="/login" replace />;
+  };
+
   return (
-    <>
-      {/* This is a simple header that shows who is logged in */}
-      {user && (
-         <p className="read-the-docs">
-           Logged in as: {user.display_name || user.email}
-         </p>
-      )}
-      
-      {/* This is the core logic:
-        - If there is NO token, show the <Login /> component.
-        - If there IS a token, show the <UploadForm /> component.
-      */}
-      {!token ? (
-        <Login onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        <UploadForm token={token} onLogout={handleLogout} />
-      )}
-    </>
+    <Router>
+      <Routes>
+        {/* Public Route - Login */}
+        <Route 
+          path="/login" 
+          element={
+            token ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
+          } 
+        />
+        
+        {/* Protected Routes - Dashboard */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home user={user} onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="people-campus" element={<PeopleCampus />} />
+          <Route path="research" element={<Research />} />
+          <Route path="education" element={<Education />} />
+          <Route path="industry-connect" element={<IndustryConnect />} />
+          <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship />} />
+          <Route path="outreach-extension" element={<OutreachExtension />} />
+          <Route path="profile" element={<Profile user={user} />} />
+          <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
+        </Route>
+        
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

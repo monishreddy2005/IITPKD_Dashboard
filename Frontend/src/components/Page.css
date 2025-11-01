@@ -1,0 +1,91 @@
+.page-container {
+  width: 100%;
+  min-height: calc(100vh - 180px);
+  padding: 2rem;
+  background-color: #111;
+  box-sizing: border-box;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #222;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.page-content h1 {
+  color: #ffffff;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+.page-content > p {
+  color: #e0e0e0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.coming-soon {
+  color: #999;
+  font-style: italic;
+  margin-top: 2rem;
+}
+
+/* Profile specific styles */
+.profile-info {
+  margin-top: 2rem;
+}
+
+.profile-field {
+  display: flex;
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+  align-items: center;
+}
+
+.profile-field:last-child {
+  border-bottom: none;
+}
+
+.profile-field label {
+  min-width: 150px;
+  font-weight: 600;
+  color: #aaa;
+  margin-right: 1rem;
+}
+
+.profile-field span {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .page-content {
+    padding: 1.5rem;
+  }
+
+  .page-content h1 {
+    font-size: 2rem;
+  }
+
+  .profile-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .profile-field label {
+    min-width: auto;
+  }
+}
