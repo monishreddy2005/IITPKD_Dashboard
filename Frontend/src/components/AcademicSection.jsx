@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { fetchFilterOptions, fetchGenderDistributionFiltered } from '../services/academicStats';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered } from '../services/academicStats';
 import './Page.css';
 import './AcademicSection.css';
 
@@ -14,6 +14,7 @@ function AcademicSection() {
     branch: [],
     department: [],
     category: [],
+    state: [],
     latest_year: null
   });
   
@@ -36,6 +37,17 @@ function AcademicSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
+  
+  // Student Strength state
+  const [studentStrengthData, setStudentStrengthData] = useState([]);
+  const [strengthFilters, setStrengthFilters] = useState({
+    yearofadmission: null,
+    category: null,
+    state: null
+  });
+  const [strengthLoading, setStrengthLoading] = useState(false);
+  const [strengthError, setStrengthError] = useState(null);
+  const [strengthTotal, setStrengthTotal] = useState(0);
 
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
@@ -58,6 +70,11 @@ function AcademicSection() {
         // Set default year to latest year
         if (options.latest_year) {
           setFilters(prev => ({
+            ...prev,
+            yearofadmission: options.latest_year
+          }));
+          // Also set default year for strength filters
+          setStrengthFilters(prev => ({
             ...prev,
             yearofadmission: options.latest_year
           }));
@@ -102,6 +119,35 @@ function AcademicSection() {
     loadGenderData();
   }, [filters, token]);
 
+  // Fetch student strength when strength filters change
+  useEffect(() => {
+    const loadStudentStrength = async () => {
+      if (!token) {
+        return;
+      }
+
+      // Don't fetch if yearofadmission is not set yet
+      if (strengthFilters.yearofadmission === null) {
+        return;
+      }
+
+      try {
+        setStrengthLoading(true);
+        setStrengthError(null);
+        const result = await fetchStudentStrengthFiltered(strengthFilters, token);
+        setStudentStrengthData(result.data);
+        setStrengthTotal(result.total);
+      } catch (err) {
+        console.error('Error loading student strength:', err);
+        setStrengthError('Failed to load student strength data. Please try again.');
+      } finally {
+        setStrengthLoading(false);
+      }
+    };
+
+    loadStudentStrength();
+  }, [strengthFilters, token]);
+
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
@@ -118,6 +164,21 @@ function AcademicSection() {
       department: null,
       category: null,
       pwd: null
+    });
+  };
+
+  const handleStrengthFilterChange = (filterName, value) => {
+    setStrengthFilters(prev => ({
+      ...prev,
+      [filterName]: value === 'All' ? null : value
+    }));
+  };
+
+  const handleClearStrengthFilters = () => {
+    setStrengthFilters({
+      yearofadmission: filterOptions.latest_year || null,
+      category: null,
+      state: null
     });
   };
 
@@ -345,9 +406,180 @@ function AcademicSection() {
             </>
           )}
         </div>
+
+        {/* Student Strength Section */}
+        <div className="student-strength-section">
+          <h2>Student Strength by Program</h2>
+          
+          {strengthError && (
+            <div className="error-message">
+              {strengthError}
+            </div>
+          )}
+
+          {/* Filter Panel */}
+          <div className="filter-panel">
+            <div className="filter-header">
+              <h3>Filters</h3>
+              <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
+                Clear All Filters
+              </button>
+            </div>
+            
+            <div className="filter-grid">
+              {/* Year of Admission */}
+              <div className="filter-group">
+                <label htmlFor="strength-year-filter">Year of Admission</label>
+                <select
+                  id="strength-year-filter"
+                  value={strengthFilters.yearofadmission || ''}
+                  onChange={(e) => handleStrengthFilterChange('yearofadmission', e.target.value ? parseInt(e.target.value) : null)}
+                  className="filter-select"
+                >
+                  <option value="">Select Year</option>
+                  {filterOptions.yearofadmission.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category */}
+              <div className="filter-group">
+                <label htmlFor="strength-category-filter">Category</label>
+                <select
+                  id="strength-category-filter"
+                  value={strengthFilters.category || 'All'}
+                  onChange={(e) => handleStrengthFilterChange('category', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.category.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* State */}
+              <div className="filter-group">
+                <label htmlFor="strength-state-filter">State</label>
+                <select
+                  id="strength-state-filter"
+                  value={strengthFilters.state || 'All'}
+                  onChange={(e) => handleStrengthFilterChange('state', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.state.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Bar Chart Section */}
+          <div className="chart-section">
+            {strengthLoading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading data...</p>
+              </div>
+            ) : (
+              <>
+                {strengthTotal > 0 ? (
+                  <>
+                    <div className="bar-chart-container">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={studentStrengthData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis 
+                            dataKey="name" 
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                            stroke="#e0e0e0"
+                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="#e0e0e0"
+                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                          />
+                          <Tooltip 
+                            content={<StackedBarTooltip total={strengthTotal} />}
+                            cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                          />
+                          <Legend 
+                            wrapperStyle={{ paddingTop: '20px' }}
+                            iconType="rect"
+                            formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
+                          />
+                          <Bar 
+                            dataKey="Male" 
+                            stackId="a"
+                            fill="#667eea"
+                            radius={[0, 0, 0, 0]}
+                          />
+                          <Bar 
+                            dataKey="Female" 
+                            stackId="a"
+                            fill="#764ba2"
+                            radius={[0, 0, 0, 0]}
+                          />
+                          <Bar 
+                            dataKey="Transgender" 
+                            stackId="a"
+                            fill="#f093fb"
+                            radius={[8, 8, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="chart-info">
+                      <div className="total-count">
+                        <strong>Total Students: {strengthTotal}</strong>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-data">
+                    <p>No data available for the selected filters.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+// Custom Tooltip for Stacked Bar Chart
+const StackedBarTooltip = ({ active, payload, total }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const programTotal = (data.Male || 0) + (data.Female || 0) + (data.Transgender || 0);
+    const percentage = total > 0 ? ((programTotal / total) * 100).toFixed(1) : 0;
+    
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-label">{`${data.name}: ${programTotal}`}</p>
+        <p className="tooltip-percentage">{percentage}% of total</p>
+        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #555' }}>
+          <p style={{ color: '#667eea', margin: '0.25rem 0', fontSize: '0.9rem' }}>
+            Male: {data.Male || 0}
+          </p>
+          <p style={{ color: '#764ba2', margin: '0.25rem 0', fontSize: '0.9rem' }}>
+            Female: {data.Female || 0}
+          </p>
+          <p style={{ color: '#f093fb', margin: '0.25rem 0', fontSize: '0.9rem' }}>
+            Transgender: {data.Transgender || 0}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default AcademicSection;
