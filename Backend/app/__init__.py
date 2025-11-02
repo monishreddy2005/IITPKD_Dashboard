@@ -44,7 +44,8 @@ def create_app():
     # Import your blueprint files
     from . import auth
     from . import dashboard
-    from . import upload  # <--- ADD THIS LINE
+    from . import upload
+    from . import academic_stats
 
     # Register the blueprints
     # All routes from auth.py will be prefixed with /auth
@@ -53,8 +54,11 @@ def create_app():
     # All routes from dashboard.py will be prefixed with /api
     app.register_blueprint(dashboard.dashboard_bp, url_prefix='/api')
     
-    # Register the new upload blueprint
-    app.register_blueprint(upload.upload_bp, url_prefix='/api') # <--- ADD THIS LINE
+    # Register the upload blueprint
+    app.register_blueprint(upload.upload_bp, url_prefix='/api')
+    
+    # Register the academic stats blueprint
+    app.register_blueprint(academic_stats.academic_bp, url_prefix='/api/academic')
     
     # A simple test route
     @app.route('/health')

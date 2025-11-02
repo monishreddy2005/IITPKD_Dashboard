@@ -12,6 +12,7 @@ import InnovationEntrepreneurship from './components/InnovationEntrepreneurship'
 import OutreachExtension from './components/OutreachExtension';
 import Profile from './components/Profile';
 import UploadForm from './components/UploadForm';
+import AcademicSection from './components/AcademicSection';
 
 function App() {
   // State to hold the authentication token
@@ -82,6 +83,7 @@ function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="people-campus" element={<PeopleCampus />} />
+          <Route path="people-campus/academic-section" element={<AcademicSection />} />
           <Route path="research" element={<Research />} />
           <Route path="education" element={<Education />} />
           <Route path="industry-connect" element={<IndustryConnect />} />
