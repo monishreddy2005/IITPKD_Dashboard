@@ -98,16 +98,23 @@ function UploadForm({ token, onLogout }) {
     formData.append('table_name', selectedTable);
     formData.append('csv_file', selectedFile);
 
-    console.log("--- DEBUG: Sending token ---", token)
+    console.log("--- DEBUG: Sending token ---", token ? `${token.substring(0, 20)}...` : 'NULL')
+    
+    // Validate token before making request
+    if (!token) {
+      setMessage('Error: No authentication token found. Please log in again.');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const response = await axios.post(
         'http://127.0.0.1:5000/api/upload-csv',
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            // --- AUTHENTICATION ADDED ---
-            // Pass the token in the Authorization header
+            // DO NOT manually set Content-Type for FormData - axios will set it automatically with the correct boundary
+            // If you set it manually, axios cannot add the boundary parameter which is required for multipart/form-data
             'Authorization': `Bearer ${token}`
           },
         }
