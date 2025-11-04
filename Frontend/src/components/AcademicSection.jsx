@@ -97,11 +97,6 @@ function AcademicSection() {
         return;
       }
 
-      // Don't fetch if yearofadmission is not set yet
-      if (filters.yearofadmission === null) {
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
@@ -123,11 +118,6 @@ function AcademicSection() {
   useEffect(() => {
     const loadStudentStrength = async () => {
       if (!token) {
-        return;
-      }
-
-      // Don't fetch if yearofadmission is not set yet
-      if (strengthFilters.yearofadmission === null) {
         return;
       }
 
@@ -246,11 +236,11 @@ function AcademicSection() {
               <label htmlFor="year-filter">Year of Admission</label>
               <select
                 id="year-filter"
-                value={filters.yearofadmission || ''}
-                onChange={(e) => handleFilterChange('yearofadmission', e.target.value ? parseInt(e.target.value) : null)}
+                value={filters.yearofadmission || 'All'}
+                onChange={(e) => handleFilterChange('yearofadmission', e.target.value === 'All' ? 'All' : (e.target.value ? parseInt(e.target.value) : null))}
                 className="filter-select"
               >
-                <option value="">Select Year</option>
+                <option value="All">All</option>
                 {filterOptions.yearofadmission.map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
@@ -432,11 +422,11 @@ function AcademicSection() {
                 <label htmlFor="strength-year-filter">Year of Admission</label>
                 <select
                   id="strength-year-filter"
-                  value={strengthFilters.yearofadmission || ''}
-                  onChange={(e) => handleStrengthFilterChange('yearofadmission', e.target.value ? parseInt(e.target.value) : null)}
+                  value={strengthFilters.yearofadmission || 'All'}
+                  onChange={(e) => handleStrengthFilterChange('yearofadmission', e.target.value === 'All' ? 'All' : (e.target.value ? parseInt(e.target.value) : null))}
                   className="filter-select"
                 >
-                  <option value="">Select Year</option>
+                  <option value="All">All</option>
                   {filterOptions.yearofadmission.map(year => (
                     <option key={year} value={year}>{year}</option>
                   ))}
