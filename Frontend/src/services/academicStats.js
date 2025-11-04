@@ -40,7 +40,7 @@ export const fetchFilterOptions = async (token) => {
  */
 export const fetchGenderDistributionFiltered = async (filters, token) => {
   try {
-    // Build query parameters, excluding null/undefined values
+    // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
     
     Object.keys(filters).forEach(key => {
@@ -48,6 +48,9 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
       if (value !== null && value !== undefined && value !== '') {
         if (key === 'pwd' && typeof value === 'boolean') {
           params.append(key, value.toString());
+        } else if (key === 'yearofadmission' && value === 'All') {
+          // Send 'All' as string for yearofadmission
+          params.append(key, 'All');
         } else {
           params.append(key, value);
         }
@@ -84,13 +87,18 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
  */
 export const fetchStudentStrengthFiltered = async (filters, token) => {
   try {
-    // Build query parameters, excluding null/undefined values
+    // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
     
     Object.keys(filters).forEach(key => {
       const value = filters[key];
       if (value !== null && value !== undefined && value !== '') {
-        params.append(key, value);
+        if (key === 'yearofadmission' && value === 'All') {
+          // Send 'All' as string for yearofadmission
+          params.append(key, 'All');
+        } else {
+          params.append(key, value);
+        }
       }
     });
     
