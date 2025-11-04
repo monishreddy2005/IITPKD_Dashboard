@@ -34,6 +34,14 @@ function Home({ user, onLogout }) {
     navigate('/profile');
   };
 
+  const handleUploadClick = () => {
+    setShowProfileDropdown(false);
+    navigate('/upload');
+  };
+
+  // Check if user has role_id 2 or 3 for upload access
+  const canUploadData = user && (user.role_id === 2 || user.role_id === 3);
+
   return (
     <div className="home-container">
       {/* Header with Logo and User Profile */}
@@ -82,6 +90,14 @@ function Home({ user, onLogout }) {
                 <button className="dropdown-item" onClick={handleProfileClick}>
                   Check Profile
                 </button>
+                {canUploadData && (
+                  <>
+                    <button className="dropdown-item" onClick={handleUploadClick}>
+                      Upload Data
+                    </button>
+                    <div className="dropdown-divider"></div>
+                  </>
+                )}
                 <button className="dropdown-item" onClick={onLogout}>
                   Logout
                 </button>

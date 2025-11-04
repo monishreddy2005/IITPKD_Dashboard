@@ -1,0 +1,59 @@
+/* Profile Component Styles */
+
+.profile-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #444;
+}
+
+.upload-data-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-data-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.upload-data-btn:active {
+  transform: translateY(0);
+}
+
+.upload-data-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .upload-data-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 2rem;
+  }
+  
+  .profile-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-data-btn {
+    font-size: 0.9rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
+
