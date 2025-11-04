@@ -43,6 +43,8 @@ def build_filter_query(filters):
         'branch': 'branch',
         'department': 'department',
         'category': 'category',
+        'gender': 'gender',
+        'state': 'state',
         'pwd': 'pwd'
     }
     
@@ -113,6 +115,10 @@ def get_filter_options(current_user_id):
         # Category
         cur.execute("SELECT DISTINCT category FROM student WHERE category IS NOT NULL ORDER BY category;")
         filter_options['category'] = [row['category'] for row in cur.fetchall()]
+        
+        # State
+        cur.execute("SELECT DISTINCT state FROM student WHERE state IS NOT NULL ORDER BY state;")
+        filter_options['state'] = [row['state'] for row in cur.fetchall()]
         
         # Get latest year
         latest_year = get_latest_year()
@@ -210,6 +216,95 @@ def get_gender_distribution_filtered(current_user_id):
     except Exception as e:
         print(f"Error fetching gender distribution: {e}")
         return jsonify({'message': 'An error occurred while fetching gender distribution.'}), 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+@academic_bp.route('/stats/student-strength', methods=['GET'])
+@token_required
+def get_student_strength(current_user_id):
+    """Fetches student strength grouped by program with gender breakdown."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+        
+        # Get filter parameters from query string (gender filter removed)
+        filters = {
+            'yearofadmission': request.args.get('yearofadmission', type=int),
+            'category': request.args.get('category', type=str),
+            'state': request.args.get('state', type=str)
+        }
+        
+        # If yearofadmission is not provided, use latest year
+        if filters['yearofadmission'] is None:
+            latest_year = get_latest_year()
+            if latest_year:
+                filters['yearofadmission'] = latest_year
+            else:
+                return jsonify({'message': 'No admission year data available.'}), 400
+        
+        # Validate that yearofadmission is provided
+        if filters['yearofadmission'] is None:
+            return jsonify({'message': 'yearofadmission is required.'}), 400
+        
+        # Build WHERE clause dynamically (AND logic between category and state)
+        where_clause, params = build_filter_query(filters)
+        
+        # Build the query - group by program and gender to get breakdown
+        query = f"""
+            SELECT program as name, gender, COUNT(*) as count
+            FROM student
+            {where_clause}
+            GROUP BY program, gender
+            ORDER BY program, gender;
+        """
+        
+        cur = conn.cursor()
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        # Organize data by program with gender breakdown
+        program_data = {}
+        for row in results:
+            program = row['name']
+            gender = row['gender']
+            count = row['count']
+            
+            if program not in program_data:
+                program_data[program] = {
+                    'name': program,
+                    'Male': 0,
+                    'Female': 0,
+                    'Transgender': 0
+                }
+            
+            if gender in program_data[program]:
+                program_data[program][gender] = count
+        
+        # Convert to list format
+        data = list(program_data.values())
+        
+        # Calculate total
+        total = sum(row['Male'] + row['Female'] + row['Transgender'] for row in data)
+        
+        # Build filters_applied dict (only include non-null filters)
+        filters_applied = {
+            k: v for k, v in filters.items() 
+            if v is not None and v != '' and v != 'All'
+        }
+        
+        return jsonify({
+            'data': data,
+            'total': total,
+            'filters_applied': filters_applied
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching student strength: {e}")
+        return jsonify({'message': 'An error occurred while fetching student strength.'}), 500
     finally:
         if conn:
             cur.close()

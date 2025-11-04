@@ -10,6 +10,17 @@
   animation: fadeIn 0.3s ease;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Filter Panel */
 .filter-panel {
   background-color: #2a2a2a;
@@ -32,6 +43,12 @@
 .filter-header h2 {
   color: #ffffff;
   font-size: 1.5rem;
+  margin: 0;
+}
+
+.filter-header h3 {
+  color: #ffffff;
+  font-size: 1.25rem;
   margin: 0;
 }
 
@@ -241,6 +258,30 @@
   margin: 0;
 }
 
+/* Student Strength Section */
+.student-strength-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #444;
+}
+
+.student-strength-section h2 {
+  color: #ffffff;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.5rem;
+}
+
+/* Bar Chart Container */
+.bar-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  min-height: 400px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .filter-header {
@@ -251,6 +292,10 @@
 
   .filter-header h2 {
     font-size: 1.25rem;
+  }
+
+  .filter-header h3 {
+    font-size: 1.1rem;
   }
 
   .clear-filters-btn {
@@ -268,6 +313,15 @@
 
   .chart-container {
     margin-bottom: 1.5rem;
+  }
+
+  .bar-chart-container {
+    min-height: 300px;
+    margin-bottom: 1.5rem;
+  }
+
+  .student-strength-section h2 {
+    font-size: 1.5rem;
   }
 
   .custom-legend {
@@ -297,6 +351,20 @@
 
   .chart-container {
     margin-bottom: 1rem;
+  }
+
+  .bar-chart-container {
+    min-height: 250px;
+    margin-bottom: 1rem;
+  }
+
+  .student-strength-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+  }
+
+  .student-strength-section h2 {
+    font-size: 1.25rem;
   }
 }
 

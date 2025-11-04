@@ -72,3 +72,43 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
   }
 };
 
+/**
+ * Fetches student strength data grouped by program based on provided filters.
+ * @param {Object} filters - Filter object with required/optional fields:
+ *   - yearofadmission: number (required, defaults to latest year)
+ *   - gender: string (optional: 'Male', 'Female', 'Transgender')
+ *   - category: string (optional: 'Gen', 'EWS', 'OBC', 'SC', 'ST')
+ *   - state: string (optional)
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Student strength data with total and filters_applied
+ */
+export const fetchStudentStrengthFiltered = async (filters, token) => {
+  try {
+    // Build query parameters, excluding null/undefined values
+    const params = new URLSearchParams();
+    
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '') {
+        params.append(key, value);
+      }
+    });
+    
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/student-strength?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student strength:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch student strength');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
