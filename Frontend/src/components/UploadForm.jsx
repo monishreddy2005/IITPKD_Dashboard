@@ -7,8 +7,12 @@ const tableOptions = [
   'course',
   'department',
   'alumni',
+  'alumini',  // Alternative spelling
   'designation',
-  'employee'
+  'employee',
+  'employment_history',
+  'additional_roles',
+  'externship_info'
 ];
 
 /**
