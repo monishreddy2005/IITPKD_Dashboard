@@ -145,8 +145,10 @@ def get_gender_distribution_filtered(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
         
         # Get filter parameters from query string
+        yearofadmission_param = request.args.get('yearofadmission', type=str)
+        
         filters = {
-            'yearofadmission': request.args.get('yearofadmission', type=int),
+            'yearofadmission': None,
             'program': request.args.get('program', type=str),
             'batch': request.args.get('batch', type=str),
             'branch': request.args.get('branch', type=str),
@@ -154,6 +156,15 @@ def get_gender_distribution_filtered(current_user_id):
             'category': request.args.get('category', type=str),
             'pwd': request.args.get('pwd', type=str)  # Will be "true", "false", or None
         }
+        
+        # Handle yearofadmission: check if it's 'All' first, otherwise try to parse as int
+        if yearofadmission_param == 'All':
+            filters['yearofadmission'] = 'All'
+        elif yearofadmission_param:
+            try:
+                filters['yearofadmission'] = int(yearofadmission_param)
+            except (ValueError, TypeError):
+                filters['yearofadmission'] = None
         
         # Convert PWD string to boolean if provided
         if filters['pwd'] == 'true':
@@ -163,7 +174,7 @@ def get_gender_distribution_filtered(current_user_id):
         elif filters['pwd'] == '' or filters['pwd'] is None:
             filters['pwd'] = None
         
-        # If yearofadmission is not provided, use latest year
+        # If yearofadmission is not provided and not 'All', use latest year
         if filters['yearofadmission'] is None:
             latest_year = get_latest_year()
             if latest_year:
@@ -232,13 +243,24 @@ def get_student_strength(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
         
         # Get filter parameters from query string (gender filter removed)
+        yearofadmission_param = request.args.get('yearofadmission', type=str)
+        
         filters = {
-            'yearofadmission': request.args.get('yearofadmission', type=int),
+            'yearofadmission': None,
             'category': request.args.get('category', type=str),
             'state': request.args.get('state', type=str)
         }
         
-        # If yearofadmission is not provided, use latest year
+        # Handle yearofadmission: check if it's 'All' first, otherwise try to parse as int
+        if yearofadmission_param == 'All':
+            filters['yearofadmission'] = 'All'
+        elif yearofadmission_param:
+            try:
+                filters['yearofadmission'] = int(yearofadmission_param)
+            except (ValueError, TypeError):
+                filters['yearofadmission'] = None
+        
+        # If yearofadmission is not provided and not 'All', use latest year
         if filters['yearofadmission'] is None:
             latest_year = get_latest_year()
             if latest_year:
@@ -246,7 +268,7 @@ def get_student_strength(current_user_id):
             else:
                 return jsonify({'message': 'No admission year data available.'}), 400
         
-        # Validate that yearofadmission is provided
+        # Validate that yearofadmission is provided (but 'All' is valid)
         if filters['yearofadmission'] is None:
             return jsonify({'message': 'yearofadmission is required.'}), 400
         

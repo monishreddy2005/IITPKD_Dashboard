@@ -97,7 +97,8 @@ function AcademicSection() {
         return;
       }
 
-      // Don't fetch if yearofadmission is not set yet
+      // Allow fetching if yearofadmission is 'All' or a valid year
+      // Only skip if it's null (nothing selected)
       if (filters.yearofadmission === null) {
         return;
       }
@@ -126,7 +127,8 @@ function AcademicSection() {
         return;
       }
 
-      // Don't fetch if yearofadmission is not set yet
+      // Allow fetching if yearofadmission is 'All' or a valid year
+      // Only skip if it's null (nothing selected)
       if (strengthFilters.yearofadmission === null) {
         return;
       }
@@ -151,7 +153,7 @@ function AcademicSection() {
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
-      [filterName]: value === 'All' ? null : value
+      [filterName]: value === 'All' ? (filterName === 'yearofadmission' ? 'All' : null) : value
     }));
   };
 
@@ -170,7 +172,7 @@ function AcademicSection() {
   const handleStrengthFilterChange = (filterName, value) => {
     setStrengthFilters(prev => ({
       ...prev,
-      [filterName]: value === 'All' ? null : value
+      [filterName]: value === 'All' ? (filterName === 'yearofadmission' ? 'All' : null) : value
     }));
   };
 
@@ -246,11 +248,21 @@ function AcademicSection() {
               <label htmlFor="year-filter">Year of Admission</label>
               <select
                 id="year-filter"
-                value={filters.yearofadmission || ''}
-                onChange={(e) => handleFilterChange('yearofadmission', e.target.value ? parseInt(e.target.value) : null)}
+                value={filters.yearofadmission === 'All' ? 'All' : filters.yearofadmission || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'All') {
+                    handleFilterChange('yearofadmission', 'All');
+                  } else if (value === '') {
+                    handleFilterChange('yearofadmission', null);
+                  } else {
+                    handleFilterChange('yearofadmission', parseInt(value));
+                  }
+                }}
                 className="filter-select"
               >
                 <option value="">Select Year</option>
+                <option value="All">All</option>
                 {filterOptions.yearofadmission.map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
@@ -432,11 +444,21 @@ function AcademicSection() {
                 <label htmlFor="strength-year-filter">Year of Admission</label>
                 <select
                   id="strength-year-filter"
-                  value={strengthFilters.yearofadmission || ''}
-                  onChange={(e) => handleStrengthFilterChange('yearofadmission', e.target.value ? parseInt(e.target.value) : null)}
+                  value={strengthFilters.yearofadmission === 'All' ? 'All' : strengthFilters.yearofadmission || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === 'All') {
+                      handleStrengthFilterChange('yearofadmission', 'All');
+                    } else if (value === '') {
+                      handleStrengthFilterChange('yearofadmission', null);
+                    } else {
+                      handleStrengthFilterChange('yearofadmission', parseInt(value));
+                    }
+                  }}
                   className="filter-select"
                 >
                   <option value="">Select Year</option>
+                  <option value="All">All</option>
                   {filterOptions.yearofadmission.map(year => (
                     <option key={year} value={year}>{year}</option>
                   ))}
