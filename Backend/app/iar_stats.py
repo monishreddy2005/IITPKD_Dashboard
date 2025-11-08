@@ -77,7 +77,7 @@ def apply_filters_and_fetch(where_clause, params, extra_select='', extra_group_b
                 s.gender
                 {extra_select}
             FROM alumni a
-            JOIN student s ON s.rollno = a.rollno
+            LEFT JOIN student s ON s.rollno = a.rollno
             {where_clause}
             {extra_group_by}
         """
