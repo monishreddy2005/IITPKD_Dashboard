@@ -234,7 +234,12 @@ def generate_departments(file):
         file.write(f"{dept_code},{dept_name},{courses},{faculty},{courselist}\n")
 
 
-def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] = None):
+def generate_alumni(
+    file,
+    count: int,
+    student_rollnos: Optional[Sequence[str]] = None,
+    existing_alumni_ids: Optional[Iterable[str]] = None
+):
     file.write(
         'RollNo,Name,AlumniIDNo,CurrentDesignation,JobCountry,JobPlace,YearOfGraduation,'
         'Department,Program,Category,Gender,HomeState,JobState,Outcome,Employer_or_Institution,Updated_At\n'
@@ -257,7 +262,7 @@ def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] =
         'Cambridge University', 'ETH Zurich', 'NVIDIA', 'Adobe', 'IBM Research'
     ]
     used_rollnos = set()
-    alumni_ids = set()
+    alumni_ids = set(existing_alumni_ids or [])
     student_rollnos = list(student_rollnos or [])
 
     for i in range(count):
@@ -271,11 +276,6 @@ def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] =
         used_rollnos.add(rollno_val)
 
         name = random_name()
-        alumni_id = f"ALU{random.randint(2020, 2024)}-{random.randint(1, 999):03d}"
-        while alumni_id in alumni_ids:
-            alumni_id = f"ALU{random.randint(2020, 2024)}-{random.randint(1, 999):03d}"
-        alumni_ids.add(alumni_id)
-
         desig = random.choice(designations)
         country = random.choice(countries)
         places = {
@@ -290,6 +290,10 @@ def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] =
         }
         job_place = random.choice(places.get(country, ['Unknown']))
         graduation_year = random.randint(2015, 2024)
+        alumni_id = f"ALU{graduation_year}{random.randint(100000, 999999)}"
+        while alumni_id in alumni_ids:
+            alumni_id = f"ALU{graduation_year}{random.randint(100000, 999999)}"
+        alumni_ids.add(alumni_id)
         dept = random.choice(departments_list)
         prog = program()
         cat = category_student()

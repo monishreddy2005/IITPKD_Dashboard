@@ -41,6 +41,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_STUDENT_COLUMN,
         help=f"Column name in the student CSV containing roll numbers (default: {DEFAULT_STUDENT_COLUMN}).",
     )
+    parser.add_argument(
+        "--existing-alumni-csv",
+        type=Path,
+        help="Optional path to existing alumni CSV to avoid duplicate AlumniIDNo values.",
+    )
+    parser.add_argument(
+        "--existing-alumni-column",
+        type=str,
+        default="AlumniIDNo",
+        help="Column name in the existing alumni CSV containing AlumniIDNo values (default: AlumniIDNo).",
+    )
     return parser
 
 
@@ -52,9 +63,13 @@ def main():
     if args.student_csv:
         student_rollnos = load_column_from_csv(Path(args.student_csv), args.student_column)
 
+    existing_alumni_ids = None
+    if args.existing_alumni_csv:
+        existing_alumni_ids = load_column_from_csv(Path(args.existing_alumni_csv), args.existing_alumni_column)
+
     output_path = ensure_parent_dir(Path(args.output))
     with output_path.open("w", encoding="utf-8") as outfile:
-        generate_alumni(outfile, args.count, student_rollnos)
+        generate_alumni(outfile, args.count, student_rollnos, existing_alumni_ids)
 
     save_and_report(output_path, "✓ Generated Alumni data")
 
