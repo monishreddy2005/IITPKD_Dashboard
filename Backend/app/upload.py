@@ -26,6 +26,8 @@ UPDATABLE_TABLES = {
     'employment_history': ['historyid'],  # Uses SERIAL ID
     'additional_roles': ['roleid'],  # Uses SERIAL ID
     'externship_info': ['externid'],  # Uses SERIAL ID
+    'igrs_yearwise': ['grievance_year'],
+    'icc_yearwise': ['complaints_year'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],

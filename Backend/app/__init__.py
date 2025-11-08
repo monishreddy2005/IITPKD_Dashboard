@@ -47,6 +47,7 @@ def create_app():
     from . import upload
     from . import academic_stats
     from . import administrative_stats
+    from . import grievance_stats
 
     # Register the blueprints
     # All routes from auth.py will be prefixed with /auth
@@ -63,6 +64,9 @@ def create_app():
     
     # Register the administrative stats blueprint
     app.register_blueprint(administrative_stats.administrative_bp, url_prefix='/api/administrative')
+
+    # Register the grievance stats blueprint
+    app.register_blueprint(grievance_stats.grievance_bp, url_prefix='/api/grievance')
     
     # A simple test route
     @app.route('/health')

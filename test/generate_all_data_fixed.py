@@ -125,6 +125,7 @@ def generate_employee_id(prefix='IITPKD', num=4):
 def generate_students(file, count):
     """Generate student data - MATCHING EXACT SCHEMA COLUMN NAMES"""
     file.write('RollNo,Name,Program,YearOfAdmission,Batch,Branch,Department,PwD,State,Category,Gender,Status\n')
+    generated_rollnos = []
     for _ in range(count):
         roll = rollno()
         name = random_name()
@@ -145,7 +146,8 @@ def generate_students(file, count):
             status()
         ])
         file.write(line + "\n")
-    return [rollno() for _ in range(count)]
+        generated_rollnos.append(roll)
+    return generated_rollnos
 
 def generate_courses(file, count, dept_codes):
     """Generate course data - MATCHING EXACT SCHEMA"""
@@ -431,6 +433,25 @@ def generate_externship_info(file, count, employee_ids):
                   f"{end_date.strftime('%Y-%m-%d')}," +
                   f"{type_val},{remarks}\n")
 
+def generate_igrs_yearwise(file, years):
+    """Generate IGRC year-wise grievance data."""
+    file.write('grievance_year,total_grievances_filed,grievances_resolved,grievances_pending\n')
+    for year in years:
+        total = random.randint(5, 60)
+        resolved = random.randint(0, total)
+        pending = total - resolved
+        file.write(f"{year},{total},{resolved},{pending}\n")
+
+
+def generate_icc_yearwise(file, years):
+    """Generate ICC year-wise complaint data."""
+    file.write('complaints_year,total_complaints,complaints_resolved,complaints_pending\n')
+    for year in years:
+        total = random.randint(1, 40)
+        resolved = random.randint(0, total)
+        pending = total - resolved
+        file.write(f"{year},{total},{resolved},{pending}\n")
+
 def main():
     print("=== Database Dummy Data Generator (Fixed Schema) ===\n")
     
@@ -443,6 +464,10 @@ def main():
     num_additional_roles = int(input("Enter number of additional roles (default 20): ") or "20")
     num_externships = int(input("Enter number of externships (default 15): ") or "15")
     num_alumni = int(input("Enter number of alumni (default 30): ") or "30")
+    igrc_start_year = int(input("Enter IGRC start year (default 2019): ") or "2019")
+    igrc_year_count = int(input("Enter number of IGRC yearly records (default 5): ") or "5")
+    icc_start_year = int(input("Enter ICC start year (default 2019): ") or "2019")
+    icc_year_count = int(input("Enter number of ICC yearly records (default 5): ") or "5")
     
     print("\nGenerating data files...")
     
@@ -495,6 +520,16 @@ def main():
     with open('Alumini.csv', 'w', encoding='utf-8') as f:
         generate_alumni(f, num_alumni, student_rollnos)
         print(f"✓ Generated Alumini.csv ({num_alumni} records)")
+
+    igrc_years = [igrc_start_year + i for i in range(max(igrc_year_count, 0))]
+    with open('igrs_yearwise.csv', 'w', encoding='utf-8') as f:
+        generate_igrs_yearwise(f, igrc_years)
+        print(f"✓ Generated igrs_yearwise.csv ({len(igrc_years)} records)")
+
+    icc_years = [icc_start_year + i for i in range(max(icc_year_count, 0))]
+    with open('icc_yearwise.csv', 'w', encoding='utf-8') as f:
+        generate_icc_yearwise(f, icc_years)
+        print(f"✓ Generated icc_yearwise.csv ({len(icc_years)} records)")
     
     print("\n✅ All data files generated successfully!")
     print("\nNote: Column names match the exact database schema:")
@@ -512,6 +547,8 @@ def main():
     print("  7. additional_roles.csv")
     print("  8. externship_info.csv")
     print("  9. Alumini.csv")
+    print("  10. igrs_yearwise.csv")
+    print("  11. icc_yearwise.csv")
 
 if __name__ == "__main__":
     main()
