@@ -76,7 +76,13 @@ function IarSection() {
       }
       try {
         const options = await fetchFilterOptions(token);
-        setFilterOptions(options);
+        setFilterOptions({
+          years: Array.isArray(options?.years) ? options.years : [],
+          departments: Array.isArray(options?.departments) ? options.departments : [],
+          genders: Array.isArray(options?.genders) ? options.genders : [],
+          programs: Array.isArray(options?.programs) ? options.programs : [],
+          categories: Array.isArray(options?.categories) ? options.categories : []
+        });
       } catch (err) {
         console.error('Failed to load filter options:', err);
         setError(err.message || 'Failed to load filter options.');
