@@ -49,14 +49,19 @@ CREATE TABLE department (
 
 -- Alumni Table
 
-CREATE TABLE alumni (
-    rollno VARCHAR(20) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    alumniidno VARCHAR(30) UNIQUE,
-    currentdesignation VARCHAR(100),
-    jobcountry VARCHAR(100),
-    jobplace VARCHAR(100)
-);
+CREATE TYPE alumni_outcome_type AS ENUM ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other');
+
+ALTER TABLE alumni
+    ADD COLUMN yearofgraduation INT,
+    ADD COLUMN department VARCHAR(100),
+    ADD COLUMN program VARCHAR(20),
+    ADD COLUMN category VARCHAR(20),
+    ADD COLUMN gender VARCHAR(20),
+    ADD COLUMN homestate VARCHAR(100),
+    ADD COLUMN jobstate VARCHAR(100),
+    ADD COLUMN outcome alumni_outcome_type,
+    ADD COLUMN employer_or_institution VARCHAR(150),
+    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 
 -- Employee and related tables

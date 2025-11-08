@@ -6,34 +6,16 @@ from .db import get_db_connection
 iar_bp = Blueprint('iar', __name__)
 
 
-HIGHER_STUDIES_KEYWORDS = (
-    'research',
-    'phd',
-    'ms',
-    'msc',
-    'm.s',
-    'm.sc',
-    'fellow',
-    'scholar',
-    'professor',
-    'lecturer',
-    'postdoc',
-    'post doctoral',
-    'graduate',
-    'student'
-)
-
-
 def build_filter_query(filters):
     conditions = []
     params = []
 
     mapping = {
-        'year': 's.yearofadmission',
-        'department': 's.department',
-        'gender': 's.gender',
-        'program': 's.program',
-        'category': 's.category'
+        'year': 'a.yearofgraduation',
+        'department': 'a.department',
+        'gender': 'a.gender',
+        'program': 'a.program',
+        'category': 'a.category'
     }
 
     for key, column in mapping.items():
@@ -49,10 +31,7 @@ def build_filter_query(filters):
     return where_clause, params
 
 
-def apply_filters_and_fetch(where_clause, params, extra_select='', extra_group_by=''):
-    """
-    Helper that returns joined alumni + student dataset per filters.
-    """
+def apply_filters_and_fetch(where_clause, params, order_clause='ORDER BY a.yearofgraduation ASC'):
     conn = None
     cur = None
     try:
@@ -69,17 +48,19 @@ def apply_filters_and_fetch(where_clause, params, extra_select='', extra_group_b
                 a.currentdesignation,
                 a.jobcountry,
                 a.jobplace,
-                s.yearofadmission,
-                s.program,
-                s.department,
-                s.state,
-                s.category,
-                s.gender
-                {extra_select}
+                a.yearofgraduation,
+                a.program,
+                a.department,
+                a.homestate,
+                a.jobstate,
+                a.category,
+                a.gender,
+                a.outcome,
+                a.employer_or_institution,
+                a.updated_at
             FROM alumni a
-            LEFT JOIN student s ON s.rollno = a.rollno
             {where_clause}
-            {extra_group_by}
+            {order_clause}
         """
         cur.execute(query, params)
         rows = cur.fetchall()
@@ -94,11 +75,17 @@ def apply_filters_and_fetch(where_clause, params, extra_select='', extra_group_b
             conn.close()
 
 
-def detect_higher_studies(designation: str) -> bool:
-    if not designation:
-        return False
+def classify_outcome(row):
+    outcome = row.get('outcome')
+    if outcome in ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other'):
+        return outcome
+
+    designation = row.get('currentdesignation') or ''
     lower = designation.lower()
-    return any(keyword in lower for keyword in HIGHER_STUDIES_KEYWORDS)
+    keywords = ('research', 'phd', 'ms', 'msc', 'fellow', 'scholar', 'professor', 'lecturer', 'postdoc')
+    if any(keyword in lower for keyword in keywords):
+        return 'HigherStudies'
+    return 'Corporate'
 
 
 @iar_bp.route('/filter-options', methods=['GET'])
@@ -114,11 +101,11 @@ def get_filter_options(current_user_id):
         cur = conn.cursor()
         cur.execute("""
             SELECT
-                ARRAY(SELECT DISTINCT yearofadmission FROM student ORDER BY yearofadmission DESC) AS years,
-                ARRAY(SELECT DISTINCT department FROM student WHERE department IS NOT NULL AND department != '' ORDER BY department) AS departments,
-                ARRAY(SELECT DISTINCT gender FROM student WHERE gender IS NOT NULL ORDER BY gender) AS genders,
-                ARRAY(SELECT DISTINCT program FROM student ORDER BY program) AS programs,
-                ARRAY(SELECT DISTINCT category FROM student WHERE category IS NOT NULL ORDER BY category) AS categories
+                ARRAY(SELECT DISTINCT yearofgraduation FROM alumni WHERE yearofgraduation IS NOT NULL ORDER BY yearofgraduation DESC) AS years,
+                ARRAY(SELECT DISTINCT department FROM alumni WHERE department IS NOT NULL AND department != '' ORDER BY department) AS departments,
+                ARRAY(SELECT DISTINCT gender FROM alumni WHERE gender IS NOT NULL ORDER BY gender) AS genders,
+                ARRAY(SELECT DISTINCT program FROM alumni WHERE program IS NOT NULL ORDER BY program) AS programs,
+                ARRAY(SELECT DISTINCT category FROM alumni WHERE category IS NOT NULL ORDER BY category) AS categories
         """)
         row = cur.fetchone()
         return jsonify({
@@ -155,18 +142,21 @@ def get_summary(current_user_id):
         return jsonify({'message': error}), 500
 
     total_alumni = len(rows)
-    higher_studies = sum(1 for row in rows if detect_higher_studies(row['currentdesignation']))
-    corporate = total_alumni - higher_studies
+    higher_studies = sum(1 for row in rows if classify_outcome(row) == 'HigherStudies')
+    corporate = sum(1 for row in rows if classify_outcome(row) == 'Corporate')
 
     by_year = {}
     for row in rows:
-        year = row['yearofadmission']
+        year = row['yearofgraduation']
+        if year is None:
+            continue
         if year not in by_year:
             by_year[year] = {'total': 0, 'higher': 0, 'corporate': 0}
         by_year[year]['total'] += 1
-        if detect_higher_studies(row['currentdesignation']):
+        outcome = classify_outcome(row)
+        if outcome == 'HigherStudies':
             by_year[year]['higher'] += 1
-        else:
+        elif outcome == 'Corporate':
             by_year[year]['corporate'] += 1
 
     trend = [
@@ -207,7 +197,7 @@ def get_state_distribution(current_user_id):
 
     distribution = {}
     for row in rows:
-        state = row['state'] or 'Unknown'
+        state = row['homestate'] or 'Unknown'
         distribution[state] = distribution.get(state, 0) + 1
 
     formatted = [{'state': state, 'count': count} for state, count in sorted(distribution.items(), key=lambda x: x[0])]
@@ -264,9 +254,10 @@ def get_outcome_breakdown(current_user_id):
         if dept not in breakdown:
             breakdown[dept] = {'department': dept, 'higher': 0, 'corporate': 0, 'total': 0}
         breakdown[dept]['total'] += 1
-        if detect_higher_studies(row['currentdesignation']):
+        outcome = classify_outcome(row)
+        if outcome == 'HigherStudies':
             breakdown[dept]['higher'] += 1
-        else:
+        elif outcome == 'Corporate':
             breakdown[dept]['corporate'] += 1
 
     formatted = sorted(breakdown.values(), key=lambda x: x['department'])

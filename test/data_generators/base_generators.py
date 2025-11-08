@@ -235,13 +235,27 @@ def generate_departments(file):
 
 
 def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] = None):
-    file.write('RollNo,Name,AlumniIDNo,CurrentDesignation,JobCountry,JobPlace\n')
+    file.write(
+        'RollNo,Name,AlumniIDNo,CurrentDesignation,JobCountry,JobPlace,YearOfGraduation,'
+        'Department,Program,Category,Gender,HomeState,JobState,Outcome,Employer_or_Institution,Updated_At\n'
+    )
     designations = [
         'Software Engineer', 'Data Scientist', 'Research Scientist', 'Product Manager',
         'Senior Engineer', 'Principal Engineer', 'Manager', 'Director', 'Professor',
         'Assistant Professor', 'Consultant', 'Entrepreneur', 'Research Fellow'
     ]
     countries = ['India', 'USA', 'UK', 'Canada', 'Australia', 'Germany', 'Singapore', 'Japan']
+    outcomes = ['HigherStudies', 'Corporate', 'Entrepreneurship', 'Other']
+    departments_list = [
+        'Computer Science', 'Electrical Engineering', 'Mechanical Engineering',
+        'Civil Engineering', 'Chemical Engineering', 'Physics', 'Mathematics',
+        'Humanities and Social Sciences'
+    ]
+    organisations = [
+        'Google', 'Microsoft', 'Amazon', 'IIT Madras', 'IISc Bangalore', 'TCS', 'Infosys',
+        'StartUp Labs', 'MIT', 'Stanford University', 'Harvard University', 'Oxford University',
+        'Cambridge University', 'ETH Zurich', 'NVIDIA', 'Adobe', 'IBM Research'
+    ]
     used_rollnos = set()
     alumni_ids = set()
     student_rollnos = list(student_rollnos or [])
@@ -265,7 +279,7 @@ def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] =
         desig = random.choice(designations)
         country = random.choice(countries)
         places = {
-            'India': ['Chennai', 'Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 'Kolkata'],
+            'India': ['Chennai', 'Bengaluru', 'Mumbai', 'Delhi', 'Hyderabad', 'Pune', 'Kolkata'],
             'USA': ['New York', 'San Francisco', 'Seattle', 'Boston'],
             'UK': ['London', 'Manchester'],
             'Canada': ['Toronto', 'Vancouver'],
@@ -274,8 +288,22 @@ def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] =
             'Singapore': ['Singapore'],
             'Japan': ['Tokyo', 'Osaka']
         }
-        place = random.choice(places.get(country, ['Unknown']))
-        file.write(f"{rollno_val},{name},{alumni_id},{desig},{country},{place}\n")
+        job_place = random.choice(places.get(country, ['Unknown']))
+        graduation_year = random.randint(2015, 2024)
+        dept = random.choice(departments_list)
+        prog = program()
+        cat = category_student()
+        gen = gender()
+        home_state = state()
+        job_state = state() if country == 'India' else ''
+        outcome = random.choice(outcomes)
+        employer = random.choice(organisations)
+        updated_at = random_date(2020, 2024).strftime('%Y-%m-%d %H:%M:%S')
+
+        file.write(
+            f"{rollno_val},{name},{alumni_id},{desig},{country},{job_place},{graduation_year},"
+            f"{dept},{prog},{cat},{gen},{home_state},{job_state},{outcome},{employer},{updated_at}\n"
+        )
 
 
 def generate_designations(file, count: int):
