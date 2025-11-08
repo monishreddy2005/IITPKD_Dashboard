@@ -310,6 +310,58 @@ def generate_alumni(
         )
 
 
+def generate_faculty_engagements(file, count: int, departments: Optional[Sequence[str]] = None):
+    file.write(
+        'engagement_code,faculty_name,engagement_type,department,startdate,enddate,duration_months,year,remarks\n'
+    )
+    engagement_types = ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
+    departments = list(departments) if departments else [
+        'Computer Science', 'Electrical Engineering', 'Mechanical Engineering',
+        'Civil Engineering', 'Chemical Engineering', 'Physics', 'Mathematics',
+        'Humanities and Social Sciences'
+    ]
+    used_codes = set()
+
+    for _ in range(count):
+        engagement_type = random.choice(engagement_types)
+        year = random.randint(2016, 2024)
+
+        engagement_code = f"ENG-{year}-{random.randint(1000, 9999)}"
+        while engagement_code in used_codes:
+            engagement_code = f"ENG-{year}-{random.randint(1000, 9999)}"
+        used_codes.add(engagement_code)
+
+        faculty_name = random_name()
+        department_val = random.choice(departments)
+
+        start_date = random_date(year, year)
+        end_date = ''
+        duration_months = ''
+
+        if engagement_type == 'Visiting':
+            duration_months = random.randint(1, 12)
+            if random.choice([True, False]):
+                end_date_dt = random_date_after(start_date, duration_months * 30)
+                end_date = end_date_dt.strftime('%Y-%m-%d')
+        else:
+            if random.choice([True, False]):
+                end_date_dt = random_date_after(start_date, 365)
+                end_date = end_date_dt.strftime('%Y-%m-%d')
+
+        remarks = random.choice([
+            '',
+            'MoU partner collaboration',
+            'Industry-sponsored engagement',
+            'Short-term teaching assignment',
+            'Research mentorship program'
+        ])
+
+        file.write(
+            f"{engagement_code},{faculty_name},{engagement_type},{department_val},"
+            f"{start_date.strftime('%Y-%m-%d')},{end_date},{duration_months},{year},{remarks}\n"
+        )
+
+
 def generate_designations(file, count: int):
     file.write('designationName,designationCadre,designationCategory,isActive\n')
     faculty_designations = [
@@ -562,6 +614,7 @@ __all__ = [
     'generate_igrs_yearwise',
     'generate_icc_yearwise',
     'generate_ewd_yearwise',
+    'generate_faculty_engagements',
     'generate_employee_id',
     'random_name',
     'random_email',

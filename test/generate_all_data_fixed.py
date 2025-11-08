@@ -12,6 +12,8 @@ from data_generators.base_generators import (
     generate_externship_info,
     generate_igrs_yearwise,
     generate_icc_yearwise,
+    generate_ewd_yearwise,
+    generate_faculty_engagements,
 )
 def main():
     print("=== Database Dummy Data Generator (Fixed Schema) ===\n")
@@ -25,6 +27,7 @@ def main():
     num_additional_roles = int(input("Enter number of additional roles (default 20): ") or "20")
     num_externships = int(input("Enter number of externships (default 15): ") or "15")
     num_alumni = int(input("Enter number of alumni (default 30): ") or "30")
+    num_faculty_engagements = int(input("Enter number of faculty engagements (default 40): ") or "40")
     igrc_start_year = int(input("Enter IGRC start year (default 2019): ") or "2019")
     igrc_year_count = int(input("Enter number of IGRC yearly records (default 5): ") or "5")
     icc_start_year = int(input("Enter ICC start year (default 2019): ") or "2019")
@@ -86,6 +89,10 @@ def main():
         generate_alumni(f, num_alumni, student_rollnos)
         print(f"✓ Generated Alumini.csv ({num_alumni} records)")
 
+    with open('faculty_engagement.csv', 'w', encoding='utf-8') as f:
+        generate_faculty_engagements(f, num_faculty_engagements, DEFAULT_DEPARTMENT_CODES)
+        print(f"✓ Generated faculty_engagement.csv ({num_faculty_engagements} records)")
+
     igrc_years = [igrc_start_year + i for i in range(max(igrc_year_count, 0))]
     with open('igrs_yearwise.csv', 'w', encoding='utf-8') as f:
         generate_igrs_yearwise(f, igrc_years)
@@ -107,6 +114,7 @@ def main():
     print("  - Course: CourseCode, CourseName, OfferedByDept, OfferedToProgram, Credit, Coordinator, CoCoordinator, CurrentStatus")
     print("  - Department: DeptCode, DeptName, CoursesOffered, Faculty, CourseList")
     print("  - Employee: employeeId, empName, email, phoneNumber, bloodGroup, dateOfBirth, gender, Department, currentDesignationId, isActive, Category, PWD_EXS, State")
+    print("  - Faculty Engagement: engagement_code, faculty_name, engagement_type, department, startdate, enddate, duration_months, year, remarks")
     print("\nImport order:")
     print("  1. designation.csv")
     print("  2. Department.csv")
@@ -117,9 +125,10 @@ def main():
     print("  7. additional_roles.csv")
     print("  8. externship_info.csv")
     print("  9. Alumini.csv")
-    print("  10. igrs_yearwise.csv")
-    print("  11. icc_yearwise.csv")
-    print("  12. ewd_yearwise.csv")
+    print("  10. faculty_engagement.csv")
+    print("  11. igrs_yearwise.csv")
+    print("  12. icc_yearwise.csv")
+    print("  13. ewd_yearwise.csv")
 
 if __name__ == "__main__":
     main()

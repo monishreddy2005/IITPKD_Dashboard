@@ -47,21 +47,27 @@ CREATE TABLE department (
     courselist TEXT
 );
 
--- Alumni Table
 
 CREATE TYPE alumni_outcome_type AS ENUM ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other');
 
-ALTER TABLE alumni
-    ADD COLUMN yearofgraduation INT,
-    ADD COLUMN department VARCHAR(100),
-    ADD COLUMN program VARCHAR(20),
-    ADD COLUMN category VARCHAR(20),
-    ADD COLUMN gender VARCHAR(20),
-    ADD COLUMN homestate VARCHAR(100),
-    ADD COLUMN jobstate VARCHAR(100),
-    ADD COLUMN outcome alumni_outcome_type,
-    ADD COLUMN employer_or_institution VARCHAR(150),
-    ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+CREATE TABLE alumni (
+    rollno VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    alumniidno VARCHAR(30) UNIQUE,
+    currentdesignation VARCHAR(100),
+    jobcountry VARCHAR(100),
+    jobplace VARCHAR(100),
+    yearofgraduation INT,
+    department VARCHAR(100),
+    program VARCHAR(20),
+    category VARCHAR(20),
+    gender VARCHAR(20),
+    homestate VARCHAR(100),
+    jobstate VARCHAR(100),
+    outcome alumni_outcome_type,
+    employer_or_institution VARCHAR(150),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 
 -- Employee and related tables
@@ -160,4 +166,61 @@ CREATE TABLE externship_info (
 
 
 
---This is new chagnes In may need to changes in future
+CREATE TYPE faculty_engagement_type AS ENUM ('Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP');
+
+CREATE TABLE faculty_engagement (
+    engagement_code VARCHAR(40) PRIMARY KEY,
+    faculty_name VARCHAR(150),
+    engagement_type faculty_engagement_type NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    startdate DATE,
+    enddate DATE,
+    duration_months INT,
+    year INT NOT NULL,
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE igrs_yearwise (
+    grievance_year INT PRIMARY KEY,
+    total_grievances_filed INT NOT NULL,
+    grievances_resolved INT NOT NULL,
+    grievances_pending INT NOT NULL,
+    CONSTRAINT igrs_total_non_negative CHECK (total_grievances_filed >= 0),
+    CONSTRAINT igrs_resolved_non_negative CHECK (grievances_resolved >= 0),
+    CONSTRAINT igrs_pending_non_negative CHECK (grievances_pending >= 0),
+    CONSTRAINT igrs_total_equals_sum CHECK (total_grievances_filed = grievances_resolved + grievances_pending)
+);
+
+
+CREATE TABLE icc_yearwise (
+    complaints_year INT PRIMARY KEY,
+    total_complaints INT NOT NULL,
+    complaints_resolved INT NOT NULL,
+    complaints_pending INT NOT NULL,
+    CONSTRAINT icc_total_non_negative CHECK (total_complaints >= 0),
+    CONSTRAINT icc_resolved_non_negative CHECK (complaints_resolved >= 0),
+    CONSTRAINT icc_pending_non_negative CHECK (complaints_pending >= 0),
+    CONSTRAINT icc_total_equals_sum CHECK (total_complaints = complaints_resolved + complaints_pending)
+);
+
+
+CREATE TABLE ewd_yearwise (
+    ewd_year INT PRIMARY KEY,
+    annual_electricity_consumption INT NOT NULL,
+    per_capita_electricity_consumption DECIMAL(10, 2) NOT NULL,
+    per_capita_water_consumption DECIMAL(10, 2) NOT NULL,
+    per_capita_recycled_water DECIMAL(10, 2) NOT NULL,
+    green_coverage DECIMAL(5, 2) NOT NULL,
+    CONSTRAINT ewd_non_negative CHECK (
+        annual_electricity_consumption >= 0
+        AND per_capita_electricity_consumption >= 0
+        AND per_capita_water_consumption >= 0
+        AND per_capita_recycled_water >= 0
+        AND green_coverage >= 0
+    )
+);
+
+
+--This is new changes In may need to changes in future

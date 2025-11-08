@@ -29,6 +29,7 @@ UPDATABLE_TABLES = {
     'igrs_yearwise': ['grievance_year'],
     'icc_yearwise': ['complaints_year'],
     'ewd_yearwise': ['ewd_year'],
+    'faculty_engagement': ['engagement_code'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],
