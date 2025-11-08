@@ -12,7 +12,10 @@ const tableOptions = [
   'employee',
   'employment_history',
   'additional_roles',
-  'externship_info'
+  'externship_info',
+  'igrs_yearwise',
+  'icc_yearwise',
+  'ewd_yearwise'
 ];
 
 /**

@@ -1,0 +1,172 @@
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.summary-card {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
+}
+
+.summary-card h3 {
+  color: #ffffff;
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  color: #667eea;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.accent-success {
+  color: #43e97b;
+}
+
+.accent-warning {
+  color: #fa709a;
+}
+
+.summary-subtitle {
+  display: block;
+  color: #aaa;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chart-header h2 {
+  color: #ffffff;
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+.chart-description {
+  color: #aaaaaa;
+  font-size: 0.95rem;
+  margin: 0.35rem 0 0 0;
+  max-width: 600px;
+}
+
+.grievance-table-wrapper {
+  margin-top: 2.5rem;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.grievance-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e0e0e0;
+}
+
+.grievance-table thead {
+  background-color: rgba(102, 126, 234, 0.12);
+}
+
+.grievance-table th,
+.grievance-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-top: 1px solid #404040;
+}
+
+.grievance-table th {
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.8px;
+}
+
+.grievance-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.grievance-table tbody tr:hover {
+  background-color: rgba(102, 126, 234, 0.08);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.status-pill.pending {
+  background-color: rgba(250, 112, 154, 0.18);
+  color: #fa709a;
+}
+
+.status-pill.resolved {
+  background-color: rgba(67, 233, 123, 0.18);
+  color: #43e97b;
+}
+
+.status-pill.mixed {
+  background-color: rgba(102, 126, 234, 0.18);
+  color: #8a9eff;
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .chart-section,
+  .grievance-table-wrapper {
+    padding: 1.5rem;
+  }
+
+  .chart-header h2 {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    padding: 1.25rem;
+  }
+
+  .chart-section,
+  .grievance-table-wrapper {
+    padding: 1.25rem;
+  }
+}
+

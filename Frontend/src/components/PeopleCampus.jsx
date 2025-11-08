@@ -27,12 +27,12 @@ function PeopleCampus() {
     {
       title: 'EWD',
       route: '/people-campus/ewd',
-      description: 'Equal Opportunity Cell / External Affairs'
+      description: 'Engineering & Works Division sustainability metrics'
     },
     {
       title: 'IAR',
       route: '/people-campus/iar',
-      description: 'Internal Audit & Risk Management'
+      description: 'International & Alumni Relations insights'
     }
   ];
 

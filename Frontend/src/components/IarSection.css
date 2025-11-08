@@ -1,0 +1,19 @@
+.chart-section .table-responsive {
+  margin-top: 1.5rem;
+}
+
+.chart-section .grievance-table th:nth-child(1),
+.chart-section .grievance-table td:nth-child(1) {
+  min-width: 160px;
+}
+
+.chart-section .grievance-table th,
+.chart-section .grievance-table td {
+  text-align: left;
+}
+
+.indicator-grid,
+.indicator-card {
+  /* Placeholder to reuse EWD indicator styles when both dashboards are present */
+}
+
