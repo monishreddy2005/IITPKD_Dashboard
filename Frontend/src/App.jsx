@@ -16,6 +16,7 @@ import AcademicSection from './components/AcademicSection';
 import AdministrativeSection from './components/AdministrativeSection';
 import IgrcSection from './components/IgrcSection';
 import IccSection from './components/IccSection';
+import EwdSection from './components/EwdSection';
 
 function App() {
   // State to hold the authentication token
@@ -90,6 +91,7 @@ function App() {
           <Route path="people-campus/administrative-section" element={<AdministrativeSection />} />
           <Route path="people-campus/igrc" element={<IgrcSection />} />
           <Route path="people-campus/icc" element={<IccSection />} />
+          <Route path="people-campus/ewd" element={<EwdSection />} />
           <Route path="research" element={<Research />} />
           <Route path="education" element={<Education />} />
           <Route path="industry-connect" element={<IndustryConnect />} />

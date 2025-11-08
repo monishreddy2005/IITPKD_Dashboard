@@ -489,6 +489,28 @@ def generate_icc_yearwise(file, years: Iterable[int]):
         file.write(f"{year},{total},{resolved},{pending}\n")
 
 
+def generate_ewd_yearwise(file, years: Iterable[int]):
+    """
+    Generate Engineering and Works Division yearly environmental data.
+    """
+    file.write(
+        'ewd_year,annual_electricity_consumption,per_capita_electricity_consumption,'
+        'per_capita_water_consumption,per_capita_recycled_water,green_coverage\n'
+    )
+
+    for year in years:
+        annual_electricity = random.randint(150_000, 600_000)
+        per_capita_electricity = round(random.uniform(400, 1200), 2)
+        per_capita_water = round(random.uniform(60, 180), 2)
+        per_capita_recycled = round(random.uniform(10, 90), 2)
+        green_coverage = round(random.uniform(25, 80), 2)
+
+        file.write(
+            f"{year},{annual_electricity},{per_capita_electricity},"
+            f"{per_capita_water},{per_capita_recycled},{green_coverage}\n"
+        )
+
+
 def ensure_directory(path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -507,6 +529,7 @@ __all__ = [
     'generate_externship_info',
     'generate_igrs_yearwise',
     'generate_icc_yearwise',
+    'generate_ewd_yearwise',
     'generate_employee_id',
     'random_name',
     'random_email',

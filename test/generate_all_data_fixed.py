@@ -29,6 +29,8 @@ def main():
     igrc_year_count = int(input("Enter number of IGRC yearly records (default 5): ") or "5")
     icc_start_year = int(input("Enter ICC start year (default 2019): ") or "2019")
     icc_year_count = int(input("Enter number of ICC yearly records (default 5): ") or "5")
+    ewd_start_year = int(input("Enter EWD start year (default 2019): ") or "2019")
+    ewd_year_count = int(input("Enter number of EWD yearly records (default 5): ") or "5")
     
     print("\nGenerating data files...")
     
@@ -93,6 +95,11 @@ def main():
     with open('icc_yearwise.csv', 'w', encoding='utf-8') as f:
         generate_icc_yearwise(f, icc_years)
         print(f"✓ Generated icc_yearwise.csv ({len(icc_years)} records)")
+
+    ewd_years = [ewd_start_year + i for i in range(max(ewd_year_count, 0))]
+    with open('ewd_yearwise.csv', 'w', encoding='utf-8') as f:
+        generate_ewd_yearwise(f, ewd_years)
+        print(f"✓ Generated ewd_yearwise.csv ({len(ewd_years)} records)")
     
     print("\n✅ All data files generated successfully!")
     print("\nNote: Column names match the exact database schema:")
@@ -112,6 +119,7 @@ def main():
     print("  9. Alumini.csv")
     print("  10. igrs_yearwise.csv")
     print("  11. icc_yearwise.csv")
+    print("  12. ewd_yearwise.csv")
 
 if __name__ == "__main__":
     main()

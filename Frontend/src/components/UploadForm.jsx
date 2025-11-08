@@ -14,7 +14,8 @@ const tableOptions = [
   'additional_roles',
   'externship_info',
   'igrs_yearwise',
-  'icc_yearwise'
+  'icc_yearwise',
+  'ewd_yearwise'
 ];
 
 /**
