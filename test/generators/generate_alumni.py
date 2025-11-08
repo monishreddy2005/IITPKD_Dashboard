@@ -21,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--count",
         type=int,
-        default=30,
+        default=300,
         help="Number of alumni records to generate (default: 30).",
     )
     parser.add_argument(
