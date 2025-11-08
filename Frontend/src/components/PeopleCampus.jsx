@@ -32,7 +32,7 @@ function PeopleCampus() {
     {
       title: 'IAR',
       route: '/people-campus/iar',
-      description: 'Internal Audit & Risk Management'
+      description: 'International & Alumni Relations insights'
     }
   ];
 
