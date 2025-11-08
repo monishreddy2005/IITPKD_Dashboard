@@ -235,7 +235,7 @@ def generate_departments(file):
 
 
 def generate_alumni(file, count: int, student_rollnos: Optional[Sequence[str]] = None):
-    file.write('RollNo,Name,AluminiIDNo,CurrentDesignation,JobCountry,JobPlace\n')
+    file.write('RollNo,Name,AlumniIDNo,CurrentDesignation,JobCountry,JobPlace\n')
     designations = [
         'Software Engineer', 'Data Scientist', 'Research Scientist', 'Product Manager',
         'Senior Engineer', 'Principal Engineer', 'Manager', 'Director', 'Professor',
