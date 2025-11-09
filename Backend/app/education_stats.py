@@ -1,6 +1,7 @@
 from datetime import date
 
 from flask import Blueprint, jsonify, request
+from psycopg2.errors import UndefinedTable
 
 from .auth import token_required
 from .db import get_db_connection
@@ -8,6 +9,7 @@ from .db import get_db_connection
 education_bp = Blueprint('education', __name__)
 
 ENGAGEMENT_TYPES = ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
+ENGAGEMENT_TABLE_NAME = 'faculty_engagement'
 
 
 def build_filter_query(filters):
@@ -61,9 +63,42 @@ def fetch_rows(where_clause, params, extra_columns=''):
         )
         rows = cur.fetchall()
         return rows, None
+    except UndefinedTable:
+        return None, f"Faculty engagement table '{ENGAGEMENT_TABLE_NAME}' is missing. Please run the latest schema migrations."
     except Exception as exc:
         print(f"Education stats error: {exc}")
         return None, 'Failed to fetch faculty engagement data.'
+def faculty_engagement_table_exists():
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return False
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = %s
+            ) AS exists_flag;
+            """,
+            (ENGAGEMENT_TABLE_NAME,)
+        )
+        row = cur.fetchone()
+        return bool(row and row['exists_flag'])
+    except Exception as exc:
+        print(f"Education table existence check failed: {exc}")
+        return False
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
     finally:
         if cur:
             cur.close()
@@ -93,6 +128,14 @@ def compute_summary(rows):
 @education_bp.route('/filter-options', methods=['GET'])
 @token_required
 def get_filter_options(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
     conn = None
     cur = None
     try:
@@ -137,6 +180,14 @@ def get_filter_options(current_user_id):
 @education_bp.route('/summary', methods=['GET'])
 @token_required
 def get_summary(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
@@ -171,6 +222,14 @@ def get_summary(current_user_id):
 @education_bp.route('/department-breakdown', methods=['GET'])
 @token_required
 def get_department_breakdown(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
@@ -233,6 +292,13 @@ def get_department_breakdown(current_user_id):
             formatted.append(entry)
 
         return jsonify({'data': formatted}), 200
+    except UndefinedTable:
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
     except Exception as exc:
         print(f"Education department breakdown error: {exc}")
         return jsonify({'message': 'Failed to fetch department breakdown.'}), 500
@@ -246,6 +312,14 @@ def get_department_breakdown(current_user_id):
 @education_bp.route('/year-trend', methods=['GET'])
 @token_required
 def get_year_trend(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
@@ -286,6 +360,13 @@ def get_year_trend(current_user_id):
 
         trend_list = [trend_map[year] for year in sorted(trend_map.keys())]
         return jsonify({'data': trend_list}), 200
+    except UndefinedTable:
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
     except Exception as exc:
         print(f"Education year trend error: {exc}")
         return jsonify({'message': 'Failed to fetch year trend.'}), 500
@@ -299,6 +380,14 @@ def get_year_trend(current_user_id):
 @education_bp.route('/type-distribution', methods=['GET'])
 @token_required
 def get_type_distribution(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
@@ -327,6 +416,13 @@ def get_type_distribution(current_user_id):
         rows = cur.fetchall()
         distribution = [{'engagement_type': row['engagement_type'], 'total': row['total']} for row in rows]
         return jsonify({'data': distribution}), 200
+    except UndefinedTable:
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
     except Exception as exc:
         print(f"Education type distribution error: {exc}")
         return jsonify({'message': 'Failed to fetch type distribution.'}), 500
