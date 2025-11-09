@@ -312,7 +312,7 @@ def generate_alumni(
 
 def generate_faculty_engagements(file, count: int, departments: Optional[Sequence[str]] = None):
     file.write(
-        'engagement_code,faculty_name,engagement_type,department,startdate,enddate,duration_months,year,remarks\n'
+        'engagement_code,faculty_name,engagement_type,department,startdate,enddate,duration_months,year,remarks,created_at\n'
     )
     engagement_types = ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
     departments = list(departments) if departments else [
@@ -356,9 +356,11 @@ def generate_faculty_engagements(file, count: int, departments: Optional[Sequenc
             'Research mentorship program'
         ])
 
+        created_at = random_date(2018, 2024).strftime('%Y-%m-%d %H:%M:%S')
+
         file.write(
             f"{engagement_code},{faculty_name},{engagement_type},{department_val},"
-            f"{start_date.strftime('%Y-%m-%d')},{end_date},{duration_months},{year},{remarks}\n"
+            f"{start_date.strftime('%Y-%m-%d')},{end_date},{duration_months},{year},{remarks},{created_at}\n"
         )
 
 
