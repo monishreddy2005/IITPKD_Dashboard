@@ -97,15 +97,6 @@ def faculty_engagement_table_exists():
             cur.close()
         if conn:
             conn.close()
-
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
 def compute_summary(rows):
     today = date.today()
     summary_map = {eng_type: {'total': 0, 'active': 0} for eng_type in ENGAGEMENT_TYPES}
