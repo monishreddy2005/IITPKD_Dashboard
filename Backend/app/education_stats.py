@@ -68,6 +68,11 @@ def fetch_rows(where_clause, params, extra_columns=''):
     except Exception as exc:
         print(f"Education stats error: {exc}")
         return None, 'Failed to fetch faculty engagement data.'
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 def faculty_engagement_table_exists():
     conn = None
     cur = None
@@ -107,7 +112,9 @@ def compute_summary(rows):
         summary_map[engagement_type]['total'] += 1
 
         enddate = row.get('enddate')
-        if enddate is None or (isinstance(enddate, date) and enddate >= today):
+        if enddate is None:
+            summary_map[engagement_type]['active'] += 1
+        elif isinstance(enddate, date) and enddate > today:
             summary_map[engagement_type]['active'] += 1
 
     overall_total = sum(item['total'] for item in summary_map.values())
@@ -242,7 +249,7 @@ def get_department_breakdown(current_user_id):
                    COUNT(*) AS total,
                    SUM(
                        CASE
-                           WHEN enddate IS NULL OR enddate >= CURRENT_DATE THEN 1
+                           WHEN enddate IS NULL OR enddate > CURRENT_DATE THEN 1
                            ELSE 0
                        END
                    ) AS active
