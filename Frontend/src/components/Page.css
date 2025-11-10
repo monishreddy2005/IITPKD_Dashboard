@@ -66,6 +66,37 @@
   font-size: 1rem;
 }
 
+.section-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 2rem 0 1.5rem;
+}
+
+.toggle-button {
+  background-color: #2d2d2d;
+  border: 1px solid #4a4a4a;
+  border-radius: 999px;
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.65rem 1.6rem;
+  transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+  border-color: #818cf8;
+  color: #ffffff;
+}
+
+.toggle-button.active {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  color: #ffffff;
+}
+
 @media (max-width: 768px) {
   .page-container {
     padding: 1rem;
@@ -87,5 +118,15 @@
 
   .profile-field label {
     min-width: auto;
+  }
+
+  .section-toggle {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toggle-button {
+    width: 100%;
+    text-align: center;
   }
 }

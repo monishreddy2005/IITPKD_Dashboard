@@ -1,6 +1,8 @@
 from data_generators.base_generators import (
     DEFAULT_DEPARTMENT_CODES,
     DEFAULT_EMPLOYEE_DEPARTMENTS,
+    GENDERS,
+    PROGRAMS,
     generate_students,
     generate_courses,
     generate_departments,
@@ -14,6 +16,9 @@ from data_generators.base_generators import (
     generate_icc_yearwise,
     generate_ewd_yearwise,
     generate_faculty_engagements,
+    generate_placement_summary,
+    generate_placement_companies,
+    generate_placement_packages,
 )
 def main():
     print("=== Database Dummy Data Generator (Fixed Schema) ===\n")
@@ -34,6 +39,9 @@ def main():
     icc_year_count = int(input("Enter number of ICC yearly records (default 5): ") or "5")
     ewd_start_year = int(input("Enter EWD start year (default 2019): ") or "2019")
     ewd_year_count = int(input("Enter number of EWD yearly records (default 5): ") or "5")
+    placement_start_year = int(input("Enter placement start year (default 2019): ") or "2019")
+    placement_year_count = int(input("Enter number of placement yearly records (default 5): ") or "5")
+    companies_per_year = int(input("Enter number of companies per year (default 12): ") or "12")
     
     print("\nGenerating data files...")
     
@@ -107,7 +115,21 @@ def main():
     with open('ewd_yearwise.csv', 'w', encoding='utf-8') as f:
         generate_ewd_yearwise(f, ewd_years)
         print(f"✓ Generated ewd_yearwise.csv ({len(ewd_years)} records)")
-    
+
+    placement_years = [placement_start_year + i for i in range(max(placement_year_count, 0))]
+    if placement_years:
+        with open('placement_summary.csv', 'w', encoding='utf-8') as f:
+            generate_placement_summary(f, placement_years)
+            print(f"✓ Generated placement_summary.csv ({len(placement_years) * len(PROGRAMS) * len(GENDERS)} records)")
+
+        with open('placement_companies.csv', 'w', encoding='utf-8') as f:
+            generate_placement_companies(f, placement_years, companies_per_year=companies_per_year)
+            print(f"✓ Generated placement_companies.csv ({len(placement_years) * companies_per_year} records)")
+
+        with open('placement_packages.csv', 'w', encoding='utf-8') as f:
+            generate_placement_packages(f, placement_years)
+            print(f"✓ Generated placement_packages.csv ({len(placement_years) * len(PROGRAMS)} records)")
+ 
     print("\n✅ All data files generated successfully!")
     print("\nNote: Column names match the exact database schema:")
     print("  - Student: RollNo, Name, Program, YearOfAdmission, Batch, Branch, Department, PwD, State, Category, Gender, Status")
@@ -115,6 +137,9 @@ def main():
     print("  - Department: DeptCode, DeptName, CoursesOffered, Faculty, CourseList")
     print("  - Employee: employeeId, empName, email, phoneNumber, bloodGroup, dateOfBirth, gender, Department, currentDesignationId, isActive, Category, PWD_EXS, State")
     print("  - Faculty Engagement: engagement_code, faculty_name, engagement_type, department, startdate, enddate, duration_months, year, remarks")
+    print("  - Placement Summary: placement_year, program, gender, registered, placed")
+    print("  - Placement Companies: company_id, placement_year, company_name, sector, offers, hires, is_top_recruiter")
+    print("  - Placement Packages: placement_year, program, highest_package, lowest_package, average_package")
     print("\nImport order:")
     print("  1. designation.csv")
     print("  2. Department.csv")
@@ -125,10 +150,13 @@ def main():
     print("  7. additional_roles.csv")
     print("  8. externship_info.csv")
     print("  9. Alumini.csv")
-    print("  10. faculty_engagement.csv")
-    print("  11. igrs_yearwise.csv")
-    print("  12. icc_yearwise.csv")
-    print("  13. ewd_yearwise.csv")
+    print(" 10. faculty_engagement.csv")
+    print(" 11. igrs_yearwise.csv")
+    print(" 12. icc_yearwise.csv")
+    print(" 13. ewd_yearwise.csv")
+    print(" 14. placement_summary.csv")
+    print(" 15. placement_companies.csv")
+    print(" 16. placement_packages.csv")
 
 if __name__ == "__main__":
     main()
