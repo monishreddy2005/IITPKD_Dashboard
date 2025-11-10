@@ -15,7 +15,8 @@ const tableOptions = [
   'externship_info',
   'igrs_yearwise',
   'icc_yearwise',
-  'ewd_yearwise'
+  'ewd_yearwise',
+  'faculty_engagement'
 ];
 
 /**
