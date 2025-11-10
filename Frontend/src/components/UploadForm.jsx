@@ -16,7 +16,10 @@ const tableOptions = [
   'igrs_yearwise',
   'icc_yearwise',
   'ewd_yearwise',
-  'faculty_engagement'
+  'faculty_engagement',
+  'placement_summary',
+  'placement_companies',
+  'placement_packages'
 ];
 
 /**

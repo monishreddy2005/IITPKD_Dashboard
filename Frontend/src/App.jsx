@@ -18,6 +18,7 @@ import IgrcSection from './components/IgrcSection';
 import IccSection from './components/IccSection';
 import EwdSection from './components/EwdSection';
 import IarSection from './components/IarSection';
+import PlacementSection from './components/PlacementSection';
 
 function App() {
   // State to hold the authentication token
@@ -96,6 +97,7 @@ function App() {
           <Route path="people-campus/iar" element={<IarSection />} />
           <Route path="research" element={<Research />} />
           <Route path="education" element={<Education />} />
+          <Route path="education/placements" element={<PlacementSection />} />
           <Route path="industry-connect" element={<IndustryConnect />} />
           <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship />} />
           <Route path="outreach-extension" element={<OutreachExtension />} />
