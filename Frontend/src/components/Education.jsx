@@ -14,6 +14,7 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { Link } from 'react-router-dom';
 
 import {
   fetchFilterOptions,
@@ -37,9 +38,7 @@ const TYPE_COLORS = {
 
 const PIE_COLORS = ['#667eea', '#f59e0b', '#43e97b', '#a855f7', '#fa709a'];
 
-function formatNumber(value) {
-  return new Intl.NumberFormat('en-IN').format(value || 0);
-}
+const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function Education() {
   const [filterOptions, setFilterOptions] = useState({
@@ -60,7 +59,6 @@ function Education() {
   const [departmentData, setDepartmentData] = useState([]);
   const [yearTrendData, setYearTrendData] = useState([]);
   const [typeDistribution, setTypeDistribution] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -82,7 +80,7 @@ function Education() {
             : ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
         });
       } catch (err) {
-        console.error('Failed to fetch filter options:', err);
+        console.error('Failed to fetch education filter options:', err);
         setError(err.message || 'Failed to load filter options.');
       }
     };
@@ -90,7 +88,7 @@ function Education() {
     loadFilterOptions();
   }, [token]);
 
-  const loadData = async () => {
+  const loadEngagementData = async () => {
     if (!token) return;
     try {
       setLoading(true);
@@ -107,7 +105,7 @@ function Education() {
       setYearTrendData(trendResp?.data || []);
       setTypeDistribution(typeResp?.data || []);
     } catch (err) {
-      console.error('Failed to load education data:', err);
+      console.error('Failed to load education statistics:', err);
       setError(err.message || 'Failed to load education statistics.');
     } finally {
       setLoading(false);
@@ -115,7 +113,7 @@ function Education() {
   };
 
   useEffect(() => {
-    loadData();
+    loadEngagementData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
@@ -161,6 +159,13 @@ function Education() {
         <p>
           Monitor adjunct, honorary, visiting faculty, fellows, and PoP appointments across departments and years to
           understand IIT Palakkad&apos;s external collaboration footprint.
+        </p>
+        <p>
+          Looking for placement performance? Explore the dedicated{' '}
+          <Link className="inline-link" to="/education/placements">
+            Placements &amp; Career Outcomes
+          </Link>{' '}
+          dashboard for recruiter insights and package trends.
         </p>
 
         {error && <div className="error-message">{error}</div>}

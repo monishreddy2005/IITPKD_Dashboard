@@ -30,6 +30,9 @@ UPDATABLE_TABLES = {
     'icc_yearwise': ['complaints_year'],
     'ewd_yearwise': ['ewd_year'],
     'faculty_engagement': ['engagement_code'],
+    'placement_summary': ['placement_year', 'program', 'gender'],
+    'placement_companies': ['company_id'],
+    'placement_packages': ['placement_year', 'program'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],
@@ -120,7 +123,7 @@ def upload_csv(current_user_id):
         # Handle case-insensitive table name matching
         cur.execute(
             """
-            SELECT column_name 
+            SELECT column_name, is_generated
             FROM information_schema.columns 
             WHERE table_schema = 'public' AND LOWER(table_name) = LOWER(%s)
             ORDER BY ordinal_position;
@@ -128,15 +131,20 @@ def upload_csv(current_user_id):
             (table_name,)
         )
         db_columns_rows = cur.fetchall()
-        db_columns = [row['column_name'] for row in db_columns_rows]
+        db_columns = [
+            row['column_name']
+            for row in db_columns_rows
+            if (row.get('is_generated') or 'NEVER').upper() != 'ALWAYS'
+        ]
         
         if not db_columns:
             # Try to find the actual table name (case-insensitive)
             cur.execute(
                 """
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' AND LOWER(table_name) = LOWER(%s);
+                SELECT column_name, is_generated
+                FROM information_schema.columns 
+                WHERE table_schema = 'public' AND table_name = %s
+                ORDER BY ordinal_position;
                 """,
                 (table_name,)
             )
@@ -146,7 +154,7 @@ def upload_csv(current_user_id):
                 # Retry column fetch with correct table name
                 cur.execute(
                     """
-                    SELECT column_name 
+                    SELECT column_name, is_generated
                     FROM information_schema.columns 
                     WHERE table_schema = 'public' AND table_name = %s
                     ORDER BY ordinal_position;
@@ -154,7 +162,11 @@ def upload_csv(current_user_id):
                     (table_name,)
                 )
                 db_columns_rows = cur.fetchall()
-                db_columns = [row['column_name'] for row in db_columns_rows]
+                db_columns = [
+                    row['column_name']
+                    for row in db_columns_rows
+                    if (row.get('is_generated') or 'NEVER').upper() != 'ALWAYS'
+                ]
         
         # Normalize column names for comparison (case-insensitive)
         csv_headers_lower = [h.lower() for h in csv_headers]
