@@ -98,6 +98,8 @@ function App() {
           <Route path="research" element={<Research />} />
           <Route path="education" element={<Education />} />
           <Route path="education/placements" element={<PlacementSection />} />
+          <Route path="education/administrative-section" element={<AdministrativeSection />} />
+          <Route path="education/academic-section" element={<AcademicSection />} />
           <Route path="industry-connect" element={<IndustryConnect />} />
           <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship />} />
           <Route path="outreach-extension" element={<OutreachExtension />} />
