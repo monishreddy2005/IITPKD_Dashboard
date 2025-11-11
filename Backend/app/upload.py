@@ -35,6 +35,10 @@ UPDATABLE_TABLES = {
     'placement_packages': ['placement_year', 'program'],
     'industry_courses': ['course_id'],
     'academic_program_launch': ['program_code'],
+    'research_projects': ['project_id'],
+    'research_mous': ['mou_id'],
+    'research_patents': ['patent_id'],
+    'research_publications': ['publication_id'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],
@@ -140,35 +144,12 @@ def upload_csv(current_user_id):
         ]
         
         if not db_columns:
-            # Try to find the actual table name (case-insensitive)
-            cur.execute(
-                """
-                SELECT column_name, is_generated
-                FROM information_schema.columns 
-                WHERE table_schema = 'public' AND table_name = %s
-                ORDER BY ordinal_position;
-                """,
-                (table_name,)
-            )
-            actual_table = cur.fetchone()
-            if actual_table:
-                table_name = actual_table['table_name']
-                # Retry column fetch with correct table name
-                cur.execute(
-                    """
-                    SELECT column_name, is_generated
-                    FROM information_schema.columns 
-                    WHERE table_schema = 'public' AND table_name = %s
-                    ORDER BY ordinal_position;
-                    """,
-                    (table_name,)
+            return jsonify({
+                'message': (
+                    f"Could not determine columns for table '{table_name}'. "
+                    "Ensure the table exists and has at least one non-generated column."
                 )
-                db_columns_rows = cur.fetchall()
-                db_columns = [
-                    row['column_name']
-                    for row in db_columns_rows
-                    if (row.get('is_generated') or 'NEVER').upper() != 'ALWAYS'
-                ]
+            }), 400
         
         # Normalize column names for comparison (case-insensitive)
         csv_headers_lower = [h.lower() for h in csv_headers]
@@ -226,16 +207,19 @@ def upload_csv(current_user_id):
         # "key1", "key2", ...
         conflict_sql = ", ".join([f'"{c}"' for c in conflict_keys_db])
         
-        # "col1" = EXCLUDED."col1", "col2" = EXCLUDED."col2", ...
-        update_sql = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
+        # Build the conflict action depending on whether we have update columns
+        if update_cols:
+            update_assignments = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
+            conflict_action = f"DO UPDATE SET {update_assignments}"
+        else:
+            conflict_action = "DO NOTHING"
 
         # The final query template
         # `VALUES %s` is the placeholder for psycopg2.extras.execute_values
         query = f"""
             INSERT INTO "{table_name}" ({cols_sql})
             VALUES %s
-            ON CONFLICT ({conflict_sql}) DO UPDATE SET
-            {update_sql};
+            ON CONFLICT ({conflict_sql}) {conflict_action};
         """
         
         # Prepare the data for bulk insertion

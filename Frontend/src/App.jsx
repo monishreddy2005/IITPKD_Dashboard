@@ -20,6 +20,9 @@ import EwdSection from './components/EwdSection';
 import IarSection from './components/IarSection';
 import PlacementSection from './components/PlacementSection';
 import EducationAcademicSection from './components/EducationAcademicSection';
+import ResearchIcsrSection from './components/ResearchIcsrSection';
+import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
+import ResearchLibrarySection from './components/ResearchLibrarySection';
 
 function App() {
   // State to hold the authentication token
@@ -97,6 +100,9 @@ function App() {
           <Route path="people-campus/ewd" element={<EwdSection />} />
           <Route path="people-campus/iar" element={<IarSection />} />
           <Route path="research" element={<Research />} />
+          <Route path="research/icsr" element={<ResearchIcsrSection />} />
+          <Route path="research/administrative-section" element={<ResearchAdministrativeSection />} />
+          <Route path="research/library" element={<ResearchLibrarySection />} />
           <Route path="education" element={<Education />} />
           <Route path="education/placements" element={<PlacementSection />} />
           <Route path="education/administrative-section" element={<AdministrativeSection />} />

@@ -21,7 +21,11 @@ const tableOptions = [
   'placement_companies',
   'placement_packages',
   'industry_courses',
-  'academic_program_launch'
+  'academic_program_launch',
+  'research_projects',
+  'research_mous',
+  'research_patents',
+  'research_publications'
 ];
 
 /**

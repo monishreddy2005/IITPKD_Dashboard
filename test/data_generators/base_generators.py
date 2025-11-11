@@ -35,6 +35,38 @@ EMPLOYMENT_APPOINTMENTS = ['Regular', 'Contract', 'Temporary', 'Visiting', 'Adho
 ROLE_STATUSES = ['Active', 'Relieved']
 PLACEMENT_OUTCOMES = ['HigherStudies', 'Corporate', 'Entrepreneurship', 'Other']
 ENGAGEMENT_TYPES = ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
+FUNDING_AGENCIES = [
+    'DST', 'SERB', 'MeitY', 'DRDO', 'CSIR', 'DBT', 'ISRO', 'AICTE', 'UGC', 'Industry CSR', 'World Bank', 'UNDP'
+]
+CONSULTANCY_CLIENTS = [
+    'Kerala PWD', 'Metro Rail Corporation', 'Tata Consultancy Services', 'Infosys', 'ABB India', 'Bosch', 'L&T Construction',
+    'Adani Group', 'Reliance Industries', 'Hero Motors', 'Indian Railways', 'Bharat Electronics Limited'
+]
+COLLABORATION_THEMES = [
+    'Joint Research & Development',
+    'Student Exchange & Training',
+    'Faculty Development Programme',
+    'Technology Transfer',
+    'Innovation & Entrepreneurship Support',
+    'Laboratory Co-Development',
+    'Knowledge Sharing'
+]
+MOU_PARTNERS = [
+    'IIT Madras', 'IIT Bombay', 'IISc Bangalore', 'IIM Kozhikode', 'NIT Calicut', 'NIT Trichy', 'Texas A&M University',
+    'National University of Singapore', 'Siemens', 'IBM Research', 'Bosch Global Software', 'ISRO Space Applications Centre'
+]
+PATENT_THEMES = ['Smart Grid', 'Biodegradable Polymers', 'AI Diagnostics', 'Nano Sensors', 'Water Purification', 'Robotics', 'Edge Computing', 'Battery Technology']
+JOURNAL_NAMES = [
+    'IEEE Transactions on Industrial Electronics',
+    'Nature Communications',
+    'Journal of Applied Physics',
+    'ACM Transactions on Embedded Systems',
+    'International Journal of Robotics Research',
+    'Renewable Energy Letters',
+    'Chemical Engineering Journal',
+    'Materials Today',
+    'Environmental Science and Technology'
+]
 
 FIRST_NAMES = [
     'Arjun', 'Divya', 'Rahul', 'Sneha', 'Pranav', 'Nisha', 'Rohit', 'Lakshmi', 'Kiran', 'Asha', 'Naveen', 'Pooja',
@@ -562,6 +594,120 @@ def generate_placement_packages(
             file.write(f"{year},{prog},{highest},{lowest},{average}\n")
 
 
+def generate_research_projects(
+    file,
+    count: int,
+    start_year: int = 2016,
+    end_year: Optional[int] = None
+) -> None:
+    file.write(
+        'project_id,project_title,principal_investigator,department,project_type,funding_agency,client_organization,'
+        'amount_sanctioned,start_date,end_date,status,created_at\n'
+    )
+    current_year = end_year or datetime.now().year
+    for idx in range(count):
+        project_id = idx + 1
+        proj_type = random.choice(['Funded', 'Consultancy'])
+        pi_name = random_name()
+        dept = random.choice(DEFAULT_EMPLOYEE_DEPARTMENTS)
+        start_dt = random_date(start_year, current_year)
+        status_val = random.choice(['Ongoing', 'Completed'])
+        end_date_str = ''
+        if status_val == 'Completed':
+            potential_end = random_date_after(start_dt, max_days=720)
+            if potential_end.year <= current_year:
+                end_date_str = _iso(potential_end)
+        if proj_type == 'Funded':
+            funding_agency = random.choice(FUNDING_AGENCIES)
+            client = ''
+        else:
+            funding_agency = ''
+            client = random.choice(CONSULTANCY_CLIENTS)
+        amount = round(random.uniform(1_000_000, 75_000_000), 2)
+        project_title = f"{proj_type} Project on {random.choice(PATENT_THEMES)} {project_id:03d}"
+        created_at = _timestamp()
+        file.write(
+            f"{project_id},{project_title},{pi_name},{dept},{proj_type},{funding_agency},{client},{amount},"
+            f"{_iso(start_dt)},{end_date_str},{status_val},{created_at}\n"
+        )
+
+
+def generate_research_mous(
+    file,
+    count: int,
+    start_year: int = 2016,
+    end_year: Optional[int] = None
+) -> None:
+    file.write('mou_id,partner_name,collaboration_nature,date_signed,validity_end,remarks\n')
+    current_year = end_year or datetime.now().year
+    for idx in range(count):
+        mou_id = idx + 1
+        partner = random.choice(MOU_PARTNERS)
+        nature = random.choice(COLLABORATION_THEMES)
+        date_signed = random_date(start_year, current_year)
+        validity_end = ''
+        if random.choice([True, False]):
+            validity_years = random.randint(1, 5)
+            validity_date = date_signed + timedelta(days=365 * validity_years)
+            validity_end = _iso(validity_date)
+        remarks = random.choice(['', 'Focus on joint labs', 'Student exchange pathway', 'Industry immersion modules'])
+        file.write(f"{mou_id},{partner},{nature},{_iso(date_signed)},{validity_end},{remarks}\n")
+
+
+def generate_research_patents(
+    file,
+    count: int,
+    start_year: int = 2016,
+    end_year: Optional[int] = None
+) -> None:
+    file.write('patent_id,patent_title,inventors,patent_status,filing_date,grant_date,remarks\n')
+    current_year = end_year or datetime.now().year
+    statuses = ['Filed', 'Granted', 'Published']
+    for idx in range(count):
+        patent_id = idx + 1
+        theme = random.choice(PATENT_THEMES)
+        title = f"{theme} System {patent_id:03d}"
+        inventor_count = random.randint(2, 4)
+        inventors = '; '.join([random_name() for _ in range(inventor_count)])
+        status_val = random.choice(statuses)
+        filing_dt = random_date(start_year, current_year)
+        grant_str = ''
+        if status_val == 'Granted':
+            grant_dt = random_date_after(filing_dt, max_days=720)
+            if grant_dt.year <= current_year:
+                grant_str = _iso(grant_dt)
+        remarks = random.choice(['', 'Technology transfer in progress', 'International filing'])
+        file.write(
+            f"{patent_id},{title},{inventors},{status_val},{_iso(filing_dt)},{grant_str},{remarks}\n"
+        )
+
+
+def generate_research_publications(
+    file,
+    years: Sequence[int],
+    departments: Optional[Sequence[str]] = None,
+    publications_per_year: int = 40
+) -> None:
+    file.write(
+        'publication_id,publication_title,journal_name,department,faculty_name,publication_year,publication_type,created_at\n'
+    )
+    dept_pool = list(departments or DEFAULT_EMPLOYEE_DEPARTMENTS)
+    publication_id = 1
+    publication_types = ['Journal', 'Conference', 'Book Chapter', 'Monograph']
+    for year in years:
+        for idx in range(publications_per_year):
+            pub_type = random.choice(publication_types)
+            dept = random.choice(dept_pool)
+            faculty = random_name()
+            title = f"{pub_type} on {random.choice(PATENT_THEMES)} {year}-{idx:02d}"
+            journal = random.choice(JOURNAL_NAMES)
+            created = _timestamp()
+            file.write(
+                f"{publication_id},{title},{journal},{dept},{faculty},{year},{pub_type},{created}\n"
+            )
+            publication_id += 1
+
+
 def generate_industry_courses(
     file,
     years: Sequence[int],
@@ -623,6 +769,10 @@ __all__ = [
     'generate_placement_summary',
     'generate_placement_companies',
     'generate_placement_packages',
+    'generate_research_projects',
+    'generate_research_mous',
+    'generate_research_patents',
+    'generate_research_publications',
     'generate_industry_courses',
     'generate_academic_program_launch',
     'generate_employee_id',
