@@ -33,6 +33,8 @@ UPDATABLE_TABLES = {
     'placement_summary': ['placement_year', 'program', 'gender'],
     'placement_companies': ['company_id'],
     'placement_packages': ['placement_year', 'program'],
+    'industry_courses': ['course_id'],
+    'academic_program_launch': ['program_code'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],

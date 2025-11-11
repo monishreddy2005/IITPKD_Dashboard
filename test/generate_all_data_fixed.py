@@ -19,6 +19,8 @@ from data_generators.base_generators import (
     generate_placement_summary,
     generate_placement_companies,
     generate_placement_packages,
+    generate_industry_courses,
+    generate_academic_program_launch,
 )
 def main():
     print("=== Database Dummy Data Generator (Fixed Schema) ===\n")
@@ -42,6 +44,10 @@ def main():
     placement_start_year = int(input("Enter placement start year (default 2019): ") or "2019")
     placement_year_count = int(input("Enter number of placement yearly records (default 5): ") or "5")
     companies_per_year = int(input("Enter number of companies per year (default 12): ") or "12")
+    industry_course_year_count = int(input("Enter number of years for industry courses (default 5): ") or "5")
+    courses_per_year = int(input("Enter number of industry courses per year (default 10): ") or "10")
+    program_year_count = int(input("Enter number of program launch years (default 5): ") or "5")
+    programs_per_year = int(input("Enter number of programs introduced per year (default 6): ") or "6")
     
     print("\nGenerating data files...")
     
@@ -129,6 +135,18 @@ def main():
         with open('placement_packages.csv', 'w', encoding='utf-8') as f:
             generate_placement_packages(f, placement_years)
             print(f"✓ Generated placement_packages.csv ({len(placement_years) * len(PROGRAMS)} records)")
+
+    industry_years = [placement_start_year + i for i in range(max(industry_course_year_count, 0))]
+    if industry_years:
+        with open('industry_courses.csv', 'w', encoding='utf-8') as f:
+            generate_industry_courses(f, industry_years, DEFAULT_EMPLOYEE_DEPARTMENTS, courses_per_year=courses_per_year)
+            print(f"✓ Generated industry_courses.csv ({len(industry_years) * courses_per_year} records)")
+
+    program_years = [placement_start_year + i for i in range(max(program_year_count, 0))]
+    if program_years:
+        with open('academic_program_launch.csv', 'w', encoding='utf-8') as f:
+            generate_academic_program_launch(f, program_years, programs_per_year=programs_per_year)
+            print(f"✓ Generated academic_program_launch.csv ({len(program_years) * programs_per_year} records)")
  
     print("\n✅ All data files generated successfully!")
     print("\nNote: Column names match the exact database schema:")
@@ -157,6 +175,8 @@ def main():
     print(" 14. placement_summary.csv")
     print(" 15. placement_companies.csv")
     print(" 16. placement_packages.csv")
+    print(" 17. industry_courses.csv")
+    print(" 18. academic_program_launch.csv")
 
 if __name__ == "__main__":
     main()

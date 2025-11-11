@@ -562,6 +562,46 @@ def generate_placement_packages(
             file.write(f"{year},{prog},{highest},{lowest},{average}\n")
 
 
+def generate_industry_courses(
+    file,
+    years: Sequence[int],
+    departments: Optional[Sequence[str]] = None,
+    courses_per_year: int = 10
+) -> None:
+    file.write('course_id,course_title,department,industry_partner,year_offered,is_active\n')
+    dept_pool = list(departments or DEFAULT_EMPLOYEE_DEPARTMENTS)
+    course_id = 1
+    for year in years:
+        for _ in range(courses_per_year):
+            dept = random.choice(dept_pool)
+            course_title = f"Industry Project on {random.choice(['AI', 'Robotics', 'Energy', 'Materials', 'Analytics', 'Automation'])} {course_id}"
+            industry_partner = random.choice([
+                'Infosys', 'TCS', 'Bosch', 'Wipro', 'Honeywell', 'Reliance Industries', 'L&T', 'IBM', 'Siemens', 'Caterpillar',
+                'Shell', 'GE Healthcare', 'ABB', 'Hitachi', 'Schneider Electric'
+            ])
+            is_active = random.choice(['TRUE', 'FALSE', 'TRUE'])
+            file.write(f"{course_id},{course_title},{dept},{industry_partner},{year},{is_active}\n")
+            course_id += 1
+
+
+def generate_academic_program_launch(
+    file,
+    years: Sequence[int],
+    program_types: Optional[Sequence[str]] = None,
+    programs_per_year: int = 6
+) -> None:
+    file.write('program_code,program_name,program_type,department,launch_year,oelp_students\n')
+    type_pool = list(program_types or ['UG', 'PG', 'Certificate', 'Interdisciplinary'])
+    for year in years:
+        for idx in range(programs_per_year):
+            program_type = random.choice(type_pool)
+            dept = random.choice(DEFAULT_EMPLOYEE_DEPARTMENTS + ['Interdisciplinary Studies'])
+            program_code = f"PROG{year}{idx:02d}"
+            program_name = f"{program_type} Programme in {random.choice(['Data Science', 'Cybersecurity', 'Robotics', 'Clean Energy', 'Smart Manufacturing', 'AI Ethics', 'Sustainable Design', 'Quantum Computing'])}"
+            oelp_students = random.randint(0, 40) if program_type in ('UG', 'PG') else random.randint(0, 15)
+            file.write(f"{program_code},{program_name},{program_type},{dept},{year},{oelp_students}\n")
+
+
 __all__ = [
     'DEFAULT_DEPARTMENT_CODES',
     'DEFAULT_EMPLOYEE_DEPARTMENTS',
@@ -583,6 +623,8 @@ __all__ = [
     'generate_placement_summary',
     'generate_placement_companies',
     'generate_placement_packages',
+    'generate_industry_courses',
+    'generate_academic_program_launch',
     'generate_employee_id',
     'random_name',
 ]

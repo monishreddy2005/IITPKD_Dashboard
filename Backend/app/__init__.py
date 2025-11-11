@@ -52,6 +52,7 @@ def create_app():
     from . import iar_stats
     from . import education_stats
     from . import placement_stats
+    from . import academic_module
 
     # Register the blueprints
     # All routes from auth.py will be prefixed with /auth
@@ -81,6 +82,7 @@ def create_app():
     # Register Education blueprint
     app.register_blueprint(education_stats.education_bp, url_prefix='/api/education')
     app.register_blueprint(placement_stats.placement_bp, url_prefix='/api/placement')
+    app.register_blueprint(academic_module.academic_module_bp, url_prefix='/api/academic-module')
     
     # A simple test route
     @app.route('/health')
