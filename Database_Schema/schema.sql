@@ -165,7 +165,7 @@ CREATE TABLE designation (
 );
 
 
-CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other');
+CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other', 'Transgender');
 
 CREATE TABLE employee (
     employeeid SERIAL PRIMARY KEY,
