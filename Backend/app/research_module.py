@@ -19,6 +19,7 @@ research_bp = Blueprint('research_module', __name__)
 
 
 def _table_exists(conn, table_name: str) -> bool:
+    """Check if a table exists in the database."""
     cur = conn.cursor()
     try:
         cur.execute(
@@ -27,12 +28,18 @@ def _table_exists(conn, table_name: str) -> bool:
                 SELECT 1
                 FROM information_schema.tables
                 WHERE table_schema = 'public'
-                  AND table_name = %s
+                  AND LOWER(table_name) = LOWER(%s)
             )
             """,
             (table_name,),
         )
-        return bool(cur.fetchone()[0])
+        result = cur.fetchone()
+        # Handle both tuple and dict cursors
+        if isinstance(result, dict):
+            return bool(result.get('exists', False))
+        return bool(result[0] if result else False)
+    except Exception:
+        return False
     finally:
         cur.close()
 
