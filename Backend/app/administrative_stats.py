@@ -171,20 +171,20 @@ def get_faculty_by_department_designation(current_user_id):
         
         # Query to get faculty by department and designation
         # Assuming faculty is identified by cadre containing 'Faculty' or designationcategory
-        faculty_condition = "(d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
         if where_clause:
             where_clause += f" AND {faculty_condition}"
         else:
             where_clause = f"WHERE {faculty_condition}"
         
-        query = f"""
+        query = """
             SELECT 
                 COALESCE(e.department, 'Unknown') as department,
                 COALESCE(d.designationname, 'Unknown') as designation,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.department, d.designationname
             ORDER BY e.department, d.designationname;
         """
@@ -272,26 +272,26 @@ def get_staff_count(current_user_id):
         
         # Query to get staff count by type (technical vs administrative)
         # Assuming staff is identified by NOT being faculty
-        staff_condition = "(d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
         if where_clause:
             where_clause += f" AND {staff_condition}"
         else:
             where_clause = f"WHERE {staff_condition}"
         
-        query = f"""
+        query = """
             SELECT 
                 CASE 
-                    WHEN d.designationcategory ILIKE '%Technical%' OR d.designationname ILIKE '%Technical%' THEN 'Technical'
-                    WHEN d.designationcategory ILIKE '%Administrative%' OR d.designationname ILIKE '%Administrative%' THEN 'Administrative'
-                    WHEN d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' 
-                        AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' 
-                        AND d.designationname NOT ILIKE '%Associate%' THEN 'Administrative'
+                    WHEN d.designationcategory ILIKE '%%Technical%%' OR d.designationname ILIKE '%%Technical%%' THEN 'Technical'
+                    WHEN d.designationcategory ILIKE '%%Administrative%%' OR d.designationname ILIKE '%%Administrative%%' THEN 'Administrative'
+                    WHEN d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' 
+                        AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' 
+                        AND d.designationname NOT ILIKE '%%Associate%%' THEN 'Administrative'
                     ELSE 'Other'
                 END as staff_type,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY staff_type
             ORDER BY staff_type;
         """
@@ -394,6 +394,11 @@ def get_gender_distribution(current_user_id):
         """
         
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Debug: Print query and params to diagnose the issue
+        print(f"DEBUG: Query: {query}")
+        print(f"DEBUG: Params: {params}")
+        print(f"DEBUG: Params count: {len(params)}")
+        print(f"DEBUG: %s count in query: {query.count('%s')}")
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -489,6 +494,11 @@ def get_category_distribution(current_user_id):
         """
         
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Debug: Print query and params to diagnose the issue
+        print(f"DEBUG: Query: {query}")
+        print(f"DEBUG: Params: {params}")
+        print(f"DEBUG: Params count: {len(params)}")
+        print(f"DEBUG: %s count in query: {query.count('%s')}")
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -553,20 +563,20 @@ def get_department_breakdown(current_user_id):
             params.append(True)
         
         # Query to get department breakdown with gender and employee type
-        query = f"""
+        query = """
             SELECT 
                 COALESCE(e.department, 'Unknown') as department,
                 e.gender,
                 CASE 
-                    WHEN d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' 
-                        OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' 
-                        OR d.designationname ILIKE '%Associate%' THEN 'Faculty'
+                    WHEN d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' 
+                        OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' 
+                        OR d.designationname ILIKE '%%Associate%%' THEN 'Faculty'
                     ELSE 'Staff'
                 END as employee_type,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.department, e.gender, employee_type
             ORDER BY e.department, e.gender, employee_type;
         """
