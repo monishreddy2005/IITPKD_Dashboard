@@ -122,7 +122,28 @@ def upload_csv(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        # First, check if the table exists
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND LOWER(table_name) = LOWER(%s)
+            ) AS table_exists;
+            """,
+            (table_name,)
+        )
+        table_exists_result = cur.fetchone()
+        if not table_exists_result or not table_exists_result.get('table_exists'):
+            return jsonify({
+                'message': (
+                    f"Table '{table_name}' does not exist in the database. "
+                    "Please ensure the table has been created by running the schema migration."
+                )
+            }), 400
         
         # Get the actual column names for this table from the database
         # We query information_schema.columns to get metadata
@@ -144,11 +165,24 @@ def upload_csv(current_user_id):
         ]
         
         if not db_columns:
+            # Provide more diagnostic information
+            all_columns = [row['column_name'] for row in db_columns_rows]
+            generated_columns = [
+                row['column_name'] 
+                for row in db_columns_rows 
+                if (row.get('is_generated') or 'NEVER').upper() == 'ALWAYS'
+            ]
             return jsonify({
                 'message': (
-                    f"Could not determine columns for table '{table_name}'. "
-                    "Ensure the table exists and has at least one non-generated column."
-                )
+                    f"Could not determine uploadable columns for table '{table_name}'. "
+                    "All columns appear to be generated or the table has no columns."
+                ),
+                'details': {
+                    'total_columns_found': len(db_columns_rows),
+                    'all_columns': all_columns,
+                    'generated_columns': generated_columns,
+                    'suggestion': 'Ensure the table exists and has at least one non-generated column that can be updated via CSV.'
+                }
             }), 400
         
         # Normalize column names for comparison (case-insensitive)
