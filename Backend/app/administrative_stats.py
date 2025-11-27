@@ -337,6 +337,7 @@ def get_staff_count(current_user_id):
 def get_gender_distribution(current_user_id):
     """Fetches gender-wise distribution for faculty and staff."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -370,35 +371,33 @@ def get_gender_distribution(current_user_id):
             params.append(True)
         
         # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
         if employee_type == 'Faculty':
             if where_clause:
-                where_clause += " AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause += f" AND {faculty_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause = f"WHERE {faculty_condition}"
         elif employee_type == 'Staff':
             if where_clause:
-                where_clause += " AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause += f" AND {staff_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause = f"WHERE {staff_condition}"
         
         # Query to get gender distribution
-        query = f"""
+        query = """
             SELECT 
                 e.gender,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.gender
             ORDER BY e.gender;
         """
         
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        # Debug: Print query and params to diagnose the issue
-        print(f"DEBUG: Query: {query}")
-        print(f"DEBUG: Params: {params}")
-        print(f"DEBUG: Params count: {len(params)}")
-        print(f"DEBUG: %s count in query: {query.count('%s')}")
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -425,11 +424,14 @@ def get_gender_distribution(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching gender distribution: {e}")
-        return jsonify({'message': 'An error occurred while fetching gender distribution.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching gender distribution: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/category-distribution', methods=['GET'])
@@ -437,6 +439,7 @@ def get_gender_distribution(current_user_id):
 def get_category_distribution(current_user_id):
     """Fetches category-wise distribution for faculty and staff."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -470,35 +473,33 @@ def get_category_distribution(current_user_id):
             params.append(True)
         
         # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
         if employee_type == 'Faculty':
             if where_clause:
-                where_clause += " AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause += f" AND {faculty_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause = f"WHERE {faculty_condition}"
         elif employee_type == 'Staff':
             if where_clause:
-                where_clause += " AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause += f" AND {staff_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause = f"WHERE {staff_condition}"
         
         # Query to get category distribution
-        query = f"""
+        query = """
             SELECT 
                 COALESCE(e.category, 'Not Specified') as category,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.category
             ORDER BY e.category;
         """
         
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        # Debug: Print query and params to diagnose the issue
-        print(f"DEBUG: Query: {query}")
-        print(f"DEBUG: Params: {params}")
-        print(f"DEBUG: Params count: {len(params)}")
-        print(f"DEBUG: %s count in query: {query.count('%s')}")
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -519,11 +520,14 @@ def get_category_distribution(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching category distribution: {e}")
-        return jsonify({'message': 'An error occurred while fetching category distribution.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching category distribution: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/department-breakdown', methods=['GET'])
