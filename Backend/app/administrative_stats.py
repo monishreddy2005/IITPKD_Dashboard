@@ -134,6 +134,7 @@ def get_filter_options(current_user_id):
 def get_faculty_by_department_designation(current_user_id):
     """Fetches faculty count by department and designation."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -216,11 +217,14 @@ def get_faculty_by_department_designation(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching faculty by department: {e}")
-        return jsonify({'message': 'An error occurred while fetching faculty data.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching faculty data: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/staff-count', methods=['GET'])
@@ -228,6 +232,7 @@ def get_faculty_by_department_designation(current_user_id):
 def get_staff_count(current_user_id):
     """Fetches staff count (technical and administrative)."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -309,11 +314,14 @@ def get_staff_count(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching staff count: {e}")
-        return jsonify({'message': 'An error occurred while fetching staff data.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching staff data: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/gender-distribution', methods=['GET'])
@@ -505,6 +513,7 @@ def get_category_distribution(current_user_id):
 def get_department_breakdown(current_user_id):
     """Fetches department-wise breakdown with gender and employee type."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -595,10 +604,13 @@ def get_department_breakdown(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching department breakdown: {e}")
-        return jsonify({'message': 'An error occurred while fetching department breakdown.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching department breakdown: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
