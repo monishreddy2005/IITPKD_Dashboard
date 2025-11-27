@@ -163,7 +163,7 @@ def _build_publication_filters(
 
 @research_bp.route('/filter-options', methods=['GET'])
 @token_required
-def get_filter_options(_current_user):
+def get_filter_options(current_user_id):
     conn = None
     cur = None
     try:
@@ -280,7 +280,7 @@ def get_filter_options(_current_user):
 
 @research_bp.route('/summary', methods=['GET'])
 @token_required
-def get_summary(_current_user):
+def get_summary(current_user_id):
     conn = None
     cur = None
     try:
@@ -370,7 +370,7 @@ def get_summary(_current_user):
 
 @research_bp.route('/projects/trend', methods=['GET'])
 @token_required
-def funded_project_trend(_current_user):
+def funded_project_trend(current_user_id):
     conn = None
     cur = None
     try:
@@ -419,7 +419,7 @@ def funded_project_trend(_current_user):
 
 @research_bp.route('/projects/list', methods=['GET'])
 @token_required
-def project_list(_current_user):
+def project_list(current_user_id):
     conn = None
     cur = None
     try:
@@ -479,7 +479,7 @@ def project_list(_current_user):
 
 @research_bp.route('/consultancy/revenue-trend', methods=['GET'])
 @token_required
-def consultancy_revenue_trend(_current_user):
+def consultancy_revenue_trend(current_user_id):
     conn = None
     cur = None
     try:
@@ -528,7 +528,7 @@ def consultancy_revenue_trend(_current_user):
 
 @research_bp.route('/mous/list', methods=['GET'])
 @token_required
-def mou_list(_current_user):
+def mou_list(current_user_id):
     conn = None
     cur = None
     try:
@@ -575,7 +575,7 @@ def mou_list(_current_user):
 
 @research_bp.route('/mous/trend', methods=['GET'])
 @token_required
-def mou_trend(_current_user):
+def mou_trend(current_user_id):
     conn = None
     cur = None
     try:
@@ -611,7 +611,7 @@ def mou_trend(_current_user):
 
 @research_bp.route('/patents/stats', methods=['GET'])
 @token_required
-def patent_stats(_current_user):
+def patent_stats(current_user_id):
     conn = None
     cur = None
     try:
@@ -671,7 +671,7 @@ def patent_stats(_current_user):
 
 @research_bp.route('/patents/list', methods=['GET'])
 @token_required
-def patent_list(_current_user):
+def patent_list(current_user_id):
     conn = None
     cur = None
     try:
@@ -721,7 +721,7 @@ def patent_list(_current_user):
 
 @research_bp.route('/externships/summary', methods=['GET'])
 @token_required
-def externship_summary(_current_user):
+def externship_summary(current_user_id):
     conn = None
     cur = None
     try:
@@ -812,7 +812,7 @@ def externship_summary(_current_user):
 
 @research_bp.route('/externships/list', methods=['GET'])
 @token_required
-def externship_list(_current_user):
+def externship_list(current_user_id):
     conn = None
     cur = None
     try:
@@ -885,7 +885,7 @@ def externship_list(_current_user):
 
 @research_bp.route('/publications/summary', methods=['GET'])
 @token_required
-def publication_summary(_current_user):
+def publication_summary(current_user_id):
     conn = None
     cur = None
     try:
@@ -936,7 +936,7 @@ def publication_summary(_current_user):
 
 @research_bp.route('/publications/trend', methods=['GET'])
 @token_required
-def publication_trend(_current_user):
+def publication_trend(current_user_id):
     conn = None
     cur = None
     try:
@@ -972,7 +972,7 @@ def publication_trend(_current_user):
 
 @research_bp.route('/publications/department', methods=['GET'])
 @token_required
-def publication_by_department(_current_user):
+def publication_by_department(current_user_id):
     conn = None
     cur = None
     try:
@@ -1008,7 +1008,7 @@ def publication_by_department(_current_user):
 
 @research_bp.route('/publications/type-distribution', methods=['GET'])
 @token_required
-def publication_type_distribution(_current_user):
+def publication_type_distribution(current_user_id):
     conn = None
     cur = None
     try:
@@ -1042,7 +1042,7 @@ def publication_type_distribution(_current_user):
 
 @research_bp.route('/publications/list', methods=['GET'])
 @token_required
-def publication_list(_current_user):
+def publication_list(current_user_id):
     conn = None
     cur = None
     try:
