@@ -148,21 +148,47 @@ def upload_csv(current_user_id):
         # Get the actual column names for this table from the database
         # We query information_schema.columns to get metadata
         # Handle case-insensitive table name matching
+        # Also check for SERIAL columns (columns with sequence defaults)
         cur.execute(
             """
-            SELECT column_name, is_generated
-            FROM information_schema.columns 
-            WHERE table_schema = 'public' AND LOWER(table_name) = LOWER(%s)
-            ORDER BY ordinal_position;
+            SELECT 
+                c.column_name, 
+                c.is_generated,
+                c.column_default,
+                c.data_type
+            FROM information_schema.columns c
+            WHERE c.table_schema = 'public' AND LOWER(c.table_name) = LOWER(%s)
+            ORDER BY c.ordinal_position;
             """,
             (table_name,)
         )
         db_columns_rows = cur.fetchall()
-        db_columns = [
-            row['column_name']
-            for row in db_columns_rows
-            if (row.get('is_generated') or 'NEVER').upper() != 'ALWAYS'
-        ]
+        
+        # Filter out generated columns and SERIAL columns (columns with sequence defaults)
+        # Also track which columns are SERIAL so we can allow them in CSV (they'll be ignored)
+        db_columns = []
+        serial_columns = []
+        for row in db_columns_rows:
+            column_name = row['column_name']
+            is_generated = (row.get('is_generated') or 'NEVER').upper()
+            column_default = row.get('column_default') or ''
+            data_type = row.get('data_type') or ''
+            
+            # Skip if it's a generated column
+            if is_generated == 'ALWAYS':
+                continue
+            
+            # Check if it's a SERIAL column (has a sequence default like "nextval('table_column_seq'::regclass)")
+            is_serial = (
+                column_default.startswith("nextval(") or
+                (data_type in ('integer', 'bigint', 'smallint') and 'nextval' in column_default.lower())
+            )
+            
+            if is_serial:
+                serial_columns.append(column_name)
+                continue
+            
+            db_columns.append(column_name)
         
         if not db_columns:
             # Provide more diagnostic information
@@ -189,20 +215,46 @@ def upload_csv(current_user_id):
         csv_headers_lower = [h.lower() for h in csv_headers]
         db_columns_lower = [c.lower() for c in db_columns]
         
-        # Compare the sets of columns (case-insensitive)
-        if set(csv_headers_lower) != set(db_columns_lower):
-            # Sets don't match, return a detailed error
-            missing_in_csv = [db_columns[i] for i, col in enumerate(db_columns_lower) if col not in csv_headers_lower]
-            extra_in_csv = [csv_headers[i] for i, col in enumerate(csv_headers_lower) if col not in db_columns_lower]
+        # Get all column names from database (including SERIAL/generated) for reference
+        all_db_columns = [row['column_name'] for row in db_columns_rows]
+        all_db_columns_lower = [c.lower() for c in all_db_columns]
+        
+        # Check if CSV has all required columns (db_columns must be in CSV)
+        missing_in_csv = [db_columns[i] for i, col in enumerate(db_columns_lower) if col not in csv_headers_lower]
+        if missing_in_csv:
             return jsonify({
-                'message': 'Column mismatch.',
+                'message': 'Column mismatch: CSV is missing required columns.',
                 'details': {
                     'missing_in_csv': missing_in_csv,
-                    'extra_in_csv': extra_in_csv,
                     'expected_columns': db_columns,
-                    'received_columns': csv_headers
+                    'received_columns': csv_headers,
+                    'note': 'SERIAL columns (like employeeid) are auto-generated and should be excluded from CSV, or will be ignored if present.'
                 }
             }), 400
+        
+        # Check for extra columns in CSV that don't exist in database at all
+        # Allow SERIAL columns in CSV (they'll be ignored during insert)
+        serial_columns_lower = [c.lower() for c in serial_columns]
+        extra_in_csv = [
+            csv_headers[i] 
+            for i, col in enumerate(csv_headers_lower) 
+            if col not in all_db_columns_lower and col not in serial_columns_lower
+        ]
+        if extra_in_csv:
+            return jsonify({
+                'message': 'Column mismatch: CSV contains columns that do not exist in the database.',
+                'details': {
+                    'extra_in_csv': extra_in_csv,
+                    'expected_columns': db_columns,
+                    'received_columns': csv_headers,
+                    'all_database_columns': all_db_columns,
+                    'serial_columns_ignored': serial_columns,
+                    'note': 'SERIAL columns (like employeeid) are auto-generated and will be ignored if present in CSV.'
+                }
+            }), 400
+        
+        # If CSV has SERIAL columns that we filtered out, that's okay - we'll just ignore them
+        # This is handled in the data preparation step below
         
         # Map CSV headers to DB column names (handle case differences)
         csv_to_db_map = {}
