@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from .db import get_db_connection
 from .auth import token_required
+import psycopg2.extras
 
 administrative_bp = Blueprint('administrative', __name__)
 
@@ -73,7 +74,7 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Get distinct values for each field
         filter_options = {}
@@ -182,7 +183,7 @@ def get_faculty_by_department_designation(current_user_id):
             ORDER BY e.department, d.designationname;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -282,7 +283,7 @@ def get_staff_count(current_user_id):
             ORDER BY staff_type;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -376,7 +377,7 @@ def get_gender_distribution(current_user_id):
             ORDER BY e.gender;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -471,7 +472,7 @@ def get_category_distribution(current_user_id):
             ORDER BY e.category;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -553,7 +554,7 @@ def get_department_breakdown(current_user_id):
             ORDER BY e.department, e.gender, employee_type;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
