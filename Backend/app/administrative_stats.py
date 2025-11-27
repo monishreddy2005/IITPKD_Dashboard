@@ -171,6 +171,12 @@ def get_faculty_by_department_designation(current_user_id):
         
         # Query to get faculty by department and designation
         # Assuming faculty is identified by cadre containing 'Faculty' or designationcategory
+        faculty_condition = "(d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+        if where_clause:
+            where_clause += f" AND {faculty_condition}"
+        else:
+            where_clause = f"WHERE {faculty_condition}"
+        
         query = f"""
             SELECT 
                 COALESCE(e.department, 'Unknown') as department,
@@ -179,7 +185,6 @@ def get_faculty_by_department_designation(current_user_id):
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
             {where_clause}
-            AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')
             GROUP BY e.department, d.designationname
             ORDER BY e.department, d.designationname;
         """
@@ -267,6 +272,12 @@ def get_staff_count(current_user_id):
         
         # Query to get staff count by type (technical vs administrative)
         # Assuming staff is identified by NOT being faculty
+        staff_condition = "(d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+        if where_clause:
+            where_clause += f" AND {staff_condition}"
+        else:
+            where_clause = f"WHERE {staff_condition}"
+        
         query = f"""
             SELECT 
                 CASE 
@@ -281,9 +292,6 @@ def get_staff_count(current_user_id):
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
             {where_clause}
-            AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' 
-                AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' 
-                AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)
             GROUP BY staff_type
             ORDER BY staff_type;
         """
