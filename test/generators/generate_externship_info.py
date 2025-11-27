@@ -54,7 +54,7 @@ def resolve_employee_ids(args):
         return load_column_from_csv(Path(args.employee_csv), args.employee_column)
     if args.employee_ids:
         return [value.strip() for value in args.employee_ids.split(',') if value.strip()]
-    raise SystemExit("Provide employee IDs via --employee-ids or --employee-csv.")
+    return None  # Employee IDs are optional - employeeid can be NULL in the database
 
 
 def main():

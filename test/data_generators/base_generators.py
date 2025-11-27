@@ -437,13 +437,13 @@ def generate_additional_roles(
         )
 
 
-def generate_externship_info(file, count: int, employee_ids: Sequence[str]) -> None:
+def generate_externship_info(file, count: int, employee_ids: Optional[Sequence[str]] = None) -> None:
     file.write(
         'externid,employeeid,empname,department,industry_name,startdate,enddate,type,remarks,createddate,modifieddate\n'
     )
     for idx in range(count):
         extern_id = idx + 1
-        emp_id = random.choice(employee_ids)
+        emp_id = random.choice(employee_ids) if employee_ids else ''
         emp_name = random_name()
         dept = department()
         industry = random.choice([
