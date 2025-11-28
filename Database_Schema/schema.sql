@@ -48,6 +48,86 @@ CREATE TABLE department (
 );
 
 
+CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
+
+
+CREATE TABLE industry_courses (
+    course_id SERIAL PRIMARY KEY,
+    course_title VARCHAR(200) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    industry_partner VARCHAR(150),
+    year_offered INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+
+CREATE TABLE academic_program_launch (
+    program_code VARCHAR(50) PRIMARY KEY,
+    program_name VARCHAR(150) NOT NULL,
+    program_type academic_program_type NOT NULL,
+    department VARCHAR(100),
+    launch_year INT NOT NULL,
+    oelp_students INT DEFAULT 0,
+    CHECK (oelp_students >= 0)
+);
+
+
+CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
+CREATE TYPE project_status_type AS ENUM ('Ongoing', 'Completed');
+CREATE TYPE patent_status_type AS ENUM ('Filed', 'Granted', 'Published');
+CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+
+
+CREATE TABLE research_projects (
+    project_id SERIAL PRIMARY KEY,
+    project_title VARCHAR(250) NOT NULL,
+    principal_investigator VARCHAR(150) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    project_type research_project_type NOT NULL,
+    funding_agency VARCHAR(150),
+    client_organization VARCHAR(150),
+    amount_sanctioned DECIMAL(14, 2) DEFAULT 0,
+    start_date DATE,
+    end_date DATE,
+    status project_status_type DEFAULT 'Ongoing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (amount_sanctioned >= 0)
+);
+
+
+CREATE TABLE research_mous (
+    mou_id SERIAL PRIMARY KEY,
+    partner_name VARCHAR(200) NOT NULL,
+    collaboration_nature TEXT,
+    date_signed DATE NOT NULL,
+    validity_end DATE,
+    remarks TEXT
+);
+
+
+CREATE TABLE research_patents (
+    patent_id SERIAL PRIMARY KEY,
+    patent_title VARCHAR(250) NOT NULL,
+    inventors TEXT,
+    patent_status patent_status_type NOT NULL,
+    filing_date DATE,
+    grant_date DATE,
+    remarks TEXT
+);
+
+
+CREATE TABLE research_publications (
+    publication_id SERIAL PRIMARY KEY,
+    publication_title VARCHAR(250) NOT NULL,
+    journal_name VARCHAR(200),
+    department VARCHAR(100),
+    faculty_name VARCHAR(150),
+    publication_year INT NOT NULL,
+    publication_type publication_category NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TYPE alumni_outcome_type AS ENUM ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other');
 
 CREATE TABLE alumni (
@@ -85,7 +165,7 @@ CREATE TABLE designation (
 );
 
 
-CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other');
+CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other', 'Transgender');
 
 CREATE TABLE employee (
     employeeid SERIAL PRIMARY KEY,
@@ -273,6 +353,61 @@ CREATE TABLE placement_packages (
         )
     )
 );
+ 
+ 
+CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
+CREATE TYPE research_project_status AS ENUM ('Ongoing', 'Completed');
+CREATE TYPE research_patent_status AS ENUM ('Filed', 'Granted', 'Published');
+CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
 
+
+CREATE TABLE research_projects (
+    project_id SERIAL PRIMARY KEY,
+    project_title VARCHAR(255) NOT NULL,
+    principal_investigator VARCHAR(150) NOT NULL,
+    department VARCHAR(150),
+    project_type research_project_type NOT NULL,
+    funding_agency VARCHAR(200),
+    client_organization VARCHAR(200),
+    amount_sanctioned DECIMAL(14, 2),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    status research_project_status NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CHECK (amount_sanctioned IS NULL OR amount_sanctioned >= 0)
+);
+
+
+CREATE TABLE research_mous (
+    mou_id SERIAL PRIMARY KEY,
+    partner_name VARCHAR(200) NOT NULL,
+    collaboration_nature VARCHAR(200),
+    date_signed DATE NOT NULL,
+    validity_end DATE,
+    remarks TEXT
+);
+
+
+CREATE TABLE research_patents (
+    patent_id SERIAL PRIMARY KEY,
+    patent_title VARCHAR(255) NOT NULL,
+    inventors TEXT NOT NULL,
+    patent_status research_patent_status NOT NULL,
+    filing_date DATE NOT NULL,
+    grant_date DATE,
+    remarks TEXT
+);
+
+
+CREATE TABLE research_publications (
+    publication_id SERIAL PRIMARY KEY,
+    publication_title VARCHAR(255) NOT NULL,
+    journal_name VARCHAR(200) NOT NULL,
+    department VARCHAR(150),
+    faculty_name VARCHAR(150),
+    publication_year INT NOT NULL,
+    publication_type publication_category NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 --This is new changes In may need to changes in future

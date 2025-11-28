@@ -19,7 +19,13 @@ const tableOptions = [
   'faculty_engagement',
   'placement_summary',
   'placement_companies',
-  'placement_packages'
+  'placement_packages',
+  'industry_courses',
+  'academic_program_launch',
+  'research_projects',
+  'research_mous',
+  'research_patents',
+  'research_publications'
 ];
 
 /**

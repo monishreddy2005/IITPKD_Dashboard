@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from .db import get_db_connection
 from .auth import token_required
+import psycopg2.extras
 
 administrative_bp = Blueprint('administrative', __name__)
 
@@ -73,7 +74,7 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         # Get distinct values for each field
         filter_options = {}
@@ -133,6 +134,7 @@ def get_filter_options(current_user_id):
 def get_faculty_by_department_designation(current_user_id):
     """Fetches faculty count by department and designation."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -169,20 +171,25 @@ def get_faculty_by_department_designation(current_user_id):
         
         # Query to get faculty by department and designation
         # Assuming faculty is identified by cadre containing 'Faculty' or designationcategory
-        query = f"""
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        if where_clause:
+            where_clause += f" AND {faculty_condition}"
+        else:
+            where_clause = f"WHERE {faculty_condition}"
+        
+        query = """
             SELECT 
                 COALESCE(e.department, 'Unknown') as department,
                 COALESCE(d.designationname, 'Unknown') as designation,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
-            AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')
+            """ + where_clause + """
             GROUP BY e.department, d.designationname
             ORDER BY e.department, d.designationname;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -215,11 +222,14 @@ def get_faculty_by_department_designation(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching faculty by department: {e}")
-        return jsonify({'message': 'An error occurred while fetching faculty data.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching faculty data: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/staff-count', methods=['GET'])
@@ -227,6 +237,7 @@ def get_faculty_by_department_designation(current_user_id):
 def get_staff_count(current_user_id):
     """Fetches staff count (technical and administrative)."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -261,28 +272,31 @@ def get_staff_count(current_user_id):
         
         # Query to get staff count by type (technical vs administrative)
         # Assuming staff is identified by NOT being faculty
-        query = f"""
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        if where_clause:
+            where_clause += f" AND {staff_condition}"
+        else:
+            where_clause = f"WHERE {staff_condition}"
+        
+        query = """
             SELECT 
                 CASE 
-                    WHEN d.designationcategory ILIKE '%Technical%' OR d.designationname ILIKE '%Technical%' THEN 'Technical'
-                    WHEN d.designationcategory ILIKE '%Administrative%' OR d.designationname ILIKE '%Administrative%' THEN 'Administrative'
-                    WHEN d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' 
-                        AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' 
-                        AND d.designationname NOT ILIKE '%Associate%' THEN 'Administrative'
+                    WHEN d.designationcategory ILIKE '%%Technical%%' OR d.designationname ILIKE '%%Technical%%' THEN 'Technical'
+                    WHEN d.designationcategory ILIKE '%%Administrative%%' OR d.designationname ILIKE '%%Administrative%%' THEN 'Administrative'
+                    WHEN d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' 
+                        AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' 
+                        AND d.designationname NOT ILIKE '%%Associate%%' THEN 'Administrative'
                     ELSE 'Other'
                 END as staff_type,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
-            AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' 
-                AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' 
-                AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)
+            """ + where_clause + """
             GROUP BY staff_type
             ORDER BY staff_type;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -308,11 +322,14 @@ def get_staff_count(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching staff count: {e}")
-        return jsonify({'message': 'An error occurred while fetching staff data.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching staff data: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/gender-distribution', methods=['GET'])
@@ -320,6 +337,7 @@ def get_staff_count(current_user_id):
 def get_gender_distribution(current_user_id):
     """Fetches gender-wise distribution for faculty and staff."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -353,30 +371,33 @@ def get_gender_distribution(current_user_id):
             params.append(True)
         
         # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
         if employee_type == 'Faculty':
             if where_clause:
-                where_clause += " AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause += f" AND {faculty_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause = f"WHERE {faculty_condition}"
         elif employee_type == 'Staff':
             if where_clause:
-                where_clause += " AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause += f" AND {staff_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause = f"WHERE {staff_condition}"
         
         # Query to get gender distribution
-        query = f"""
+        query = """
             SELECT 
                 e.gender,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.gender
             ORDER BY e.gender;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -403,11 +424,14 @@ def get_gender_distribution(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching gender distribution: {e}")
-        return jsonify({'message': 'An error occurred while fetching gender distribution.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching gender distribution: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/category-distribution', methods=['GET'])
@@ -415,6 +439,7 @@ def get_gender_distribution(current_user_id):
 def get_category_distribution(current_user_id):
     """Fetches category-wise distribution for faculty and staff."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -448,30 +473,33 @@ def get_category_distribution(current_user_id):
             params.append(True)
         
         # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
         if employee_type == 'Faculty':
             if where_clause:
-                where_clause += " AND (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause += f" AND {faculty_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' OR d.designationname ILIKE '%Associate%')"
+                where_clause = f"WHERE {faculty_condition}"
         elif employee_type == 'Staff':
             if where_clause:
-                where_clause += " AND (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause += f" AND {staff_condition}"
             else:
-                where_clause = "WHERE (d.designationcadre NOT ILIKE '%Faculty%' AND d.designationcategory NOT ILIKE '%Faculty%' AND d.designationname NOT ILIKE '%Professor%' AND d.designationname NOT ILIKE '%Assistant%' AND d.designationname NOT ILIKE '%Associate%' OR d.designationcadre IS NULL)"
+                where_clause = f"WHERE {staff_condition}"
         
         # Query to get category distribution
-        query = f"""
+        query = """
             SELECT 
                 COALESCE(e.category, 'Not Specified') as category,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.category
             ORDER BY e.category;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -492,11 +520,14 @@ def get_category_distribution(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching category distribution: {e}")
-        return jsonify({'message': 'An error occurred while fetching category distribution.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching category distribution: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/department-breakdown', methods=['GET'])
@@ -504,6 +535,7 @@ def get_category_distribution(current_user_id):
 def get_department_breakdown(current_user_id):
     """Fetches department-wise breakdown with gender and employee type."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -535,25 +567,25 @@ def get_department_breakdown(current_user_id):
             params.append(True)
         
         # Query to get department breakdown with gender and employee type
-        query = f"""
+        query = """
             SELECT 
                 COALESCE(e.department, 'Unknown') as department,
                 e.gender,
                 CASE 
-                    WHEN d.designationcadre ILIKE '%Faculty%' OR d.designationcategory ILIKE '%Faculty%' 
-                        OR d.designationname ILIKE '%Professor%' OR d.designationname ILIKE '%Assistant%' 
-                        OR d.designationname ILIKE '%Associate%' THEN 'Faculty'
+                    WHEN d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' 
+                        OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' 
+                        OR d.designationname ILIKE '%%Associate%%' THEN 'Faculty'
                     ELSE 'Staff'
                 END as employee_type,
                 COUNT(*) as count
             FROM employee e
             LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            {where_clause}
+            """ + where_clause + """
             GROUP BY e.department, e.gender, employee_type
             ORDER BY e.department, e.gender, employee_type;
         """
         
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
         
@@ -594,10 +626,13 @@ def get_department_breakdown(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
         print(f"Error fetching department breakdown: {e}")
-        return jsonify({'message': 'An error occurred while fetching department breakdown.'}), 500
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching department breakdown: {str(e)}'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 

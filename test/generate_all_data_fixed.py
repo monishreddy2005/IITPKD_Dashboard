@@ -19,6 +19,12 @@ from data_generators.base_generators import (
     generate_placement_summary,
     generate_placement_companies,
     generate_placement_packages,
+    generate_industry_courses,
+    generate_academic_program_launch,
+    generate_research_projects,
+    generate_research_mous,
+    generate_research_patents,
+    generate_research_publications,
 )
 def main():
     print("=== Database Dummy Data Generator (Fixed Schema) ===\n")
@@ -42,6 +48,16 @@ def main():
     placement_start_year = int(input("Enter placement start year (default 2019): ") or "2019")
     placement_year_count = int(input("Enter number of placement yearly records (default 5): ") or "5")
     companies_per_year = int(input("Enter number of companies per year (default 12): ") or "12")
+    industry_course_year_count = int(input("Enter number of years for industry courses (default 5): ") or "5")
+    courses_per_year = int(input("Enter number of industry courses per year (default 10): ") or "10")
+    program_year_count = int(input("Enter number of program launch years (default 5): ") or "5")
+    programs_per_year = int(input("Enter number of programs introduced per year (default 6): ") or "6")
+    research_projects_count = int(input("Enter number of research projects (default 75): ") or "75")
+    research_mous_count = int(input("Enter number of research MoUs (default 25): ") or "25")
+    research_patents_count = int(input("Enter number of research patents (default 30): ") or "30")
+    publication_start_year = int(input("Enter publications start year (default 2018): ") or "2018")
+    publication_year_span = int(input("Enter number of publication years (default 6): ") or "6")
+    publications_per_year = int(input("Enter publications per year (default 40): ") or "40")
     
     print("\nGenerating data files...")
     
@@ -129,7 +145,47 @@ def main():
         with open('placement_packages.csv', 'w', encoding='utf-8') as f:
             generate_placement_packages(f, placement_years)
             print(f"✓ Generated placement_packages.csv ({len(placement_years) * len(PROGRAMS)} records)")
- 
+
+    industry_years = [placement_start_year + i for i in range(max(industry_course_year_count, 0))]
+    if industry_years:
+        with open('industry_courses.csv', 'w', encoding='utf-8') as f:
+            generate_industry_courses(f, industry_years, DEFAULT_EMPLOYEE_DEPARTMENTS, courses_per_year=courses_per_year)
+            print(f"✓ Generated industry_courses.csv ({len(industry_years) * courses_per_year} records)")
+
+    program_years = [placement_start_year + i for i in range(max(program_year_count, 0))]
+    if program_years:
+        with open('academic_program_launch.csv', 'w', encoding='utf-8') as f:
+            generate_academic_program_launch(f, program_years, programs_per_year=programs_per_year)
+            print(f"✓ Generated academic_program_launch.csv ({len(program_years) * programs_per_year} records)")
+
+    if research_projects_count > 0:
+        with open('research_projects.csv', 'w', encoding='utf-8') as f:
+            generate_research_projects(f, research_projects_count)
+            print(f"✓ Generated research_projects.csv ({research_projects_count} records)")
+
+    if research_mous_count > 0:
+        with open('research_mous.csv', 'w', encoding='utf-8') as f:
+            generate_research_mous(f, research_mous_count)
+            print(f"✓ Generated research_mous.csv ({research_mous_count} records)")
+
+    if research_patents_count > 0:
+        with open('research_patents.csv', 'w', encoding='utf-8') as f:
+            generate_research_patents(f, research_patents_count)
+            print(f"✓ Generated research_patents.csv ({research_patents_count} records)")
+
+    publication_years = [publication_start_year + i for i in range(max(publication_year_span, 0))]
+    if publication_years:
+        with open('research_publications.csv', 'w', encoding='utf-8') as f:
+            generate_research_publications(
+                f,
+                publication_years,
+                DEFAULT_EMPLOYEE_DEPARTMENTS,
+                publications_per_year=publications_per_year
+            )
+            print(
+                f"✓ Generated research_publications.csv ({len(publication_years) * publications_per_year} records)"
+            )
+
     print("\n✅ All data files generated successfully!")
     print("\nNote: Column names match the exact database schema:")
     print("  - Student: RollNo, Name, Program, YearOfAdmission, Batch, Branch, Department, PwD, State, Category, Gender, Status")
@@ -140,6 +196,10 @@ def main():
     print("  - Placement Summary: placement_year, program, gender, registered, placed")
     print("  - Placement Companies: company_id, placement_year, company_name, sector, offers, hires, is_top_recruiter")
     print("  - Placement Packages: placement_year, program, highest_package, lowest_package, average_package")
+    print("  - Research Projects: project_id, project_title, principal_investigator, department, project_type, funding_agency, client_organization, amount_sanctioned, start_date, end_date, status, created_at")
+    print("  - Research MoUs: mou_id, partner_name, collaboration_nature, date_signed, validity_end, remarks")
+    print("  - Research Patents: patent_id, patent_title, inventors, patent_status, filing_date, grant_date, remarks")
+    print("  - Research Publications: publication_id, publication_title, journal_name, department, faculty_name, publication_year, publication_type, created_at")
     print("\nImport order:")
     print("  1. designation.csv")
     print("  2. Department.csv")
@@ -157,6 +217,12 @@ def main():
     print(" 14. placement_summary.csv")
     print(" 15. placement_companies.csv")
     print(" 16. placement_packages.csv")
+    print(" 17. industry_courses.csv")
+    print(" 18. academic_program_launch.csv")
+    print(" 19. research_projects.csv")
+    print(" 20. research_mous.csv")
+    print(" 21. research_patents.csv")
+    print(" 22. research_publications.csv")
 
 if __name__ == "__main__":
     main()
