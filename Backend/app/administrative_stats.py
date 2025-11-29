@@ -401,17 +401,21 @@ def get_gender_distribution(current_user_id):
         cur.execute(query, params)
         results = cur.fetchall()
         
-        # Initialize gender counts
+        # Initialize gender counts - include all possible gender values
         gender_data = {
             'Male': 0,
             'Female': 0,
-            'Other': 0
+            'Other': 0,
+            'Transgender': 0
         }
         
-        # Populate gender counts from results
+        # Populate gender counts from results - handle any gender value
         for row in results:
             gender = row['gender']
             if gender in gender_data:
+                gender_data[gender] = row['count']
+            else:
+                # If a new gender value appears, add it dynamically
                 gender_data[gender] = row['count']
         
         total = sum(gender_data.values())
@@ -530,6 +534,97 @@ def get_category_distribution(current_user_id):
         if conn:
             conn.close()
 
+@administrative_bp.route('/stats/data-summary', methods=['GET'])
+@token_required
+def get_data_summary(current_user_id):
+    """Diagnostic endpoint to check what data exists in the database."""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+        
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        summary = {}
+        
+        # Total employees
+        cur.execute("SELECT COUNT(*) as total FROM employee;")
+        summary['total_employees'] = cur.fetchone()['total']
+        
+        # Active vs Inactive
+        cur.execute("SELECT isactive, COUNT(*) as count FROM employee GROUP BY isactive;")
+        summary['active_status'] = {row['isactive']: row['count'] for row in cur.fetchall()}
+        
+        # Employees with designations
+        cur.execute("""
+            SELECT COUNT(*) as count 
+            FROM employee e 
+            WHERE e.currentdesignationid IS NOT NULL;
+        """)
+        summary['employees_with_designation'] = cur.fetchone()['count']
+        
+        # Employees without designations
+        cur.execute("""
+            SELECT COUNT(*) as count 
+            FROM employee e 
+            WHERE e.currentdesignationid IS NULL;
+        """)
+        summary['employees_without_designation'] = cur.fetchone()['count']
+        
+        # Gender distribution
+        cur.execute("SELECT gender, COUNT(*) as count FROM employee GROUP BY gender ORDER BY gender;")
+        summary['gender_distribution'] = {row['gender']: row['count'] for row in cur.fetchall()}
+        
+        # Department distribution
+        cur.execute("""
+            SELECT COALESCE(department, 'Unknown') as dept, COUNT(*) as count 
+            FROM employee 
+            GROUP BY department 
+            ORDER BY count DESC 
+            LIMIT 10;
+        """)
+        summary['top_departments'] = {row['dept']: row['count'] for row in cur.fetchall()}
+        
+        # Faculty vs Staff (based on designation patterns)
+        cur.execute("""
+            SELECT 
+                CASE 
+                    WHEN d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' 
+                        OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' 
+                        OR d.designationname ILIKE '%%Associate%%' THEN 'Faculty'
+                    WHEN d.designationcadre IS NULL THEN 'No Designation'
+                    ELSE 'Staff'
+                END as emp_type,
+                COUNT(*) as count
+            FROM employee e
+            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
+            GROUP BY emp_type;
+        """)
+        summary['employee_type_distribution'] = {row['emp_type']: row['count'] for row in cur.fetchall()}
+        
+        # Sample designations
+        cur.execute("""
+            SELECT designationname, designationcadre, designationcategory 
+            FROM designation 
+            LIMIT 10;
+        """)
+        summary['sample_designations'] = [dict(row) for row in cur.fetchall()]
+        
+        return jsonify(summary), 200
+        
+    except Exception as e:
+        import traceback
+        print(f"Error fetching data summary: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
 @administrative_bp.route('/stats/department-breakdown', methods=['GET'])
 @token_required
 def get_department_breakdown(current_user_id):
@@ -602,14 +697,18 @@ def get_department_breakdown(current_user_id):
                     'Faculty_Male': 0,
                     'Faculty_Female': 0,
                     'Faculty_Other': 0,
+                    'Faculty_Transgender': 0,
                     'Staff_Male': 0,
                     'Staff_Female': 0,
-                    'Staff_Other': 0
+                    'Staff_Other': 0,
+                    'Staff_Transgender': 0
                 }
             
             key = f"{emp_type}_{gender}"
-            if key in department_data[dept]:
-                department_data[dept][key] = count
+            # Initialize the key if it doesn't exist (for any new gender values)
+            if key not in department_data[dept]:
+                department_data[dept][key] = 0
+            department_data[dept][key] = count
         
         # Convert to list format for chart
         data = []
