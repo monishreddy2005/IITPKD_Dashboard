@@ -141,6 +141,7 @@ def get_faculty_by_department_designation(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
         
         # Get filter parameters
+        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
         filters = {
             'department': request.args.get('department', type=str),
             'designation': request.args.get('designation', type=str),
@@ -169,13 +170,21 @@ def get_faculty_by_department_designation(current_user_id):
                 where_clause = "WHERE e.isactive = %s"
             params.append(True)
         
-        # Query to get faculty by department and designation
-        # Assuming faculty is identified by cadre containing 'Faculty' or designationcategory
+        # Add employee type filter
         faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        if where_clause:
-            where_clause += f" AND {faculty_condition}"
-        else:
-            where_clause = f"WHERE {faculty_condition}"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
+        if employee_type == 'Faculty':
+            if where_clause:
+                where_clause += f" AND {faculty_condition}"
+            else:
+                where_clause = f"WHERE {faculty_condition}"
+        elif employee_type == 'Staff':
+            if where_clause:
+                where_clause += f" AND {staff_condition}"
+            else:
+                where_clause = f"WHERE {staff_condition}"
+        # If 'All' or None, don't add employee type filter
         
         query = """
             SELECT 
@@ -244,6 +253,7 @@ def get_staff_count(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
         
         # Get filter parameters
+        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
         filters = {
             'department': request.args.get('department', type=str),
             'gender': request.args.get('gender', type=str),
@@ -270,13 +280,21 @@ def get_staff_count(current_user_id):
                 where_clause = "WHERE e.isactive = %s"
             params.append(True)
         
-        # Query to get staff count by type (technical vs administrative)
-        # Assuming staff is identified by NOT being faculty
+        # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
         staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        if where_clause:
-            where_clause += f" AND {staff_condition}"
-        else:
-            where_clause = f"WHERE {staff_condition}"
+        
+        if employee_type == 'Faculty':
+            if where_clause:
+                where_clause += f" AND {faculty_condition}"
+            else:
+                where_clause = f"WHERE {faculty_condition}"
+        elif employee_type == 'Staff':
+            if where_clause:
+                where_clause += f" AND {staff_condition}"
+            else:
+                where_clause = f"WHERE {staff_condition}"
+        # If 'All' or None, don't add employee type filter (show all)
         
         query = """
             SELECT 
@@ -637,6 +655,7 @@ def get_department_breakdown(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
         
         # Get filter parameters
+        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
         filters = {
             'category': request.args.get('category', type=str),
             'isactive': request.args.get('isactive', type=str)
@@ -660,6 +679,22 @@ def get_department_breakdown(current_user_id):
             else:
                 where_clause = "WHERE e.isactive = %s"
             params.append(True)
+        
+        # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
+        if employee_type == 'Faculty':
+            if where_clause:
+                where_clause += f" AND {faculty_condition}"
+            else:
+                where_clause = f"WHERE {faculty_condition}"
+        elif employee_type == 'Staff':
+            if where_clause:
+                where_clause += f" AND {staff_condition}"
+            else:
+                where_clause = f"WHERE {staff_condition}"
+        # If 'All' or None, don't add employee type filter (show all)
         
         # Query to get department breakdown with gender and employee type
         query = """

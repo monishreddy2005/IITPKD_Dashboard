@@ -103,7 +103,7 @@ function AdministrativeSection() {
       try {
         setFacultyLoading(true);
         setFacultyError(null);
-        const result = await fetchFacultyByDepartmentDesignation(filters, token);
+        const result = await fetchFacultyByDepartmentDesignation(filters, employeeType, token);
         setFacultyData(result.data);
         setFacultyTotal(result.total);
       } catch (err) {
@@ -115,7 +115,7 @@ function AdministrativeSection() {
     };
 
     loadFacultyData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   // Fetch staff data
   useEffect(() => {
@@ -125,7 +125,7 @@ function AdministrativeSection() {
       try {
         setStaffLoading(true);
         setStaffError(null);
-        const result = await fetchStaffCount(filters, token);
+        const result = await fetchStaffCount(filters, employeeType, token);
         setStaffData(result.data);
         setStaffTotal(result.total);
       } catch (err) {
@@ -137,7 +137,7 @@ function AdministrativeSection() {
     };
 
     loadStaffData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   // Fetch gender distribution
   useEffect(() => {
@@ -191,7 +191,7 @@ function AdministrativeSection() {
       try {
         setDepartmentLoading(true);
         setDepartmentError(null);
-        const result = await fetchDepartmentBreakdown(filters, token);
+        const result = await fetchDepartmentBreakdown(filters, employeeType, token);
         setDepartmentData(result.data);
         setDepartmentTotal(result.total);
       } catch (err) {
@@ -203,7 +203,7 @@ function AdministrativeSection() {
     };
 
     loadDepartmentData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
