@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -59,6 +60,7 @@ const formatPercentage = (value) => {
 };
 
 function PlacementSection() {
+  const navigate = useNavigate();
   const [filterOptions, setFilterOptions] = useState({
     years: [],
     programs: [],
@@ -554,6 +556,24 @@ function PlacementSection() {
                   <h2>Top Recruiters</h2>
                   <p className="chart-description">Highlights of visiting recruiters, their sectors, and offer volume.</p>
                 </div>
+                <button
+                  onClick={() => navigate('/education/placements/companies', {
+                    state: { ...filters, is_top_recruiter: 'true' }
+                  })}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: '#4f46e5',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '500'
+                  }}
+                  title="View all companies"
+                >
+                  View All Companies →
+                </button>
               </div>
 
               {!topRecruiters.length ? (

@@ -98,6 +98,48 @@ function UploadForm({ token, onLogout }) {
   };
 
   /**
+   * Handles template download for the selected table.
+   */
+  const handleDownloadTemplate = async () => {
+    if (!token) {
+      setMessage('Error: Authentication token is missing. Please log in again.');
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:5000/api/upload/download-template/${selectedTable}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          responseType: 'blob' // Important for file download
+        }
+      );
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${selectedTable}_template.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setMessage(`Template downloaded successfully: ${selectedTable}_template.csv`);
+    } catch (error) {
+      let errorMessage = 'Failed to download template.';
+      if (error.response) {
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setMessage(`Error: ${errorMessage}`);
+    }
+  };
+
+  /**
    * Handles the form submission.
    */
   const handleSubmit = async (event) => {
@@ -181,7 +223,7 @@ function UploadForm({ token, onLogout }) {
       
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {/* --- Form Inputs (same as before) --- */}
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <label htmlFor="table-select" style={{ marginRight: '1rem' }}>
             Table to Update:
           </label>
@@ -190,7 +232,7 @@ function UploadForm({ token, onLogout }) {
             value={selectedTable}
             onChange={handleTableChange}
             disabled={isLoading}
-            style={{ padding: '0.5em', fontSize: '1em' }}
+            style={{ padding: '0.5em', fontSize: '1em', flex: '1', minWidth: '200px' }}
           >
             {tableOptions.map((table) => (
               <option key={table} value={table}>
@@ -198,6 +240,24 @@ function UploadForm({ token, onLogout }) {
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            disabled={isLoading}
+            style={{
+              padding: '0.5em 1em',
+              fontSize: '1em',
+              backgroundColor: '#4f46e5',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+            title="Download CSV template for this table"
+          >
+            📥 Download Template
+          </button>
         </div>
 
         <div>

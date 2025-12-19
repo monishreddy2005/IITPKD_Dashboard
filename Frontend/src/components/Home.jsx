@@ -39,8 +39,8 @@ function Home({ user, onLogout }) {
     navigate('/upload');
   };
 
-  // Check if user has role_id 2 or 3 for upload access
-  const canUploadData = user && (user.role_id === 2 || user.role_id === 3);
+  // Check if user has admin or administration role for upload access
+  const canUploadData = user && (user.role_name === 'admin' || user.role_name === 'administration');
 
   return (
     <div className="home-container">
