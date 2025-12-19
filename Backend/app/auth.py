@@ -181,7 +181,12 @@ def signup():
     email = data.get('email')
     password = data.get('password')
     display_name = data.get('display_name', None) 
-    username = data.get('username', None) 
+    username = data.get('username', None)
+    role_id = data.get('role_id', 1)  # Default to role_id 1 (officials) if not provided
+    
+    # Validate role_id - only allow non-admin roles during signup
+    if role_id not in [1, 2]:  # Only allow 'officials' (1) or 'administration' (2)
+        role_id = 1  # Default to officials if invalid role provided 
     
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -194,11 +199,11 @@ def signup():
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO users (email, password_hash, display_name, username)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (email, password_hash, display_name, username, role_id)
+            VALUES (%s, %s, %s, %s, %s)
             RETURNING id, email, display_name, created_at, role_id;
             """,
-            (email, hashed_password, display_name, username)
+            (email, hashed_password, display_name, username, role_id)
         )
         new_user = cur.fetchone()
         conn.commit()
@@ -330,8 +335,7 @@ def get_current_user(current_user_id, current_user_role_id):
             conn.close()
 
 @auth_bp.route('/roles', methods=['GET'])
-@token_required
-def get_roles(current_user_id, current_user_role_id):
+def get_roles():
     """Get all available roles (for admin use)."""
     conn = None
     try:

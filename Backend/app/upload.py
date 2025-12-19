@@ -48,7 +48,7 @@ UPDATABLE_TABLES = {
 # Create a new Blueprint for our upload logic
 upload_bp = Blueprint('upload', __name__)
 
-@upload_bp.route('/upload-csv', methods=['POST'])
+@upload_bp.route('/csv', methods=['POST'])
 @role_required('admin', 'administration')
 def upload_csv(current_user_id, current_user_role_id):
     """

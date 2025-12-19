@@ -83,6 +83,16 @@ function Home({ user, onLogout }) {
                     <div className="dropdown-user-details">
                       <div className="dropdown-name">{user?.display_name || 'User'}</div>
                       <div className="dropdown-email">{user?.email || ''}</div>
+                      {user?.role_name && (
+                        <div className="dropdown-role" style={{ 
+                          fontSize: '0.85rem', 
+                          color: '#9ca3af', 
+                          marginTop: '0.25rem',
+                          textTransform: 'capitalize'
+                        }}>
+                          Role: {user.role_name}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
