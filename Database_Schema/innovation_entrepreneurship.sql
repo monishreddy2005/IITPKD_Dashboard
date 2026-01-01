@@ -28,7 +28,8 @@ CREATE TABLE innovation_projects (
     year_started INT NOT NULL,
     status VARCHAR(50) DEFAULT 'Ongoing',
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(project_title, year_started)  -- Prevent duplicate project titles in same year
 );
 
 -- Indexes for better query performance
