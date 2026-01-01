@@ -23,6 +23,7 @@ import EducationAcademicSection from './components/EducationAcademicSection';
 import ResearchIcsrSection from './components/ResearchIcsrSection';
 import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
 import ResearchLibrarySection from './components/ResearchLibrarySection';
+import InnovationSection from './components/InnovationSection';
 
 function App() {
   // State to hold the authentication token
@@ -108,7 +109,7 @@ function App() {
           <Route path="education/administrative-section" element={<AdministrativeSection />} />
           <Route path="education/academic-section" element={<EducationAcademicSection />} />
           <Route path="industry-connect" element={<IndustryConnect />} />
-          <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship />} />
+          <Route path="innovation-entrepreneurship" element={<InnovationSection />} />
           <Route path="outreach-extension" element={<OutreachExtension />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />

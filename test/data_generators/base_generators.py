@@ -748,6 +748,67 @@ def generate_academic_program_launch(
             file.write(f"{program_code},{program_name},{program_type},{dept},{year},{oelp_students}\n")
 
 
+INNOVATION_SECTORS = [
+    'Software & IT', 'Clean Energy', 'Biotechnology', 'Healthcare Technology', 'Robotics & Automation',
+    'Manufacturing', 'Agricultural Technology', 'FinTech', 'EdTech', 'IoT & Smart Devices',
+    'Materials Science', 'Environmental Technology', 'Data Analytics', 'AI & Machine Learning'
+]
+STARTUP_STATUSES = ['Active', 'Graduated', 'Inactive']
+INNOVATION_FOCUS_AREAS = [
+    'AI-Powered Healthcare Solutions', 'Renewable Energy Systems', 'Smart Manufacturing',
+    'Agricultural IoT', 'Financial Technology', 'Educational Platforms', 'Robotics Automation',
+    'Sustainable Materials', 'Water Purification', 'Waste Management', 'Precision Agriculture',
+    'Medical Diagnostics', 'Supply Chain Optimization', 'Smart Cities', 'Cybersecurity'
+]
+
+
+def generate_startups(
+    file,
+    years: Sequence[int],
+    startups_per_year: int = 15,
+    iitpkd_ratio: float = 0.4
+) -> None:
+    """Generate startups/incubatees data."""
+    file.write('startup_name,founder_name,innovation_focus_area,year_of_incubation,status,sector,is_from_iitpkd\n')
+    startup_id = 1
+    for year in years:
+        for _ in range(startups_per_year):
+            startup_name = f"{random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)}"
+            founder_name = random_name()
+            innovation_area = random.choice(INNOVATION_FOCUS_AREAS)
+            status_val = random.choice(STARTUP_STATUSES)
+            sector_val = random.choice(INNOVATION_SECTORS)
+            is_iitpkd = random.random() < iitpkd_ratio
+            file.write(
+                f"{startup_name},{founder_name},{innovation_area},{year},{status_val},{sector_val},"
+                f"{'TRUE' if is_iitpkd else 'FALSE'}\n"
+            )
+            startup_id += 1
+
+
+def generate_innovation_projects(
+    file,
+    years: Sequence[int],
+    projects_per_year: int = 8
+) -> None:
+    """Generate innovation projects data (non-startup projects)."""
+    file.write('project_title,project_type,sector,year_started,status,description\n')
+    project_id = 1
+    project_types = ['Funded', 'Mentored']
+    for year in years:
+        for _ in range(projects_per_year):
+            project_type = random.choice(project_types)
+            sector_val = random.choice(INNOVATION_SECTORS)
+            status_val = random.choice(['Ongoing', 'Completed'])
+            focus = random.choice(INNOVATION_FOCUS_AREAS)
+            project_title = f"{project_type} Innovation Project: {focus} {project_id}"
+            description = f"Project focusing on {focus.lower()} in the {sector_val.lower()} sector"
+            file.write(
+                f"{project_title},{project_type},{sector_val},{year},{status_val},{description}\n"
+            )
+            project_id += 1
+
+
 __all__ = [
     'DEFAULT_DEPARTMENT_CODES',
     'DEFAULT_EMPLOYEE_DEPARTMENTS',
@@ -775,6 +836,8 @@ __all__ = [
     'generate_research_publications',
     'generate_industry_courses',
     'generate_academic_program_launch',
+    'generate_startups',
+    'generate_innovation_projects',
     'generate_employee_id',
     'random_name',
 ]

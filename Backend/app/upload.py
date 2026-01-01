@@ -39,6 +39,8 @@ UPDATABLE_TABLES = {
     'research_mous': ['mou_id'],
     'research_patents': ['patent_id'],
     'research_publications': ['publication_id'],
+    'startups': ['startup_name', 'year_of_incubation'],  # Composite unique key
+    'innovation_projects': ['project_title'],  # Using project_title as unique identifier
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],
