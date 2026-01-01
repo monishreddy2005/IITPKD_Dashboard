@@ -5,7 +5,7 @@ import psycopg2
 import psycopg2.extras
 from flask import Blueprint, request, jsonify
 from .db import get_db_connection
-from .auth import token_required, role_required
+from .auth import token_required
 
 # Define a whitelist of tables that are allowed to be updated via this form.
 # This is a CRITICAL security measure to prevent users from trying to update
@@ -48,9 +48,9 @@ UPDATABLE_TABLES = {
 # Create a new Blueprint for our upload logic
 upload_bp = Blueprint('upload', __name__)
 
-@upload_bp.route('/csv', methods=['POST'])
-@role_required('admin', 'administration')
-def upload_csv(current_user_id, current_user_role_id):
+@upload_bp.route('/upload-csv', methods=['POST'])
+@token_required
+def upload_csv(current_user_id):
     """
     Handles CSV file upload to update a specified database table.
     1. Validates the table name against a whitelist.
@@ -355,119 +355,6 @@ def upload_csv(current_user_id, current_user_role_id):
     
     finally:
         # Always close the connection
-        if conn:
-            cur.close()
-            conn.close()
-
-@upload_bp.route('/download-template/<table_name>', methods=['GET'])
-@token_required
-def download_template(current_user_id, current_user_role_id, table_name):
-    """
-    Downloads a CSV template for a specified table.
-    The template includes column headers and example rows.
-    """
-    # Normalize table name
-    table_name_lower = table_name.lower()
-    
-    # Check if table is in the allowed list
-    if table_name_lower not in UPDATABLE_TABLES:
-        return jsonify({'message': f'Table "{table_name}" is not available for template download.'}), 400
-    
-    conn = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed!'}), 500
-        
-        cur = conn.cursor()
-        
-        # Get table columns (excluding SERIAL columns)
-        cur.execute("""
-            SELECT column_name, data_type, column_default
-            FROM information_schema.columns
-            WHERE table_name = %s
-            ORDER BY ordinal_position;
-        """, (table_name_lower,))
-        columns = cur.fetchall()
-        
-        if not columns:
-            return jsonify({'message': f'Table "{table_name}" not found in database.'}), 404
-        
-        # Filter out SERIAL columns (auto-generated)
-        serial_patterns = ['nextval', 'sequence']
-        csv_columns = []
-        for col in columns:
-            col_name = col['column_name']
-            col_default = col['column_default'] or ''
-            is_serial = any(pattern in str(col_default).lower() for pattern in serial_patterns)
-            
-            if not is_serial:
-                csv_columns.append(col_name)
-        
-        if not csv_columns:
-            return jsonify({'message': f'No downloadable columns found for table "{table_name}".'}), 400
-        
-        # Create CSV content
-        output = io.StringIO()
-        writer = csv.writer(output)
-        
-        # Write header
-        writer.writerow(csv_columns)
-        
-        # Write example rows (2-3 examples with placeholder data)
-        example_count = min(3, len(csv_columns))
-        for i in range(example_count):
-            example_row = []
-            for col in csv_columns:
-                # Generate example data based on column name
-                col_lower = col.lower()
-                if 'email' in col_lower:
-                    example_row.append(f'example{i+1}@example.com')
-                elif 'name' in col_lower or 'title' in col_lower:
-                    example_row.append(f'Example {col.replace("_", " ").title()} {i+1}')
-                elif 'year' in col_lower or 'date' in col_lower:
-                    if 'year' in col_lower:
-                        example_row.append(str(2020 + i))
-                    else:
-                        example_row.append(f'2024-01-{i+1:02d}')
-                elif 'id' in col_lower and col_lower != 'id':
-                    example_row.append(f'ID{i+1}')
-                elif 'code' in col_lower:
-                    example_row.append(f'CODE{i+1}')
-                elif 'gender' in col_lower:
-                    example_row.append('Male' if i == 0 else 'Female' if i == 1 else 'Other')
-                elif 'status' in col_lower or 'type' in col_lower:
-                    example_row.append('Active' if i == 0 else 'Inactive' if i == 1 else 'Pending')
-                elif 'amount' in col_lower or 'package' in col_lower or 'salary' in col_lower:
-                    example_row.append(str(100000 + i * 50000))
-                elif 'count' in col_lower or 'number' in col_lower:
-                    example_row.append(str(10 + i * 5))
-                elif 'boolean' in str(col['data_type']).lower() or 'bool' in str(col['data_type']).lower():
-                    example_row.append('TRUE' if i == 0 else 'FALSE')
-                else:
-                    example_row.append(f'Example Value {i+1}')
-            writer.writerow(example_row)
-        
-        # Prepare response
-        output.seek(0)
-        csv_content = output.getvalue()
-        output.close()
-        
-        # Create response with CSV file
-        from flask import Response
-        response = Response(
-            csv_content,
-            mimetype='text/csv',
-            headers={
-                'Content-Disposition': f'attachment; filename="{table_name}_template.csv"'
-            }
-        )
-        return response
-        
-    except Exception as e:
-        print(f"Template download error: {e}")
-        return jsonify({'message': f'Error generating template: {str(e)}'}), 500
-    finally:
         if conn:
             cur.close()
             conn.close()

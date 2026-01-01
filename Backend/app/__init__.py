@@ -63,7 +63,7 @@ def create_app():
     app.register_blueprint(dashboard.dashboard_bp, url_prefix='/api')
     
     # Register the upload blueprint
-    app.register_blueprint(upload.upload_bp, url_prefix='/api/upload')
+    app.register_blueprint(upload.upload_bp, url_prefix='/api')
     
     # Register the academic stats blueprint
     app.register_blueprint(academic_stats.academic_bp, url_prefix='/api/academic')

@@ -52,7 +52,7 @@ def encode_auth_token(user_id, role_id):
 
 
 def decode_auth_token(auth_token):
-    """Decodes the auth token. Returns tuple (user_id, role_id) or error message string."""
+    """Decodes the auth token."""
     try:
         secret_key = current_app.config.get('SECRET_KEY')
         if not secret_key:
@@ -65,9 +65,8 @@ def decode_auth_token(auth_token):
         payload = jwt.decode(auth_token, secret_key, algorithms=['HS256'], leeway=10)
         # Convert user_id back to integer since we store it as string in the token
         user_id = int(payload['sub'])
-        role_id = payload.get('role', 1)  # Default to role_id 1 if not present
-        print(f"--- SUCCESS: Token decoded. User ID: {user_id}, Role: {role_id} ---")
-        return (user_id, role_id)  # Return tuple of (user_id, role_id)
+        print(f"--- SUCCESS: Token decoded. User ID: {user_id}, Role: {payload.get('role')} ---")
+        return user_id # Return the user ID as integer
     except jwt.ExpiredSignatureError as e:
         print(f"--- ERROR: Token has expired - {str(e)} ---")
         return 'Token expired. Please log in again.'
@@ -107,66 +106,16 @@ def token_required(f):
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
 
-        result = decode_auth_token(token)
-        if isinstance(result, str): # If it's an error message
-            print(f"--- ERROR: Token validation failed: {result} ---")
-            return jsonify({'message': result}), 401
+        user_id = decode_auth_token(token)
+        if isinstance(user_id, str): # If it's an error message
+            print(f"--- ERROR: Token validation failed: {user_id} ---")
+            return jsonify({'message': user_id}), 401
         
-        user_id, role_id = result
-        print(f"--- SUCCESS: Token validated for user_id: {user_id}, role_id: {role_id} ---")
+        print(f"--- SUCCESS: Token validated for user_id: {user_id} ---")
         kwargs['current_user_id'] = user_id
-        kwargs['current_user_role_id'] = role_id
         return f(*args, **kwargs)
 
     return decorated
-
-# --- Role-Based Access Control Decorator ---
-def role_required(*allowed_roles):
-    """
-    A decorator to protect routes that require specific roles.
-    Usage: @role_required('admin', 'administration')
-    """
-    def decorator(f):
-        @wraps(f)
-        @token_required
-        def decorated(*args, **kwargs):
-            role_id = kwargs.get('current_user_role_id')
-            
-            # Get role name from database
-            conn = None
-            try:
-                conn = get_db_connection()
-                if conn is None:
-                    return jsonify({'message': 'Database connection failed!'}), 500
-                
-                cur = conn.cursor()
-                cur.execute("SELECT name FROM roles WHERE id = %s;", (role_id,))
-                role_result = cur.fetchone()
-                
-                if not role_result:
-                    return jsonify({'message': 'User role not found!'}), 403
-                
-                role_name = role_result['name']
-                
-                # Check if user's role is in allowed roles
-                if role_name not in allowed_roles:
-                    return jsonify({
-                        'message': f'Access denied. Required roles: {", ".join(allowed_roles)}'
-                    }), 403
-                
-                kwargs['current_user_role'] = role_name
-                return f(*args, **kwargs)
-                
-            except Exception as e:
-                print(f"Role check error: {e}")
-                return jsonify({'message': 'Error checking user permissions.'}), 500
-            finally:
-                if conn:
-                    cur.close()
-                    conn.close()
-        
-        return decorated
-    return decorator
 
 # --- Routes ---
 
@@ -181,12 +130,7 @@ def signup():
     email = data.get('email')
     password = data.get('password')
     display_name = data.get('display_name', None) 
-    username = data.get('username', None)
-    role_id = data.get('role_id', 1)  # Default to role_id 1 (officials) if not provided
-    
-    # Validate role_id - only allow non-admin roles during signup
-    if role_id not in [1, 2]:  # Only allow 'officials' (1) or 'administration' (2)
-        role_id = 1  # Default to officials if invalid role provided 
+    username = data.get('username', None) 
     
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -199,11 +143,11 @@ def signup():
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO users (email, password_hash, display_name, username, role_id)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO users (email, password_hash, display_name, username)
+            VALUES (%s, %s, %s, %s)
             RETURNING id, email, display_name, created_at, role_id;
             """,
-            (email, hashed_password, display_name, username, role_id)
+            (email, hashed_password, display_name, username)
         )
         new_user = cur.fetchone()
         conn.commit()
@@ -293,67 +237,6 @@ def login():
         if conn: conn.rollback()
         print(f"Login error: {e}")
         return jsonify({'message': 'An error occurred during login.'}), 500
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
-
-@auth_bp.route('/me', methods=['GET'])
-@token_required
-def get_current_user(current_user_id, current_user_role_id):
-    """Get current user information including role."""
-    conn = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed!'}), 500
-        
-        cur = conn.cursor()
-        # Get user info with role name
-        cur.execute("""
-            SELECT u.id, u.email, u.username, u.display_name, u.status, u.created_at, 
-                   r.id as role_id, r.name as role_name
-            FROM users u
-            LEFT JOIN roles r ON u.role_id = r.id
-            WHERE u.id = %s;
-        """, (current_user_id,))
-        user = cur.fetchone()
-        
-        if not user:
-            return jsonify({'message': 'User not found!'}), 404
-        
-        return jsonify({
-            'user': user
-        }), 200
-        
-    except Exception as e:
-        print(f"Get user error: {e}")
-        return jsonify({'message': 'An error occurred while fetching user information.'}), 500
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
-
-@auth_bp.route('/roles', methods=['GET'])
-def get_roles():
-    """Get all available roles (for admin use)."""
-    conn = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed!'}), 500
-        
-        cur = conn.cursor()
-        cur.execute("SELECT id, name FROM roles ORDER BY id;")
-        roles = cur.fetchall()
-        
-        return jsonify({
-            'roles': roles
-        }), 200
-        
-    except Exception as e:
-        print(f"Get roles error: {e}")
-        return jsonify({'message': 'An error occurred while fetching roles.'}), 500
     finally:
         if conn:
             cur.close()

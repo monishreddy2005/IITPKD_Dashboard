@@ -39,8 +39,8 @@ function Home({ user, onLogout }) {
     navigate('/upload');
   };
 
-  // Check if user has admin or administration role for upload access
-  const canUploadData = user && (user.role_name === 'admin' || user.role_name === 'administration');
+  // Check if user has role_id 2 or 3 for upload access
+  const canUploadData = user && (user.role_id === 2 || user.role_id === 3);
 
   return (
     <div className="home-container">
@@ -83,16 +83,6 @@ function Home({ user, onLogout }) {
                     <div className="dropdown-user-details">
                       <div className="dropdown-name">{user?.display_name || 'User'}</div>
                       <div className="dropdown-email">{user?.email || ''}</div>
-                      {user?.role_name && (
-                        <div className="dropdown-role" style={{ 
-                          fontSize: '0.85rem', 
-                          color: '#9ca3af', 
-                          marginTop: '0.25rem',
-                          textTransform: 'capitalize'
-                        }}>
-                          Role: {user.role_name}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

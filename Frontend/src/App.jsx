@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { getCurrentUser } from './services/authService';
 import './App.css';
 import Login from './components/Login';
 import Home from './components/Home';
@@ -20,7 +19,6 @@ import IccSection from './components/IccSection';
 import EwdSection from './components/EwdSection';
 import IarSection from './components/IarSection';
 import PlacementSection from './components/PlacementSection';
-import PlacementCompaniesDetail from './components/PlacementCompaniesDetail';
 import EducationAcademicSection from './components/EducationAcademicSection';
 import ResearchIcsrSection from './components/ResearchIcsrSection';
 import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
@@ -34,7 +32,7 @@ function App() {
   const [user, setUser] = useState(null);
 
   // This `useEffect` hook runs once when the app loads
-  // It checks if a token is already saved in localStorage and fetches user role
+  // It checks if a token is already saved in localStorage
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -42,26 +40,7 @@ function App() {
     if (storedToken) {
       setToken(storedToken);
       if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        
-        // Fetch full user info including role if not present
-        if (!parsedUser.role_name) {
-          getCurrentUser(storedToken)
-            .then(fullUser => {
-              setUser(fullUser);
-              localStorage.setItem('authUser', JSON.stringify(fullUser));
-            })
-            .catch(err => console.error('Failed to fetch user role:', err));
-        }
-      } else {
-        // Fetch user info if not stored
-        getCurrentUser(storedToken)
-          .then(fullUser => {
-            setUser(fullUser);
-            localStorage.setItem('authUser', JSON.stringify(fullUser));
-          })
-          .catch(err => console.error('Failed to fetch user role:', err));
+        setUser(JSON.parse(storedUser));
       }
     }
   }, []);
@@ -70,21 +49,11 @@ function App() {
    * Callback function passed to the Login component.
    * Saves the token and user to state and localStorage.
    */
-  const handleLoginSuccess = async (receivedToken, receivedUser) => {
+  const handleLoginSuccess = (receivedToken, receivedUser) => {
     setToken(receivedToken);
+    setUser(receivedUser);
     localStorage.setItem('authToken', receivedToken);
-    
-    // Fetch full user info including role
-    try {
-      const fullUser = await getCurrentUser(receivedToken);
-      setUser(fullUser);
-      localStorage.setItem('authUser', JSON.stringify(fullUser));
-    } catch (err) {
-      // Fallback to received user if fetch fails
-      console.error('Failed to fetch user role:', err);
-      setUser(receivedUser);
-      localStorage.setItem('authUser', JSON.stringify(receivedUser));
-    }
+    localStorage.setItem('authUser', JSON.stringify(receivedUser));
   };
 
   /**
@@ -136,7 +105,6 @@ function App() {
           <Route path="research/library" element={<ResearchLibrarySection />} />
           <Route path="education" element={<Education />} />
           <Route path="education/placements" element={<PlacementSection />} />
-          <Route path="education/placements/companies" element={<PlacementCompaniesDetail />} />
           <Route path="education/administrative-section" element={<AdministrativeSection />} />
           <Route path="education/academic-section" element={<EducationAcademicSection />} />
           <Route path="industry-connect" element={<IndustryConnect />} />

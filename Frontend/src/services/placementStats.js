@@ -110,24 +110,3 @@ export const fetchTopRecruiters = async (filters, token) => {
     handleError(error, 'Failed to fetch top recruiters');
   }
 };
-
-export const fetchCompaniesDetails = async (filters, page = 1, perPage = 50, token) => {
-  try {
-    const queryParams = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '' && value !== 'All') {
-        queryParams.append(key, value);
-      }
-    });
-    queryParams.append('page', page);
-    queryParams.append('per_page', perPage);
-    
-    const response = await axios.get(
-      `${API_BASE_URL}/details/companies?${queryParams.toString()}`,
-      authHeaders(token)
-    );
-    return response.data;
-  } catch (error) {
-    handleError(error, 'Failed to fetch company details');
-  }
-};

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -14,39 +14,9 @@ function Login({ onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [roleId, setRoleId] = useState('1'); // Default to 'officials' (role_id: 1)
-  const [availableRoles, setAvailableRoles] = useState([]);
   
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Fetch available roles on component mount (only for signup)
-  useEffect(() => {
-    if (!isLoginView) {
-      // Try to fetch roles, but don't require authentication for this
-      axios.get('http://127.0.0.1:5000/auth/roles', {
-        headers: {
-          // Try with token if available, but don't fail if not
-        }
-      })
-        .then(response => {
-          // Filter out 'admin' role for security (only allow officials and administration)
-          const roles = (response.data.roles || []).filter(role => role.name !== 'admin');
-          setAvailableRoles(roles.length > 0 ? roles : [
-            { id: 1, name: 'officials' },
-            { id: 2, name: 'administration' }
-          ]);
-        })
-        .catch(err => {
-          console.error('Failed to fetch roles:', err);
-          // Default roles if fetch fails
-          setAvailableRoles([
-            { id: 1, name: 'officials' },
-            { id: 2, name: 'administration' }
-          ]);
-        });
-    }
-  }, [isLoginView]);
 
   /**
    * Handles the form submission for both login and signup.
@@ -62,7 +32,7 @@ function Login({ onLoginSuccess }) {
       
     const payload = isLoginView
       ? { email, password }
-      : { email, password, username, display_name: displayName, role_id: parseInt(roleId) };
+      : { email, password, username, display_name: displayName };
 
     try {
       const response = await axios.post(url, payload);
@@ -121,17 +91,6 @@ function Login({ onLoginSuccess }) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
             />
-            <select
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value)}
-              style={{ padding: '0.5rem', fontSize: '1rem' }}
-            >
-              {availableRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                </option>
-              ))}
-            </select>
           </>
         )}
 
