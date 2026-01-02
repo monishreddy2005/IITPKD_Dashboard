@@ -809,6 +809,94 @@ def generate_innovation_projects(
             project_id += 1
 
 
+EVENT_TYPES = ['Workshop', 'Seminar', 'Industrial Talk', 'Networking Event', 'Industry Visit', 'Panel Discussion', 'Conference', 'Training Program', 'Hackathon', 'Other']
+CONCLAVE_THEMES = [
+    'Digital Transformation in Manufacturing',
+    'Sustainable Engineering Solutions',
+    'AI and Machine Learning Applications',
+    'Industry 4.0 and Smart Manufacturing',
+    'Renewable Energy Technologies',
+    'Cybersecurity and Data Privacy',
+    'Healthcare Technology Innovation',
+    'Smart Cities and Urban Planning',
+    'Robotics and Automation',
+    'Materials Science and Engineering'
+]
+
+
+def generate_industry_events(
+    file,
+    years: Sequence[int],
+    events_per_year: int = 20
+) -> None:
+    """Generate industry interaction events data."""
+    file.write('event_title,event_type,industry_partner,event_date,duration_hours,department,description\n')
+    event_id = 1
+    seen_combinations = set()  # Track (event_title, event_date) combinations to ensure uniqueness
+    
+    for year in years:
+        for idx in range(events_per_year):
+            event_type = random.choice(EVENT_TYPES)
+            industry_partner = f"{random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)}"
+            department = random.choice(DEFAULT_EMPLOYEE_DEPARTMENTS)
+            
+            # Generate base title
+            base_title = f"{event_type} on {random.choice(['AI', 'Robotics', 'Energy', 'Materials', 'Automation', 'Data Science', 'IoT', 'Cloud Computing'])}"
+            event_title = base_title
+            counter = 1
+            
+            # Generate event date within the year
+            event_date = random_date(year, year)
+            
+            # Ensure uniqueness
+            while (event_title, event_date) in seen_combinations:
+                event_title = f"{base_title} {counter}"
+                counter += 1
+                # If still duplicate, try a different date
+                if counter > 5:
+                    event_date = random_date(year, year)
+                    counter = 1
+            
+            seen_combinations.add((event_title, event_date))
+            duration_hours = round(random.uniform(1.0, 8.0), 2)
+            description = f"{event_type} organized by {industry_partner} in collaboration with {department}"
+            
+            file.write(
+                f"{event_title},{event_type},{industry_partner},{_iso(event_date)},{duration_hours},{department},{description}\n"
+            )
+            event_id += 1
+
+
+def generate_industry_conclave(
+    file,
+    years: Sequence[int]
+) -> None:
+    """Generate Industry-Academia Conclave data (one per year)."""
+    file.write('year,theme,focus_area,number_of_companies,sessions_held,key_speakers,event_photos_url,brochure_url,description\n')
+    
+    for year in years:
+        theme = random.choice(CONCLAVE_THEMES)
+        focus_area = random.choice([
+            'Technology Transfer', 'Research Collaboration', 'Student Placements',
+            'Industry Partnerships', 'Innovation Ecosystem', 'Skill Development'
+        ])
+        number_of_companies = random.randint(15, 50)
+        sessions_held = '; '.join([
+            f"Panel Discussion: {random.choice(['Future of Manufacturing', 'AI in Industry', 'Sustainable Technologies'])}",
+            f"Workshop: {random.choice(['Industry Best Practices', 'Emerging Technologies', 'Innovation Management'])}",
+            f"Networking Session: {random.choice(['Industry-Academia Meet', 'Startup Showcase', 'Technology Expo'])}"
+        ])
+        speakers = [random_name() for _ in range(random.randint(3, 6))]
+        key_speakers = '; '.join([f"{speaker} ({random.choice(['CEO', 'CTO', 'VP Engineering', 'Director R&D', 'Head of Innovation'])} at {random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)})" for speaker in speakers])
+        event_photos_url = f"https://example.com/photos/conclave-{year}"
+        brochure_url = f"https://example.com/brochures/conclave-{year}.pdf"
+        description = f"Annual Industry-Academia Conclave {year} focusing on {theme.lower()} and fostering collaboration between industry and academia."
+        
+        file.write(
+            f"{year},{theme},{focus_area},{number_of_companies},{sessions_held},{key_speakers},{event_photos_url},{brochure_url},{description}\n"
+        )
+
+
 __all__ = [
     'DEFAULT_DEPARTMENT_CODES',
     'DEFAULT_EMPLOYEE_DEPARTMENTS',
@@ -838,6 +926,8 @@ __all__ = [
     'generate_academic_program_launch',
     'generate_startups',
     'generate_innovation_projects',
+    'generate_industry_events',
+    'generate_industry_conclave',
     'generate_employee_id',
     'random_name',
 ]

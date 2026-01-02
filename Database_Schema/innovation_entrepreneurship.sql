@@ -22,14 +22,13 @@ CREATE TABLE startups (
 -- Innovation projects table (non-startup projects)
 CREATE TABLE innovation_projects (
     project_id SERIAL PRIMARY KEY,
-    project_title VARCHAR(250) NOT NULL,
+    project_title VARCHAR(250) NOT NULL UNIQUE,
     project_type innovation_project_type NOT NULL,
     sector VARCHAR(100),
     year_started INT NOT NULL,
     status VARCHAR(50) DEFAULT 'Ongoing',
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(project_title, year_started)  -- Prevent duplicate project titles in same year
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for better query performance

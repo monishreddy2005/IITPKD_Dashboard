@@ -40,7 +40,9 @@ UPDATABLE_TABLES = {
     'research_patents': ['patent_id'],
     'research_publications': ['publication_id'],
     'startups': ['startup_name', 'year_of_incubation'],  # Composite unique key
-    'innovation_projects': ['project_title', 'year_started'],  # Composite unique key
+    'innovation_projects': ['project_title'],  # Using project_title as unique identifier
+    'industry_events': ['event_title', 'event_date'],  # Composite unique key
+    'industry_conclave': ['year'],  # One conclave per year
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],
@@ -151,7 +153,6 @@ def upload_csv(current_user_id):
         # We query information_schema.columns to get metadata
         # Handle case-insensitive table name matching
         # Also check for SERIAL columns (columns with sequence defaults)
-        # Also filter out columns with DEFAULT values (like created_at, updated_at) as they're auto-populated
         cur.execute(
             """
             SELECT 
@@ -167,11 +168,10 @@ def upload_csv(current_user_id):
         )
         db_columns_rows = cur.fetchall()
         
-        # Filter out generated columns, SERIAL columns, and columns with DEFAULT values
+        # Filter out generated columns and SERIAL columns (columns with sequence defaults)
         # Also track which columns are SERIAL so we can allow them in CSV (they'll be ignored)
         db_columns = []
         serial_columns = []
-        default_columns = []
         for row in db_columns_rows:
             column_name = row['column_name']
             is_generated = (row.get('is_generated') or 'NEVER').upper()
@@ -191,14 +191,6 @@ def upload_csv(current_user_id):
             if is_serial:
                 serial_columns.append(column_name)
                 continue
-            
-            # Check if it has a DEFAULT value (like CURRENT_TIMESTAMP, NOW(), etc.)
-            # These columns will be auto-populated by the database, so they're optional in CSV
-            has_default = bool(column_default) and not is_serial
-            
-            if has_default:
-                default_columns.append(column_name)
-                continue  # Skip columns with defaults - they're optional in CSV
             
             db_columns.append(column_name)
         
@@ -227,15 +219,11 @@ def upload_csv(current_user_id):
         csv_headers_lower = [h.lower() for h in csv_headers]
         db_columns_lower = [c.lower() for c in db_columns]
         
-        # Get all column names from database (including SERIAL/generated/default) for reference
+        # Get all column names from database (including SERIAL/generated) for reference
         all_db_columns = [row['column_name'] for row in db_columns_rows]
         all_db_columns_lower = [c.lower() for c in all_db_columns]
         
-        # Also include default columns in the "allowed but not required" list
-        default_columns_lower = [c.lower() for c in default_columns]
-        
         # Check if CSV has all required columns (db_columns must be in CSV)
-        # Columns with DEFAULT values are optional, so don't require them
         missing_in_csv = [db_columns[i] for i, col in enumerate(db_columns_lower) if col not in csv_headers_lower]
         if missing_in_csv:
             return jsonify({
@@ -243,19 +231,18 @@ def upload_csv(current_user_id):
                 'details': {
                     'missing_in_csv': missing_in_csv,
                     'expected_columns': db_columns,
-                    'optional_columns_with_defaults': default_columns,
                     'received_columns': csv_headers,
-                    'note': 'SERIAL columns and columns with DEFAULT values (like created_at) are optional in CSV.'
+                    'note': 'SERIAL columns (like employeeid) are auto-generated and should be excluded from CSV, or will be ignored if present.'
                 }
             }), 400
         
         # Check for extra columns in CSV that don't exist in database at all
-        # Allow SERIAL columns and default columns in CSV (they'll be handled appropriately)
+        # Allow SERIAL columns in CSV (they'll be ignored during insert)
         serial_columns_lower = [c.lower() for c in serial_columns]
         extra_in_csv = [
             csv_headers[i] 
             for i, col in enumerate(csv_headers_lower) 
-            if col not in all_db_columns_lower and col not in serial_columns_lower and col not in default_columns_lower
+            if col not in all_db_columns_lower and col not in serial_columns_lower
         ]
         if extra_in_csv:
             return jsonify({
@@ -263,11 +250,10 @@ def upload_csv(current_user_id):
                 'details': {
                     'extra_in_csv': extra_in_csv,
                     'expected_columns': db_columns,
-                    'optional_columns': default_columns,
                     'received_columns': csv_headers,
                     'all_database_columns': all_db_columns,
                     'serial_columns_ignored': serial_columns,
-                    'note': 'SERIAL columns and columns with DEFAULT values are optional in CSV.'
+                    'note': 'SERIAL columns (like employeeid) are auto-generated and will be ignored if present in CSV.'
                 }
             }), 400
         
@@ -275,22 +261,11 @@ def upload_csv(current_user_id):
         # This is handled in the data preparation step below
         
         # Map CSV headers to DB column names (handle case differences)
-        # Include both required columns and optional default columns that are present in CSV
-        all_uploadable_columns = db_columns + default_columns
         csv_to_db_map = {}
         for csv_header in csv_headers:
-            for db_col in all_uploadable_columns:
+            for db_col in db_columns:
                 if csv_header.lower() == db_col.lower():
                     csv_to_db_map[csv_header] = db_col
-                    break
-        
-        # Determine which columns to actually insert (required + optional that are in CSV)
-        columns_to_insert = db_columns.copy()
-        for csv_header in csv_headers:
-            for default_col in default_columns:
-                if csv_header.lower() == default_col.lower():
-                    if default_col not in columns_to_insert:
-                        columns_to_insert.append(default_col)
                     break
 
         # 5. --- Database Upsert (INSERT... ON CONFLICT) ---
@@ -300,28 +275,24 @@ def upload_csv(current_user_id):
         
         # Get all columns that are *not* part of the conflict key
         # These are the ones we will update if a conflict occurs
-        # Map conflict keys to actual DB column names (check both required and default columns)
+        # Map conflict keys to actual DB column names
         conflict_keys_db = []
         for key in conflict_keys:
-            found = False
-            for db_col in all_uploadable_columns:  # Check both db_columns and default_columns
+            for db_col in db_columns:
                 if key.lower() == db_col.lower():
                     conflict_keys_db.append(db_col)
-                    found = True
                     break
-            if not found:
+            else:
                 conflict_keys_db.append(key)  # Fallback if not found
         
-        # Update columns should include all columns to insert except conflict keys
-        update_cols = [col for col in columns_to_insert if col not in conflict_keys_db]
+        update_cols = [col for col in db_columns if col not in conflict_keys_db]
 
         # --- Build the dynamic, but SAFE, SQL query ---
         # We use f-strings safely here because 'table_name' and column names
         # are validated against our whitelist and database metadata, NOT raw user input.
         
         # "col1", "col2", ...
-        # Use columns_to_insert which includes required columns + optional default columns from CSV
-        cols_sql = ", ".join([f'"{c}"' for c in columns_to_insert])
+        cols_sql = ", ".join([f'"{c}"' for c in db_columns])
         
         # "key1", "key2", ...
         conflict_sql = ", ".join([f'"{c}"' for c in conflict_keys_db])
@@ -349,10 +320,10 @@ def upload_csv(current_user_id):
         
         data_to_insert = []
         for row in reader:
-            # Create a tuple for the row, ensuring columns are in the same order as columns_to_insert
+            # Create a tuple for the row, ensuring columns are in the same order as db_columns
             # Handle empty strings as None (NULL) and map CSV headers to DB column names
             row_tuple = []
-            for db_col in columns_to_insert:
+            for db_col in db_columns:
                 # Find matching CSV header (case-insensitive)
                 value = None
                 for csv_header in csv_headers:

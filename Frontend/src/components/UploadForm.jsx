@@ -27,7 +27,9 @@ const tableOptions = [
   'research_patents',
   'research_publications',
   'startups',
-  'innovation_projects'
+  'innovation_projects',
+  'industry_events',
+  'industry_conclave'
 ];
 
 /**

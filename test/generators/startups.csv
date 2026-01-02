@@ -1,0 +1,91 @@
+startup_name,founder_name,innovation_focus_area,year_of_incubation,status,sector,is_from_iitpkd
+PrimeVentures,Sameer Verma,Agricultural IoT,2018,Inactive,Software & IT,TRUE
+OptiDynamics,Harish Mehta,Financial Technology,2018,Inactive,EdTech,FALSE
+PrimeGlobal,Nisha Chakraborty,Waste Management,2018,Inactive,Materials Science,TRUE
+OptiPartners,Kiran Nair,Robotics Automation,2018,Active,Biotechnology,TRUE
+AeroDynamics,Vikram Reddy,Agricultural IoT,2018,Inactive,EdTech,TRUE
+DataLabs,Nisha Pillai,Robotics Automation,2018,Inactive,Robotics & Automation,FALSE
+AeroDynamics 1,Naveen Iyer,Cybersecurity,2018,Graduated,Robotics & Automation,TRUE
+PrimeVentures 1,Pranav Nair,Cybersecurity,2018,Graduated,Data Analytics,FALSE
+TechDynamics,Nisha Kulkarni,Waste Management,2018,Active,Agricultural Technology,FALSE
+NextWorks,Harish Joshi,Precision Agriculture,2018,Active,Data Analytics,FALSE
+NovaSolutions,Vikram Das,Smart Cities,2018,Active,Biotechnology,FALSE
+UltraSolutions,Pranav Das,Waste Management,2018,Inactive,Data Analytics,FALSE
+NovaEnterprises,Lakshmi Mehta,Smart Cities,2018,Active,Agricultural Technology,FALSE
+NovaGlobal,Harish Gupta,Agricultural IoT,2018,Active,EdTech,FALSE
+DataSolutions,Kiran Mishra,Robotics Automation,2018,Graduated,Environmental Technology,TRUE
+NovaLabs,Isha Kulkarni,Precision Agriculture,2019,Graduated,FinTech,FALSE
+InfoNetworks,Rahul Mehta,Cybersecurity,2019,Inactive,Software & IT,TRUE
+PrimePartners,Naveen Das,Agricultural IoT,2019,Graduated,Robotics & Automation,FALSE
+OptiVentures,Deepa Mishra,Financial Technology,2019,Graduated,Manufacturing,FALSE
+UltraSolutions,Manoj Pillai,Precision Agriculture,2019,Inactive,FinTech,FALSE
+AeroNetworks,Deepa Yadav,Water Purification,2019,Graduated,Materials Science,TRUE
+InfoWorks,Arjun Singh,Waste Management,2019,Graduated,Healthcare Technology,FALSE
+TechGlobal,Rohit Nair,Water Purification,2019,Active,Environmental Technology,FALSE
+GreenSolutions,Arjun Gopal,Supply Chain Optimization,2019,Active,FinTech,TRUE
+NextNetworks,Asha Kulkarni,Waste Management,2019,Active,Robotics & Automation,FALSE
+NovaLabs 1,Manoj Singh,Smart Manufacturing,2019,Inactive,Biotechnology,TRUE
+UltraSystems,Kiran Iyer,Cybersecurity,2019,Graduated,Biotechnology,TRUE
+OptiNetworks,Shreya Patel,Waste Management,2019,Active,EdTech,TRUE
+InfoSystems,Sneha Krishnan,Renewable Energy Systems,2019,Active,EdTech,FALSE
+AeroLabs,Pooja Mishra,Supply Chain Optimization,2019,Inactive,Robotics & Automation,FALSE
+OptiSystems,Vikram Patel,Smart Cities,2020,Graduated,Clean Energy,FALSE
+DataPartners,Rahul Reddy,Agricultural IoT,2020,Inactive,Manufacturing,TRUE
+TechDynamics,Pranav Menon,Sustainable Materials,2020,Inactive,EdTech,TRUE
+NovaSolutions,Pooja Mishra,Educational Platforms,2020,Inactive,Biotechnology,TRUE
+UltraSystems,Arjun Krishnan,Renewable Energy Systems,2020,Inactive,Robotics & Automation,FALSE
+NextEnterprises,Vikram Pillai,Smart Manufacturing,2020,Graduated,EdTech,FALSE
+PrimeSolutions,Nisha Reddy,Supply Chain Optimization,2020,Active,IoT & Smart Devices,FALSE
+UltraLabs,Arjun Mishra,Waste Management,2020,Inactive,FinTech,TRUE
+DataNetworks,Isha Mishra,Educational Platforms,2020,Graduated,Healthcare Technology,TRUE
+PrimeGlobal,Manoj Patel,Smart Cities,2020,Active,FinTech,FALSE
+GreenSolutions,Sameer Gopal,Precision Agriculture,2020,Active,Software & IT,FALSE
+InfoNetworks,Deepa Pillai,Water Purification,2020,Active,FinTech,FALSE
+TechLabs,Rahul Reddy,Cybersecurity,2020,Active,Environmental Technology,FALSE
+NextWorks,Asha Patel,Waste Management,2020,Inactive,Healthcare Technology,TRUE
+PrimeSolutions 1,Asha Joshi,Cybersecurity,2020,Active,Environmental Technology,FALSE
+DataNetworks,Aparna Das,Renewable Energy Systems,2021,Inactive,Healthcare Technology,FALSE
+NovaVentures,Sameer Yadav,Educational Platforms,2021,Active,EdTech,FALSE
+AeroWorks,Sneha Mishra,Supply Chain Optimization,2021,Active,IoT & Smart Devices,FALSE
+InfoGlobal,Divya Patel,AI-Powered Healthcare Solutions,2021,Graduated,Manufacturing,TRUE
+AeroGlobal,Sneha Pillai,Precision Agriculture,2021,Graduated,AI & Machine Learning,TRUE
+OptiLabs,Pooja Mehta,AI-Powered Healthcare Solutions,2021,Graduated,EdTech,TRUE
+InfoEnterprises,Pranav Yadav,Smart Manufacturing,2021,Graduated,Agricultural Technology,FALSE
+PrimeDynamics,Harish Nair,Renewable Energy Systems,2021,Active,EdTech,TRUE
+NovaDynamics,Lakshmi Kulkarni,Precision Agriculture,2021,Graduated,Agricultural Technology,FALSE
+GreenSystems,Harish Mehta,Smart Manufacturing,2021,Graduated,Healthcare Technology,FALSE
+NextSystems,Rohit Reddy,Renewable Energy Systems,2021,Active,EdTech,FALSE
+NovaNetworks,Sneha Gupta,Supply Chain Optimization,2021,Graduated,Software & IT,TRUE
+AeroWorks 1,Vikram Patel,Water Purification,2021,Graduated,FinTech,FALSE
+TechDynamics,Asha Pillai,Financial Technology,2021,Graduated,Clean Energy,TRUE
+NextWorks,Rahul Chakraborty,Sustainable Materials,2021,Active,AI & Machine Learning,FALSE
+GreenPartners,Vikram Joshi,Medical Diagnostics,2022,Graduated,Robotics & Automation,TRUE
+PrimeSystems,Nisha Reddy,Water Purification,2022,Graduated,Environmental Technology,FALSE
+NovaPartners,Sneha Yadav,Sustainable Materials,2022,Active,Biotechnology,FALSE
+OptiSolutions,Shreya Mishra,Precision Agriculture,2022,Active,AI & Machine Learning,FALSE
+InfoSystems,Kiran Verma,Precision Agriculture,2022,Inactive,Manufacturing,TRUE
+InfoDynamics,Naveen Raman,Precision Agriculture,2022,Graduated,AI & Machine Learning,FALSE
+TechNetworks,Sneha Reddy,AI-Powered Healthcare Solutions,2022,Inactive,Healthcare Technology,TRUE
+DataGlobal,Aparna Menon,Renewable Energy Systems,2022,Graduated,Manufacturing,TRUE
+UltraVentures,Rohit Singh,Cybersecurity,2022,Graduated,Manufacturing,TRUE
+InfoNetworks,Pranav Kulkarni,Agricultural IoT,2022,Graduated,FinTech,TRUE
+GreenLabs,Aparna Joshi,Smart Manufacturing,2022,Active,Robotics & Automation,FALSE
+GreenPartners 1,Rohit Reddy,Smart Manufacturing,2022,Graduated,Agricultural Technology,TRUE
+NextDynamics,Asha Sharma,Cybersecurity,2022,Active,IoT & Smart Devices,TRUE
+NextSystems,Lakshmi Kulkarni,Sustainable Materials,2022,Inactive,FinTech,TRUE
+InfoPartners,Vikram Das,Precision Agriculture,2022,Graduated,Manufacturing,FALSE
+NextPartners,Asha Chakraborty,AI-Powered Healthcare Solutions,2023,Active,FinTech,FALSE
+DataLabs,Manoj Sharma,Smart Cities,2023,Graduated,Agricultural Technology,TRUE
+TechNetworks,Pooja Kulkarni,Supply Chain Optimization,2023,Inactive,Clean Energy,FALSE
+PrimeSystems,Arjun Nair,Educational Platforms,2023,Active,AI & Machine Learning,FALSE
+PrimeWorks,Rohit Reddy,Agricultural IoT,2023,Graduated,FinTech,FALSE
+AeroVentures,Manoj Gupta,AI-Powered Healthcare Solutions,2023,Graduated,Clean Energy,FALSE
+TechEnterprises,Rahul Kulkarni,Cybersecurity,2023,Active,Biotechnology,FALSE
+InfoPartners,Sneha Gupta,Cybersecurity,2023,Graduated,Healthcare Technology,FALSE
+TechGlobal,Kiran Mehta,Supply Chain Optimization,2023,Inactive,Data Analytics,FALSE
+InfoPartners 1,Harish Sharma,Agricultural IoT,2023,Inactive,IoT & Smart Devices,FALSE
+GreenGlobal,Nisha Chakraborty,Educational Platforms,2023,Active,Clean Energy,FALSE
+InfoNetworks,Sneha Verma,Precision Agriculture,2023,Graduated,Materials Science,FALSE
+DataEnterprises,Manoj Chakraborty,Medical Diagnostics,2023,Active,Data Analytics,FALSE
+OptiGlobal,Sameer Kulkarni,Sustainable Materials,2023,Graduated,Materials Science,TRUE
+NovaNetworks,Vikram Nair,AI-Powered Healthcare Solutions,2023,Inactive,IoT & Smart Devices,FALSE
