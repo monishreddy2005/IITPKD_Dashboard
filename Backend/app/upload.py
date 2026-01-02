@@ -42,9 +42,13 @@ UPDATABLE_TABLES = {
     'startups': ['startup_name', 'year_of_incubation'],  # Composite unique key
     'innovation_projects': ['project_title', 'year_started'],  # Composite unique key
     'industry_events': ['event_title', 'event_date'],  # Composite unique key
-    'industry_conclave': ['year'],  # Single unique key
-    'industry_events': ['event_title', 'event_date'],  # Composite unique key
     'industry_conclave': ['year'],  # One conclave per year
+    'open_house': ['event_year', 'event_date'],  # Composite unique key
+    'nptel_local_chapters': ['chapter_name'],  # Single unique key
+    'nptel_courses': ['course_code', 'offering_year', 'offering_semester'],  # Composite unique key
+    'nptel_enrollments': ['enrollment_id'],  # Uses SERIAL ID
+    'uba_projects': ['project_id'],  # Uses SERIAL ID
+    'uba_events': ['event_id'],  # Uses SERIAL ID
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],

@@ -26,6 +26,9 @@ import ResearchLibrarySection from './components/ResearchLibrarySection';
 import InnovationSection from './components/InnovationSection';
 import IcsrSection from './components/IcsrSection';
 import ConclaveSection from './components/ConclaveSection';
+import OpenHouseSection from './components/OpenHouseSection';
+import NptelSection from './components/NptelSection';
+import UbaSection from './components/UbaSection';
 
 function App() {
   // State to hold the authentication token
@@ -115,6 +118,9 @@ function App() {
           <Route path="industry-connect/icsr" element={<IcsrSection />} />
           <Route path="industry-connect/conclave" element={<ConclaveSection />} />
           <Route path="outreach-extension" element={<OutreachExtension />} />
+          <Route path="outreach-extension/open-house" element={<OpenHouseSection />} />
+          <Route path="outreach-extension/nptel" element={<NptelSection />} />
+          <Route path="outreach-extension/uba" element={<UbaSection />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
         </Route>

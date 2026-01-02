@@ -29,7 +29,13 @@ const tableOptions = [
   'startups',
   'innovation_projects',
   'industry_events',
-  'industry_conclave'
+  'industry_conclave',
+  'open_house',
+  'nptel_local_chapters',
+  'nptel_courses',
+  'nptel_enrollments',
+  'uba_projects',
+  'uba_events'
 ];
 
 /**
