@@ -1,7 +1,11 @@
-CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
+DO $$ BEGIN
+    CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 
-CREATE TABLE industry_courses (
+CREATE TABLE IF NOT EXISTS industry_courses (
     course_id SERIAL PRIMARY KEY,
     course_title VARCHAR(200) NOT NULL,
     department VARCHAR(100) NOT NULL,
@@ -11,7 +15,7 @@ CREATE TABLE industry_courses (
 );
 
 
-CREATE TABLE academic_program_launch (
+CREATE TABLE IF NOT EXISTS academic_program_launch (
     program_code VARCHAR(50) PRIMARY KEY,
     program_name VARCHAR(150) NOT NULL,
     program_type academic_program_type NOT NULL,

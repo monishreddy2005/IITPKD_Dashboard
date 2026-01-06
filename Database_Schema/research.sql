@@ -1,10 +1,26 @@
-CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
-CREATE TYPE project_status_type AS ENUM ('Ongoing', 'Completed');
-CREATE TYPE patent_status_type AS ENUM ('Filed', 'Granted', 'Published');
-CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+DO $$ BEGIN
+    CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    CREATE TYPE project_status_type AS ENUM ('Ongoing', 'Completed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    CREATE TYPE patent_status_type AS ENUM ('Filed', 'Granted', 'Published');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 
-CREATE TABLE research_projects (
+CREATE TABLE IF NOT EXISTS research_projects (
     project_id SERIAL PRIMARY KEY,
     project_title VARCHAR(250) NOT NULL,
     principal_investigator VARCHAR(150) NOT NULL,
@@ -21,7 +37,7 @@ CREATE TABLE research_projects (
 );
 
 
-CREATE TABLE research_mous (
+CREATE TABLE IF NOT EXISTS research_mous (
     mou_id SERIAL PRIMARY KEY,
     partner_name VARCHAR(200) NOT NULL,
     collaboration_nature TEXT,
@@ -31,7 +47,7 @@ CREATE TABLE research_mous (
 );
 
 
-CREATE TABLE research_patents (
+CREATE TABLE IF NOT EXISTS research_patents (
     patent_id SERIAL PRIMARY KEY,
     patent_title VARCHAR(250) NOT NULL,
     inventors TEXT,
@@ -42,7 +58,7 @@ CREATE TABLE research_patents (
 );
 
 
-CREATE TABLE research_publications (
+CREATE TABLE IF NOT EXISTS research_publications (
     publication_id SERIAL PRIMARY KEY,
     publication_title VARCHAR(250) NOT NULL,
     journal_name VARCHAR(200),

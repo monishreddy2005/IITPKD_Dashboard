@@ -1,4 +1,4 @@
-CREATE TABLE ewd_yearwise (
+CREATE TABLE IF NOT EXISTS ewd_yearwise (
     ewd_year INT PRIMARY KEY, 
     
 
