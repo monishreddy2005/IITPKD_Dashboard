@@ -1,11 +1,19 @@
 -- Innovation and Entrepreneurship Module
 -- TECHIN (Technology Innovation Foundation of IIT Palakkad) & IPTIF (IIT Palakkad Technology IHub Foundation)
 
-CREATE TYPE startup_status_type AS ENUM ('Active', 'Graduated', 'Inactive');
-CREATE TYPE innovation_project_type AS ENUM ('Funded', 'Mentored');
+DO $$ BEGIN
+    CREATE TYPE startup_status_type AS ENUM ('Active', 'Graduated', 'Inactive');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    CREATE TYPE innovation_project_type AS ENUM ('Funded', 'Mentored');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Main startups/incubatees table
-CREATE TABLE startups (
+CREATE TABLE IF NOT EXISTS startups (
     startup_id SERIAL PRIMARY KEY,
     startup_name VARCHAR(200) NOT NULL,
     founder_name VARCHAR(200) NOT NULL,
@@ -20,7 +28,7 @@ CREATE TABLE startups (
 );
 
 -- Innovation projects table (non-startup projects)
-CREATE TABLE innovation_projects (
+CREATE TABLE IF NOT EXISTS innovation_projects (
     project_id SERIAL PRIMARY KEY,
     project_title VARCHAR(250) NOT NULL UNIQUE,
     project_type innovation_project_type NOT NULL,

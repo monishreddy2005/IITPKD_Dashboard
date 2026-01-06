@@ -1,7 +1,8 @@
 -- Industry Connect Module
 -- ICSR Section and Industry-Academia Conclave Coordinator
 
-CREATE TYPE event_type AS ENUM (
+DO $$ BEGIN
+    CREATE TYPE event_type AS ENUM (
     'Workshop', 
     'Seminar', 
     'Industrial Talk', 
@@ -13,9 +14,12 @@ CREATE TYPE event_type AS ENUM (
     'Hackathon',
     'Other'
 );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- ICSR Section: Industry Interaction Events
-CREATE TABLE industry_events (
+CREATE TABLE IF NOT EXISTS industry_events (
     event_id SERIAL PRIMARY KEY,
     event_title VARCHAR(250) NOT NULL,
     event_type event_type NOT NULL,
@@ -29,7 +33,7 @@ CREATE TABLE industry_events (
 );
 
 -- Industry-Academia Conclave
-CREATE TABLE industry_conclave (
+CREATE TABLE IF NOT EXISTS industry_conclave (
     conclave_id SERIAL PRIMARY KEY,
     year INT NOT NULL UNIQUE,  -- One conclave per year
     theme VARCHAR(300) NOT NULL,

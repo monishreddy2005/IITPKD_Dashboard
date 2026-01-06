@@ -1,4 +1,4 @@
-CREATE TABLE icc_yearwise (
+CREATE TABLE IF NOT EXISTS icc_yearwise (
     complaints_year INT PRIMARY KEY, 
     total_complaints INT NOT NULL, 
     complaints_resolved INT NOT NULL,  

@@ -2,7 +2,7 @@
 -- Open House, NPTEL-CCE, and UBA (Unnat Bharat Abhiyan)
 
 -- 1. Open House – Faculty Coordinator
-CREATE TABLE open_house (
+CREATE TABLE IF NOT EXISTS open_house (
     event_id SERIAL PRIMARY KEY,
     event_year INT NOT NULL,
     event_date DATE NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE open_house (
 );
 
 -- 2. NPTEL – CCE (Continuing and Community Education)
-CREATE TABLE nptel_local_chapters (
+CREATE TABLE IF NOT EXISTS nptel_local_chapters (
     chapter_id SERIAL PRIMARY KEY,
     chapter_name VARCHAR(200) NOT NULL,
     faculty_coordinator VARCHAR(150) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE nptel_local_chapters (
     UNIQUE(chapter_name)  -- Each chapter name should be unique
 );
 
-CREATE TABLE nptel_courses (
+CREATE TABLE IF NOT EXISTS nptel_courses (
     course_id SERIAL PRIMARY KEY,
     course_code VARCHAR(50) NOT NULL,
     course_title VARCHAR(250) NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE nptel_courses (
     UNIQUE(course_code, offering_year, offering_semester)  -- Same course can be offered multiple times
 );
 
-CREATE TABLE nptel_enrollments (
+CREATE TABLE IF NOT EXISTS nptel_enrollments (
     enrollment_id SERIAL PRIMARY KEY,
     course_id INT NOT NULL REFERENCES nptel_courses(course_id),
     student_name VARCHAR(150),
@@ -56,7 +56,7 @@ CREATE TABLE nptel_enrollments (
 );
 
 -- 3. UBA (Unnat Bharat Abhiyan) – Faculty Coordinator
-CREATE TABLE uba_projects (
+CREATE TABLE IF NOT EXISTS uba_projects (
     project_id SERIAL PRIMARY KEY,
     project_title VARCHAR(250) NOT NULL,
     coordinator_name VARCHAR(150) NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE uba_projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE uba_events (
+CREATE TABLE IF NOT EXISTS uba_events (
     event_id SERIAL PRIMARY KEY,
     project_id INT REFERENCES uba_projects(project_id),
     event_title VARCHAR(250) NOT NULL,

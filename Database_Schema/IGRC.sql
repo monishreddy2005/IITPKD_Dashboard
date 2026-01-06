@@ -1,4 +1,4 @@
-CREATE TABLE igrs_yearwise (
+CREATE TABLE IF NOT EXISTS igrs_yearwise (
     grievance_year INT PRIMARY KEY,
     total_grievances_filed INT NOT NULL,
     grievances_resolved INT NOT NULL,
