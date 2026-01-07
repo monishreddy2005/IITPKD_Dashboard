@@ -24,6 +24,8 @@ import {
   fetchPublicationList
 } from '../services/researchStats';
 
+import DataUploadModal from './DataUploadModal';
+
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -38,7 +40,9 @@ const formatDateYear = (year) => {
   return year;
 };
 
-function ResearchLibrarySection() {
+function ResearchLibrarySection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
   const [filterOptions, setFilterOptions] = useState({
     publication_departments: [],
     publication_years: [],
@@ -200,6 +204,18 @@ function ResearchLibrarySection() {
               Clear Filters
             </button>
           </div>
+
+          {user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => setIsUploadModalOpen(true)}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Publications
+              </button>
+            </div>
+          )}
 
           <div className="filter-grid">
             <div className="filter-group">
@@ -392,6 +408,14 @@ function ResearchLibrarySection() {
           </>
         )}
       </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="research_publications"
+        token={token}
+      />
     </div>
   );
 }

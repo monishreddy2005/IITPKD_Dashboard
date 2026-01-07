@@ -7,9 +7,17 @@ function Profile({ user }) {
   
   // Check if user has role_id 2 or 3
   const canUploadData = user && (user.role_id === 2 || user.role_id === 3);
+
+  // ✅ ADDITION: Super Admin check
+  const isAdmin = user && user.role_id === 3;
   
   const handleUploadClick = () => {
     navigate('/upload');
+  };
+
+  // ✅ ADDITION
+  const handleCreateUserClick = () => {
+    navigate('/create-user');
   };
 
   return (
@@ -51,6 +59,18 @@ function Profile({ user }) {
                   onClick={handleUploadClick}
                 >
                   Upload Data
+                </button>
+              </div>
+            )}
+
+            {/* ✅ ADDITION: Create User - Only Super Admin */}
+            {isAdmin && (
+              <div className="profile-actions">
+                <button 
+                  className="upload-data-btn"
+                  onClick={handleCreateUserClick}
+                >
+                  Create User
                 </button>
               </div>
             )}

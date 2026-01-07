@@ -54,6 +54,9 @@ def create_app():
     from . import placement_stats
     from . import academic_module
     from . import research_module
+    from . import innovation_module
+    from . import industry_connect_module
+    from . import outreach_extension_module
 
     # Register the blueprints
     # All routes from auth.py will be prefixed with /auth
@@ -85,6 +88,9 @@ def create_app():
     app.register_blueprint(placement_stats.placement_bp, url_prefix='/api/placement')
     app.register_blueprint(academic_module.academic_module_bp, url_prefix='/api/academic-module')
     app.register_blueprint(research_module.research_bp, url_prefix='/api/research-module')
+    app.register_blueprint(innovation_module.innovation_bp, url_prefix='/api/innovation')
+    app.register_blueprint(industry_connect_module.industry_connect_bp, url_prefix='/api/industry-connect')
+    app.register_blueprint(outreach_extension_module.outreach_extension_bp, url_prefix='/api/outreach-extension')
     
     # A simple test route
     @app.route('/health')

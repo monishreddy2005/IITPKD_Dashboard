@@ -1,4 +1,4 @@
-CREATE TABLE placement_summary (
+CREATE TABLE IF NOT EXISTS placement_summary (
     placement_year INT NOT NULL,
     program program_type NOT NULL,
     gender gender_type NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE placement_summary (
 );
 
 
-CREATE TABLE placement_companies (
+CREATE TABLE IF NOT EXISTS placement_companies (
     company_id SERIAL PRIMARY KEY,
     placement_year INT NOT NULL,
     company_name VARCHAR(150) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE placement_companies (
 );
 
 
-CREATE TABLE placement_packages (
+CREATE TABLE IF NOT EXISTS placement_packages (
     placement_year INT NOT NULL,
     program program_type NOT NULL,
     highest_package DECIMAL(10, 2),

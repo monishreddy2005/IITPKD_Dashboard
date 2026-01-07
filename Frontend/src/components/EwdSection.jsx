@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 
 import { fetchEwdSummary, fetchEwdYearly } from '../services/ewdStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -33,7 +34,8 @@ const decimalFormatter = new Intl.NumberFormat('en-IN', { minimumFractionDigits:
 const formatNumber = (value) => numberFormatter.format(Math.round(value || 0));
 const formatDecimal = (value) => decimalFormatter.format(value || 0);
 
-function EwdSection() {
+function EwdSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [summary, setSummary] = useState({
     totalAnnualElectricity: 0,
@@ -79,12 +81,12 @@ function EwdSection() {
         const summaryData = summaryResponse?.data || {};
         const latest = summaryData.latest
           ? {
-              year: summaryData.latest.ewd_year,
-              perCapitaElectricity: Number(summaryData.latest.per_capita_electricity_consumption || 0),
-              perCapitaWater: Number(summaryData.latest.per_capita_water_consumption || 0),
-              perCapitaRecycled: Number(summaryData.latest.per_capita_recycled_water || 0),
-              greenCoverage: Number(summaryData.latest.green_coverage || 0)
-            }
+            year: summaryData.latest.ewd_year,
+            perCapitaElectricity: Number(summaryData.latest.per_capita_electricity_consumption || 0),
+            perCapitaWater: Number(summaryData.latest.per_capita_water_consumption || 0),
+            perCapitaRecycled: Number(summaryData.latest.per_capita_recycled_water || 0),
+            greenCoverage: Number(summaryData.latest.green_coverage || 0)
+          }
           : null;
 
         setSummary({
@@ -121,6 +123,18 @@ function EwdSection() {
           Monitor institute-wide energy and water usage trends along with per capita consumption indicators and green
           coverage metrics maintained by the Engineering and Works Division.
         </p>
+
+        {user && user.role_id === 3 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              Upload Data
+            </button>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 
@@ -320,6 +334,14 @@ function EwdSection() {
           </>
         )}
       </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="ewd_yearwise"
+        token={token}
+      />
     </div>
   );
 }

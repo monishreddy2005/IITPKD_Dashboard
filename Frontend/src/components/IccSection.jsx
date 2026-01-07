@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 
 import { fetchIccSummary, fetchIccYearly } from '../services/grievanceStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -21,7 +22,8 @@ const AREA_COLORS = {
   pending: '#fa709a'
 };
 
-function IccSection() {
+function IccSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [summary, setSummary] = useState({
     total: 0,
@@ -84,6 +86,18 @@ function IccSection() {
           Monitor the yearly trend of sexual harassment complaints received by the ICC and track their resolution
           status.
         </p>
+
+        {user && user.role_id === 3 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              Upload Data
+            </button>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 
@@ -230,6 +244,14 @@ function IccSection() {
           </>
         )}
       </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="icc_yearwise"
+        token={token}
+      />
     </div>
   );
 }

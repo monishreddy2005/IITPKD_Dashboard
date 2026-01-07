@@ -1,21 +1,25 @@
 -- A 'user_status' enum type
-CREATE TYPE user_status AS ENUM (
+DO $$ BEGIN
+    CREATE TYPE user_status AS ENUM (
     'pending_verification', 
     'active', 
     'deactivated' 
 );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- This table holds user roles
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Insert default roles
-INSERT INTO roles (name) VALUES ('officials'), ('administration'), ('admin');
+INSERT INTO roles (name) VALUES ('officials'), ('administration'), ('admin'), ('academics');
 
 -- The main users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     -- Core Identity
     id SERIAL PRIMARY KEY,
     

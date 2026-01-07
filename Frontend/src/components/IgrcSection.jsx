@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 
 import { fetchIgrcSummary, fetchIgrcYearly } from '../services/grievanceStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -21,7 +22,8 @@ const BAR_COLORS = {
   pending: '#fa709a'
 };
 
-function IgrcSection() {
+function IgrcSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [summary, setSummary] = useState({
     total: 0,
@@ -86,6 +88,18 @@ function IgrcSection() {
           Grievance Resolution Cell.
         </p>
 
+        {user && user.role_id === 3 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              Upload Data
+            </button>
+          </div>
+        )}
+
         {error && <div className="error-message">{error}</div>}
 
         {loading ? (
@@ -148,6 +162,14 @@ function IgrcSection() {
           </>
         )}
       </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="igrs_yearwise"
+        token={token}
+      />
     </div>
   );
 }

@@ -1,0 +1,101 @@
+employeeid,empname,email,phonenumber,bloodgroup,dateofbirth,gender,department,currentdesignationid,isactive,category,pwd_exs,state,createddate,modifieddate
+EMP256750,Rahul Reddy,rahulreddy71@iitpkd.ac.in,9561879566,A-,1973-09-25,Transgender,Mathematics,28,TRUE,OBC,FALSE,Maharashtra,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257152,Rohit Gopal,rohitgopal98@iitpkd.ac.in,9892193197,O+,1971-07-08,Male,Civil Engineering,2,TRUE,OBC,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253992,Divya Verma,divyaverma66@iitpkd.ac.in,9323814210,O+,1992-12-03,Female,Mathematics,38,TRUE,ST,FALSE,West Bengal,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256757,Shreya Kulkarni,shreyakulkarni81@iitpkd.ac.in,9104594274,A-,1986-02-27,Male,Physics,24,TRUE,GEN,FALSE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259671,Lakshmi Pillai,lakshmipillai39@iitpkd.ac.in,9233017990,AB-,1972-06-28,Male,Humanities and Social Sciences,16,FALSE,EWS,TRUE,Gujarat,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253041,Arjun Joshi,arjunjoshi64@iitpkd.ac.in,9726896410,AB-,1984-01-29,Male,Humanities and Social Sciences,19,TRUE,ST,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256686,Rahul Sharma,rahulsharma98@iitpkd.ac.in,9036698416,AB+,1989-02-02,Transgender,Mathematics,39,FALSE,SC,TRUE,Rajasthan,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259087,Pranav Nair,pranavnair20@iitpkd.ac.in,9400989378,A-,1991-04-04,Female,Chemical Engineering,28,TRUE,EWS,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259915,Pranav Yadav,pranavyadav54@iitpkd.ac.in,9549045480,A+,1991-07-03,Female,Physics,22,FALSE,SC,TRUE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253253,Rohit Raman,rohitraman40@iitpkd.ac.in,9625307786,AB+,1993-06-01,Transgender,Mechanical Engineering,13,TRUE,GEN,FALSE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258113,Arjun Mehta,arjunmehta88@iitpkd.ac.in,9767544117,AB-,1989-04-20,Transgender,Mechanical Engineering,22,FALSE,SC,FALSE,Maharashtra,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254115,Sneha Yadav,snehayadav72@iitpkd.ac.in,9864431406,AB-,1977-04-29,Transgender,Computer Science and Engineering,23,TRUE,SC,TRUE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255557,Aparna Verma,aparnaverma36@iitpkd.ac.in,9379196589,O-,1988-01-04,Transgender,Chemical Engineering,36,FALSE,EWS,TRUE,Uttar Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259495,Pooja Gupta,poojagupta22@iitpkd.ac.in,9632195495,A-,1980-08-13,Female,Chemical Engineering,25,TRUE,EWS,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253202,Asha Pillai,ashapillai52@iitpkd.ac.in,9952777006,AB+,1978-05-25,Female,Civil Engineering,10,FALSE,SC,TRUE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255729,Deepa Mishra,deepamishra46@iitpkd.ac.in,9816411432,O-,1971-07-01,Female,Electrical Engineering,34,TRUE,OBC,FALSE,Odisha,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254390,Manoj Patel,manojpatel62@iitpkd.ac.in,9222167663,B+,1987-01-11,Male,Computer Science and Engineering,22,TRUE,OBC,FALSE,West Bengal,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257116,Rahul Sharma,rahulsharma12@iitpkd.ac.in,9224898854,A-,1992-12-11,Female,Electrical Engineering,12,TRUE,EWS,TRUE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254071,Harish Gopal,harishgopal64@iitpkd.ac.in,9250096810,B+,1990-07-22,Transgender,Mechanical Engineering,9,TRUE,ST,FALSE,Telangana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257066,Arjun Reddy,arjunreddy76@iitpkd.ac.in,9936320520,A+,1995-03-26,Female,Physics,9,FALSE,OBC,TRUE,Haryana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258855,Deepa Das,deepadas51@iitpkd.ac.in,9979205734,AB-,1983-03-25,Male,Mechanical Engineering,1,TRUE,OBC,FALSE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254559,Nisha Iyer,nishaiyer67@iitpkd.ac.in,9834003732,AB-,1976-06-16,Transgender,Chemistry,35,FALSE,OBC,TRUE,Rajasthan,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255212,Nisha Singh,nishasingh92@iitpkd.ac.in,9295702265,AB-,1989-03-30,Female,Civil Engineering,3,TRUE,ST,FALSE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251546,Shreya Das,shreyadas68@iitpkd.ac.in,9408934542,A+,1979-04-16,Male,Chemical Engineering,39,FALSE,SC,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252293,Isha Singh,ishasingh43@iitpkd.ac.in,9840575190,AB+,1970-04-08,Female,Civil Engineering,5,TRUE,ST,FALSE,Tamil Nadu,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253892,Arjun Yadav,arjunyadav33@iitpkd.ac.in,9167176993,B-,1991-07-06,Transgender,Physics,26,TRUE,ST,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257553,Pranav Iyer,pranaviyer81@iitpkd.ac.in,9369503658,AB+,1977-09-18,Transgender,Humanities and Social Sciences,1,FALSE,SC,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254109,Manoj Singh,manojsingh89@iitpkd.ac.in,9596394493,B-,1995-04-01,Transgender,Electrical Engineering,35,TRUE,OBC,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256990,Sameer Kulkarni,sameerkulkarni57@iitpkd.ac.in,9676352262,O+,1990-05-08,Female,Physics,28,TRUE,ST,TRUE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251137,Manoj Raman,manojraman98@iitpkd.ac.in,9630799011,A-,1971-08-13,Male,Mechanical Engineering,3,TRUE,SC,TRUE,Rajasthan,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252140,Aparna Pillai,aparnapillai10@iitpkd.ac.in,9200447914,O+,1984-05-20,Male,Mathematics,21,FALSE,GEN,TRUE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257018,Naveen Chakraborty,naveenchakraborty42@iitpkd.ac.in,9740926347,AB-,1992-01-24,Female,Humanities and Social Sciences,7,FALSE,SC,TRUE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252144,Rahul Gopal,rahulgopal74@iitpkd.ac.in,9531208309,AB+,1978-12-09,Female,Chemical Engineering,6,FALSE,ST,FALSE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256644,Vikram Chakraborty,vikramchakraborty86@iitpkd.ac.in,9828916882,AB-,1991-01-15,Transgender,Chemistry,43,FALSE,SC,FALSE,Tamil Nadu,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253360,Harish Raman,harishraman52@iitpkd.ac.in,9032574128,AB-,1972-07-30,Male,Humanities and Social Sciences,25,FALSE,EWS,FALSE,Rajasthan,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258129,Isha Sharma,ishasharma74@iitpkd.ac.in,9939164114,AB-,1973-08-28,Transgender,Physics,25,TRUE,EWS,FALSE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255389,Vikram Gupta,vikramgupta62@iitpkd.ac.in,9552877812,O-,1970-05-11,Male,Mechanical Engineering,38,TRUE,ST,TRUE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259315,Pranav Chakraborty,pranavchakraborty91@iitpkd.ac.in,9800342607,O+,1977-10-06,Transgender,Computer Science and Engineering,23,FALSE,GEN,TRUE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256334,Vikram Patel,vikrampatel11@iitpkd.ac.in,9037273397,O+,1982-09-16,Transgender,Humanities and Social Sciences,30,TRUE,SC,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259343,Rahul Raman,rahulraman25@iitpkd.ac.in,9959568460,AB+,1982-08-30,Transgender,Computer Science and Engineering,6,TRUE,SC,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256001,Divya Reddy,divyareddy73@iitpkd.ac.in,9162471453,A-,1990-12-19,Female,Humanities and Social Sciences,22,FALSE,GEN,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251613,Isha Raman,isharaman86@iitpkd.ac.in,9982075851,A+,1972-02-22,Transgender,Humanities and Social Sciences,36,FALSE,OBC,TRUE,Gujarat,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259398,Sneha Singh,snehasingh80@iitpkd.ac.in,9868688639,B-,1986-07-10,Male,Computer Science and Engineering,32,TRUE,OBC,TRUE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258597,Harish Patel,harishpatel17@iitpkd.ac.in,9073532703,O-,1973-08-27,Female,Physics,35,TRUE,ST,TRUE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253535,Arjun Reddy,arjunreddy57@iitpkd.ac.in,9274173834,AB-,1980-04-21,Transgender,Humanities and Social Sciences,37,TRUE,OBC,FALSE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255955,Sneha Das,snehadas78@iitpkd.ac.in,9141758695,A+,1978-09-30,Female,Civil Engineering,26,TRUE,GEN,FALSE,Bihar,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253832,Nisha Pillai,nishapillai33@iitpkd.ac.in,9736999029,A-,1981-12-03,Transgender,Computer Science and Engineering,20,TRUE,ST,TRUE,Rajasthan,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251605,Arjun Yadav,arjunyadav83@iitpkd.ac.in,9331191815,O-,1974-04-19,Female,Chemistry,13,TRUE,ST,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258266,Rahul Mehta,rahulmehta29@iitpkd.ac.in,9463423207,AB+,1979-05-25,Female,Mathematics,9,FALSE,ST,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255881,Lakshmi Raman,lakshmiraman99@iitpkd.ac.in,9271082791,AB-,1981-04-27,Female,Computer Science and Engineering,9,FALSE,GEN,TRUE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253114,Kiran Nair,kirannair18@iitpkd.ac.in,9254817882,B-,1972-07-20,Transgender,Physics,28,FALSE,GEN,TRUE,Odisha,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP259004,Arjun Pillai,arjunpillai49@iitpkd.ac.in,9834686748,B+,1992-06-10,Transgender,Chemistry,8,FALSE,OBC,FALSE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252902,Isha Nair,ishanair19@iitpkd.ac.in,9793025973,B-,1994-07-27,Male,Electrical Engineering,23,FALSE,ST,TRUE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258888,Shreya Yadav,shreyayadav19@iitpkd.ac.in,9015712040,A-,1973-08-24,Female,Electrical Engineering,6,TRUE,EWS,TRUE,Gujarat,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255863,Shreya Verma,shreyaverma55@iitpkd.ac.in,9624952358,O-,1981-12-25,Female,Mathematics,37,FALSE,GEN,FALSE,Telangana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252880,Deepa Gupta,deepagupta13@iitpkd.ac.in,9061605270,A-,1984-06-01,Female,Electrical Engineering,39,TRUE,EWS,TRUE,Telangana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258963,Divya Singh,divyasingh32@iitpkd.ac.in,9879616856,AB+,1970-07-21,Male,Chemistry,26,TRUE,EWS,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256332,Lakshmi Patel,lakshmipatel21@iitpkd.ac.in,9157544298,B+,1972-04-13,Transgender,Chemical Engineering,10,FALSE,OBC,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257255,Arjun Verma,arjunverma11@iitpkd.ac.in,9651344063,A+,1995-03-07,Transgender,Chemical Engineering,9,TRUE,OBC,TRUE,Gujarat,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252792,Divya Mishra,divyamishra23@iitpkd.ac.in,9271410952,A+,1978-02-02,Transgender,Mathematics,20,FALSE,ST,FALSE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257048,Pooja Reddy,poojareddy32@iitpkd.ac.in,9976333377,A+,1985-06-14,Transgender,Civil Engineering,8,TRUE,GEN,FALSE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258370,Kiran Menon,kiranmenon16@iitpkd.ac.in,9904399766,O+,1971-07-27,Female,Physics,36,TRUE,EWS,TRUE,Jharkhand,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251129,Kiran Verma,kiranverma57@iitpkd.ac.in,9690259198,O+,1984-05-18,Female,Physics,4,FALSE,GEN,FALSE,Haryana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252015,Pooja Das,poojadas47@iitpkd.ac.in,9647638113,O+,1983-12-11,Transgender,Civil Engineering,41,FALSE,EWS,TRUE,Madhya Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257562,Rahul Iyer,rahuliyer87@iitpkd.ac.in,9731023190,O+,1973-11-18,Male,Electrical Engineering,11,FALSE,GEN,TRUE,Assam,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258870,Pooja Patel,poojapatel70@iitpkd.ac.in,9745892848,O+,1989-04-01,Female,Mathematics,40,TRUE,ST,FALSE,Telangana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257933,Aparna Gupta,aparnagupta61@iitpkd.ac.in,9624481472,O-,1971-11-05,Female,Humanities and Social Sciences,2,FALSE,ST,TRUE,Haryana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258732,Arjun Gupta,arjungupta90@iitpkd.ac.in,9646780992,A+,1995-01-15,Transgender,Computer Science and Engineering,40,TRUE,EWS,FALSE,Madhya Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258419,Aparna Verma,aparnaverma66@iitpkd.ac.in,9713031184,B+,1971-11-30,Male,Electrical Engineering,11,FALSE,ST,TRUE,Madhya Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254446,Pranav Krishnan,pranavkrishnan52@iitpkd.ac.in,9679406010,O-,1977-11-05,Female,Mathematics,35,FALSE,OBC,TRUE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251770,Vikram Patel,vikrampatel67@iitpkd.ac.in,9948449454,O-,1979-09-19,Male,Chemical Engineering,3,FALSE,EWS,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253153,Kiran Pillai,kiranpillai97@iitpkd.ac.in,9095293302,B-,1987-02-03,Female,Physics,13,FALSE,ST,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258290,Pooja Krishnan,poojakrishnan29@iitpkd.ac.in,9182104258,A-,1987-05-23,Female,Electrical Engineering,15,FALSE,EWS,TRUE,Gujarat,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251850,Pooja Patel,poojapatel66@iitpkd.ac.in,9020654822,B+,1971-07-15,Female,Chemistry,19,TRUE,ST,FALSE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258024,Kiran Patel,kiranpatel96@iitpkd.ac.in,9347786395,B-,1992-03-08,Transgender,Mechanical Engineering,40,FALSE,OBC,FALSE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257318,Harish Reddy,harishreddy28@iitpkd.ac.in,9385901231,AB-,1976-05-15,Male,Electrical Engineering,9,FALSE,ST,FALSE,Odisha,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253856,Pooja Nair,poojanair16@iitpkd.ac.in,9933713577,B+,1974-02-17,Transgender,Chemical Engineering,35,FALSE,ST,FALSE,Telangana,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254341,Nisha Krishnan,nishakrishnan74@iitpkd.ac.in,9924195730,O-,1989-06-01,Transgender,Mathematics,42,FALSE,GEN,FALSE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255563,Pranav Das,pranavdas53@iitpkd.ac.in,9410205530,B-,1984-05-26,Male,Physics,32,TRUE,OBC,FALSE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257416,Sameer Pillai,sameerpillai44@iitpkd.ac.in,9687715270,AB-,1990-02-09,Male,Mechanical Engineering,13,TRUE,SC,TRUE,Karnataka,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP251567,Pooja Sharma,poojasharma49@iitpkd.ac.in,9858683454,AB+,1983-01-31,Female,Chemistry,21,TRUE,GEN,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256378,Arjun Yadav,arjunyadav65@iitpkd.ac.in,9129054762,B+,1992-10-16,Female,Civil Engineering,10,FALSE,SC,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255574,Divya Verma,divyaverma15@iitpkd.ac.in,9358949306,AB-,1990-05-20,Female,Electrical Engineering,8,TRUE,SC,TRUE,Madhya Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257386,Vikram Mishra,vikrammishra74@iitpkd.ac.in,9595994077,AB-,1993-12-02,Transgender,Mathematics,1,TRUE,GEN,TRUE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253679,Sneha Menon,snehamenon73@iitpkd.ac.in,9812086535,B-,1975-06-26,Female,Humanities and Social Sciences,10,FALSE,ST,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252560,Asha Patel,ashapatel85@iitpkd.ac.in,9432893916,A+,1986-06-29,Transgender,Electrical Engineering,20,TRUE,SC,TRUE,Assam,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP258088,Pooja Mishra,poojamishra93@iitpkd.ac.in,9597199972,O+,1981-11-24,Male,Physics,10,FALSE,OBC,TRUE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255469,Deepa Chakraborty,deepachakraborty73@iitpkd.ac.in,9725468499,AB-,1973-05-23,Female,Mathematics,9,FALSE,EWS,FALSE,Kerala,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256766,Divya Das,divyadas62@iitpkd.ac.in,9663618689,B-,1979-11-03,Female,Chemistry,4,TRUE,EWS,TRUE,West Bengal,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254309,Nisha Joshi,nishajoshi50@iitpkd.ac.in,9891585612,AB-,1980-02-15,Female,Physics,21,FALSE,OBC,TRUE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252043,Sameer Singh,sameersingh35@iitpkd.ac.in,9636477411,B+,1975-02-17,Female,Electrical Engineering,4,TRUE,EWS,TRUE,Delhi,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255524,Rohit Joshi,rohitjoshi31@iitpkd.ac.in,9397852143,O-,1990-09-09,Female,Electrical Engineering,24,TRUE,ST,FALSE,Odisha,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254519,Vikram Krishnan,vikramkrishnan19@iitpkd.ac.in,9551856987,B+,1977-11-24,Female,Mathematics,32,FALSE,SC,TRUE,Jharkhand,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP253269,Naveen Menon,naveenmenon66@iitpkd.ac.in,9227809430,AB+,1989-07-09,Transgender,Humanities and Social Sciences,4,TRUE,EWS,TRUE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255073,Divya Menon,divyamenon66@iitpkd.ac.in,9328556371,B+,1983-10-15,Female,Civil Engineering,6,TRUE,ST,FALSE,Punjab,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP255091,Harish Mehta,harishmehta19@iitpkd.ac.in,9029304684,O+,1977-04-10,Transgender,Computer Science and Engineering,4,FALSE,EWS,FALSE,Goa,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP256776,Lakshmi Verma,lakshmiverma68@iitpkd.ac.in,9139065583,B-,1973-12-30,Female,Electrical Engineering,42,FALSE,GEN,FALSE,Chhattisgarh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP254019,Kiran Mehta,kiranmehta31@iitpkd.ac.in,9015390317,A+,1978-02-09,Female,Mechanical Engineering,4,FALSE,GEN,TRUE,Odisha,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP252805,Isha Menon,ishamenon21@iitpkd.ac.in,9525943152,B+,1984-02-12,Male,Humanities and Social Sciences,41,TRUE,SC,FALSE,Andhra Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36
+EMP257457,Lakshmi Sharma,lakshmisharma93@iitpkd.ac.in,9717974996,AB+,1994-02-02,Male,Chemical Engineering,42,FALSE,EWS,FALSE,Uttar Pradesh,2025-11-29 12:53:36,2025-11-29 12:53:36

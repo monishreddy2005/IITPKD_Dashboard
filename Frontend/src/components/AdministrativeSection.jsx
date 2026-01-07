@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { 
-  fetchFilterOptions, 
-  fetchFacultyByDepartmentDesignation, 
+import {
+  fetchFilterOptions,
+  fetchFacultyByDepartmentDesignation,
   fetchStaffCount,
   fetchGenderDistribution,
   fetchCategoryDistribution,
   fetchDepartmentBreakdown
 } from '../services/administrativeStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const GENDER_COLORS = ['#667eea', '#764ba2', '#f093fb'];
 
-function AdministrativeSection() {
+function AdministrativeSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     department: [],
     designation: [],
@@ -23,7 +25,7 @@ function AdministrativeSection() {
     cadre: [],
     category_type: []
   });
-  
+
   const [filters, setFilters] = useState({
     department: null,
     designation: null,
@@ -31,15 +33,15 @@ function AdministrativeSection() {
     category: null,
     isactive: true
   });
-  
+
   const [employeeType, setEmployeeType] = useState('All'); // 'Faculty', 'Staff', or 'All'
-  
+
   // Faculty by department/designation state
   const [facultyData, setFacultyData] = useState([]);
   const [facultyLoading, setFacultyLoading] = useState(false);
   const [facultyError, setFacultyError] = useState(null);
   const [facultyTotal, setFacultyTotal] = useState(0);
-  
+
   // Staff count state
   const [staffData, setStaffData] = useState({
     Technical: 0,
@@ -49,7 +51,7 @@ function AdministrativeSection() {
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState(null);
   const [staffTotal, setStaffTotal] = useState(0);
-  
+
   // Gender distribution state
   const [genderData, setGenderData] = useState({
     Male: 0,
@@ -59,13 +61,13 @@ function AdministrativeSection() {
   const [genderLoading, setGenderLoading] = useState(false);
   const [genderError, setGenderError] = useState(null);
   const [genderTotal, setGenderTotal] = useState(0);
-  
+
   // Category distribution state
   const [categoryData, setCategoryData] = useState({});
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categoryError, setCategoryError] = useState(null);
   const [categoryTotal, setCategoryTotal] = useState(0);
-  
+
   // Department breakdown state
   const [departmentData, setDepartmentData] = useState([]);
   const [departmentLoading, setDepartmentLoading] = useState(false);
@@ -103,7 +105,7 @@ function AdministrativeSection() {
       try {
         setFacultyLoading(true);
         setFacultyError(null);
-        const result = await fetchFacultyByDepartmentDesignation(filters, token);
+        const result = await fetchFacultyByDepartmentDesignation(filters, employeeType, token);
         setFacultyData(result.data);
         setFacultyTotal(result.total);
       } catch (err) {
@@ -115,7 +117,7 @@ function AdministrativeSection() {
     };
 
     loadFacultyData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   // Fetch staff data
   useEffect(() => {
@@ -125,7 +127,7 @@ function AdministrativeSection() {
       try {
         setStaffLoading(true);
         setStaffError(null);
-        const result = await fetchStaffCount(filters, token);
+        const result = await fetchStaffCount(filters, employeeType, token);
         setStaffData(result.data);
         setStaffTotal(result.total);
       } catch (err) {
@@ -137,7 +139,7 @@ function AdministrativeSection() {
     };
 
     loadStaffData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   // Fetch gender distribution
   useEffect(() => {
@@ -191,7 +193,7 @@ function AdministrativeSection() {
       try {
         setDepartmentLoading(true);
         setDepartmentError(null);
-        const result = await fetchDepartmentBreakdown(filters, token);
+        const result = await fetchDepartmentBreakdown(filters, employeeType, token);
         setDepartmentData(result.data);
         setDepartmentTotal(result.total);
       } catch (err) {
@@ -203,7 +205,7 @@ function AdministrativeSection() {
     };
 
     loadDepartmentData();
-  }, [filters, token]);
+  }, [filters, employeeType, token]);
 
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
@@ -225,7 +227,7 @@ function AdministrativeSection() {
 
   // Prepare data for charts
   const facultyChartData = facultyData || [];
-  
+
   const staffChartData = [
     { name: 'Technical', value: staffData.Technical || 0 },
     { name: 'Administrative', value: staffData.Administrative || 0 },
@@ -297,7 +299,7 @@ function AdministrativeSection() {
     <div className="page-container">
       <div className="page-content">
         <h1>Administrative Section - Faculty & Staff Demographics</h1>
-        
+
         {(facultyError || staffError || genderError || categoryError || departmentError) && (
           <div className="error-message">
             {facultyError || staffError || genderError || categoryError || departmentError}
@@ -311,8 +313,17 @@ function AdministrativeSection() {
             <button className="clear-filters-btn" onClick={handleClearFilters}>
               Clear All Filters
             </button>
+            {user && user.role_id === 3 && (
+              <button
+                className="upload-data-btn"
+                onClick={() => setIsUploadModalOpen(true)}
+                style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              >
+                Upload Data
+              </button>
+            )}
           </div>
-          
+
           <div className="filter-grid">
             {/* Employee Type */}
             <div className="filter-group">
@@ -429,29 +440,29 @@ function AdministrativeSection() {
                     <ResponsiveContainer width="100%" height={400}>
                       <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis 
-                          dataKey="name" 
+                        <XAxis
+                          dataKey="name"
                           angle={-45}
                           textAnchor="end"
                           height={100}
                           stroke="#e0e0e0"
                           tick={{ fill: '#e0e0e0', fontSize: 12 }}
                         />
-                        <YAxis 
+                        <YAxis
                           stroke="#e0e0e0"
                           tick={{ fill: '#e0e0e0', fontSize: 12 }}
                         />
-                        <Tooltip 
+                        <Tooltip
                           content={<CustomTooltip />}
                           cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                         />
-                        <Legend 
+                        <Legend
                           wrapperStyle={{ paddingTop: '20px' }}
                           iconType="rect"
                           formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
                         />
                         {designations.map((desig, index) => (
-                          <Bar 
+                          <Bar
                             key={desig}
                             dataKey={desig}
                             stackId="a"
@@ -480,7 +491,7 @@ function AdministrativeSection() {
         {/* Staff Count */}
         <div className="student-strength-section">
           <h2>Staff Count (Technical and Administrative)</h2>
-          
+
           {staffError && (
             <div className="error-message">
               {staffError}
@@ -540,7 +551,7 @@ function AdministrativeSection() {
         {/* Gender Distribution */}
         <div className="student-strength-section">
           <h2>Gender Distribution</h2>
-          
+
           {genderError && (
             <div className="error-message">
               {genderError}
@@ -600,7 +611,7 @@ function AdministrativeSection() {
         {/* Category Distribution */}
         <div className="student-strength-section">
           <h2>Category Distribution</h2>
-          
+
           {categoryError && (
             <div className="error-message">
               {categoryError}
@@ -621,24 +632,24 @@ function AdministrativeSection() {
                       <ResponsiveContainer width="100%" height={400}>
                         <BarChart data={categoryChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis 
-                            dataKey="name" 
+                          <XAxis
+                            dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={100}
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 12 }}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 12 }}
                           />
-                          <Tooltip 
+                          <Tooltip
                             content={<CustomTooltip total={categoryTotal} />}
                             cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                           />
-                          <Bar 
-                            dataKey="value" 
+                          <Bar
+                            dataKey="value"
                             fill="#667eea"
                             radius={[8, 8, 0, 0]}
                           />
@@ -664,7 +675,7 @@ function AdministrativeSection() {
         {/* Department Breakdown */}
         <div className="student-strength-section">
           <h2>Department Breakdown (Faculty & Staff by Gender)</h2>
-          
+
           {departmentError && (
             <div className="error-message">
               {departmentError}
@@ -685,23 +696,23 @@ function AdministrativeSection() {
                       <ResponsiveContainer width="100%" height={500}>
                         <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis 
-                            dataKey="name" 
+                          <XAxis
+                            dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={120}
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 11 }}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 12 }}
                           />
-                          <Tooltip 
+                          <Tooltip
                             content={<CustomTooltip total={departmentTotal} />}
                             cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                           />
-                          <Legend 
+                          <Legend
                             wrapperStyle={{ paddingTop: '20px' }}
                             iconType="rect"
                             formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
@@ -731,7 +742,15 @@ function AdministrativeSection() {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="employee"
+        token={token}
+      />
+    </div >
   );
 }
 

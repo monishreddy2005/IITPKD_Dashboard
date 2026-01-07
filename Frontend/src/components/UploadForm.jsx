@@ -25,7 +25,17 @@ const tableOptions = [
   'research_projects',
   'research_mous',
   'research_patents',
-  'research_publications'
+  'research_publications',
+  'startups',
+  'innovation_projects',
+  'industry_events',
+  'industry_conclave',
+  'open_house',
+  'nptel_local_chapters',
+  'nptel_courses',
+  'nptel_enrollments',
+  'uba_projects',
+  'uba_events'
 ];
 
 /**

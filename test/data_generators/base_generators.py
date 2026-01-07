@@ -748,6 +748,384 @@ def generate_academic_program_launch(
             file.write(f"{program_code},{program_name},{program_type},{dept},{year},{oelp_students}\n")
 
 
+INNOVATION_SECTORS = [
+    'Software & IT', 'Clean Energy', 'Biotechnology', 'Healthcare Technology', 'Robotics & Automation',
+    'Manufacturing', 'Agricultural Technology', 'FinTech', 'EdTech', 'IoT & Smart Devices',
+    'Materials Science', 'Environmental Technology', 'Data Analytics', 'AI & Machine Learning'
+]
+STARTUP_STATUSES = ['Active', 'Graduated', 'Inactive']
+INNOVATION_FOCUS_AREAS = [
+    'AI-Powered Healthcare Solutions', 'Renewable Energy Systems', 'Smart Manufacturing',
+    'Agricultural IoT', 'Financial Technology', 'Educational Platforms', 'Robotics Automation',
+    'Sustainable Materials', 'Water Purification', 'Waste Management', 'Precision Agriculture',
+    'Medical Diagnostics', 'Supply Chain Optimization', 'Smart Cities', 'Cybersecurity'
+]
+
+
+def generate_startups(
+    file,
+    years: Sequence[int],
+    startups_per_year: int = 15,
+    iitpkd_ratio: float = 0.4
+) -> None:
+    """Generate startups/incubatees data."""
+    file.write('startup_name,founder_name,innovation_focus_area,year_of_incubation,status,sector,is_from_iitpkd\n')
+    startup_id = 1
+    for year in years:
+        for _ in range(startups_per_year):
+            startup_name = f"{random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)}"
+            founder_name = random_name()
+            innovation_area = random.choice(INNOVATION_FOCUS_AREAS)
+            status_val = random.choice(STARTUP_STATUSES)
+            sector_val = random.choice(INNOVATION_SECTORS)
+            is_iitpkd = random.random() < iitpkd_ratio
+            file.write(
+                f"{startup_name},{founder_name},{innovation_area},{year},{status_val},{sector_val},"
+                f"{'TRUE' if is_iitpkd else 'FALSE'}\n"
+            )
+            startup_id += 1
+
+
+def generate_innovation_projects(
+    file,
+    years: Sequence[int],
+    projects_per_year: int = 8
+) -> None:
+    """Generate innovation projects data (non-startup projects)."""
+    file.write('project_title,project_type,sector,year_started,status,description\n')
+    project_id = 1
+    project_types = ['Funded', 'Mentored']
+    for year in years:
+        for _ in range(projects_per_year):
+            project_type = random.choice(project_types)
+            sector_val = random.choice(INNOVATION_SECTORS)
+            status_val = random.choice(['Ongoing', 'Completed'])
+            focus = random.choice(INNOVATION_FOCUS_AREAS)
+            project_title = f"{project_type} Innovation Project: {focus} {project_id}"
+            description = f"Project focusing on {focus.lower()} in the {sector_val.lower()} sector"
+            file.write(
+                f"{project_title},{project_type},{sector_val},{year},{status_val},{description}\n"
+            )
+            project_id += 1
+
+
+EVENT_TYPES = ['Workshop', 'Seminar', 'Industrial Talk', 'Networking Event', 'Industry Visit', 'Panel Discussion', 'Conference', 'Training Program', 'Hackathon', 'Other']
+CONCLAVE_THEMES = [
+    'Digital Transformation in Manufacturing',
+    'Sustainable Engineering Solutions',
+    'AI and Machine Learning Applications',
+    'Industry 4.0 and Smart Manufacturing',
+    'Renewable Energy Technologies',
+    'Cybersecurity and Data Privacy',
+    'Healthcare Technology Innovation',
+    'Smart Cities and Urban Planning',
+    'Robotics and Automation',
+    'Materials Science and Engineering'
+]
+
+
+def generate_industry_events(
+    file,
+    years: Sequence[int],
+    events_per_year: int = 20
+) -> None:
+    """Generate industry interaction events data."""
+    file.write('event_title,event_type,industry_partner,event_date,duration_hours,department,description\n')
+    event_id = 1
+    seen_combinations = set()  # Track (event_title, event_date) combinations to ensure uniqueness
+    
+    for year in years:
+        for idx in range(events_per_year):
+            event_type = random.choice(EVENT_TYPES)
+            industry_partner = f"{random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)}"
+            department = random.choice(DEFAULT_EMPLOYEE_DEPARTMENTS)
+            
+            # Generate base title
+            base_title = f"{event_type} on {random.choice(['AI', 'Robotics', 'Energy', 'Materials', 'Automation', 'Data Science', 'IoT', 'Cloud Computing'])}"
+            event_title = base_title
+            counter = 1
+            
+            # Generate event date within the year
+            event_date = random_date(year, year)
+            
+            # Ensure uniqueness
+            while (event_title, event_date) in seen_combinations:
+                event_title = f"{base_title} {counter}"
+                counter += 1
+                # If still duplicate, try a different date
+                if counter > 5:
+                    event_date = random_date(year, year)
+                    counter = 1
+            
+            seen_combinations.add((event_title, event_date))
+            duration_hours = round(random.uniform(1.0, 8.0), 2)
+            description = f"{event_type} organized by {industry_partner} in collaboration with {department}"
+            
+            file.write(
+                f"{event_title},{event_type},{industry_partner},{_iso(event_date)},{duration_hours},{department},{description}\n"
+            )
+            event_id += 1
+
+
+def generate_industry_conclave(
+    file,
+    years: Sequence[int]
+) -> None:
+    """Generate Industry-Academia Conclave data (one per year)."""
+    file.write('year,theme,focus_area,number_of_companies,sessions_held,key_speakers,event_photos_url,brochure_url,description\n')
+    
+    for year in years:
+        theme = random.choice(CONCLAVE_THEMES)
+        focus_area = random.choice([
+            'Technology Transfer', 'Research Collaboration', 'Student Placements',
+            'Industry Partnerships', 'Innovation Ecosystem', 'Skill Development'
+        ])
+        number_of_companies = random.randint(15, 50)
+        sessions_held = '; '.join([
+            f"Panel Discussion: {random.choice(['Future of Manufacturing', 'AI in Industry', 'Sustainable Technologies'])}",
+            f"Workshop: {random.choice(['Industry Best Practices', 'Emerging Technologies', 'Innovation Management'])}",
+            f"Networking Session: {random.choice(['Industry-Academia Meet', 'Startup Showcase', 'Technology Expo'])}"
+        ])
+        speakers = [random_name() for _ in range(random.randint(3, 6))]
+        key_speakers = '; '.join([f"{speaker} ({random.choice(['CEO', 'CTO', 'VP Engineering', 'Director R&D', 'Head of Innovation'])} at {random.choice(COMPANY_FIRST)}{random.choice(COMPANY_SECOND)})" for speaker in speakers])
+        event_photos_url = f"https://example.com/photos/conclave-{year}"
+        brochure_url = f"https://example.com/brochures/conclave-{year}.pdf"
+        description = f"Annual Industry-Academia Conclave {year} focusing on {theme.lower()} and fostering collaboration between industry and academia."
+        
+        file.write(
+            f"{year},{theme},{focus_area},{number_of_companies},{sessions_held},{key_speakers},{event_photos_url},{brochure_url},{description}\n"
+        )
+
+
+# ========== Outreach and Extension Module ==========
+
+OPEN_HOUSE_THEMES = [
+    'Science and Technology Exhibition',
+    'Engineering Innovation Showcase',
+    'Research and Development Expo',
+    'Career Guidance and Opportunities',
+    'Sustainable Technologies',
+    'Artificial Intelligence and Machine Learning',
+    'Renewable Energy Solutions',
+    'Smart Cities and Infrastructure'
+]
+
+TARGET_AUDIENCES = [
+    'School Students',
+    'College Students',
+    'General Public',
+    'Educators',
+    'Industry Professionals',
+    'Parents and Guardians'
+]
+
+NPTEL_CATEGORIES = [
+    'Engineering',
+    'Science',
+    'Humanities',
+    'Management',
+    'Mathematics',
+    'Computer Science',
+    'Electronics',
+    'Mechanical'
+]
+
+UBA_EVENT_TYPES = [
+    'Awareness Camp',
+    'Survey',
+    'Workshop',
+    'Training Program',
+    'Health Camp',
+    'Educational Outreach',
+    'Technology Demonstration',
+    'Community Meeting'
+]
+
+
+def generate_open_house(
+    file,
+    years: Sequence[int],
+    events_per_year: int = 2
+) -> None:
+    """Generate Open House events data."""
+    file.write('event_year,event_date,theme,target_audience,departments_participated,num_departments,total_visitors,key_highlights,photos_url,poster_url,brochure_url\n')
+    seen_combinations = set()
+    
+    for year in years:
+        for idx in range(events_per_year):
+            theme = random.choice(OPEN_HOUSE_THEMES)
+            target_audience = random.choice(TARGET_AUDIENCES)
+            departments = random.sample(DEFAULT_EMPLOYEE_DEPARTMENTS, random.randint(3, 8))
+            departments_str = ', '.join(departments)
+            num_departments = len(departments)
+            
+            # Generate event date within the year
+            event_date = random_date(year, year)
+            
+            # Ensure uniqueness
+            while (year, event_date) in seen_combinations:
+                event_date = random_date(year, year)
+            seen_combinations.add((year, event_date))
+            
+            total_visitors = random.randint(200, 2000)
+            key_highlights = f"Showcased {random.choice(['innovative projects', 'research breakthroughs', 'student achievements', 'industry collaborations'])}"
+            photos_url = f"https://example.com/photos/open-house-{year}-{idx+1}"
+            poster_url = f"https://example.com/posters/open-house-{year}-{idx+1}.pdf"
+            brochure_url = f"https://example.com/brochures/open-house-{year}-{idx+1}.pdf"
+            
+            file.write(
+                f"{year},{_iso(event_date)},{theme},{target_audience},{departments_str},{num_departments},{total_visitors},{key_highlights},{photos_url},{poster_url},{brochure_url}\n"
+            )
+
+
+def generate_nptel_local_chapters(
+    file,
+    count: int = 3
+) -> None:
+    """Generate NPTEL local chapters data."""
+    file.write('chapter_name,faculty_coordinator,is_active,established_year\n')
+    chapter_names = set()
+    
+    for idx in range(count):
+        chapter_name = f"NPTEL Local Chapter {idx + 1}"
+        while chapter_name in chapter_names:
+            chapter_name = f"NPTEL Local Chapter {idx + 1} - {random.choice(['Main', 'Branch', 'Extension'])}"
+        chapter_names.add(chapter_name)
+        
+        faculty_coordinator = random_name()
+        is_active = random.choice([True, True, True, False])  # Mostly active
+        established_year = random.randint(2018, 2023)
+        
+        file.write(
+            f"{chapter_name},{faculty_coordinator},{is_active},{established_year}\n"
+        )
+
+
+def generate_nptel_courses(
+    file,
+    years: Sequence[int],
+    courses_per_year: int = 15
+) -> None:
+    """Generate NPTEL courses data."""
+    file.write('course_code,course_title,course_category,offering_semester,offering_year,local_chapter_id\n')
+    seen_combinations = set()
+    
+    # Generate course codes and titles
+    course_templates = [
+        ('CS101', 'Introduction to Programming'),
+        ('EE201', 'Digital Electronics'),
+        ('ME301', 'Thermodynamics'),
+        ('CH401', 'Chemical Process Design'),
+        ('MA501', 'Linear Algebra'),
+        ('PH601', 'Quantum Mechanics'),
+        ('HS701', 'Technical Communication'),
+        ('MG801', 'Project Management')
+    ]
+    
+    for year in years:
+        for idx in range(courses_per_year):
+            template = random.choice(course_templates)
+            course_code = f"{template[0]}{random.randint(1, 9)}"
+            course_title = f"{template[1]} - {random.choice(['Advanced', 'Fundamentals', 'Applications', 'Principles'])}"
+            course_category = random.choice(NPTEL_CATEGORIES)
+            offering_semester = random.choice(['Spring', 'Fall', 'Summer'])
+            local_chapter_id = random.randint(1, 3)  # Assuming 3 chapters
+            
+            # Ensure uniqueness
+            while (course_code, year, offering_semester) in seen_combinations:
+                course_code = f"{template[0]}{random.randint(1, 9)}"
+            seen_combinations.add((course_code, year, offering_semester))
+            
+            file.write(
+                f"{course_code},{course_title},{course_category},{offering_semester},{year},{local_chapter_id}\n"
+            )
+
+
+def generate_nptel_enrollments(
+    file,
+    course_ids: Sequence[int],
+    enrollments_per_course: int = 20
+) -> None:
+    """Generate NPTEL enrollments data."""
+    file.write('course_id,student_name,enrollment_semester,enrollment_year,certification_earned,certification_date\n')
+    
+    for course_id in course_ids:
+        for idx in range(enrollments_per_course):
+            student_name = random_name()
+            enrollment_semester = random.choice(['Spring', 'Fall', 'Summer'])
+            enrollment_year = random.randint(2019, 2024)
+            certification_earned = random.choice([True, True, False, False, False])  # 40% certification rate
+            certification_date = None
+            if certification_earned:
+                certification_date = random_date(enrollment_year, enrollment_year + 1)
+            
+            file.write(
+                f"{course_id},{student_name},{enrollment_semester},{enrollment_year},{certification_earned},{_iso(certification_date) if certification_date else ''}\n"
+            )
+
+
+def generate_uba_projects(
+    file,
+    count: int = 10
+) -> None:
+    """Generate UBA projects data."""
+    file.write('project_title,coordinator_name,intervention_description,project_status,start_date,end_date,collaboration_partners\n')
+    
+    project_titles = [
+        'Rural Water Management System',
+        'Solar Power for Remote Villages',
+        'Digital Literacy Program',
+        'Agricultural Technology Transfer',
+        'Healthcare Access Initiative',
+        'Sanitation Improvement Project',
+        'Education Support Program',
+        'Skill Development Workshop',
+        'Waste Management Solution',
+        'Renewable Energy Adoption'
+    ]
+    
+    for idx in range(count):
+        project_title = project_titles[idx % len(project_titles)]
+        if idx >= len(project_titles):
+            project_title = f"{random.choice(project_titles)} - {idx + 1}"
+        
+        coordinator_name = random_name()
+        intervention_description = f"Comprehensive intervention focusing on {random.choice(['sustainable development', 'technology adoption', 'community empowerment', 'resource management'])} in rural areas."
+        project_status = random.choice(['Ongoing', 'Completed', 'Planned'])
+        start_date = random_date(2019, 2023)
+        end_date = None
+        if project_status == 'Completed':
+            end_date = random_date(start_date.year, start_date.year + 2)
+        collaboration_partners = ', '.join(random.sample(['NGO A', 'NGO B', 'Government Agency', 'Local Community'], random.randint(1, 3)))
+        
+        file.write(
+            f"{project_title},{coordinator_name},{intervention_description},{project_status},{_iso(start_date)},{_iso(end_date) if end_date else ''},{collaboration_partners}\n"
+        )
+
+
+def generate_uba_events(
+    file,
+    project_ids: Sequence[int],
+    events_per_project: int = 3
+) -> None:
+    """Generate UBA events data."""
+    file.write('project_id,event_title,event_type,event_date,location,description,photos_url,brochure_url\n')
+    
+    for project_id in project_ids:
+        for idx in range(events_per_project):
+            event_type = random.choice(UBA_EVENT_TYPES)
+            event_title = f"{event_type} - {random.choice(['Phase 1', 'Phase 2', 'Annual', 'Quarterly'])}"
+            event_date = random_date(2020, 2024)
+            location = f"{random.choice(['Village', 'Block', 'District'])} {random.choice(['A', 'B', 'C'])}"
+            description = f"{event_type} conducted as part of the UBA project to {random.choice(['raise awareness', 'gather data', 'provide training', 'demonstrate technology'])}."
+            photos_url = f"https://example.com/photos/uba-project-{project_id}-event-{idx+1}"
+            brochure_url = f"https://example.com/brochures/uba-project-{project_id}-event-{idx+1}.pdf"
+            
+            file.write(
+                f"{project_id},{event_title},{event_type},{_iso(event_date)},{location},{description},{photos_url},{brochure_url}\n"
+            )
+
+
 __all__ = [
     'DEFAULT_DEPARTMENT_CODES',
     'DEFAULT_EMPLOYEE_DEPARTMENTS',
@@ -775,6 +1153,16 @@ __all__ = [
     'generate_research_publications',
     'generate_industry_courses',
     'generate_academic_program_launch',
+    'generate_startups',
+    'generate_innovation_projects',
+    'generate_industry_events',
+    'generate_industry_conclave',
+    'generate_open_house',
+    'generate_nptel_local_chapters',
+    'generate_nptel_courses',
+    'generate_nptel_enrollments',
+    'generate_uba_projects',
+    'generate_uba_events',
     'generate_employee_id',
     'random_name',
 ]

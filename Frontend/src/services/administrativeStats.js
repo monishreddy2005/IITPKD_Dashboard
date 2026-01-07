@@ -27,12 +27,17 @@ export const fetchFilterOptions = async (token) => {
 /**
  * Fetches faculty count by department and designation.
  * @param {Object} filters - Filter object with optional fields
+ * @param {string} employeeType - 'Faculty', 'Staff', or 'All'
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Faculty data with total and filters_applied
  */
-export const fetchFacultyByDepartmentDesignation = async (filters, token) => {
+export const fetchFacultyByDepartmentDesignation = async (filters, employeeType, token) => {
   try {
     const params = new URLSearchParams();
+    
+    if (employeeType && employeeType !== 'All') {
+      params.append('employee_type', employeeType);
+    }
     
     Object.keys(filters).forEach(key => {
       const value = filters[key];
@@ -62,12 +67,17 @@ export const fetchFacultyByDepartmentDesignation = async (filters, token) => {
 /**
  * Fetches staff count (technical and administrative).
  * @param {Object} filters - Filter object with optional fields
+ * @param {string} employeeType - 'Faculty', 'Staff', or 'All'
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Staff data with total and filters_applied
  */
-export const fetchStaffCount = async (filters, token) => {
+export const fetchStaffCount = async (filters, employeeType, token) => {
   try {
     const params = new URLSearchParams();
+    
+    if (employeeType && employeeType !== 'All') {
+      params.append('employee_type', employeeType);
+    }
     
     Object.keys(filters).forEach(key => {
       const value = filters[key];
@@ -177,12 +187,17 @@ export const fetchCategoryDistribution = async (filters, employeeType, token) =>
 /**
  * Fetches department-wise breakdown with gender and employee type.
  * @param {Object} filters - Filter object with optional fields
+ * @param {string} employeeType - 'Faculty', 'Staff', or 'All'
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Department breakdown data with total
  */
-export const fetchDepartmentBreakdown = async (filters, token) => {
+export const fetchDepartmentBreakdown = async (filters, employeeType, token) => {
   try {
     const params = new URLSearchParams();
+    
+    if (employeeType && employeeType !== 'All') {
+      params.append('employee_type', employeeType);
+    }
     
     Object.keys(filters).forEach(key => {
       const value = filters[key];

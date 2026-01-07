@@ -40,7 +40,7 @@ function Home({ user, onLogout }) {
   };
 
   // Check if user has role_id 2 or 3 for upload access
-  const canUploadData = user && (user.role_id === 2 || user.role_id === 3);
+  const canUploadData = user && (user.role_id === 2 || user.role_id === 3 || user.role_id === 4);
 
   return (
     <div className="home-container">

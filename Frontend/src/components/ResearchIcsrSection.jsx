@@ -24,6 +24,8 @@ import {
   fetchPatentList
 } from '../services/researchStats';
 
+import DataUploadModal from './DataUploadModal';
+
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -68,7 +70,10 @@ const buildPatentBreakdown = (source = {}) => ({
   Published: Number(source?.Published) || 0
 });
 
-function ResearchIcsrSection() {
+function ResearchIcsrSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
+
   const [filterOptions, setFilterOptions] = useState({
     project_departments: [],
     project_years: [],
@@ -299,6 +304,32 @@ function ResearchIcsrSection() {
               Clear Filters
             </button>
           </div>
+
+          {user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('research_projects'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Projects
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload MoUs
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Patents
+              </button>
+            </div>
+          )}
 
           <div className="filter-grid">
             <div className="filter-group">
@@ -683,6 +714,13 @@ function ResearchIcsrSection() {
           </>
         )}
       </div>
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
     </div>
   );
 }

@@ -1,12 +1,52 @@
 -- STUDENT
 
-CREATE TYPE program_type AS ENUM ('BTech', 'MTech', 'MSc', 'MS', 'PhD');
-CREATE TYPE batch_type AS ENUM ('Jan', 'Jul');
-CREATE TYPE category_type AS ENUM ('Gen', 'EWS', 'OBC', 'SC', 'ST');
-CREATE TYPE gender_type AS ENUM ('Male', 'Female', 'Transgender');
-CREATE TYPE status_type AS ENUM ('Graduated', 'Ongoing', 'Slowpace');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE program_type AS ENUM ('BTech', 'MTech', 'MSc', 'MS', 'PhD');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE batch_type AS ENUM ('Jan', 'Jul');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE category_type AS ENUM ('Gen', 'EWS', 'OBC', 'SC', 'ST');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE gender_type AS ENUM ('Male', 'Female', 'Transgender');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE status_type AS ENUM ('Graduated', 'Ongoing', 'Slowpace');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE student (
+CREATE TABLE IF NOT EXISTS student (
     rollno VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     program program_type NOT NULL,
@@ -23,9 +63,17 @@ CREATE TABLE student (
 
 -- course table
 
-CREATE TYPE course_status AS ENUM ('Active', 'Inactive');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE course_status AS ENUM ('Active', 'Inactive');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE course (
+CREATE TABLE IF NOT EXISTS course (
     coursecode VARCHAR(20) PRIMARY KEY,
     coursename VARCHAR(150) NOT NULL,
     offeredbydept VARCHAR(100) NOT NULL,
@@ -39,7 +87,7 @@ CREATE TABLE course (
 
 
 
-CREATE TABLE department (
+CREATE TABLE IF NOT EXISTS department (
     deptcode VARCHAR(20) PRIMARY KEY,
     deptname VARCHAR(100) NOT NULL,
     coursesoffered TEXT,
@@ -48,10 +96,17 @@ CREATE TABLE department (
 );
 
 
-CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-
-CREATE TABLE industry_courses (
+CREATE TABLE IF NOT EXISTS industry_courses (
     course_id SERIAL PRIMARY KEY,
     course_title VARCHAR(200) NOT NULL,
     department VARCHAR(100) NOT NULL,
@@ -61,7 +116,7 @@ CREATE TABLE industry_courses (
 );
 
 
-CREATE TABLE academic_program_launch (
+CREATE TABLE IF NOT EXISTS academic_program_launch (
     program_code VARCHAR(50) PRIMARY KEY,
     program_name VARCHAR(150) NOT NULL,
     program_type academic_program_type NOT NULL,
@@ -72,13 +127,45 @@ CREATE TABLE academic_program_launch (
 );
 
 
-CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
-CREATE TYPE project_status_type AS ENUM ('Ongoing', 'Completed');
-CREATE TYPE patent_status_type AS ENUM ('Filed', 'Granted', 'Published');
-CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE project_status_type AS ENUM ('Ongoing', 'Completed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE patent_status_type AS ENUM ('Filed', 'Granted', 'Published');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 
-CREATE TABLE research_projects (
+CREATE TABLE IF NOT EXISTS research_projects (
     project_id SERIAL PRIMARY KEY,
     project_title VARCHAR(250) NOT NULL,
     principal_investigator VARCHAR(150) NOT NULL,
@@ -95,7 +182,7 @@ CREATE TABLE research_projects (
 );
 
 
-CREATE TABLE research_mous (
+CREATE TABLE IF NOT EXISTS research_mous (
     mou_id SERIAL PRIMARY KEY,
     partner_name VARCHAR(200) NOT NULL,
     collaboration_nature TEXT,
@@ -105,7 +192,7 @@ CREATE TABLE research_mous (
 );
 
 
-CREATE TABLE research_patents (
+CREATE TABLE IF NOT EXISTS research_patents (
     patent_id SERIAL PRIMARY KEY,
     patent_title VARCHAR(250) NOT NULL,
     inventors TEXT,
@@ -116,7 +203,7 @@ CREATE TABLE research_patents (
 );
 
 
-CREATE TABLE research_publications (
+CREATE TABLE IF NOT EXISTS research_publications (
     publication_id SERIAL PRIMARY KEY,
     publication_title VARCHAR(250) NOT NULL,
     journal_name VARCHAR(200),
@@ -128,9 +215,17 @@ CREATE TABLE research_publications (
 );
 
 
-CREATE TYPE alumni_outcome_type AS ENUM ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE alumni_outcome_type AS ENUM ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE alumni (
+CREATE TABLE IF NOT EXISTS alumni (
     rollno VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     alumniidno VARCHAR(30) UNIQUE,
@@ -154,7 +249,7 @@ CREATE TABLE alumni (
 
 
 
-CREATE TABLE designation (
+CREATE TABLE IF NOT EXISTS designation (
     designationid SERIAL PRIMARY KEY,
     designationname VARCHAR(50) UNIQUE NOT NULL,
     designationcadre VARCHAR(50),
@@ -165,9 +260,17 @@ CREATE TABLE designation (
 );
 
 
-CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other', 'Transgender');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE emp_gender AS ENUM ('Male', 'Female', 'Other', 'Transgender');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE employee (
+CREATE TABLE IF NOT EXISTS employee (
     employeeid SERIAL PRIMARY KEY,
     empname VARCHAR(50) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -186,11 +289,35 @@ CREATE TABLE employee (
 );
 
 
-CREATE TYPE nature_type AS ENUM ('Regular', 'Contract', 'Temporary', 'Visiting', 'Adhoc');
-CREATE TYPE lien_type AS ENUM ('Yes', 'No', 'NA');
-CREATE TYPE emp_status AS ENUM ('Active', 'Relieved', 'Transferred');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE nature_type AS ENUM ('Regular', 'Contract', 'Temporary', 'Visiting', 'Adhoc');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE lien_type AS ENUM ('Yes', 'No', 'NA');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE emp_status AS ENUM ('Active', 'Relieved', 'Transferred');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE employment_history (
+CREATE TABLE IF NOT EXISTS employment_history (
     historyid SERIAL PRIMARY KEY,
     employeeid INT REFERENCES employee(employeeid) ON DELETE CASCADE,
     designationid INT REFERENCES designation(designationid) ON DELETE SET NULL,
@@ -212,9 +339,17 @@ CREATE TABLE employment_history (
 );
 
 
-CREATE TYPE role_status AS ENUM ('Active', 'Relieved');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE role_status AS ENUM ('Active', 'Relieved');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE additional_roles (
+CREATE TABLE IF NOT EXISTS additional_roles (
     roleid SERIAL PRIMARY KEY,
     historyid INT REFERENCES employment_history(historyid) ON DELETE CASCADE,
     employeeid INT REFERENCES employee(employeeid) ON DELETE CASCADE,
@@ -229,7 +364,7 @@ CREATE TABLE additional_roles (
 );
 
 
-CREATE TABLE externship_info (
+CREATE TABLE IF NOT EXISTS externship_info (
     externid SERIAL PRIMARY KEY,
     employeeid INT REFERENCES employee(employeeid) ON DELETE CASCADE,
     empname VARCHAR(50) NOT NULL,
@@ -246,9 +381,17 @@ CREATE TABLE externship_info (
 
 
 
-CREATE TYPE faculty_engagement_type AS ENUM ('Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE faculty_engagement_type AS ENUM ('Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE faculty_engagement (
+CREATE TABLE IF NOT EXISTS faculty_engagement (
     engagement_code VARCHAR(40) PRIMARY KEY,
     faculty_name VARCHAR(150),
     engagement_type faculty_engagement_type NOT NULL,
@@ -262,7 +405,7 @@ CREATE TABLE faculty_engagement (
 );
 
 
-CREATE TABLE igrs_yearwise (
+CREATE TABLE IF NOT EXISTS igrs_yearwise (
     grievance_year INT PRIMARY KEY,
     total_grievances_filed INT NOT NULL,
     grievances_resolved INT NOT NULL,
@@ -274,7 +417,7 @@ CREATE TABLE igrs_yearwise (
 );
 
 
-CREATE TABLE icc_yearwise (
+CREATE TABLE IF NOT EXISTS icc_yearwise (
     complaints_year INT PRIMARY KEY,
     total_complaints INT NOT NULL,
     complaints_resolved INT NOT NULL,
@@ -286,7 +429,7 @@ CREATE TABLE icc_yearwise (
 );
 
 
-CREATE TABLE ewd_yearwise (
+CREATE TABLE IF NOT EXISTS ewd_yearwise (
     ewd_year INT PRIMARY KEY,
     annual_electricity_consumption INT NOT NULL,
     per_capita_electricity_consumption DECIMAL(10, 2) NOT NULL,
@@ -303,7 +446,7 @@ CREATE TABLE ewd_yearwise (
 );
 
 
-CREATE TABLE placement_summary (
+CREATE TABLE IF NOT EXISTS placement_summary (
     placement_year INT NOT NULL,
     program program_type NOT NULL,
     gender gender_type NOT NULL,
@@ -316,7 +459,7 @@ CREATE TABLE placement_summary (
 );
 
 
-CREATE TABLE placement_companies (
+CREATE TABLE IF NOT EXISTS placement_companies (
     company_id SERIAL PRIMARY KEY,
     placement_year INT NOT NULL,
     company_name VARCHAR(150) NOT NULL,
@@ -329,7 +472,7 @@ CREATE TABLE placement_companies (
 );
 
 
-CREATE TABLE placement_packages (
+CREATE TABLE IF NOT EXISTS placement_packages (
     placement_year INT NOT NULL,
     program program_type NOT NULL,
     highest_package DECIMAL(10, 2),
@@ -355,13 +498,45 @@ CREATE TABLE placement_packages (
 );
  
  
-CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
-CREATE TYPE research_project_status AS ENUM ('Ongoing', 'Completed');
-CREATE TYPE research_patent_status AS ENUM ('Filed', 'Granted', 'Published');
-CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE research_project_type AS ENUM ('Funded', 'Consultancy');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE research_project_status AS ENUM ('Ongoing', 'Completed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE research_patent_status AS ENUM ('Filed', 'Granted', 'Published');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+DO $$ BEGIN
+    DO $$ BEGIN
+    CREATE TYPE publication_category AS ENUM ('Journal', 'Conference', 'Book Chapter', 'Monograph');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 
-CREATE TABLE research_projects (
+CREATE TABLE IF NOT EXISTS research_projects (
     project_id SERIAL PRIMARY KEY,
     project_title VARCHAR(255) NOT NULL,
     principal_investigator VARCHAR(150) NOT NULL,
@@ -378,7 +553,7 @@ CREATE TABLE research_projects (
 );
 
 
-CREATE TABLE research_mous (
+CREATE TABLE IF NOT EXISTS research_mous (
     mou_id SERIAL PRIMARY KEY,
     partner_name VARCHAR(200) NOT NULL,
     collaboration_nature VARCHAR(200),
@@ -388,7 +563,7 @@ CREATE TABLE research_mous (
 );
 
 
-CREATE TABLE research_patents (
+CREATE TABLE IF NOT EXISTS research_patents (
     patent_id SERIAL PRIMARY KEY,
     patent_title VARCHAR(255) NOT NULL,
     inventors TEXT NOT NULL,
@@ -399,7 +574,7 @@ CREATE TABLE research_patents (
 );
 
 
-CREATE TABLE research_publications (
+CREATE TABLE IF NOT EXISTS research_publications (
     publication_id SERIAL PRIMARY KEY,
     publication_title VARCHAR(255) NOT NULL,
     journal_name VARCHAR(200) NOT NULL,

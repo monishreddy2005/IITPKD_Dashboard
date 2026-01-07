@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered } from '../services/academicStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb'];
 
-function AcademicSection() {
+function AcademicSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     yearofadmission: [],
     program: [],
@@ -17,7 +19,7 @@ function AcademicSection() {
     state: [],
     latest_year: null
   });
-  
+
   const [filters, setFilters] = useState({
     yearofadmission: null,
     program: null,
@@ -27,17 +29,17 @@ function AcademicSection() {
     category: null,
     pwd: null
   });
-  
+
   const [genderData, setGenderData] = useState({
     Male: 0,
     Female: 0,
     Transgender: 0
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [total, setTotal] = useState(0);
-  
+
   // Student Strength state
   const [studentStrengthData, setStudentStrengthData] = useState([]);
   const [strengthFilters, setStrengthFilters] = useState({
@@ -66,7 +68,7 @@ function AcademicSection() {
         setError(null);
         const options = await fetchFilterOptions(token);
         setFilterOptions(options);
-        
+
         // Set default year to latest year
         if (options.latest_year) {
           setFilters(prev => ({
@@ -226,7 +228,7 @@ function AcademicSection() {
     <div className="page-container">
       <div className="page-content">
         <h1>Academic Section - Gender Distribution</h1>
-        
+
         {error && (
           <div className="error-message">
             {error}
@@ -240,8 +242,17 @@ function AcademicSection() {
             <button className="clear-filters-btn" onClick={handleClearFilters}>
               Clear All Filters
             </button>
+            {user && user.role_id === 3 && (
+              <button
+                className="upload-data-btn"
+                onClick={() => setIsUploadModalOpen(true)}
+                style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              >
+                Upload Data
+              </button>
+            )}
           </div>
-          
+
           <div className="filter-grid">
             {/* Year of Admission */}
             <div className="filter-group">
@@ -422,7 +433,7 @@ function AcademicSection() {
         {/* Student Strength Section */}
         <div className="student-strength-section">
           <h2>Student Strength by Program</h2>
-          
+
           {strengthError && (
             <div className="error-message">
               {strengthError}
@@ -436,8 +447,17 @@ function AcademicSection() {
               <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
                 Clear All Filters
               </button>
+              {user && user.role_id === 3 && (
+                <button
+                  className="upload-data-btn"
+                  onClick={() => setIsUploadModalOpen(true)}
+                  style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                >
+                  Upload Data
+                </button>
+              )}
             </div>
-            
+
             <div className="filter-grid">
               {/* Year of Admission */}
               <div className="filter-group">
@@ -514,41 +534,41 @@ function AcademicSection() {
                       <ResponsiveContainer width="100%" height={400}>
                         <BarChart data={studentStrengthData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis 
-                            dataKey="name" 
+                          <XAxis
+                            dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={100}
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 12 }}
                           />
-                          <YAxis 
+                          <YAxis
                             stroke="#e0e0e0"
                             tick={{ fill: '#e0e0e0', fontSize: 12 }}
                           />
-                          <Tooltip 
+                          <Tooltip
                             content={<StackedBarTooltip total={strengthTotal} />}
                             cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                           />
-                          <Legend 
+                          <Legend
                             wrapperStyle={{ paddingTop: '20px' }}
                             iconType="rect"
                             formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
                           />
-                          <Bar 
-                            dataKey="Male" 
+                          <Bar
+                            dataKey="Male"
                             stackId="a"
                             fill="#667eea"
                             radius={[0, 0, 0, 0]}
                           />
-                          <Bar 
-                            dataKey="Female" 
+                          <Bar
+                            dataKey="Female"
                             stackId="a"
                             fill="#764ba2"
                             radius={[0, 0, 0, 0]}
                           />
-                          <Bar 
-                            dataKey="Transgender" 
+                          <Bar
+                            dataKey="Transgender"
                             stackId="a"
                             fill="#f093fb"
                             radius={[8, 8, 0, 0]}
@@ -572,6 +592,14 @@ function AcademicSection() {
           </div>
         </div>
       </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="student"
+        token={token}
+      />
     </div>
   );
 }
@@ -582,7 +610,7 @@ const StackedBarTooltip = ({ active, payload, total }) => {
     const data = payload[0].payload;
     const programTotal = (data.Male || 0) + (data.Female || 0) + (data.Transgender || 0);
     const percentage = total > 0 ? ((programTotal / total) * 100).toFixed(1) : 0;
-    
+
     return (
       <div className="custom-tooltip">
         <p className="tooltip-label">{`${data.name}: ${programTotal}`}</p>
