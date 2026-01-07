@@ -6,12 +6,15 @@ import {
 } from '../services/outreachExtensionStats';
 import './Page.css';
 import './AcademicSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function UbaSection() {
+function UbaSection({ user }) {
   const token = localStorage.getItem('authToken');
-  
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
+
   const [summary, setSummary] = useState({
     total_projects: 0,
     total_events: 0
@@ -100,6 +103,27 @@ function UbaSection() {
       <div className="page-content">
         <h1>UBA (Unnat Bharat Abhiyan) – Faculty Coordinator</h1>
 
+
+
+        {user && user.role_id === 3 && (
+          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => { setActiveUploadTable('uba_projects'); setIsUploadModalOpen(true); }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Projects
+            </button>
+            <button
+              className="upload-data-btn"
+              onClick={() => { setActiveUploadTable('uba_events'); setIsUploadModalOpen(true); }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Events
+            </button>
+          </div>
+        )}
+
         {/* Impact Summary */}
         <div className="summary-grid">
           <div className="summary-card">
@@ -143,7 +167,7 @@ function UbaSection() {
                   >
                     {selectedProject === project.project_id ? 'Hide Events' : 'View Events'}
                   </button>
-                  
+
                   {/* Events for this project */}
                   {selectedProject === project.project_id && projectEvents.length > 0 && (
                     <div className="project-events">
@@ -179,6 +203,13 @@ function UbaSection() {
           </div>
         </div>
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
     </div>
   );
 }

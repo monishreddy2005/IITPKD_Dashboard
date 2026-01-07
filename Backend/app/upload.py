@@ -165,7 +165,8 @@ def upload_csv(current_user_id):
                 c.column_name, 
                 c.is_generated,
                 c.column_default,
-                c.data_type
+                c.data_type,
+                c.is_nullable
             FROM information_schema.columns c
             WHERE c.table_schema = 'public' AND LOWER(c.table_name) = LOWER(%s)
             ORDER BY c.ordinal_position;
@@ -180,11 +181,14 @@ def upload_csv(current_user_id):
         db_columns = []
         serial_columns = []
         optional_columns = []  # Columns with DEFAULT values (non-SERIAL)
+        not_null_columns = set() # Track required columns
+
         for row in db_columns_rows:
             column_name = row['column_name']
             is_generated = (row.get('is_generated') or 'NEVER').upper()
             column_default = row.get('column_default') or ''
             data_type = row.get('data_type') or ''
+            is_nullable = (row.get('is_nullable') or 'YES').upper()
             
             # Skip if it's a generated column
             if is_generated == 'ALWAYS':
@@ -207,6 +211,9 @@ def upload_csv(current_user_id):
                 continue  # Skip from required columns, but allow in CSV if present
             
             db_columns.append(column_name)
+            
+            if is_nullable == 'NO':
+                not_null_columns.add(column_name.lower())
         
         if not db_columns:
             # Provide more diagnostic information
@@ -291,11 +298,13 @@ def upload_csv(current_user_id):
                 if csv_header.lower() == db_col.lower():
                     csv_to_db_map[csv_header] = db_col
                     break
-
+        
         # 5. --- Database Upsert (INSERT... ON CONFLICT) ---
         
         # Get the conflict key(s) (primary/unique) for this table
-        conflict_keys = UPDATABLE_TABLES[table_name]
+        conflict_keys = UPDATABLE_TABLES.get(table_name, [])
+        if not conflict_keys:
+             conflict_keys = [] # Fallback
         
         # Get all columns that are *not* part of the conflict key
         # These are the ones we will update if a conflict occurs
@@ -330,7 +339,7 @@ def upload_csv(current_user_id):
         conflict_sql = ", ".join([f'"{c}"' for c in conflict_keys_db])
         
         # Build the conflict action depending on whether we have update columns
-        if update_cols:
+        if update_cols and conflict_keys_db:
             update_assignments = ", ".join([f'"{c}" = EXCLUDED."{c}"' for c in update_cols])
             conflict_action = f"DO UPDATE SET {update_assignments}"
         else:
@@ -351,10 +360,13 @@ def upload_csv(current_user_id):
         reader = csv.DictReader(csv_file_text) # Re-init the reader
         
         data_to_insert = []
-        for row in reader:
+        rows_processed = 0
+        for i, row in enumerate(reader, start=1):
             # Create a tuple for the row, ensuring columns are in the same order as columns_to_insert
             # Handle empty strings as None (NULL) and map CSV headers to DB column names
             row_tuple = []
+            is_empty_row = True
+            
             for db_col in columns_to_insert:
                 # Find matching CSV header (case-insensitive)
                 value = None
@@ -365,10 +377,24 @@ def upload_csv(current_user_id):
                 # If no match found, try direct match
                 if value is None and db_col in row:
                     value = row[db_col]
-                # Convert empty string to None
-                value = None if value == '' else value
+                
+                # Check for empty string
+                if value is not None and value.strip() == '':
+                    value = None
+                
+                if value is not None:
+                     is_empty_row = False
+                
+                # Validate NOT NULL
+                if value is None and db_col.lower() in not_null_columns:
+                     return jsonify({'message': f"Validation Error on Row {i}: Column '{db_col}' cannot be empty."}), 400
+
                 row_tuple.append(value)
-            data_to_insert.append(tuple(row_tuple))
+            
+            if not is_empty_row:
+                 data_to_insert.append(tuple(row_tuple))
+                 rows_processed += 1
+
 
         if not data_to_insert:
              return jsonify({'message': 'CSV file contains no data rows.'}), 400
@@ -381,6 +407,34 @@ def upload_csv(current_user_id):
         conn.commit()
         
         return jsonify({'message': f"Successfully updated {len(data_to_insert)} rows in '{table_name}'."}), 200
+
+    except psycopg2.errors.UniqueViolation as e:
+        if conn: conn.rollback()
+        return jsonify({
+            'message': 'Duplicate Entry Error',
+            'details': f"A record with this ID or unique key already exists. Error: {str(e).split('DETAIL:')[-1].strip()}"
+        }), 409
+
+    except psycopg2.errors.InvalidTextRepresentation as e:
+        if conn: conn.rollback()
+        return jsonify({
+            'message': 'Data Format Error',
+            'details': f"Invalid value for a column (likely an Enum or Date). Please check your values. Error: {str(e).strip()}"
+        }), 400
+
+    except psycopg2.errors.NotNullViolation as e:
+        if conn: conn.rollback()
+        return jsonify({
+            'message': 'Missing Required Data',
+            'details': f"A required field is missing. Error: {str(e).strip()}"
+        }), 400
+
+    except psycopg2.errors.DatatypeMismatch as e:
+        if conn: conn.rollback()
+        return jsonify({
+            'message': 'Data Type Mismatch',
+            'details': f"Value has incorrect type. Error: {str(e).strip()}"
+        }), 400
 
     except Exception as e:
         # Rollback any changes if an error occurs

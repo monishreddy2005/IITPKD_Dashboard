@@ -16,6 +16,8 @@ import {
   fetchExternshipList
 } from '../services/researchStats';
 
+import DataUploadModal from './DataUploadModal';
+
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -50,7 +52,9 @@ const formatDuration = (days) => {
   return `${numeric} days`;
 };
 
-function ResearchAdministrativeSection() {
+function ResearchAdministrativeSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
   const [filterOptions, setFilterOptions] = useState({
     externship_departments: [],
     externship_years: []
@@ -222,6 +226,18 @@ function ResearchAdministrativeSection() {
             </button>
           </div>
 
+          {user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => setIsUploadModalOpen(true)}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Externships
+              </button>
+            </div>
+          )}
+
           <div className="filter-grid">
             <div className="filter-group">
               <label htmlFor="externship-dept-filter">Department</label>
@@ -377,6 +393,12 @@ function ResearchAdministrativeSection() {
             </section>
           </>
         )}
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName="externship_info"
+          token={token}
+        />
       </div>
     </div>
   );

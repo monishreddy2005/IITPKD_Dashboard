@@ -24,15 +24,17 @@ import {
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const SECTOR_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function InnovationSection() {
+function InnovationSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
-  
+
   const [summary, setSummary] = useState({
     total_incubatees: 0,
     total_startups: 0,
@@ -200,7 +202,7 @@ function InnovationSection() {
       <div className="page-content">
         <h1>Innovation & Entrepreneurship</h1>
         <p>
-          Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation) 
+          Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation)
           and IPTIF (IIT Palakkad Technology IHub Foundation).
         </p>
 
@@ -300,6 +302,17 @@ function InnovationSection() {
               </button>
             </div>
             <div className="filter-grid">
+              {user && user.role_id === 3 && (
+                <div className="filter-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                  >
+                    Upload Startups
+                  </button>
+                </div>
+              )}
               <div className="filter-group">
                 <label>Status</label>
                 <select
@@ -443,7 +456,14 @@ function InnovationSection() {
           )}
         </div>
       </div>
-    </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="startups"
+        token={token}
+      />
+    </div >
   );
 }
 

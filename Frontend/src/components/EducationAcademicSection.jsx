@@ -24,12 +24,16 @@ import {
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const PROGRAM_COLORS = ['#6366f1', '#22d3ee', '#f97316', '#a855f7'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function EducationAcademicSection() {
+function EducationAcademicSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
+
   const [filterOptions, setFilterOptions] = useState({
     departments: [],
     course_years: [],
@@ -168,6 +172,25 @@ function EducationAcademicSection() {
               Clear Filters
             </button>
           </div>
+
+          {user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('industry_courses'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Industry Courses
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('academic_program_launch'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Programs
+              </button>
+            </div>
+          )}
 
           <div className="filter-grid">
             <div className="filter-group">
@@ -416,7 +439,14 @@ function EducationAcademicSection() {
           </>
         )}
       </div>
-    </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
+    </div >
   );
 }
 

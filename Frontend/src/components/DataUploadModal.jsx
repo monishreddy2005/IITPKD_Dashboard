@@ -118,6 +118,91 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                     headers: ['rollno', 'name', 'alumniidno', 'currentdesignation', 'jobcountry', 'jobplace', 'yearofgraduation', 'department', 'program', 'category', 'gender', 'homestate', 'jobstate', 'outcome', 'employer_or_institution'],
                     sample: ['112233', 'Alice Bob', 'AL123', 'Software Engineer', 'India', 'Bangalore', '2022', 'CSE', 'BTech', 'Gen', 'Female', 'Kerala', 'Karnataka', 'Corporate', 'Google']
                 };
+            case 'research_projects':
+                return {
+                    headers: ['project_title', 'principal_investigator', 'department', 'project_type', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
+                    sample: ['AI Project', 'Dr. Smith', 'CSE', 'Funded', 'DST', '', '5000000', '2023-01-01', '2025-01-01', 'Ongoing']
+                };
+            case 'research_mous':
+                return {
+                    headers: ['partner_name', 'collaboration_nature', 'date_signed', 'validity_end', 'remarks'],
+                    sample: ['Tech Corp', 'Joint Research', '2023-05-15', '2026-05-15', 'Active collaboration']
+                };
+            case 'research_patents':
+                return {
+                    headers: ['patent_title', 'inventors', 'patent_status', 'filing_date', 'grant_date', 'remarks'],
+                    sample: ['New Algorithm', 'Dr. Smith, John Doe', 'Filed', '2023-08-20', '', 'Pending review']
+                };
+            case 'externship_info':
+                return {
+                    headers: ['empname', 'department', 'industry_name', 'startdate', 'enddate', 'type', 'remarks'],
+                    sample: ['Prof. Jones', 'EE', 'Power Grid Corp', '2023-06-01', '2023-07-31', 'Summer Externship', 'Completed']
+                };
+            case 'research_publications':
+                return {
+                    headers: ['publication_title', 'journal_name', 'department', 'faculty_name', 'publication_year', 'publication_type'],
+                    sample: ['Deep Learning', 'IEEE Transactions', 'CSE', 'Dr. Smith', '2023', 'Journal']
+                };
+            case 'industry_courses':
+                return {
+                    headers: ['year_offered', 'course_title', 'department', 'industry_partner', 'is_active'],
+                    sample: ['2023', 'Cloud Computing', 'CSE', 'Google', 'TRUE']
+                };
+            case 'academic_program_launch':
+                return {
+                    headers: ['launch_year', 'program_code', 'program_name', 'program_type', 'department', 'oelp_students'],
+                    sample: ['2023', 'DS_MTECH', 'Data Science', 'MTech', 'CSE', '50']
+                };
+            case 'placement_summary':
+                return {
+                    headers: ['placement_year', 'program', 'gender', 'registered', 'placed'],
+                    sample: ['2023', 'UG', 'Male', '120', '110']
+                };
+            case 'placement_companies':
+                return {
+                    headers: ['placement_year', 'company_name', 'sector', 'offers', 'hires', 'is_top_recruiter'],
+                    sample: ['2023', 'Microsoft', 'IT', '10', '8', 'TRUE']
+                };
+            case 'startups':
+                return {
+                    headers: ['startup_name', 'founder_name', 'innovation_focus_area', 'year_of_incubation', 'status', 'sector', 'is_from_iitpkd'],
+                    sample: ['InnovateAI', 'Jane Doe', 'AI/ML', '2022', 'Active', 'DeepTech', 'TRUE']
+                };
+            case 'industry_conclave':
+                return {
+                    headers: ['year', 'theme', 'focus_area', 'number_of_companies', 'description', 'sessions_held', 'key_speakers', 'brochure_url', 'event_photos_url'],
+                    sample: ['2023', 'Industry 4.0', 'Automation', '50', 'Annual Conclave', '5', 'Mr. X, Ms. Y', '', '']
+                };
+            case 'open_house':
+                return {
+                    headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'total_visitors', 'key_highlights', 'photos_url'],
+                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', '10', '500', 'Robot Demo', '']
+                };
+            case 'nptel_local_chapters':
+                return {
+                    headers: ['chapter_name', 'faculty_coordinator', 'is_active', 'established_year'],
+                    sample: ['IIT Palakkad Chapter', 'Dr. Smith', 'TRUE', '2019']
+                };
+            case 'nptel_courses':
+                return {
+                    headers: ['course_code', 'course_title', 'course_category', 'offering_semester', 'offering_year'],
+                    sample: ['NPTEL123', 'Data Structures', 'Engineering', 'Spring', '2023']
+                };
+            case 'nptel_enrollments':
+                return {
+                    headers: ['enrollment_year', 'student_name', 'enrollment_semester', 'certification_earned', 'certification_date'],
+                    sample: ['2023', 'John Doe', 'Spring', 'TRUE', '2023-05-20']
+                };
+            case 'uba_projects':
+                return {
+                    headers: ['project_title', 'coordinator_name', 'project_status', 'start_date', 'end_date', 'intervention_description', 'collaboration_partners'],
+                    sample: ['Water Conservation', 'Dr. Green', 'Ongoing', '2023-01-01', '', 'Village pond restoration', 'Panchayat']
+                };
+            case 'uba_events':
+                return {
+                    headers: ['project_title', 'event_title', 'event_type', 'event_date', 'location', 'description', 'photos_url', 'brochure_url'],
+                    sample: ['Water Conservation', 'Awareness Camp', 'Workshop', '2023-03-22', 'Village Hall', 'Community meeting', '', '']
+                };
             default:
                 return { headers: [], sample: [] };
         }

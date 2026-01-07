@@ -30,6 +30,7 @@ import {
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const GENDER_COLORS = ['#6366f1', '#ec4899', '#f97316'];
 const SECTOR_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6'];
@@ -58,7 +59,10 @@ const formatPercentage = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
-function PlacementSection() {
+function PlacementSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
+
   const [filterOptions, setFilterOptions] = useState({
     years: [],
     programs: [],
@@ -256,6 +260,25 @@ function PlacementSection() {
               Clear Filters
             </button>
           </div>
+
+          {user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Placement Summaries
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Recruiters
+              </button>
+            </div>
+          )}
 
           <div className="filter-grid">
             <div className="filter-group">
@@ -590,7 +613,14 @@ function PlacementSection() {
           </>
         )}
       </div>
-    </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
+    </div >
   );
 }
 

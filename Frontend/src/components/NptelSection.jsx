@@ -25,9 +25,11 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 
 const COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'];
 
-function NptelSection() {
+function NptelSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
   const token = localStorage.getItem('authToken');
-  
+
   const [summary, setSummary] = useState({
     total_courses: 0,
     total_enrollments: 0,
@@ -220,6 +222,31 @@ function NptelSection() {
                 <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
               </p>
             </div>
+            {user && user.role_id === 3 && (
+              <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  className="upload-data-btn"
+                  onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Upload Local Chapters
+                </button>
+                <button
+                  className="upload-data-btn"
+                  onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Upload Courses
+                </button>
+                <button
+                  className="upload-data-btn"
+                  onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Upload Enrollments
+                </button>
+              </div>
+            )}
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -242,6 +269,13 @@ function NptelSection() {
           </div>
         )}
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
     </div>
   );
 }

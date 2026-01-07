@@ -107,21 +107,21 @@ function App() {
           <Route path="people-campus/ewd" element={<EwdSection user={user} />} />
           <Route path="people-campus/iar" element={<IarSection user={user} />} />
           <Route path="research" element={<Research />} />
-          <Route path="research/icsr" element={<ResearchIcsrSection />} />
-          <Route path="research/administrative-section" element={<ResearchAdministrativeSection />} />
-          <Route path="research/library" element={<ResearchLibrarySection />} />
+          <Route path="research/icsr" element={<ResearchIcsrSection user={user} />} />
+          <Route path="research/administrative-section" element={<ResearchAdministrativeSection user={user} />} />
+          <Route path="research/library" element={<ResearchLibrarySection user={user} />} />
           <Route path="education" element={<Education user={user} />} />
-          <Route path="education/placements" element={<PlacementSection />} />
-          <Route path="education/administrative-section" element={<AdministrativeSection />} />
-          <Route path="education/academic-section" element={<EducationAcademicSection />} />
-          <Route path="industry-connect" element={<IndustryConnect />} />
-          <Route path="innovation-entrepreneurship" element={<InnovationSection />} />
-          <Route path="industry-connect/icsr" element={<IcsrSection />} />
-          <Route path="industry-connect/conclave" element={<ConclaveSection />} />
-          <Route path="outreach-extension" element={<OutreachExtension />} />
-          <Route path="outreach-extension/open-house" element={<OpenHouseSection />} />
-          <Route path="outreach-extension/nptel" element={<NptelSection />} />
-          <Route path="outreach-extension/uba" element={<UbaSection />} />
+          <Route path="education/placements" element={<PlacementSection user={user} />} />
+          <Route path="education/administrative-section" element={<AdministrativeSection user={user} />} />
+          <Route path="education/academic-section" element={<EducationAcademicSection user={user} />} />
+          <Route path="industry-connect" element={<IndustryConnect user={user} />} />
+          <Route path="innovation-entrepreneurship" element={<InnovationSection user={user} />} />
+          <Route path="industry-connect/icsr" element={<IcsrSection user={user} />} />
+          <Route path="industry-connect/conclave" element={<ConclaveSection user={user} />} />
+          <Route path="outreach-extension" element={<OutreachExtension user={user} />} />
+          <Route path="outreach-extension/open-house" element={<OpenHouseSection user={user} />} />
+          <Route path="outreach-extension/nptel" element={<NptelSection user={user} />} />
+          <Route path="outreach-extension/uba" element={<UbaSection user={user} />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
           <Route path="create-user" element={<CreateUser user={user} token={token} />} />

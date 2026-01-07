@@ -5,12 +5,14 @@ import {
 } from '../services/industryConnectStats';
 import './Page.css';
 import './AcademicSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function ConclaveSection() {
+function ConclaveSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
-  
+
   const [summary, setSummary] = useState({
     total_conclaves: 0,
     total_companies: 0
@@ -61,6 +63,18 @@ function ConclaveSection() {
         </p>
 
         {error && <div className="error-message">{error}</div>}
+
+        {user && user.role_id === 3 && (
+          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Conclave Data
+            </button>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="summary-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
@@ -239,6 +253,13 @@ function ConclaveSection() {
           <div className="no-data">No conclave data available.</div>
         )}
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="industry_conclave"
+        token={token}
+      />
     </div>
   );
 }

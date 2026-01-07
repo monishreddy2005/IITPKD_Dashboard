@@ -18,12 +18,14 @@ import {
 } from '../services/outreachExtensionStats';
 import './Page.css';
 import './AcademicSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function OpenHouseSection() {
+function OpenHouseSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
-  
+
   const [summary, setSummary] = useState({
     total_events: 0,
     total_visitors: 0,
@@ -140,6 +142,18 @@ function OpenHouseSection() {
       <div className="page-content">
         <h1>Open House – Faculty Coordinator</h1>
 
+        {user && user.role_id === 3 && (
+          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Open House Data
+            </button>
+          </div>
+        )}
+
         {/* Summary Tiles */}
         <div className="summary-grid">
           <div className="summary-card">
@@ -195,7 +209,7 @@ function OpenHouseSection() {
         {/* Events Table */}
         <div className="chart-section">
           <h2>Open House Events</h2>
-          
+
           {/* Filters */}
           <div className="filters-section">
             <input
@@ -284,6 +298,13 @@ function OpenHouseSection() {
           )}
         </div>
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="open_house"
+        token={token}
+      />
     </div>
   );
 }
