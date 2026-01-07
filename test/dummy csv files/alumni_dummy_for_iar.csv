@@ -1,0 +1,11 @@
+rollno,name,alumniidno,currentdesignation,jobcountry,jobplace,yearofgraduation,department,program,category,gender,homestate,jobstate,outcome,employer_or_institution
+101901001,Amit Kumar,AL19001,Software Engineer,India,Bangalore,2023,Computer Science,BTech,Gen,Male,Maharashtra,Karnataka,Corporate,Google
+101901002,Priya Singh,AL19002,Data Scientist,USA,New York,2023,Computer Science,BTech,OBC,Female,Delhi,New York,Corporate,Microsoft
+101901003,Rahul Sharma,AL19003,PhD Scholar,Germany,Munich,2023,Mechanical Engineering,BTech,SC,Male,Uttar Pradesh,Bavaria,HigherStudies,TU Munich
+101901004,Sneha Gupta,AL19004,Product Manager,India,Pune,2022,Electrical Engineering,BTech,Gen,Female,Gujarat,Maharashtra,Corporate,Amazon
+101901005,Vikram Patel,AL19005,Researcher,UK,London,2022,Civil Engineering,BTech,EWS,Male,Rajasthan,London,HigherStudies,Imperial College
+101901006,Anjali Das,AL19006,Founder,India,Hyderabad,2021,Computer Science,BTech,ST,Female,West Bengal,Telangana,Entrepreneurship,TechStart
+101901007,Rohan Verma,AL19007,Consultant,India,Mumbai,2021,Mechanical Engineering,BTech,OBC,Male,Bihar,Maharashtra,Corporate,McKinsey
+101901008,Kavita Reddy,AL19008,Professor,USA,Boston,2020,Electrical Engineering,BTech,Gen,Female,Andhra Pradesh,Massachusetts,HigherStudies,MIT
+101901009,Arjun Nair,AL19009,Analyst,India,Gurgaon,2020,Civil Engineering,BTech,Gen,Male,Kerala,Haryana,Corporate,Goldman Sachs
+101901010,Meera Joshi,AL19010,Civil Servant,India,Delhi,2019,Mechanical Engineering,BTech,EWS,Female,Uttarakhand,Delhi,Other,Government of India

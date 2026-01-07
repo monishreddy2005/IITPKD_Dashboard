@@ -22,7 +22,7 @@ import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function OpenHouseSection({ user }) {
+function OpenHouseSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
@@ -142,7 +142,7 @@ function OpenHouseSection({ user }) {
       <div className="page-content">
         <h1>Open House – Faculty Coordinator</h1>
 
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : (user && user.role_id === 3 && (
           <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <button
               className="upload-data-btn"
@@ -152,7 +152,7 @@ function OpenHouseSection({ user }) {
               Upload Open House Data
             </button>
           </div>
-        )}
+        ))}
 
         {/* Summary Tiles */}
         <div className="summary-grid">

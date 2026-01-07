@@ -59,7 +59,7 @@ const formatPercentage = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
-function PlacementSection({ user }) {
+function PlacementSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -243,9 +243,9 @@ function PlacementSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Placements & Career Outcomes</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Placements & Career Outcomes</h1>}
         <p>
           Analyse multi-year placement performance, cohort-wise conversion rates, visiting recruiters, and package
           benchmarks to understand student career trajectories at IIT Palakkad.
@@ -261,7 +261,7 @@ function PlacementSection({ user }) {
             </button>
           </div>
 
-          {user && user.role_id === 3 && (
+          {isPublicView ? null : (user && user.role_id === 3 && (
             <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <button
                 className="upload-data-btn"
@@ -278,7 +278,7 @@ function PlacementSection({ user }) {
                 Upload Recruiters
               </button>
             </div>
-          )}
+          ))}
 
           <div className="filter-grid">
             <div className="filter-group">

@@ -38,7 +38,7 @@ const TREND_TOTAL_COLOR = '#667eea';
 const TREND_HIGHER_COLOR = '#22d3ee';
 const TREND_CORPORATE_COLOR = '#f97316';
 
-function IarSection({ user }) {
+function IarSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     years: [],
@@ -131,15 +131,15 @@ function IarSection({ user }) {
   const trendData = useMemo(() => summary.trend || [], [summary.trend]);
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>International and Alumni Relations</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>International and Alumni Relations</h1>}
         <p>
           Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
           year, department, program, gender, and category.
         </p>
 
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"

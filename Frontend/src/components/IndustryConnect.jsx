@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import IndustryConnectPublicView from './IndustryConnectPublicView';
 
 import './Page.css';
 import './PeopleCampus.css';
@@ -18,7 +20,31 @@ const INDUSTRY_CONNECT_SECTIONS = [
   }
 ];
 
-function IndustryConnect() {
+function IndustryConnect({ user }) {
+  const [showPublicView, setShowPublicView] = useState(false);
+  const roleId = user?.role_id;
+
+  if (roleId === 1) {
+    return <IndustryConnectPublicView user={user} />;
+  }
+
+  if (showPublicView) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(false)}
+            style={{ marginBottom: '1rem' }}
+          >
+            ← Back to Industry Connect
+          </button>
+          <IndustryConnectPublicView user={user} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <div className="page-content">
@@ -27,6 +53,14 @@ function IndustryConnect() {
           Explore IIT Palakkad&apos;s industry engagement initiatives. Select a section to view detailed analytics,
           events, and partnership information.
         </p>
+
+        {roleId === 3 && (
+          <div style={{ marginBottom: '2rem' }}>
+            <button className="upload-data-btn" onClick={() => setShowPublicView(true)}>
+              View Public Page
+            </button>
+          </div>
+        )}
 
         <div className="people-campus-grid">
           {INDUSTRY_CONNECT_SECTIONS.map((section) => (

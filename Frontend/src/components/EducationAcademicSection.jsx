@@ -30,7 +30,7 @@ const PROGRAM_COLORS = ['#6366f1', '#22d3ee', '#f97316', '#a855f7'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function EducationAcademicSection({ user }) {
+function EducationAcademicSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -155,9 +155,9 @@ function EducationAcademicSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Academic Section · Industry Collaboration & Program Launches</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Academic Section · Industry Collaboration & Program Launches</h1>}
         <p>
           Review how departments collaborate with industry to offer specialised courses and track the launch of new
           academic programmes across IIT Palakkad.
@@ -173,7 +173,7 @@ function EducationAcademicSection({ user }) {
             </button>
           </div>
 
-          {user && user.role_id === 3 && (
+          {isPublicView ? null : (user && user.role_id === 3 && (
             <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <button
                 className="upload-data-btn"
@@ -190,7 +190,7 @@ function EducationAcademicSection({ user }) {
                 Upload Programs
               </button>
             </div>
-          )}
+          ))}
 
           <div className="filter-grid">
             <div className="filter-group">

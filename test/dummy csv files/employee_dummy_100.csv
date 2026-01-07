@@ -1,0 +1,101 @@
+empname,email,phonenumber,bloodgroup,dateofbirth,gender,department,currentdesignationid,isactive,category,pwd_exs,state
+Arjun Singh 1,arjun.singh.1@institute.ac.in,9175341496,B+,1990-11-23,Male,Accounts,,True,EWS,False,Gujarat
+Kavita Nair 2,kavita.nair.2@institute.ac.in,9215650587,B-,1976-11-22,Female,Civil Engineering,,True,Gen,False,Bihar
+Deepak Chandra 3,deepak.chandra.3@institute.ac.in,9521371167,O+,1978-04-06,Male,Computer Science,,True,ST,True,Kerala
+Imran Khan 4,imran.khan.4@institute.ac.in,9163430528,A-,1976-03-06,Transgender,Computer Science,,True,Gen,False,Maharashtra
+Monika Jain 5,monika.jain.5@institute.ac.in,9873364073,AB-,1994-06-03,Transgender,Mathematics,,True,OBC,False,Tamil Nadu
+Ritu Malhotra 6,ritu.malhotra.6@institute.ac.in,9417339081,O+,1995-02-18,Transgender,Chemistry,,True,SC,False,Kerala
+Harish Reddy 7,harish.reddy.7@institute.ac.in,9488883475,O-,1996-06-27,Female,Chemistry,,True,ST,True,Maharashtra
+Rahul Mehta 8,rahul.mehta.8@institute.ac.in,9109134989,AB+,1976-02-11,Other,Accounts,,True,EWS,False,Tamil Nadu
+Monika Jain 9,monika.jain.9@institute.ac.in,9344841881,A-,1980-10-14,Other,Library,,True,OBC,False,Maharashtra
+Manish Tiwari 10,manish.tiwari.10@institute.ac.in,9420018966,A+,1997-05-04,Other,Chemistry,,True,ST,True,Kerala
+Amit Sharma 11,amit.sharma.11@institute.ac.in,9732419236,B-,1988-06-16,Female,Chemistry,,True,Gen,True,Delhi
+Ayesha Siddiqui 12,ayesha.siddiqui.12@institute.ac.in,9352488215,B+,1988-09-08,Female,Electrical Engineering,,True,EWS,False,Uttar Pradesh
+Reena Thomas 13,reena.thomas.13@institute.ac.in,9526266353,B+,1992-01-13,Transgender,Administration,,True,ST,True,Rajasthan
+Kavita Nair 14,kavita.nair.14@institute.ac.in,9187302417,O+,1987-07-28,Female,Electrical Engineering,,True,EWS,False,Tamil Nadu
+Vinod Kumar 15,vinod.kumar.15@institute.ac.in,9770921033,A-,1996-03-24,Transgender,Accounts,,True,EWS,True,Rajasthan
+Deepak Chandra 16,deepak.chandra.16@institute.ac.in,9119321487,AB-,1993-05-15,Female,Library,,True,ST,False,Kerala
+Rahul Mehta 17,rahul.mehta.17@institute.ac.in,9505447325,B+,1990-05-15,Male,Accounts,,True,Gen,True,Bihar
+Sandeep Verma 18,sandeep.verma.18@institute.ac.in,9560289138,O+,1989-10-10,Transgender,Chemistry,,True,Gen,False,Delhi
+Manish Tiwari 19,manish.tiwari.19@institute.ac.in,9468510213,B-,1988-09-24,Other,Administration,,True,OBC,True,Tamil Nadu
+Sandeep Verma 20,sandeep.verma.20@institute.ac.in,9476956419,O-,1989-08-24,Transgender,Mechanical Engineering,,True,SC,False,Bihar
+Meena Pillai 21,meena.pillai.21@institute.ac.in,9681708892,A-,1994-02-16,Female,Administration,,True,OBC,True,Gujarat
+Kavita Nair 22,kavita.nair.22@institute.ac.in,9393002832,AB+,1994-11-25,Male,Library,,True,Gen,False,Rajasthan
+Sunil Naik 23,sunil.naik.23@institute.ac.in,9272946693,A+,1991-06-08,Female,Computer Science,,True,EWS,False,Telangana
+Sunita Devi 24,sunita.devi.24@institute.ac.in,9778100438,AB-,1987-01-08,Transgender,Computer Science,,True,ST,True,West Bengal
+Anjali Pandey 25,anjali.pandey.25@institute.ac.in,9117603464,B-,1976-07-09,Transgender,Mechanical Engineering,,True,Gen,False,Gujarat
+Vinod Kumar 26,vinod.kumar.26@institute.ac.in,9833496804,A-,1991-10-05,Male,Physics,,True,SC,False,West Bengal
+Divya Arora 27,divya.arora.27@institute.ac.in,9985431479,B-,1979-12-13,Other,Computer Science,,True,Gen,False,Bihar
+Reena Thomas 28,reena.thomas.28@institute.ac.in,9753127293,AB+,1980-09-22,Other,Electrical Engineering,,True,ST,True,Kerala
+Rakesh Yadav 29,rakesh.yadav.29@institute.ac.in,9130648715,AB-,1975-11-14,Transgender,Computer Science,,True,OBC,True,Karnataka
+Nidhi Agarwal 30,nidhi.agarwal.30@institute.ac.in,9841567984,AB-,1989-01-19,Transgender,Mathematics,,True,EWS,False,Karnataka
+Pooja Desai 31,pooja.desai.31@institute.ac.in,9844999413,B+,1994-03-09,Transgender,Electrical Engineering,,True,ST,True,Tamil Nadu
+Anupam Roy 32,anupam.roy.32@institute.ac.in,9288591863,A-,1978-11-11,Transgender,Mathematics,,True,EWS,False,Gujarat
+Kavita Nair 33,kavita.nair.33@institute.ac.in,9650385423,AB+,1991-06-05,Male,Civil Engineering,,True,Gen,True,Maharashtra
+Anjali Pandey 34,anjali.pandey.34@institute.ac.in,9260317619,O+,1987-04-04,Other,Accounts,,True,OBC,False,Bihar
+Isha Kapoor 35,isha.kapoor.35@institute.ac.in,9827544504,B+,1984-11-07,Other,Electrical Engineering,,True,ST,False,Gujarat
+Sarita Khatri 36,sarita.khatri.36@institute.ac.in,9845202349,O+,1977-08-14,Female,Electrical Engineering,,True,EWS,False,West Bengal
+Sharmila Bose 37,sharmila.bose.37@institute.ac.in,9766364723,O+,1996-09-03,Female,Mathematics,,True,ST,False,Telangana
+Divya Arora 38,divya.arora.38@institute.ac.in,9125486694,AB-,1990-08-23,Male,Administration,,True,SC,False,Kerala
+Meena Pillai 39,meena.pillai.39@institute.ac.in,9421292930,AB-,1998-09-24,Male,Physics,,True,OBC,True,Maharashtra
+Ayesha Siddiqui 40,ayesha.siddiqui.40@institute.ac.in,9704798008,O-,1975-10-08,Male,Administration,,True,OBC,True,Delhi
+Nandita Ghosh 41,nandita.ghosh.41@institute.ac.in,9892181523,A-,1984-12-10,Female,Mechanical Engineering,,True,OBC,False,Tamil Nadu
+Snehal Patil 42,snehal.patil.42@institute.ac.in,9590552274,B-,1984-03-01,Male,Civil Engineering,,True,OBC,False,Telangana
+Reena Thomas 43,reena.thomas.43@institute.ac.in,9397958034,O-,1981-04-15,Female,Physics,,True,EWS,True,Kerala
+Sarita Khatri 44,sarita.khatri.44@institute.ac.in,9518777026,AB+,1991-04-13,Female,Accounts,,True,Gen,True,Uttar Pradesh
+Rekha Mishra 45,rekha.mishra.45@institute.ac.in,9653270760,A-,1994-10-24,Male,Mechanical Engineering,,True,Gen,True,West Bengal
+Rekha Mishra 46,rekha.mishra.46@institute.ac.in,9788194860,A-,1998-10-08,Male,Administration,,True,SC,True,Maharashtra
+Lakshmi Krishnan 47,lakshmi.krishnan.47@institute.ac.in,9953020684,B-,1982-07-10,Transgender,Library,,True,OBC,True,Gujarat
+Harish Reddy 48,harish.reddy.48@institute.ac.in,9384767431,B+,1991-07-08,Transgender,Chemistry,,True,EWS,True,Uttar Pradesh
+Fatima Sheikh 49,fatima.sheikh.49@institute.ac.in,9474575717,AB+,1978-02-10,Other,Accounts,,True,SC,False,Bihar
+Anita Rao 50,anita.rao.50@institute.ac.in,9712280871,O-,1981-05-08,Male,Computer Science,,True,SC,False,Tamil Nadu
+Deepak Chandra 51,deepak.chandra.51@institute.ac.in,9944230900,B-,1998-12-23,Female,Physics,,True,Gen,True,Karnataka
+Sunita Devi 52,sunita.devi.52@institute.ac.in,9875086149,O-,1977-06-25,Transgender,Computer Science,,True,OBC,True,West Bengal
+Manoj Patil 53,manoj.patil.53@institute.ac.in,9205501348,AB+,1984-02-14,Transgender,Chemistry,,True,SC,True,Uttar Pradesh
+Pooja Desai 54,pooja.desai.54@institute.ac.in,9445758456,AB+,1982-03-28,Other,Administration,,True,SC,True,Rajasthan
+Pooja Desai 55,pooja.desai.55@institute.ac.in,9121345363,AB+,1985-09-26,Other,Physics,,True,ST,True,Rajasthan
+Pallavi Deshpande 56,pallavi.deshpande.56@institute.ac.in,9948157158,O-,1993-08-16,Male,Mathematics,,True,Gen,False,Rajasthan
+Meena Pillai 57,meena.pillai.57@institute.ac.in,9193482574,A-,1978-02-04,Male,Mechanical Engineering,,True,ST,False,Telangana
+Reena Thomas 58,reena.thomas.58@institute.ac.in,9147135357,O-,1988-03-16,Other,Electrical Engineering,,True,EWS,True,Karnataka
+Shilpa Joshi 59,shilpa.joshi.59@institute.ac.in,9763731103,A+,1996-08-13,Male,Accounts,,True,EWS,True,Rajasthan
+Fatima Sheikh 60,fatima.sheikh.60@institute.ac.in,9464014768,AB+,1998-07-12,Male,Mathematics,,True,ST,False,Gujarat
+Vinod Kumar 61,vinod.kumar.61@institute.ac.in,9664733204,O+,1998-06-19,Female,Electrical Engineering,,True,SC,False,Delhi
+Sunil Naik 62,sunil.naik.62@institute.ac.in,9116905139,AB+,1995-03-16,Other,Computer Science,,True,Gen,False,Bihar
+Anjali Pandey 63,anjali.pandey.63@institute.ac.in,9689945924,B+,1979-07-14,Female,Mechanical Engineering,,True,OBC,True,Kerala
+Monika Jain 64,monika.jain.64@institute.ac.in,9619240292,B-,1975-09-18,Other,Library,,True,EWS,False,Kerala
+Arjun Singh 65,arjun.singh.65@institute.ac.in,9506401472,AB+,1996-12-21,Female,Computer Science,,True,Gen,True,Telangana
+Sanjay Gupta 66,sanjay.gupta.66@institute.ac.in,9326250343,AB+,1994-10-01,Female,Computer Science,,True,SC,True,Delhi
+Prakash Shetty 67,prakash.shetty.67@institute.ac.in,9757336457,O-,1981-01-07,Male,Physics,,True,OBC,False,West Bengal
+Sanjay Gupta 68,sanjay.gupta.68@institute.ac.in,9436602458,B-,1998-05-24,Male,Civil Engineering,,True,ST,False,Karnataka
+Rohit Bansal 69,rohit.bansal.69@institute.ac.in,9751814276,O-,1995-09-22,Other,Computer Science,,True,SC,False,Uttar Pradesh
+Sharmila Bose 70,sharmila.bose.70@institute.ac.in,9265260237,A-,1990-11-09,Male,Library,,True,EWS,False,Tamil Nadu
+Harish Reddy 71,harish.reddy.71@institute.ac.in,9517073752,A+,1993-09-26,Other,Library,,True,SC,False,Kerala
+Kiran More 72,kiran.more.72@institute.ac.in,9932827434,B+,1975-04-26,Male,Civil Engineering,,True,Gen,True,Tamil Nadu
+Swati Agarwal 73,swati.agarwal.73@institute.ac.in,9254151826,O-,1993-10-04,Male,Mechanical Engineering,,True,Gen,True,Maharashtra
+Amit Sharma 74,amit.sharma.74@institute.ac.in,9506606284,B+,1982-07-01,Male,Library,,True,EWS,True,Telangana
+Gaurav Saxena 75,gaurav.saxena.75@institute.ac.in,9549863621,O+,1993-10-11,Female,Accounts,,True,SC,True,Tamil Nadu
+Isha Kapoor 76,isha.kapoor.76@institute.ac.in,9517376793,A-,1982-03-04,Other,Computer Science,,True,SC,True,Maharashtra
+Sandeep Verma 77,sandeep.verma.77@institute.ac.in,9323370540,A-,1987-08-13,Female,Accounts,,True,Gen,False,Tamil Nadu
+Amit Sharma 78,amit.sharma.78@institute.ac.in,9691607047,O-,1977-03-13,Transgender,Computer Science,,True,EWS,True,Karnataka
+Kavita Nair 79,kavita.nair.79@institute.ac.in,9422895713,A-,1989-01-28,Male,Civil Engineering,,True,ST,False,Tamil Nadu
+Neha Kulkarni 80,neha.kulkarni.80@institute.ac.in,9354296580,O-,1977-11-07,Female,Civil Engineering,,True,Gen,False,Karnataka
+Pooja Desai 81,pooja.desai.81@institute.ac.in,9942484840,B-,1993-03-01,Transgender,Mathematics,,True,OBC,True,Telangana
+Priya Verma 82,priya.verma.82@institute.ac.in,9364403714,B+,1985-04-09,Other,Electrical Engineering,,True,SC,True,Maharashtra
+Fatima Sheikh 83,fatima.sheikh.83@institute.ac.in,9690707372,B-,1989-12-25,Male,Electrical Engineering,,True,SC,False,Bihar
+Vinod Kumar 84,vinod.kumar.84@institute.ac.in,9537911655,B+,1985-04-12,Female,Mechanical Engineering,,True,OBC,True,Tamil Nadu
+Vinod Kumar 85,vinod.kumar.85@institute.ac.in,9503996724,B+,1985-11-08,Other,Accounts,,True,SC,False,Karnataka
+Amit Sharma 86,amit.sharma.86@institute.ac.in,9897425361,A-,1990-06-21,Other,Chemistry,,True,SC,True,Maharashtra
+Ayesha Siddiqui 87,ayesha.siddiqui.87@institute.ac.in,9384287953,A+,1988-02-12,Transgender,Computer Science,,True,Gen,True,Maharashtra
+Pooja Desai 88,pooja.desai.88@institute.ac.in,9334646669,A+,1983-08-24,Transgender,Library,,True,Gen,False,Karnataka
+Rajiv Menon 89,rajiv.menon.89@institute.ac.in,9586069478,AB+,1985-02-14,Female,Chemistry,,True,OBC,True,Delhi
+Vikram Joshi 90,vikram.joshi.90@institute.ac.in,9269525029,A+,1993-08-23,Transgender,Library,,True,Gen,True,Rajasthan
+Rahul Mehta 91,rahul.mehta.91@institute.ac.in,9528815318,B+,1979-02-23,Transgender,Administration,,True,OBC,False,Delhi
+Reena Thomas 92,reena.thomas.92@institute.ac.in,9268424942,A+,1977-01-12,Other,Chemistry,,True,OBC,False,Delhi
+Anupam Roy 93,anupam.roy.93@institute.ac.in,9551284115,O-,1981-05-01,Male,Electrical Engineering,,True,OBC,True,Maharashtra
+Ajay Rawat 94,ajay.rawat.94@institute.ac.in,9352344069,O-,1995-03-22,Male,Chemistry,,True,EWS,True,Delhi
+Monika Jain 95,monika.jain.95@institute.ac.in,9113062199,A+,1993-03-11,Transgender,Administration,,True,EWS,True,Uttar Pradesh
+Anjali Pandey 96,anjali.pandey.96@institute.ac.in,9136655414,O+,1981-07-18,Other,Mathematics,,True,ST,True,Telangana
+Vikram Joshi 97,vikram.joshi.97@institute.ac.in,9782402257,AB-,1988-11-23,Transgender,Library,,True,EWS,True,Kerala
+Prakash Shetty 98,prakash.shetty.98@institute.ac.in,9288294400,B+,1995-06-20,Female,Library,,True,Gen,True,Telangana
+Alok Mishra 99,alok.mishra.99@institute.ac.in,9955285566,O+,1977-11-19,Other,Administration,,True,OBC,False,Telangana
+Swati Agarwal 100,swati.agarwal.100@institute.ac.in,9919214373,AB+,1997-05-09,Other,Administration,,True,ST,True,Kerala

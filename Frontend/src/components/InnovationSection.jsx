@@ -34,6 +34,10 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 function InnovationSection({ user }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
+  const [isPublicViewMode, setIsPublicViewMode] = useState(false);
+
+  // Determine effective public view state: true if user is public (role 1) OR explicitly toggled
+  const isPublicView = user?.role_id === 1 || isPublicViewMode;
 
   const [summary, setSummary] = useState({
     total_incubatees: 0,
@@ -200,7 +204,31 @@ function InnovationSection({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Innovation & Entrepreneurship</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1>Innovation & Entrepreneurship</h1>
+
+          {/* Public View Toggle for Admins */}
+          {!isPublicView && user && user.role_id === 3 && (
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsPublicViewMode(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              View Public Page
+            </button>
+          )}
+
+          {/* Back Button for Admins in Public Mode */}
+          {isPublicViewMode && user && user.role_id === 3 && (
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsPublicViewMode(false)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              ← Back to Admin View
+            </button>
+          )}
+        </div>
         <p>
           Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation)
           and IPTIF (IIT Palakkad Technology IHub Foundation).
@@ -302,7 +330,7 @@ function InnovationSection({ user }) {
               </button>
             </div>
             <div className="filter-grid">
-              {user && user.role_id === 3 && (
+              {isPublicView ? null : (user && user.role_id === 3 && (
                 <div className="filter-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
                   <button
                     className="upload-data-btn"
@@ -312,7 +340,7 @@ function InnovationSection({ user }) {
                     Upload Startups
                   </button>
                 </div>
-              )}
+              ))}
               <div className="filter-group">
                 <label>Status</label>
                 <select

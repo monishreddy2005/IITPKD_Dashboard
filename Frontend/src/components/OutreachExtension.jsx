@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import OutreachPublicView from './OutreachPublicView';
 
 import './Page.css';
 import './PeopleCampus.css';
@@ -24,15 +26,47 @@ const OUTREACH_EXTENSION_SECTIONS = [
   }
 ];
 
-function OutreachExtension() {
+function OutreachExtension({ user }) { // Added user prop
+  const [showPublicView, setShowPublicView] = useState(false);
+  const roleId = user?.role_id;
+
+  if (roleId === 1) {
+    return <OutreachPublicView user={user} />;
+  }
+
+  if (showPublicView) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(false)}
+            style={{ marginBottom: '1rem' }}
+          >
+            ← Back to Outreach Modules
+          </button>
+          <OutreachPublicView user={user} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Outreach and Extension</h1>
+        <h1>Outreach & Extension Examples</h1> {/* Modified h1 text */}
         <p>
-          Explore IIT Palakkad&apos;s outreach initiatives, community engagement programs, and extension activities.
-          Select a section to view detailed analytics and information.
+          Discover how IIT Palakkad connects with the community and extends knowledge beyond the campus.
+          Select a module to view detailed activities and impact metrics. {/* Modified p text */}
         </p>
+
+        {roleId === 3 && (
+          <div style={{ marginBottom: '2rem' }}>
+            <button className="upload-data-btn" onClick={() => setShowPublicView(true)}>
+              View Public Page
+            </button>
+          </div>
+        )}
 
         <div className="people-campus-grid">
           {OUTREACH_EXTENSION_SECTIONS.map((section) => (
@@ -46,8 +80,7 @@ function OutreachExtension() {
           ))}
         </div>
       </div>
-    </div>
-  );
+    </div>);
 }
 
 export default OutreachExtension;

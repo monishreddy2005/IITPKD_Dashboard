@@ -40,7 +40,7 @@ const formatDateYear = (year) => {
   return year;
 };
 
-function ResearchLibrarySection({ user }) {
+function ResearchLibrarySection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState({
@@ -187,9 +187,9 @@ function ResearchLibrarySection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Research · Library & Scholarly Outputs</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Research · Library & Scholarly Outputs</h1>}
         <p>
           Explore the institute&apos;s research publications across journals, conferences, and scholarly formats with
           granular filters by department and year.
@@ -205,7 +205,7 @@ function ResearchLibrarySection({ user }) {
             </button>
           </div>
 
-          {user && user.role_id === 3 && (
+          {isPublicView ? null : (user && user.role_id === 3 && (
             <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
               <button
                 className="upload-data-btn"
@@ -215,7 +215,7 @@ function ResearchLibrarySection({ user }) {
                 Upload Publications
               </button>
             </div>
-          )}
+          ))}
 
           <div className="filter-grid">
             <div className="filter-group">
