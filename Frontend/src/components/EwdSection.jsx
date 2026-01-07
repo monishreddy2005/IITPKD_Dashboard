@@ -34,7 +34,7 @@ const decimalFormatter = new Intl.NumberFormat('en-IN', { minimumFractionDigits:
 const formatNumber = (value) => numberFormatter.format(Math.round(value || 0));
 const formatDecimal = (value) => decimalFormatter.format(value || 0);
 
-function EwdSection({ user }) {
+function EwdSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [summary, setSummary] = useState({
@@ -116,15 +116,15 @@ function EwdSection({ user }) {
   }, [summary.latest]);
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Engineering and Works Division (EWD)</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Engineering and Works Division (EWD)</h1>}
         <p>
           Monitor institute-wide energy and water usage trends along with per capita consumption indicators and green
           coverage metrics maintained by the Engineering and Works Division.
         </p>
 
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"

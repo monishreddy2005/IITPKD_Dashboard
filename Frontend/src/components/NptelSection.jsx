@@ -25,7 +25,7 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 
 const COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'];
 
-function NptelSection({ user }) {
+function NptelSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
   const token = localStorage.getItem('authToken');
@@ -136,9 +136,9 @@ function NptelSection({ user }) {
   ];
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>NPTEL – CCE</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
 
         {/* Summary Tiles */}
         <div className="summary-grid">
@@ -222,7 +222,7 @@ function NptelSection({ user }) {
                 <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
               </p>
             </div>
-            {user && user.role_id === 3 && (
+            {isPublicView ? null : (user && user.role_id === 3 && (
               <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <button
                   className="upload-data-btn"
@@ -246,7 +246,7 @@ function NptelSection({ user }) {
                   Upload Enrollments
                 </button>
               </div>
-            )}
+            ))}
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie

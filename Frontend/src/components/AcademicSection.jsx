@@ -7,7 +7,7 @@ import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb'];
 
-function AcademicSection({ user }) {
+function AcademicSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     yearofadmission: [],
@@ -225,9 +225,9 @@ function AcademicSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Academic Section - Gender Distribution</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Academic Section - Gender Distribution</h1>}
 
         {error && (
           <div className="error-message">
@@ -242,7 +242,7 @@ function AcademicSection({ user }) {
             <button className="clear-filters-btn" onClick={handleClearFilters}>
               Clear All Filters
             </button>
-            {user && user.role_id === 3 && (
+            {isPublicView ? null : (user && user.role_id === 3 && (
               <button
                 className="upload-data-btn"
                 onClick={() => setIsUploadModalOpen(true)}
@@ -250,7 +250,7 @@ function AcademicSection({ user }) {
               >
                 Upload Data
               </button>
-            )}
+            ))}
           </div>
 
           <div className="filter-grid">
@@ -447,7 +447,7 @@ function AcademicSection({ user }) {
               <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
                 Clear All Filters
               </button>
-              {user && user.role_id === 3 && (
+              {isPublicView ? null : (user && user.role_id === 3 && (
                 <button
                   className="upload-data-btn"
                   onClick={() => setIsUploadModalOpen(true)}
@@ -455,7 +455,7 @@ function AcademicSection({ user }) {
                 >
                   Upload Data
                 </button>
-              )}
+              ))}
             </div>
 
             <div className="filter-grid">

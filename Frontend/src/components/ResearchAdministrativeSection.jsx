@@ -52,7 +52,7 @@ const formatDuration = (days) => {
   return `${numeric} days`;
 };
 
-function ResearchAdministrativeSection({ user }) {
+function ResearchAdministrativeSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState({
@@ -208,9 +208,9 @@ function ResearchAdministrativeSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Research · Administrative (Industry Externships)</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Research · Administrative (Industry Externships)</h1>}
         <p>
           Monitor faculty participation in industry externship programmes and collaborations, segmented by department,
           engagement type, and year.
@@ -226,7 +226,7 @@ function ResearchAdministrativeSection({ user }) {
             </button>
           </div>
 
-          {user && user.role_id === 3 && (
+          {isPublicView ? null : (user && user.role_id === 3 && (
             <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
               <button
                 className="upload-data-btn"
@@ -236,7 +236,7 @@ function ResearchAdministrativeSection({ user }) {
                 Upload Externships
               </button>
             </div>
-          )}
+          ))}
 
           <div className="filter-grid">
             <div className="filter-group">

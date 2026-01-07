@@ -2,7 +2,14 @@
 import './Page.css';
 import './PeopleCampus.css';
 
-function PeopleCampusPublicView() {
+import AcademicSection from './AcademicSection';
+import AdministrativeSection from './AdministrativeSection';
+import IgrcSection from './IgrcSection';
+import IccSection from './IccSection';
+import EwdSection from './EwdSection';
+import IarSection from './IarSection';
+
+function PeopleCampusPublicView({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
@@ -14,12 +21,38 @@ function PeopleCampusPublicView() {
 
         {/* ================= Academic Public View ================= */}
         <section style={{ marginTop: '3rem' }}>
-          Helllo
+          <h2 className="section-title">Academic Section</h2>
+          <AcademicSection user={user} isPublicView={true} />
         </section>
 
         {/* ================= Administrative Public View ================= */}
         <section style={{ marginTop: '4rem' }}>
-          Hi
+          <h2 className="section-title">Administrative Section</h2>
+          <AdministrativeSection user={user} isPublicView={true} />
+        </section>
+
+        {/* ================= IGRC Public View ================= */}
+        <section style={{ marginTop: '4rem' }}>
+          <h2 className="section-title">Internal Grievance Resolution Cell (IGRC)</h2>
+          <IgrcSection user={user} isPublicView={true} />
+        </section>
+
+        {/* ================= ICC Public View ================= */}
+        <section style={{ marginTop: '4rem' }}>
+          <h2 className="section-title">Internal Complaints Committee (ICC)</h2>
+          <IccSection user={user} isPublicView={true} />
+        </section>
+
+        {/* ================= EWD Public View ================= */}
+        <section style={{ marginTop: '4rem' }}>
+          <h2 className="section-title">Engineering & Works Division (EWD)</h2>
+          <EwdSection user={user} isPublicView={true} />
+        </section>
+
+        {/* ================= IAR Public View ================= */}
+        <section style={{ marginTop: '4rem' }}>
+          <h2 className="section-title">International & Alumni Relations (IAR)</h2>
+          <IarSection user={user} isPublicView={true} />
         </section>
       </div>
     </div>

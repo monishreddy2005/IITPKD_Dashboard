@@ -392,7 +392,39 @@ def upload_csv(current_user_id):
                 row_tuple.append(value)
             
             if not is_empty_row:
-                 data_to_insert.append(tuple(row_tuple))
+                 # --- DATA NORMALIZATION ---
+                 # Apply smart corrections before adding to the list
+                 normalized_tuple = list(row_tuple)
+                 
+                 for idx, db_col in enumerate(columns_to_insert):
+                     val = normalized_tuple[idx]
+                     if val is None: continue
+                     
+                     val_str = str(val).strip()
+                     
+                     # 1. Boolean normalization (Yes/No -> True/False)
+                     # Check if column is likely boolean
+                     if db_col.lower() in ['pwd', 'is_active', 'is_from_iitpkd', 'pwd_exs', 'certification_earned', 'is_top_recruiter', 'isactive']:
+                         if val_str.lower() in ['yes', 'y', 'true', '1']:
+                             normalized_tuple[idx] = 'TRUE'
+                         elif val_str.lower() in ['no', 'n', 'false', '0']:
+                             normalized_tuple[idx] = 'FALSE'
+                             
+                     # 2. Student Program normalization (B.Tech -> BTech)
+                     # Only apply if table is student (to avoid side effects)
+                     if table_name == 'student' and db_col.lower() == 'program':
+                         normalized_tuple[idx] = val_str.replace('.', '')
+                         
+                     # 3. Category normalization (General -> Gen)
+                     if db_col.lower() == 'category' and val_str.lower() == 'general':
+                         normalized_tuple[idx] = 'Gen'
+
+                     # 4. Student Status normalization (Active -> Ongoing)
+                     if table_name == 'student' and db_col.lower() == 'status':
+                         if val_str.lower() == 'active':
+                             normalized_tuple[idx] = 'Ongoing'
+
+                 data_to_insert.append(tuple(normalized_tuple))
                  rows_processed += 1
 
 

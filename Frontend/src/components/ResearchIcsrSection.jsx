@@ -70,7 +70,7 @@ const buildPatentBreakdown = (source = {}) => ({
   Published: Number(source?.Published) || 0
 });
 
-function ResearchIcsrSection({ user }) {
+function ResearchIcsrSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -287,9 +287,9 @@ function ResearchIcsrSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>}
         <p>
           Track externally funded and consultancy projects, partnership MoUs, and innovation outcomes through patents
           filed and granted under IIT Palakkad&apos;s ICSR portfolio.
@@ -305,7 +305,7 @@ function ResearchIcsrSection({ user }) {
             </button>
           </div>
 
-          {user && user.role_id === 3 && (
+          {isPublicView ? null : (user && user.role_id === 3 && (
             <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <button
                 className="upload-data-btn"
@@ -329,7 +329,7 @@ function ResearchIcsrSection({ user }) {
                 Upload Patents
               </button>
             </div>
-          )}
+          ))}
 
           <div className="filter-grid">
             <div className="filter-group">

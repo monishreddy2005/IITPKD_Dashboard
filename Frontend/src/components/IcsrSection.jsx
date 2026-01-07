@@ -27,9 +27,9 @@ const EVENT_TYPE_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7'
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function IcsrSection() {
+function IcsrSection({ user, isPublicView = false }) {
   const token = localStorage.getItem('authToken');
-  
+
   const [summary, setSummary] = useState({
     total_events: 0,
     departments_involved: 0
@@ -179,9 +179,9 @@ function IcsrSection() {
   }, [eventTypes]);
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>ICSR Section - Industry Interaction Events</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>ICSR Section - Industry Interaction Events</h1>}
         <p>
           Track and analyze industry engagement events, workshops, seminars, and networking activities
           coordinated by the Industrial Consultancy & Sponsored Research (ICSR) section.
@@ -274,6 +274,17 @@ function IcsrSection() {
               </button>
             </div>
             <div className="filter-grid">
+              {isPublicView ? null : (user && user.role_id === 3 && (
+                <div className="filter-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                  >
+                    Upload Industry Events
+                  </button>
+                </div>
+              ))}
               <div className="filter-group">
                 <label>Event Type</label>
                 <select

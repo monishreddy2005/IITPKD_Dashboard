@@ -106,7 +106,7 @@ function App() {
           <Route path="people-campus/icc" element={<IccSection user={user} />} />
           <Route path="people-campus/ewd" element={<EwdSection user={user} />} />
           <Route path="people-campus/iar" element={<IarSection user={user} />} />
-          <Route path="research" element={<Research />} />
+          <Route path="research" element={<Research user={user} />} />
           <Route path="research/icsr" element={<ResearchIcsrSection user={user} />} />
           <Route path="research/administrative-section" element={<ResearchAdministrativeSection user={user} />} />
           <Route path="research/library" element={<ResearchLibrarySection user={user} />} />

@@ -10,7 +10,7 @@ import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function UbaSection({ user }) {
+function UbaSection({ user, isPublicView = false }) {
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -101,11 +101,14 @@ function UbaSection({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>UBA (Unnat Bharat Abhiyan) – Faculty Coordinator</h1>
+        {isPublicView ? (
+          <h1>UBA (Unnat Bharat Abhiyan)</h1>
+        ) : (
+          <h1>UBA (Unnat Bharat Abhiyan) – Faculty Coordinator</h1>
+        )}
 
 
-
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : (user && user.role_id === 3 && (
           <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <button
               className="upload-data-btn"
@@ -122,7 +125,7 @@ function UbaSection({ user }) {
               Upload Events
             </button>
           </div>
-        )}
+        ))}
 
         {/* Impact Summary */}
         <div className="summary-grid">

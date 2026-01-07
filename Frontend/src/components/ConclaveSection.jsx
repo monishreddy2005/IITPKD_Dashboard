@@ -9,7 +9,7 @@ import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function ConclaveSection({ user }) {
+function ConclaveSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
@@ -54,9 +54,9 @@ function ConclaveSection({ user }) {
   }, [token]);
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Industry-Academia Conclave</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Industry-Academia Conclave</h1>}
         <p>
           Explore the annual Industry-Academia Conclave events, themes, participating companies,
           and key highlights from each edition.
@@ -64,7 +64,7 @@ function ConclaveSection({ user }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : (user && user.role_id === 3 && (
           <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <button
               className="upload-data-btn"
@@ -74,7 +74,7 @@ function ConclaveSection({ user }) {
               Upload Conclave Data
             </button>
           </div>
-        )}
+        ))}
 
         {/* Summary Cards */}
         <div className="summary-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>

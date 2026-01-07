@@ -22,7 +22,7 @@ const BAR_COLORS = {
   pending: '#fa709a'
 };
 
-function IgrcSection({ user }) {
+function IgrcSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [summary, setSummary] = useState({
@@ -80,15 +80,15 @@ function IgrcSection({ user }) {
   }, [token]);
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Internal Grievance Resolution Cell (IGRC)</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Internal Grievance Resolution Cell (IGRC)</h1>}
         <p>
           Track how grievances have been filed, resolved, and remain pending across the years for the Institute
           Grievance Resolution Cell.
         </p>
 
-        {user && user.role_id === 3 && (
+        {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"

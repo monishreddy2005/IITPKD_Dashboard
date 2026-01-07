@@ -78,8 +78,15 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
             setMessage({ type: 'success', text: response.data.message || 'Upload successful!' });
             // Optional: Close after delay or let user close
         } catch (error) {
-            const errorText = error.response?.data?.message || error.message || 'An error occurred during upload.';
-            setMessage({ type: 'error', text: errorText });
+            const errorMsg = error.response?.data?.message || error.message || 'An error occurred during upload.';
+            const errorDetails = error.response?.data?.details;
+
+            // Format the final message to include details if available
+            const finalMessage = errorDetails
+                ? `${errorMsg} (${errorDetails})`
+                : errorMsg;
+
+            setMessage({ type: 'error', text: finalMessage });
         } finally {
             setIsLoading(false);
         }

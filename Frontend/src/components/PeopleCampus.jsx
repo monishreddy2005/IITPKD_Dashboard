@@ -62,7 +62,7 @@ function PeopleCampus({ user }) {
 
   // 🔹 ADDITION: If public user → always show public view
   if (roleId === 1) {
-    return <PeopleCampusPublicView />;
+    return <PeopleCampusPublicView user={user} />;
   }
 
   // 🔹 ADDITION: If non-public user explicitly chooses public view
@@ -78,7 +78,7 @@ function PeopleCampus({ user }) {
             ← Back to Admin View
           </button>
 
-          <PeopleCampusPublicView />
+          <PeopleCampusPublicView user={user} />
         </div>
       </div>
     );
@@ -114,9 +114,9 @@ function PeopleCampus({ user }) {
             }
 
             return (
-              <Link 
-                key={index} 
-                to={section.route} 
+              <Link
+                key={index}
+                to={section.route}
                 className="people-campus-card"
               >
                 <div className="card-icon">

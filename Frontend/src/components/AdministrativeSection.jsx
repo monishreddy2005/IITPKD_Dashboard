@@ -15,7 +15,7 @@ import './AcademicSection.css';
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const GENDER_COLORS = ['#667eea', '#764ba2', '#f093fb'];
 
-function AdministrativeSection({ user }) {
+function AdministrativeSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     department: [],
@@ -296,9 +296,9 @@ function AdministrativeSection({ user }) {
   const designations = getAllDesignations();
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        <h1>Administrative Section - Faculty & Staff Demographics</h1>
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && <h1>Administrative Section - Faculty & Staff Demographics</h1>}
 
         {(facultyError || staffError || genderError || categoryError || departmentError) && (
           <div className="error-message">
@@ -313,7 +313,7 @@ function AdministrativeSection({ user }) {
             <button className="clear-filters-btn" onClick={handleClearFilters}>
               Clear All Filters
             </button>
-            {user && user.role_id === 3 && (
+            {isPublicView ? null : (user && user.role_id === 3 && (
               <button
                 className="upload-data-btn"
                 onClick={() => setIsUploadModalOpen(true)}
@@ -321,7 +321,7 @@ function AdministrativeSection({ user }) {
               >
                 Upload Data
               </button>
-            )}
+            ))}
           </div>
 
           <div className="filter-grid">

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import EducationPublicView from './EducationPublicView';
 
 import './Page.css';
 import './PeopleCampus.css';
@@ -31,9 +33,29 @@ const EDUCATION_SECTIONS = [
 ];
 
 function Education({ user }) {
-
-  // 🔹 ADDITION: safely get role_id
+  const [showPublicView, setShowPublicView] = useState(false);
   const roleId = user?.role_id;
+
+  if (roleId === 1) {
+    return <EducationPublicView user={user} />;
+  }
+
+  if (showPublicView) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(false)}
+            style={{ marginBottom: '1rem' }}
+          >
+            ← Back to Education Modules
+          </button>
+          <EducationPublicView user={user} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -43,6 +65,14 @@ function Education({ user }) {
           Explore key sections of IIT Palakkad&apos;s education ecosystem. Choose a module to dive into detailed dashboards,
           analytics, and operational insights.
         </p>
+
+        {roleId === 3 && (
+          <div style={{ marginBottom: '2rem' }}>
+            <button className="upload-data-btn" onClick={() => setShowPublicView(true)}>
+              View Public Page
+            </button>
+          </div>
+        )}
 
         <div className="people-campus-grid">
           {EDUCATION_SECTIONS.map((section) => {
