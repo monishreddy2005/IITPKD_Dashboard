@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS roles (
 );
 
 -- Insert default roles
-INSERT INTO roles (name) VALUES ('officials'), ('administration'), ('admin');
+INSERT INTO roles (name) VALUES ('officials'), ('administration'), ('admin'), ('academics');
 
 -- The main users table
 CREATE TABLE IF NOT EXISTS users (

@@ -12,6 +12,7 @@ import InnovationEntrepreneurship from './components/InnovationEntrepreneurship'
 import OutreachExtension from './components/OutreachExtension';
 import Profile from './components/Profile';
 import UploadForm from './components/UploadForm';
+import CreateUser from './components/CreateUser';
 import AcademicSection from './components/AcademicSection';
 import AdministrativeSection from './components/AdministrativeSection';
 import IgrcSection from './components/IgrcSection';
@@ -33,7 +34,7 @@ import UbaSection from './components/UbaSection';
 function App() {
   // State to hold the authentication token
   const [token, setToken] = useState(null);
-  
+
   // State to hold user info (optional, but good for UI)
   const [user, setUser] = useState(null);
 
@@ -42,7 +43,7 @@ function App() {
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
-    
+
     if (storedToken) {
       setToken(storedToken);
       if (storedUser) {
@@ -81,13 +82,13 @@ function App() {
     <Router>
       <Routes>
         {/* Public Route - Login */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             token ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
-          } 
+          }
         />
-        
+
         {/* Protected Routes - Dashboard */}
         <Route
           path="/"
@@ -98,18 +99,18 @@ function App() {
           }
         >
           <Route index element={<HomePage />} />
-          <Route path="people-campus" element={<PeopleCampus />} />
-          <Route path="people-campus/academic-section" element={<AcademicSection />} />
-          <Route path="people-campus/administrative-section" element={<AdministrativeSection />} />
-          <Route path="people-campus/igrc" element={<IgrcSection />} />
-          <Route path="people-campus/icc" element={<IccSection />} />
-          <Route path="people-campus/ewd" element={<EwdSection />} />
-          <Route path="people-campus/iar" element={<IarSection />} />
+          <Route path="people-campus" element={<PeopleCampus user={user} />} />
+          <Route path="people-campus/academic-section" element={<AcademicSection user={user} />} />
+          <Route path="people-campus/administrative-section" element={<AdministrativeSection user={user} />} />
+          <Route path="people-campus/igrc" element={<IgrcSection user={user} />} />
+          <Route path="people-campus/icc" element={<IccSection user={user} />} />
+          <Route path="people-campus/ewd" element={<EwdSection user={user} />} />
+          <Route path="people-campus/iar" element={<IarSection user={user} />} />
           <Route path="research" element={<Research />} />
           <Route path="research/icsr" element={<ResearchIcsrSection />} />
           <Route path="research/administrative-section" element={<ResearchAdministrativeSection />} />
           <Route path="research/library" element={<ResearchLibrarySection />} />
-          <Route path="education" element={<Education />} />
+          <Route path="education" element={<Education user={user} />} />
           <Route path="education/placements" element={<PlacementSection />} />
           <Route path="education/administrative-section" element={<AdministrativeSection />} />
           <Route path="education/academic-section" element={<EducationAcademicSection />} />
@@ -123,8 +124,9 @@ function App() {
           <Route path="outreach-extension/uba" element={<UbaSection />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
+          <Route path="create-user" element={<CreateUser user={user} token={token} />} />
         </Route>
-        
+
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

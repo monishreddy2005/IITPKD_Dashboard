@@ -23,6 +23,8 @@ import {
   fetchOutcomeBreakdown
 } from '../services/iarStats';
 
+import DataUploadModal from './DataUploadModal';
+
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
@@ -36,7 +38,8 @@ const TREND_TOTAL_COLOR = '#667eea';
 const TREND_HIGHER_COLOR = '#22d3ee';
 const TREND_CORPORATE_COLOR = '#f97316';
 
-function IarSection() {
+function IarSection({ user }) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     years: [],
     departments: [],
@@ -135,6 +138,18 @@ function IarSection() {
           Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
           year, department, program, gender, and category.
         </p>
+
+        {user && user.role_id === 3 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              Upload Data
+            </button>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 
@@ -433,7 +448,15 @@ function IarSection() {
           </>
         )}
       </div>
-    </div>
+
+      {/* Upload Modal */}
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="alumni"
+        token={token}
+      />
+    </div >
   );
 }
 
