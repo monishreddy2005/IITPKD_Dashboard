@@ -1,51 +1,55 @@
--- A 'user_status' enum type
-DO $$ BEGIN
-    CREATE TYPE user_status AS ENUM (
-    'pending_verification', 
-    'active', 
-    'deactivated' 
-);
-EXCEPTION
-    WHEN duplicate_object THEN null;
+-- ======================
+-- ENUM: user_status
+-- ======================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type
+        WHERE typname = 'user_status'
+    ) THEN
+        CREATE TYPE user_status AS ENUM (
+            'pending_verification',
+            'active',
+            'deactivated'
+        );
+    END IF;
 END $$;
 
--- This table holds user roles
+-- ======================
+-- ROLES TABLE
+-- ======================
+
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
--- Insert default roles
-INSERT INTO roles (name) VALUES ('officials'), ('administration'), ('admin'), ('academics');
+-- ======================
+-- DEFAULT ROLES (IDEMPOTENT)
+-- ======================
 
--- The main users table
+INSERT INTO roles (name)
+VALUES
+    ('officials'),
+    ('administration'),
+    ('admin'),
+    ('academic')
+ON CONFLICT (name) DO NOTHING;
+
+-- ======================
+-- USERS TABLE
+-- ======================
+
 CREATE TABLE IF NOT EXISTS users (
-    -- Core Identity
     id SERIAL PRIMARY KEY,
-    
     email VARCHAR(255) UNIQUE NOT NULL,
-    username VARCHAR(50) UNIQUE,
     password_hash VARCHAR(128) NOT NULL,
-    
-    -- User Profile
-    display_name VARCHAR(100),
-
-    -- Status & Lifecycle
     status user_status NOT NULL DEFAULT 'pending_verification',
-    last_login_at TIMESTAMPTZ,
-    
-    -- Security
-    failed_login_attempts SMALLINT NOT NULL DEFAULT 0,
-    
-    -- Relationships
-    role_id INTEGER NOT NULL DEFAULT 1, -- Assumes 'officials' has ID=1
-    
-    -- Timestamps
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    -- Foreign Key Constraint
-    CONSTRAINT fk_role
-        FOREIGN KEY(role_id) 
+    role_id INT,
+    CONSTRAINT fk_users_role
+        FOREIGN KEY (role_id)
         REFERENCES roles(id)
-        ON DELETE SET DEFAULT
+        ON DELETE SET NULL
 );

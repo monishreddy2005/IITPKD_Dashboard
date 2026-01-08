@@ -1,0 +1,51 @@
+coursecode,coursename,offeredbydept,offeredtoprogram,credit,coordinator,cocoordinator,currentstatus
+MA500,Advanced Analytics 1,MA,MTech,4.0,Divya Reddy,Nisha Sharma,Inactive
+PH501,Advanced Topics 2,PH,MS,4.0,Aparna Das,Manoj Patel,Inactive
+ME502,Advanced Design 3,ME,BTech,4.0,Deepa Das,Harish Verma,Inactive
+CE503,Advanced Topics 4,CE,MTech,3.0,Rahul Reddy,Harish Yadav,Active
+MA504,Advanced Design 5,MA,PhD,2.0,Shreya Mishra,,Inactive
+HS505,Advanced Analytics 6,HS,MSc,4.0,Isha Patel,Arjun Patel,Active
+CY506,Advanced Topics 7,CY,MS,2.0,Manoj Singh,Pooja Krishnan,Inactive
+HS507,Advanced Analytics 8,HS,MS,3.0,Asha Gupta,Rahul Yadav,Inactive
+ME508,Advanced Analytics 9,ME,MSc,2.0,Sameer Pillai,Rahul Menon,Inactive
+AE509,Advanced Laboratory 10,AE,PhD,3.0,Lakshmi Iyer,Arjun Nair,Active
+CE510,Advanced Design 11,CE,MSc,3.0,Harish Patel,,Active
+EE511,Advanced Theory 12,EE,PhD,2.0,Nisha Reddy,Divya Iyer,Inactive
+AE512,Advanced Systems 13,AE,MTech,2.0,Rahul Reddy,,Inactive
+PH513,Advanced Theory 14,PH,PhD,2.0,Sneha Yadav,Isha Mishra,Inactive
+PH514,Advanced Design 15,PH,PhD,4.0,Kiran Verma,Manoj Reddy,Active
+CY515,Advanced Topics 16,CY,MSc,3.0,Pranav Raman,Sameer Sharma,Active
+MA516,Advanced Design 17,MA,PhD,2.0,Deepa Kulkarni,Asha Gopal,Active
+EE517,Advanced Theory 18,EE,MTech,3.0,Harish Sharma,Harish Kulkarni,Active
+EE518,Advanced Topics 19,EE,PhD,4.0,Aparna Gupta,Asha Krishnan,Inactive
+CH519,Advanced Laboratory 20,CH,MS,3.0,Asha Das,,Active
+HS520,Advanced Systems 21,HS,MTech,3.0,Pooja Gupta,Pranav Singh,Active
+EE521,Advanced Design 22,EE,MS,3.0,Isha Das,Manoj Yadav,Inactive
+MA522,Advanced Analytics 23,MA,MS,4.0,Aparna Kulkarni,,Active
+ME523,Advanced Laboratory 24,ME,BTech,4.0,Aparna Gupta,,Active
+EE524,Advanced Systems 25,EE,MSc,3.0,Pranav Raman,,Active
+CY525,Advanced Topics 26,CY,MS,3.0,Divya Joshi,Shreya Iyer,Active
+HS526,Advanced Design 27,HS,PhD,2.0,Sneha Sharma,Manoj Reddy,Active
+EE527,Advanced Topics 28,EE,MSc,3.0,Rohit Kulkarni,Vikram Raman,Active
+CY528,Advanced Topics 29,CY,MTech,3.0,Nisha Iyer,,Inactive
+CE529,Advanced Systems 30,CE,BTech,4.0,Deepa Mehta,Sneha Raman,Inactive
+CH530,Advanced Topics 31,CH,BTech,3.0,Deepa Reddy,Sameer Mehta,Active
+CY531,Advanced Analytics 32,CY,MS,3.0,Arjun Iyer,Arjun Krishnan,Inactive
+CE532,Advanced Analytics 33,CE,MSc,3.0,Harish Patel,Asha Yadav,Active
+EE533,Advanced Topics 34,EE,PhD,3.0,Manoj Gupta,Manoj Mehta,Active
+MA534,Advanced Theory 35,MA,BTech,3.0,Aparna Kulkarni,,Active
+CH535,Advanced Design 36,CH,BTech,2.0,Sameer Nair,,Active
+CY536,Advanced Theory 37,CY,MTech,4.0,Sameer Mehta,Asha Joshi,Inactive
+MA537,Advanced Laboratory 38,MA,MS,2.0,Deepa Patel,,Active
+AE538,Advanced Laboratory 39,AE,MSc,2.0,Kiran Kulkarni,,Inactive
+AE539,Advanced Theory 40,AE,MTech,4.0,Arjun Patel,Nisha Mehta,Active
+CY540,Advanced Topics 41,CY,MS,3.0,Lakshmi Mishra,Sneha Krishnan,Active
+ME541,Advanced Topics 42,ME,MTech,3.0,Pranav Joshi,Manoj Chakraborty,Active
+CY542,Advanced Laboratory 43,CY,PhD,4.0,Rahul Patel,Kiran Krishnan,Active
+EE543,Advanced Laboratory 44,EE,MSc,3.0,Deepa Chakraborty,Naveen Iyer,Active
+CE544,Advanced Analytics 45,CE,MTech,2.0,Sneha Joshi,Deepa Chakraborty,Inactive
+EE545,Advanced Theory 46,EE,MSc,2.0,Aparna Chakraborty,,Active
+CE546,Advanced Theory 47,CE,PhD,2.0,Harish Menon,,Inactive
+EE547,Advanced Laboratory 48,EE,MTech,3.0,Pooja Kulkarni,Manoj Joshi,Inactive
+PH548,Advanced Analytics 49,PH,PhD,3.0,Aparna Gupta,Rohit Krishnan,Inactive
+PH549,Advanced Topics 50,PH,MSc,2.0,Sneha Gupta,Nisha Patel,Active

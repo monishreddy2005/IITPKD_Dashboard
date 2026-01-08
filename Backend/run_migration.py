@@ -1,81 +1,104 @@
 #!/usr/bin/env python3
-"""
-Migration script to add 'Transgender' to emp_gender enum.
-This script uses the same database connection as the Flask app.
-"""
+
 import os
 import sys
 import psycopg2
 from dotenv import load_dotenv
 
-# Load .env file
 load_dotenv()
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    print("Error: DATABASE_URL not found in environment variables.")
-    print("Please ensure your .env file contains DATABASE_URL.")
+    print("❌ DATABASE_URL not set in .env")
     sys.exit(1)
 
-def run_migration():
-    """Run the migration to add 'Transgender' to emp_gender enum."""
+# ----------------------------
+# PATH FIX (IMPORTANT)
+# ----------------------------
+
+# Backend/
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Project root (one level up)
+PROJECT_ROOT = os.path.abspath(os.path.join(BACKEND_DIR, ".."))
+
+# Database_Schema/
+SCHEMA_DIR = os.path.join(PROJECT_ROOT, "Database_Schema")
+MIGRATIONS_DIR = os.path.join(SCHEMA_DIR, "migrations")
+
+# Debug prints (keep these)
+print("Backend Dir     :", BACKEND_DIR)
+print("Project Root    :", PROJECT_ROOT)
+print("Schema Dir      :", SCHEMA_DIR)
+print("Migrations Dir  :", MIGRATIONS_DIR)
+
+if not os.path.isdir(SCHEMA_DIR):
+    print("❌ Database_Schema directory not found")
+    sys.exit(1)
+
+# ----------------------------
+# STRICT EXECUTION ORDER
+# ----------------------------
+
+SQL_EXECUTION_ORDER = [
+    os.path.join(SCHEMA_DIR, "schema.sql"),
+    os.path.join(MIGRATIONS_DIR, "add_transgender_to_emp_gender.sql"),
+    os.path.join(SCHEMA_DIR, "users.sql"),
+    os.path.join(SCHEMA_DIR, "academic_section.sql"),
+    os.path.join(SCHEMA_DIR, "industry_connect.sql"),
+    os.path.join(SCHEMA_DIR, "innovation_entrepreneurship.sql"),
+    os.path.join(SCHEMA_DIR, "outreach_extension.sql"),
+    os.path.join(SCHEMA_DIR, "research.sql"),
+    os.path.join(SCHEMA_DIR, "placement.sql"),
+    os.path.join(SCHEMA_DIR, "ICC.sql"),
+    os.path.join(SCHEMA_DIR, "IGRC.sql"),
+    os.path.join(SCHEMA_DIR, "EWD.sql"),
+]
+
+def execute_sql_file(cursor, file_path):
+    print(f"\n▶ Running: {file_path}")
+
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"Missing SQL file: {file_path}")
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        sql = f.read().strip()
+
+    if not sql:
+        print("⚠ Skipped (empty file)")
+        return
+
+    cursor.execute(sql)
+    print("✓ Success")
+
+def run_migrations():
     conn = None
     try:
-        print("Connecting to database...")
+        print("\n🔗 Connecting to PostgreSQL...")
         conn = psycopg2.connect(DATABASE_URL)
-        cur = conn.cursor()
-        
-        print("Checking if 'Transgender' already exists in emp_gender enum...")
-        # Check if 'Transgender' already exists
-        cur.execute("""
-            SELECT EXISTS (
-                SELECT 1 
-                FROM pg_enum 
-                WHERE enumlabel = 'Transgender' 
-                AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'emp_gender')
-            ) AS exists;
-        """)
-        result = cur.fetchone()
-        already_exists = result[0] if result else False
-        
-        if already_exists:
-            print("✓ 'Transgender' already exists in emp_gender enum. No migration needed.")
-            return True
-        
-        print("Adding 'Transgender' to emp_gender enum...")
-        # Add 'Transgender' to the enum
-        cur.execute("ALTER TYPE emp_gender ADD VALUE 'Transgender';")
+        conn.autocommit = False
+        cursor = conn.cursor()
+
+        for sql_file in SQL_EXECUTION_ORDER:
+            execute_sql_file(cursor, sql_file)
+
         conn.commit()
-        
-        print("✓ Successfully added 'Transgender' to emp_gender enum!")
-        return True
-        
-    except psycopg2.Error as e:
-        if conn:
-            conn.rollback()
-        print(f"✗ Database error: {e}")
-        return False
+        print("\n✅ ALL MIGRATIONS COMPLETED SUCCESSFULLY")
+
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f"✗ Unexpected error: {e}")
-        return False
+        print("\n❌ MIGRATION FAILED")
+        print("Reason:", e)
+        sys.exit(1)
+
     finally:
         if conn:
-            cur.close()
             conn.close()
-            print("Database connection closed.")
+            print("\n🔒 Database connection closed")
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Migration: Add 'Transgender' to emp_gender enum")
+    print(" POSTGRESQL DATABASE MIGRATION ")
     print("=" * 60)
-    success = run_migration()
-    if success:
-        print("\n✓ Migration completed successfully!")
-        sys.exit(0)
-    else:
-        print("\n✗ Migration failed. Please check the error messages above.")
-        sys.exit(1)
-
+    run_migrations()

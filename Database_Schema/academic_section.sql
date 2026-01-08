@@ -1,26 +1,13 @@
-DO $$ BEGIN
-    CREATE TYPE academic_program_type AS ENUM ('UG', 'PG', 'Certificate', 'Interdisciplinary');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-
 CREATE TABLE IF NOT EXISTS industry_courses (
     course_id SERIAL PRIMARY KEY,
     course_title VARCHAR(200) NOT NULL,
     department VARCHAR(100) NOT NULL,
-    industry_partner VARCHAR(150),
-    year_offered INT NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE
+    year_offered INT NOT NULL
 );
-
 
 CREATE TABLE IF NOT EXISTS academic_program_launch (
     program_code VARCHAR(50) PRIMARY KEY,
     program_name VARCHAR(150) NOT NULL,
     program_type academic_program_type NOT NULL,
-    department VARCHAR(100),
-    launch_year INT NOT NULL,
-    oelp_students INT DEFAULT 0,
-    CHECK (oelp_students >= 0)
+    launch_year INT NOT NULL
 );

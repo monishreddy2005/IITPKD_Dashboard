@@ -1,0 +1,61 @@
+company_id,placement_year,company_name,sector,offers,hires,is_top_recruiter,created_at
+1,2019,OptiGlobal,Consulting,19,17,TRUE,2026-01-08 09:25:42
+2,2019,InfoEnterprises,Energy,19,12,TRUE,2026-01-08 09:25:42
+3,2019,AeroEnterprises,Core Engineering,25,12,TRUE,2026-01-08 09:25:42
+4,2019,DataSolutions,Research,7,4,FALSE,2026-01-08 09:25:42
+5,2019,TechPartners,Consulting,2,1,FALSE,2026-01-08 09:25:42
+6,2019,AeroNetworks,Consulting,19,9,TRUE,2026-01-08 09:25:42
+7,2019,UltraGlobal,Manufacturing,6,4,FALSE,2026-01-08 09:25:42
+8,2019,InfoDynamics,Energy,16,13,TRUE,2026-01-08 09:25:42
+9,2019,DataNetworks,Finance,15,12,TRUE,2026-01-08 09:25:42
+10,2019,TechEnterprises,Manufacturing,14,9,FALSE,2026-01-08 09:25:42
+11,2019,TechWorks,Manufacturing,4,3,FALSE,2026-01-08 09:25:42
+12,2019,InfoSolutions,Consulting,9,5,FALSE,2026-01-08 09:25:42
+13,2020,OptiNetworks,Manufacturing,12,9,FALSE,2026-01-08 09:25:42
+14,2020,OptiWorks,Analytics,5,3,FALSE,2026-01-08 09:25:42
+15,2020,InfoWorks,Consulting,16,9,TRUE,2026-01-08 09:25:42
+16,2020,NovaNetworks,Software,18,17,TRUE,2026-01-08 09:25:42
+17,2020,InfoEnterprises,Consulting,15,15,TRUE,2026-01-08 09:25:42
+18,2020,PrimeDynamics,Analytics,20,19,TRUE,2026-01-08 09:25:42
+19,2020,TechPartners,Software,14,12,FALSE,2026-01-08 09:25:42
+20,2020,PrimeSystems,Core Engineering,10,7,FALSE,2026-01-08 09:25:42
+21,2020,UltraPartners,Software,16,8,TRUE,2026-01-08 09:25:42
+22,2020,GreenPartners,Consulting,20,11,TRUE,2026-01-08 09:25:42
+23,2020,GreenWorks,Research,23,14,TRUE,2026-01-08 09:25:42
+24,2020,UltraVentures,Research,1,1,FALSE,2026-01-08 09:25:42
+25,2021,OptiSolutions,Software,8,4,FALSE,2026-01-08 09:25:42
+26,2021,InfoSystems,Core Engineering,19,10,TRUE,2026-01-08 09:25:42
+27,2021,InfoWorks,Core Engineering,1,1,FALSE,2026-01-08 09:25:42
+28,2021,OptiDynamics,Core Engineering,20,17,TRUE,2026-01-08 09:25:42
+29,2021,AeroLabs,Consulting,1,1,FALSE,2026-01-08 09:25:42
+30,2021,DataSolutions,Core Engineering,16,11,TRUE,2026-01-08 09:25:42
+31,2021,DataDynamics,Finance,5,3,FALSE,2026-01-08 09:25:42
+32,2021,NovaVentures,Software,12,10,FALSE,2026-01-08 09:25:42
+33,2021,PrimeLabs,Consulting,1,1,FALSE,2026-01-08 09:25:42
+34,2021,GreenWorks,Manufacturing,10,6,FALSE,2026-01-08 09:25:42
+35,2021,PrimeEnterprises,Core Engineering,11,6,FALSE,2026-01-08 09:25:42
+36,2021,NovaWorks,Energy,25,15,TRUE,2026-01-08 09:25:42
+37,2022,PrimeDynamics,Analytics,1,1,FALSE,2026-01-08 09:25:42
+38,2022,DataGlobal,Finance,15,9,TRUE,2026-01-08 09:25:42
+39,2022,GreenGlobal,Manufacturing,6,3,FALSE,2026-01-08 09:25:42
+40,2022,AeroGlobal,Research,7,5,FALSE,2026-01-08 09:25:42
+41,2022,DataSolutions,Manufacturing,20,17,TRUE,2026-01-08 09:25:42
+42,2022,TechSolutions,Consulting,14,11,FALSE,2026-01-08 09:25:42
+43,2022,DataDynamics,Finance,24,24,TRUE,2026-01-08 09:25:42
+44,2022,UltraWorks,Energy,6,4,FALSE,2026-01-08 09:25:42
+45,2022,OptiSolutions,Core Engineering,16,12,TRUE,2026-01-08 09:25:42
+46,2022,PrimeVentures,Finance,9,6,FALSE,2026-01-08 09:25:42
+47,2022,OptiWorks,Manufacturing,9,4,FALSE,2026-01-08 09:25:42
+48,2022,TechLabs,Energy,20,20,TRUE,2026-01-08 09:25:42
+49,2023,NextLabs,Consulting,12,6,FALSE,2026-01-08 09:25:42
+50,2023,GreenVentures,Software,22,15,TRUE,2026-01-08 09:25:42
+51,2023,DataGlobal,Manufacturing,17,12,TRUE,2026-01-08 09:25:42
+52,2023,AeroSystems,Finance,25,16,TRUE,2026-01-08 09:25:42
+53,2023,NovaSystems,Consulting,2,1,FALSE,2026-01-08 09:25:42
+54,2023,NovaVentures,Analytics,5,4,FALSE,2026-01-08 09:25:42
+55,2023,OptiWorks,Finance,9,6,FALSE,2026-01-08 09:25:42
+56,2023,InfoPartners,Consulting,1,1,FALSE,2026-01-08 09:25:42
+57,2023,InfoSolutions,Analytics,9,4,FALSE,2026-01-08 09:25:42
+58,2023,GreenSolutions,Research,20,11,TRUE,2026-01-08 09:25:42
+59,2023,TechSolutions,Core Engineering,18,9,TRUE,2026-01-08 09:25:42
+60,2023,AeroPartners,Software,22,11,TRUE,2026-01-08 09:25:42

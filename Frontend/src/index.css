@@ -1,11 +1,21 @@
+/* ================= ROOT THEME ================= */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Theme colors */
+  --off-white: #faf9f7;
+  --off-white-2: #f2f1ee;
+  --text-main: #2b2b2b;
+  --text-muted: #666;
+  --accent: #f7a600;
+  --accent-hover: #d88f00;
+  --border-light: #e3e1dc;
+
+  color-scheme: light;
+  color: var(--text-main);
+  background-color: var(--off-white);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,15 +23,19 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ================= LINKS ================= */
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--accent);
   text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  transition: color 0.2s ease;
 }
 
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* ================= LAYOUT RESET ================= */
 html, body {
   margin: 0;
   padding: 0;
@@ -29,10 +43,12 @@ html, body {
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
+  background: var(--off-white);
 }
 
 body {
   display: block;
+  color: var(--text-main);
 }
 
 #root {
@@ -40,39 +56,65 @@ body {
   min-height: 100vh;
 }
 
+/* ================= HEADINGS ================= */
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  color: var(--text-main);
 }
 
+/* ================= BUTTONS ================= */
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-light);
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #ffffff;
+  color: var(--text-main);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
 }
 
+button:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 3px solid rgba(247, 166, 0, 0.4);
+  outline-offset: 2px;
+}
+
+/* ================= SCROLLBAR ================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d4ce;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ================= LIGHT MODE SAFETY ================= */
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--text-main);
+    background-color: var(--off-white);
   }
-  a:hover {
-    color: #747bff;
-  }
+
   button {
-    background-color: #f9f9f9;
+    background-color: #ffffff;
   }
 }
