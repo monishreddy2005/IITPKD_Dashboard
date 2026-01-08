@@ -1,0 +1,2 @@
+"id","email","username","password_hash","display_name","status","last_login_at","failed_login_attempts","role_id","created_at"
+1,"demo@test.com","demo","$2b$12$zKpGRoUXQEWj1ohHZARYPuEUzF1AmEW6TgQuYMaBAXuh6/Wd/cUFK","demo","pending_verification","2026-01-07 11:12:12.170637+05:30",0,1,"2026-01-07 11:06:31.369231+05:30"

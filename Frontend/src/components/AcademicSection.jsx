@@ -242,7 +242,7 @@ function AcademicSection({ user, isPublicView = false }) {
             <button className="clear-filters-btn" onClick={handleClearFilters}>
               Clear All Filters
             </button>
-            {isPublicView ? null : (user && user.role_id === 3 && (
+            {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4) && (
               <button
                 className="upload-data-btn"
                 onClick={() => setIsUploadModalOpen(true)}
@@ -447,7 +447,7 @@ function AcademicSection({ user, isPublicView = false }) {
               <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
                 Clear All Filters
               </button>
-              {isPublicView ? null : (user && user.role_id === 3 && (
+              {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4 ) && (
                 <button
                   className="upload-data-btn"
                   onClick={() => setIsUploadModalOpen(true)}

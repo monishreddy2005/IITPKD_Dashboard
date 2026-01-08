@@ -1,0 +1,11 @@
+designationid,designationname,designationcadre,designationcategory,isactive,createddate,modifieddate
+1,Associate Professor 1,NA,Non-Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+2,Associate Professor 2,Admin,Visiting,FALSE,2026-01-08 09:25:42,2026-01-08 09:25:42
+3,Professor 3,Technical,Non-Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+4,Visiting Faculty 4,Admin,Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+5,Administrative Officer 5,Visiting,Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+6,Assistant Professor 6,Admin,Teaching,FALSE,2026-01-08 09:25:42,2026-01-08 09:25:42
+7,Administrative Officer 7,Teaching,Non-Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+8,Technical Officer 8,Visiting,Visiting,FALSE,2026-01-08 09:25:42,2026-01-08 09:25:42
+9,Technical Officer 9,Visiting,Non-Teaching,TRUE,2026-01-08 09:25:42,2026-01-08 09:25:42
+10,Assistant Professor 10,Admin,Teaching,FALSE,2026-01-08 09:25:42,2026-01-08 09:25:42

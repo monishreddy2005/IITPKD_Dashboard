@@ -1,0 +1,29 @@
+#packages
+
+# Flask Framework
+Flask==3.0.0
+Werkzeug>=3.0.0
+
+# Database
+psycopg2-binary>=2.9.10
+
+# Authentication & Security
+PyJWT==2.8.0
+flask-bcrypt==1.0.1
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# CORS Support
+flask-cors==4.0.0
+
+# Additional Dependencies (if needed for data generation/testing)
+# Uncomment these if you plan to run test data generators
+# faker>=20.0.0
+# pandas>=2.0.0
+
+# Email validation (if used in the project)
+# email-validator>=2.0.0
+
+# Optional: For better development experience
+# flask-migrate>=4.0.0  # If using Flask-Migrate for database migrations

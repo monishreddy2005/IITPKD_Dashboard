@@ -1,0 +1,51 @@
+course_id,course_title,department,industry_partner,year_offered,is_active
+1,Industry Project on AI 1,Chemistry,Shell,2019,TRUE
+2,Industry Project on Analytics 2,Computer Science and Engineering,Bosch,2019,TRUE
+3,Industry Project on AI 3,Physics,GE Healthcare,2019,TRUE
+4,Industry Project on Robotics 4,Chemical Engineering,ABB,2019,TRUE
+5,Industry Project on Analytics 5,Humanities and Social Sciences,ABB,2019,FALSE
+6,Industry Project on AI 6,Electrical Engineering,Siemens,2019,TRUE
+7,Industry Project on Robotics 7,Mathematics,L&T,2019,TRUE
+8,Industry Project on AI 8,Humanities and Social Sciences,Caterpillar,2019,TRUE
+9,Industry Project on Automation 9,Computer Science and Engineering,Caterpillar,2019,TRUE
+10,Industry Project on Materials 10,Civil Engineering,IBM,2019,TRUE
+11,Industry Project on Analytics 11,Humanities and Social Sciences,TCS,2020,TRUE
+12,Industry Project on Automation 12,Mathematics,Bosch,2020,TRUE
+13,Industry Project on Automation 13,Electrical Engineering,GE Healthcare,2020,FALSE
+14,Industry Project on Analytics 14,Electrical Engineering,Siemens,2020,TRUE
+15,Industry Project on Materials 15,Chemical Engineering,Infosys,2020,TRUE
+16,Industry Project on Materials 16,Physics,Schneider Electric,2020,TRUE
+17,Industry Project on AI 17,Physics,ABB,2020,FALSE
+18,Industry Project on Automation 18,Physics,GE Healthcare,2020,TRUE
+19,Industry Project on Robotics 19,Mathematics,Caterpillar,2020,FALSE
+20,Industry Project on AI 20,Mechanical Engineering,Shell,2020,FALSE
+21,Industry Project on AI 21,Electrical Engineering,Siemens,2021,FALSE
+22,Industry Project on AI 22,Electrical Engineering,Schneider Electric,2021,TRUE
+23,Industry Project on AI 23,Civil Engineering,Shell,2021,TRUE
+24,Industry Project on Automation 24,Chemistry,Honeywell,2021,TRUE
+25,Industry Project on Analytics 25,Physics,Hitachi,2021,FALSE
+26,Industry Project on Materials 26,Electrical Engineering,IBM,2021,FALSE
+27,Industry Project on Robotics 27,Chemistry,GE Healthcare,2021,FALSE
+28,Industry Project on Analytics 28,Chemistry,Infosys,2021,FALSE
+29,Industry Project on Materials 29,Humanities and Social Sciences,Shell,2021,TRUE
+30,Industry Project on Energy 30,Physics,Infosys,2021,FALSE
+31,Industry Project on Materials 31,Mechanical Engineering,Hitachi,2022,TRUE
+32,Industry Project on Materials 32,Chemical Engineering,Hitachi,2022,TRUE
+33,Industry Project on Robotics 33,Mathematics,Hitachi,2022,TRUE
+34,Industry Project on Robotics 34,Mechanical Engineering,Honeywell,2022,TRUE
+35,Industry Project on Analytics 35,Mathematics,ABB,2022,FALSE
+36,Industry Project on Materials 36,Civil Engineering,Wipro,2022,TRUE
+37,Industry Project on AI 37,Chemical Engineering,Shell,2022,TRUE
+38,Industry Project on Analytics 38,Chemistry,Caterpillar,2022,FALSE
+39,Industry Project on Materials 39,Chemical Engineering,Honeywell,2022,TRUE
+40,Industry Project on Robotics 40,Humanities and Social Sciences,Reliance Industries,2022,TRUE
+41,Industry Project on Automation 41,Mathematics,Shell,2023,TRUE
+42,Industry Project on AI 42,Chemical Engineering,TCS,2023,TRUE
+43,Industry Project on Analytics 43,Civil Engineering,Honeywell,2023,FALSE
+44,Industry Project on Robotics 44,Chemistry,Infosys,2023,FALSE
+45,Industry Project on Energy 45,Mathematics,Wipro,2023,TRUE
+46,Industry Project on Automation 46,Mathematics,TCS,2023,TRUE
+47,Industry Project on AI 47,Chemical Engineering,ABB,2023,TRUE
+48,Industry Project on Robotics 48,Mechanical Engineering,Bosch,2023,FALSE
+49,Industry Project on Energy 49,Physics,Hitachi,2023,TRUE
+50,Industry Project on Automation 50,Mathematics,Infosys,2023,FALSE

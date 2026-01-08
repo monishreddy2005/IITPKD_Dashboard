@@ -1,8 +1,9 @@
+/* ================= PAGE STRUCTURE ================= */
 .page-container {
   width: 100%;
   min-height: calc(100vh - 180px);
   padding: 2rem;
-  background-color: #111;
+  background-color: #f5f5f5;
   box-sizing: border-box;
 }
 
@@ -11,61 +12,88 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  background-color: #222;
+  /* Original Orange Color Maintained */
+  background-color: #f8b225df; 
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
+  overflow: hidden; /* Prevents child elements from bleeding out */
 }
 
+/* ================= READABLE H1 TITLE ================= */
 .page-content h1 {
-  color: #ffffff;
+  /* Using a deep charcoal for maximum contrast against orange */
+  color: #1a1a1a; 
   font-size: 2.5rem;
+  font-weight: 800;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid #667eea;
   padding-bottom: 0.5rem;
+  /* Replaced blue border with a dark one for better color harmony */
+  border-bottom: 3px solid #1a1a1a; 
+  /* Subtle light shadow to help letters pop against the orange */
+  text-shadow: 0.5px 0.5px 0px rgba(255, 255, 255, 0.4);
+  letter-spacing: -0.01em;
 }
 
 .page-content > p {
-  color: #e0e0e0;
+  /* Darkened for better readability on orange */
+  color: #2d2d2d; 
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 1rem;
 }
 
-.coming-soon {
-  color: #999;
-  font-style: italic;
-  margin-top: 2rem;
+/* ================= FILTER SECTION FIXES ================= */
+.filter-panel {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* Ensures panel stays within page-content */
+  width: 100%;
+  box-sizing: border-box; 
 }
 
-/* Profile specific styles */
-.profile-info {
-  margin-top: 2rem;
+.filter-grid {
+  display: grid;
+  /* Adjusted minmax to ensure columns fit within the panel */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.profile-field {
+.filter-group {
   display: flex;
-  padding: 1rem;
-  border-bottom: 1px solid #444;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0; /* Prevents grid items from expanding past container */
 }
 
-.profile-field:last-child {
-  border-bottom: none;
+/* FIXED DROPDOWN ICONS */
+.filter-select {
+  width: 100%;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  appearance: none;
+  box-sizing: border-box;
+
+  /* Icon positioning fixed to stay inside the div */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 12px) center;
+  background-size: 12px;
+  padding-right: 2.5rem;
 }
 
-.profile-field label {
-  min-width: 150px;
-  font-weight: 600;
-  color: #aaa;
-  margin-right: 1rem;
-}
-
-.profile-field span {
-  color: #ffffff;
-  font-size: 1rem;
-}
-
+/* ================= TOGGLES & BUTTONS ================= */
 .section-toggle {
   display: flex;
   flex-wrap: wrap;
@@ -85,48 +113,25 @@
   transition: all 0.2s ease;
 }
 
-.toggle-button:hover {
-  border-color: #818cf8;
-  color: #ffffff;
-}
-
 .toggle-button.active {
   background: linear-gradient(135deg, #4f46e5, #6366f1);
   border-color: transparent;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
   color: #ffffff;
 }
 
+/* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
-  .page-container {
-    padding: 1rem;
-  }
-
-  .page-content {
-    padding: 1.5rem;
-  }
-
   .page-content h1 {
     font-size: 2rem;
   }
-
-  .profile-field {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  
+  .filter-grid {
+    grid-template-columns: 1fr 1fr;
   }
+}
 
-  .profile-field label {
-    min-width: auto;
-  }
-
-  .section-toggle {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .toggle-button {
-    width: 100%;
-    text-align: center;
+@media (max-width: 480px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
   }
 }

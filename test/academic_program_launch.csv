@@ -1,0 +1,31 @@
+program_code,program_name,program_type,department,launch_year,oelp_students
+PROG201900,Interdisciplinary Programme in AI Ethics,Interdisciplinary,Computer Science and Engineering,2019,7
+PROG201901,UG Programme in Cybersecurity,UG,Chemistry,2019,4
+PROG201902,Certificate Programme in Clean Energy,Certificate,Interdisciplinary Studies,2019,6
+PROG201903,Interdisciplinary Programme in AI Ethics,Interdisciplinary,Electrical Engineering,2019,1
+PROG201904,UG Programme in Robotics,UG,Chemistry,2019,26
+PROG201905,Certificate Programme in Quantum Computing,Certificate,Civil Engineering,2019,8
+PROG202000,PG Programme in Data Science,PG,Interdisciplinary Studies,2020,15
+PROG202001,PG Programme in Quantum Computing,PG,Computer Science and Engineering,2020,6
+PROG202002,UG Programme in Data Science,UG,Chemical Engineering,2020,35
+PROG202003,Certificate Programme in Cybersecurity,Certificate,Electrical Engineering,2020,5
+PROG202004,Interdisciplinary Programme in Smart Manufacturing,Interdisciplinary,Humanities and Social Sciences,2020,14
+PROG202005,UG Programme in Data Science,UG,Electrical Engineering,2020,18
+PROG202100,UG Programme in AI Ethics,UG,Mechanical Engineering,2021,26
+PROG202101,Certificate Programme in Data Science,Certificate,Mechanical Engineering,2021,9
+PROG202102,PG Programme in Robotics,PG,Chemical Engineering,2021,31
+PROG202103,PG Programme in Data Science,PG,Humanities and Social Sciences,2021,34
+PROG202104,Certificate Programme in Robotics,Certificate,Interdisciplinary Studies,2021,14
+PROG202105,PG Programme in Smart Manufacturing,PG,Mechanical Engineering,2021,12
+PROG202200,PG Programme in Cybersecurity,PG,Electrical Engineering,2022,5
+PROG202201,PG Programme in Quantum Computing,PG,Chemical Engineering,2022,33
+PROG202202,Interdisciplinary Programme in Smart Manufacturing,Interdisciplinary,Chemical Engineering,2022,4
+PROG202203,Interdisciplinary Programme in AI Ethics,Interdisciplinary,Computer Science and Engineering,2022,4
+PROG202204,Interdisciplinary Programme in Smart Manufacturing,Interdisciplinary,Chemistry,2022,8
+PROG202205,UG Programme in Quantum Computing,UG,Physics,2022,23
+PROG202300,UG Programme in Smart Manufacturing,UG,Humanities and Social Sciences,2023,35
+PROG202301,Certificate Programme in AI Ethics,Certificate,Chemical Engineering,2023,0
+PROG202302,PG Programme in Clean Energy,PG,Computer Science and Engineering,2023,3
+PROG202303,Interdisciplinary Programme in Sustainable Design,Interdisciplinary,Humanities and Social Sciences,2023,13
+PROG202304,PG Programme in Smart Manufacturing,PG,Chemistry,2023,36
+PROG202305,Interdisciplinary Programme in Robotics,Interdisciplinary,Computer Science and Engineering,2023,4

@@ -1,0 +1,11 @@
+deptcode,deptname,coursesoffered,faculty,courselist
+CSE,Computer Science and Engineering,CSE501; CSE502; CSE503,Harish Reddy; Vikram Das; Vikram Das,Computer Science and Engineering Course 1; Computer Science and Engineering Course 2; Computer Science and Engineering Course 3
+CE,Civil Engineering,CE501; CE502; CE503,Pooja Das; Harish Gupta; Rohit Menon,Civil Engineering Course 1; Civil Engineering Course 2; Civil Engineering Course 3
+EE,Electrical Engineering,EE501; EE502; EE503,Nisha Kulkarni; Sameer Iyer; Vikram Yadav,Electrical Engineering Course 1; Electrical Engineering Course 2; Electrical Engineering Course 3
+ME,Mechanical Engineering,ME501; ME502; ME503,Nisha Patel; Divya Krishnan; Kiran Chakraborty,Mechanical Engineering Course 1; Mechanical Engineering Course 2; Mechanical Engineering Course 3
+CH,Chemical Engineering,CH501; CH502; CH503,Kiran Menon; Sneha Menon; Harish Verma,Chemical Engineering Course 1; Chemical Engineering Course 2; Chemical Engineering Course 3
+AE,Aerospace Engineering,AE501; AE502; AE503,Vikram Iyer; Rohit Mehta; Kiran Iyer,Aerospace Engineering Course 1; Aerospace Engineering Course 2; Aerospace Engineering Course 3
+MA,Mathematics,MA501; MA502; MA503,Isha Iyer; Asha Menon; Rohit Iyer,Mathematics Course 1; Mathematics Course 2; Mathematics Course 3
+PH,Physics,PH501; PH502; PH503,Rohit Sharma; Pooja Pillai; Sneha Verma,Physics Course 1; Physics Course 2; Physics Course 3
+CY,Chemistry,CY501; CY502; CY503,Asha Kulkarni; Nisha Verma; Pranav Nair,Chemistry Course 1; Chemistry Course 2; Chemistry Course 3
+HS,Humanities and Social Sciences,HS501; HS502; HS503,Nisha Raman; Rohit Pillai; Rohit Sharma,Humanities and Social Sciences Course 1; Humanities and Social Sciences Course 2; Humanities and Social Sciences Course 3
