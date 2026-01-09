@@ -182,8 +182,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                 };
             case 'open_house':
                 return {
-                    headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'total_visitors', 'key_highlights', 'photos_url'],
-                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', '10', '500', 'Robot Demo', '']
+                    headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'num_departments', 'total_visitors', 'key_highlights', 'photos_url', 'poster_url', 'brochure_url'],
+                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', 'CSE, ECE, ME', '3', '500', 'Robot Demo', 'https://example.com/photos', 'https://example.com/poster.pdf', 'https://example.com/brochure.pdf']
                 };
             case 'nptel_local_chapters':
                 return {

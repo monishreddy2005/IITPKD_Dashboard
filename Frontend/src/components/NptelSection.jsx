@@ -20,6 +20,7 @@ import {
 } from '../services/outreachExtensionStats';
 import './Page.css';
 import './AcademicSection.css';
+import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 

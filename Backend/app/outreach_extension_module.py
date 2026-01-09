@@ -96,13 +96,29 @@ def get_open_house_summary(current_user_id):
         
         # Number of Participating Departments (count unique departments from all events)
         # We'll count the maximum number of unique departments across all events
-        cur.execute(f"""
-            SELECT COUNT(DISTINCT TRIM(unnest(string_to_array(departments_participated, ',')))) as total
-            FROM {OPEN_HOUSE_TABLE}
-            WHERE departments_participated IS NOT NULL AND departments_participated != '';
-        """)
-        result = cur.fetchone()
-        departments_count = result['total'] or 0 if result else 0
+        # Handle case where column might not exist or table is empty
+        try:
+            cur.execute(f"""
+                SELECT COUNT(DISTINCT TRIM(unnest(string_to_array(departments_participated, ',')))) as total
+                FROM {OPEN_HOUSE_TABLE}
+                WHERE departments_participated IS NOT NULL AND departments_participated != '';
+            """)
+            result = cur.fetchone()
+            departments_count = result['total'] or 0 if result else 0
+        except Exception as dept_error:
+            # If departments_participated column doesn't exist or query fails, try alternative
+            print(f"Department count query error (non-fatal): {dept_error}")
+            # Fallback: use num_departments if available, otherwise 0
+            try:
+                cur.execute(f"""
+                    SELECT COUNT(DISTINCT num_departments) as total
+                    FROM {OPEN_HOUSE_TABLE}
+                    WHERE num_departments IS NOT NULL;
+                """)
+                result = cur.fetchone()
+                departments_count = result['total'] or 0 if result else 0
+            except Exception:
+                departments_count = 0
         
         return jsonify({
             'total_events': total_events,
@@ -111,8 +127,14 @@ def get_open_house_summary(current_user_id):
         }), 200
         
     except Exception as e:
+        import traceback
+        error_details = str(e)
         print(f"Open House summary error: {e}")
-        return jsonify({'message': 'Failed to fetch Open House summary statistics.'}), 500
+        print(traceback.format_exc())
+        return jsonify({
+            'message': 'Failed to fetch Open House summary statistics.',
+            'error': error_details
+        }), 500
     finally:
         if cur:
             cur.close()
