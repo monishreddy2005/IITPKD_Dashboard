@@ -58,6 +58,16 @@ UPDATABLE_TABLES = {
 # Create a new Blueprint for our upload logic
 upload_bp = Blueprint('upload', __name__)
 
+def safe_rollback(conn):
+    """Safely rollback a database connection, handling cases where it might be closed."""
+    if conn:
+        try:
+            if not conn.closed:
+                conn.rollback()
+        except (psycopg2.InterfaceError, AttributeError):
+            # Connection is already closed or invalid, ignore
+            pass
+
 @upload_bp.route('/upload-csv', methods=['POST'])
 @token_required
 def upload_csv(current_user_id):
@@ -125,6 +135,183 @@ def upload_csv(current_user_id):
         csv_headers = reader.fieldnames
         if not csv_headers:
              return jsonify({'message': 'CSV file is empty or headers are missing.'}), 400
+
+        # --- PRE-PROCESSING for 'uba_events' ---
+        # The CSV template has 'project_title', but the DB needs 'project_id'.
+        # We need to look up these IDs and inject them into the CSV stream before validation.
+        if table_name == 'uba_events' and csv_headers and 'project_title' in csv_headers:
+            # We need to consume the reader to process rows, so we'll rebuild the stream later
+            rows = list(reader)
+            
+            if not rows:
+                 return jsonify({'message': 'CSV file is empty.'}), 400
+
+            # 1. Get all unique project titles from the CSV
+            titles = set(row.get('project_title', '').strip() for row in rows if row.get('project_title'))
+            
+            if not titles:
+                return jsonify({'message': 'No project_title found in CSV rows.'}), 400
+                
+            # 2. Query the DB to get the mapping {title -> id}
+            lookup_conn = get_db_connection()
+            if lookup_conn:
+                cur = lookup_conn.cursor()  # Returns RealDictCursor (dictionaries)
+                try:
+                    # Use ANY(ARRAY[...]) for efficient lookup
+                    cur.execute(
+                        "SELECT project_title, project_id FROM uba_projects WHERE LOWER(project_title) = ANY(%s)",
+                        (list(t.lower() for t in titles),)
+                    )
+                    mapping_rows = cur.fetchall()
+                    # Create a lookup dictionary: lower(title) -> id
+                    # Fixed: Using dictionary keys since RealDictCursor returns dicts
+                    title_to_id = {row['project_title'].lower(): row['project_id'] for row in mapping_rows}
+                    
+                finally:
+                    cur.close()
+                    lookup_conn.close()
+            else:
+                return jsonify({'message': 'Database connection failed during lookup.'}), 500
+            
+            # 3. Validation: specific error for missing projects
+            missing_projects = [t for t in titles if t.lower() not in title_to_id]
+            if missing_projects:
+                return jsonify({
+                    'message': 'Project Lookup Failed',
+                    'details': f"The following project titles were not found in the database: {', '.join(missing_projects)}. Please ensure strings match exactly."
+                }), 400
+                
+            # 4. Rewrite the rows with project_id
+            processed_rows = []
+            
+            # Update headers: Remove 'project_title' and add 'project_id'
+            new_headers = [h for h in csv_headers if h != 'project_title']
+            if 'project_id' not in new_headers:
+                new_headers.append('project_id')
+            
+            for row in rows:
+                title = row.get('project_title', '').strip()
+                if title:
+                    pid = title_to_id.get(title.lower())
+                    row['project_id'] = pid
+                
+                # Remove the title key so it doesn't trigger "unknown column" error
+                if 'project_title' in row:
+                    del row['project_title']
+                
+                processed_rows.append(row)
+            
+            # 5. Re-create the csv_file_text stream
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=new_headers)
+            writer.writeheader()
+            writer.writerows(processed_rows)
+            
+            # Reset stream position and replace the original variables
+            output.seek(0)
+            csv_file_text = output
+            reader = csv.DictReader(csv_file_text) # Re-init reader for the next steps
+            csv_headers = reader.fieldnames # Refresh headers
+
+        # --- PRE-PROCESSING for 'nptel_enrollments' ---
+        # The CSV template has 'course_code', but the DB needs 'course_id'.
+        # We need to look up these IDs using (course_code, year, semester)
+        if table_name == 'nptel_enrollments' and csv_headers and 'course_code' in csv_headers:
+            rows = list(reader)
+            if not rows:
+                 return jsonify({'message': 'CSV file is empty.'}), 400
+
+            # 1. Get unique tuples for lookup
+            # We assume enrollment_year/semester match offering_year/semester
+            lookup_keys = set()
+            for row in rows:
+                c_code = row.get('course_code', '').strip()
+                year = row.get('enrollment_year', '').strip()
+                sem = row.get('enrollment_semester', '').strip()
+                if c_code and year:
+                     lookup_keys.add((c_code, year, sem))
+            
+            if not lookup_keys:
+                 return jsonify({'message': 'No course_code/year found in CSV rows.'}), 400
+
+            # 2. Query DB
+            lookup_map = {} # (code, year, sem) -> course_id
+            lookup_conn = get_db_connection()
+            if lookup_conn:
+                cur = lookup_conn.cursor()
+                try:
+                    # Construct WHERE clause dynamically or fetch candidates
+                    # For simplicity, let's fetch matching courses
+                    # Note: We cast year to int in Python if needed, but DB handles string comparison too usually
+                    # Better to be safe with types. 'year' from CSV is string.
+                    
+                    code_list = [k[0] for k in lookup_keys]
+                    cur.execute(
+                        "SELECT course_id, course_code, offering_year, offering_semester FROM nptel_courses WHERE course_code = ANY(%s)",
+                        (code_list,)
+                    )
+                    matches = cur.fetchall()
+                    
+                    # Build map: (code, str(year), sem) -> id
+                    # normalizing keys to strings for safe lookup
+                    for m in matches:
+                        k = (
+                            m['course_code'].strip(), 
+                            str(m['offering_year']), 
+                            (m['offering_semester'] or '').strip()
+                        )
+                        lookup_map[k] = m['course_id']
+                        
+                finally:
+                    cur.close()
+                    lookup_conn.close()
+            else:
+                 return jsonify({'message': 'Database connection failed during lookup.'}), 500
+
+            # 3. Rewrite rows
+            processed_rows = []
+            new_headers = [h for h in csv_headers if h != 'course_code']
+            if 'course_id' not in new_headers:
+                new_headers.append('course_id')
+
+            missing_lookups = []
+
+            for row in rows:
+                c_code = row.get('course_code', '').strip()
+                year = row.get('enrollment_year', '').strip()
+                sem = row.get('enrollment_semester', '').strip()
+                
+                # Try exact match first
+                key = (c_code, year, sem)
+                cid = lookup_map.get(key)
+                
+                # Fallback: if semester is empty in CSV or DB, try matching just code and year?
+                # For now strict match.
+                
+                if cid:
+                    row['course_id'] = cid
+                else:
+                    if c_code: missing_lookups.append(f"{c_code} ({year} {sem})")
+                
+                if 'course_code' in row:
+                    del row['course_code']
+                processed_rows.append(row)
+
+            if missing_lookups:
+                 return jsonify({
+                    'message': 'Course Lookup Failed',
+                    'details': f"Could not find course_id for: {', '.join(missing_lookups[:5])}... Ensure NPTEL Courses are uploaded first."
+                }), 400
+
+            # 4. Re-create stream
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=new_headers)
+            writer.writeheader()
+            writer.writerows(processed_rows)
+            output.seek(0)
+            csv_file_text = output
+            reader = csv.DictReader(csv_file_text)
+            csv_headers = reader.fieldnames
 
         # 4. --- Database Column Validation ---
         
@@ -204,9 +391,9 @@ def upload_csv(current_user_id):
                 serial_columns.append(column_name)
                 continue
             
-            # Check if column has a DEFAULT value (making it optional in CSV)
+            # Check if column has a DEFAULT value OR is NULLABLE (making it optional in CSV)
             # Examples: DEFAULT CURRENT_TIMESTAMP, DEFAULT 0, DEFAULT 'value', etc.
-            if column_default and not is_serial:
+            if (column_default or is_nullable == 'YES') and not is_serial:
                 optional_columns.append(column_name)
                 continue  # Skip from required columns, but allow in CSV if present
             
@@ -441,28 +628,28 @@ def upload_csv(current_user_id):
         return jsonify({'message': f"Successfully updated {len(data_to_insert)} rows in '{table_name}'."}), 200
 
     except psycopg2.errors.UniqueViolation as e:
-        if conn: conn.rollback()
+        safe_rollback(conn)
         return jsonify({
             'message': 'Duplicate Entry Error',
             'details': f"A record with this ID or unique key already exists. Error: {str(e).split('DETAIL:')[-1].strip()}"
         }), 409
 
     except psycopg2.errors.InvalidTextRepresentation as e:
-        if conn: conn.rollback()
+        safe_rollback(conn)
         return jsonify({
             'message': 'Data Format Error',
             'details': f"Invalid value for a column (likely an Enum or Date). Please check your values. Error: {str(e).strip()}"
         }), 400
 
     except psycopg2.errors.NotNullViolation as e:
-        if conn: conn.rollback()
+        safe_rollback(conn)
         return jsonify({
             'message': 'Missing Required Data',
             'details': f"A required field is missing. Error: {str(e).strip()}"
         }), 400
 
     except psycopg2.errors.DatatypeMismatch as e:
-        if conn: conn.rollback()
+        safe_rollback(conn)
         return jsonify({
             'message': 'Data Type Mismatch',
             'details': f"Value has incorrect type. Error: {str(e).strip()}"
@@ -470,13 +657,22 @@ def upload_csv(current_user_id):
 
     except Exception as e:
         # Rollback any changes if an error occurs
-        if conn:
-            conn.rollback()
+        safe_rollback(conn)
         print(f"Error during CSV upload: {e}")
         return jsonify({'message': 'An error occurred during processing.', 'error': str(e)}), 500
     
     finally:
         # Always close the connection
         if conn:
-            cur.close()
-            conn.close()
+            try:
+                # Close cursor if it exists (it's only defined after the main DB connection)
+                cur.close()
+            except (NameError, AttributeError, psycopg2.InterfaceError):
+                # cur doesn't exist or is already closed, ignore
+                pass
+            try:
+                if not conn.closed:
+                    conn.close()
+            except (AttributeError, psycopg2.InterfaceError):
+                # Connection is already closed or invalid, ignore
+                pass
