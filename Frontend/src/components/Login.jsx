@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
+import IIPKD_Logo from '../assets/IITPKD_Logo.png';
 // The Login component receives a prop `onLoginSuccess` from App.jsx
 // which it will call with the token and user data after a successful login/signup.
 function Login({ onLoginSuccess }) {
@@ -56,10 +57,21 @@ function Login({ onLoginSuccess }) {
   };
 
   return (
+  <div className="login-page">
+    {/* Page heading */}
+    <h1 className="login-page-title">
+      Indian Institute of Technology Palakkad
+    </h1>
+
     <div className="card">
-      <h1>{isLoginView ? 'Login' : 'Sign Up'}</h1>
+      {/* Logo */}
+      <div className="login-logo">
+        <img src={IIPKD_Logo} alt="IIT Palakkad Logo" />
+      </div>
+
+      <h2>{isLoginView ? 'Sign in to Dashboard' : 'Create an Account'}</h2>
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        
         <input
           type="email"
           placeholder="Email"
@@ -67,6 +79,7 @@ function Login({ onLoginSuccess }) {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -75,7 +88,6 @@ function Login({ onLoginSuccess }) {
           required
         />
 
-        {/* Show these fields only for Sign Up */}
         {!isLoginView && (
           <>
             <input
@@ -98,20 +110,21 @@ function Login({ onLoginSuccess }) {
           {isLoading ? 'Loading...' : (isLoginView ? 'Login' : 'Sign Up')}
         </button>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p className="login-error">{error}</p>}
       </form>
 
-      <button 
+      <button
+        className="login-toggle"
         onClick={() => {
           setIsLoginView(!isLoginView);
-          setError(''); // Clear errors when toggling
+          setError('');
         }}
-        style={{ marginTop: '1rem', backgroundColor: 'transparent', border: 'none', color: '#646cff', cursor: 'pointer' }}
       >
         {isLoginView ? 'Need an account? Sign Up' : 'Already have an account? Login'}
       </button>
     </div>
-  );
+  </div>
+);
 }
 
 export default Login;
