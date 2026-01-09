@@ -213,6 +213,106 @@ def upload_csv(current_user_id):
             reader = csv.DictReader(csv_file_text) # Re-init reader for the next steps
             csv_headers = reader.fieldnames # Refresh headers
 
+        # --- PRE-PROCESSING for 'nptel_enrollments' ---
+        # The CSV template has 'course_code', but the DB needs 'course_id'.
+        # We need to look up these IDs using (course_code, year, semester)
+        if table_name == 'nptel_enrollments' and csv_headers and 'course_code' in csv_headers:
+            rows = list(reader)
+            if not rows:
+                 return jsonify({'message': 'CSV file is empty.'}), 400
+
+            # 1. Get unique tuples for lookup
+            # We assume enrollment_year/semester match offering_year/semester
+            lookup_keys = set()
+            for row in rows:
+                c_code = row.get('course_code', '').strip()
+                year = row.get('enrollment_year', '').strip()
+                sem = row.get('enrollment_semester', '').strip()
+                if c_code and year:
+                     lookup_keys.add((c_code, year, sem))
+            
+            if not lookup_keys:
+                 return jsonify({'message': 'No course_code/year found in CSV rows.'}), 400
+
+            # 2. Query DB
+            lookup_map = {} # (code, year, sem) -> course_id
+            lookup_conn = get_db_connection()
+            if lookup_conn:
+                cur = lookup_conn.cursor()
+                try:
+                    # Construct WHERE clause dynamically or fetch candidates
+                    # For simplicity, let's fetch matching courses
+                    # Note: We cast year to int in Python if needed, but DB handles string comparison too usually
+                    # Better to be safe with types. 'year' from CSV is string.
+                    
+                    code_list = [k[0] for k in lookup_keys]
+                    cur.execute(
+                        "SELECT course_id, course_code, offering_year, offering_semester FROM nptel_courses WHERE course_code = ANY(%s)",
+                        (code_list,)
+                    )
+                    matches = cur.fetchall()
+                    
+                    # Build map: (code, str(year), sem) -> id
+                    # normalizing keys to strings for safe lookup
+                    for m in matches:
+                        k = (
+                            m['course_code'].strip(), 
+                            str(m['offering_year']), 
+                            (m['offering_semester'] or '').strip()
+                        )
+                        lookup_map[k] = m['course_id']
+                        
+                finally:
+                    cur.close()
+                    lookup_conn.close()
+            else:
+                 return jsonify({'message': 'Database connection failed during lookup.'}), 500
+
+            # 3. Rewrite rows
+            processed_rows = []
+            new_headers = [h for h in csv_headers if h != 'course_code']
+            if 'course_id' not in new_headers:
+                new_headers.append('course_id')
+
+            missing_lookups = []
+
+            for row in rows:
+                c_code = row.get('course_code', '').strip()
+                year = row.get('enrollment_year', '').strip()
+                sem = row.get('enrollment_semester', '').strip()
+                
+                # Try exact match first
+                key = (c_code, year, sem)
+                cid = lookup_map.get(key)
+                
+                # Fallback: if semester is empty in CSV or DB, try matching just code and year?
+                # For now strict match.
+                
+                if cid:
+                    row['course_id'] = cid
+                else:
+                    if c_code: missing_lookups.append(f"{c_code} ({year} {sem})")
+                
+                if 'course_code' in row:
+                    del row['course_code']
+                processed_rows.append(row)
+
+            if missing_lookups:
+                 return jsonify({
+                    'message': 'Course Lookup Failed',
+                    'details': f"Could not find course_id for: {', '.join(missing_lookups[:5])}... Ensure NPTEL Courses are uploaded first."
+                }), 400
+
+            # 4. Re-create stream
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=new_headers)
+            writer.writeheader()
+            writer.writerows(processed_rows)
+            output.seek(0)
+            csv_file_text = output
+            reader = csv.DictReader(csv_file_text)
+            csv_headers = reader.fieldnames
+
         # 4. --- Database Column Validation ---
         
         conn = get_db_connection()
@@ -291,9 +391,9 @@ def upload_csv(current_user_id):
                 serial_columns.append(column_name)
                 continue
             
-            # Check if column has a DEFAULT value (making it optional in CSV)
+            # Check if column has a DEFAULT value OR is NULLABLE (making it optional in CSV)
             # Examples: DEFAULT CURRENT_TIMESTAMP, DEFAULT 0, DEFAULT 'value', etc.
-            if column_default and not is_serial:
+            if (column_default or is_nullable == 'YES') and not is_serial:
                 optional_columns.append(column_name)
                 continue  # Skip from required columns, but allow in CSV if present
             

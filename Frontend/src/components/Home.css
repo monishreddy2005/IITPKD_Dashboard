@@ -16,7 +16,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -27,9 +28,10 @@ html, body {
   color: var(--text-main);
 }
 
-/* Offset page for FIXED HEADER */
+/* Offset page for FIXED HEADER CONTAINER (Header + Navbar) */
 body {
-  padding-top: 72px; /* desktop header height */
+  padding-top: 130px;
+  /* Total height: ~72px (header) + ~54px (navbar) + buffer */
 }
 
 #root {
@@ -37,7 +39,18 @@ body {
   min-height: 100vh;
 }
 
-/* ================= HEADER (FIXED) ================= */
+/* ================= HEADER CONTAINER (FIXED) ================= */
+.app-header-container {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background: var(--off-white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= HEADER ================= */
 .main-header {
   width: 100%;
   display: flex;
@@ -47,12 +60,7 @@ body {
   padding: 1rem 2.5rem;
   background: var(--off-white);
   border-bottom: 1px solid var(--border-light);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
+  /* box-shadow removed here, moved to container */
 }
 
 /* LEFT HEADER */
@@ -75,7 +83,8 @@ body {
 
 /* LOGO IMAGE */
 .logo-image {
-  height: 32px;               /* Desktop size */
+  height: 32px;
+  /* Desktop size */
   width: auto;
   object-fit: contain;
   display: block;
@@ -145,7 +154,7 @@ body {
   border: 1px solid var(--border-light);
   border-radius: 10px;
   min-width: 260px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   z-index: 1001;
 }
@@ -193,6 +202,7 @@ body {
   justify-content: space-around;
   background: var(--off-white-2);
   border-bottom: 1px solid var(--border-light);
+  /* Removed sticky: handled by parent container */
 }
 
 .nav-link {
@@ -231,12 +241,14 @@ body {
 /* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
   body {
-    padding-top: 68px;
+    padding-top: 120px;
   }
 
   .main-header {
     padding: 1rem 2rem;
   }
+
+  /* Navbar top adjustment not needed anymore */
 
   .nav-link {
     padding: 0.8rem 1rem;
@@ -249,11 +261,14 @@ body {
 
 @media (max-width: 640px) {
   body {
-    padding-top: 64px;
+    padding-top: 110px;
   }
 
+  /* Navbar top adjustment not needed anymore */
+
   .logo-image {
-    height: 24px;     /* Mobile size */
+    height: 24px;
+    /* Mobile size */
   }
 
   .logo-text {

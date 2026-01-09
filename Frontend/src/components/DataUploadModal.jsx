@@ -183,7 +183,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
             case 'open_house':
                 return {
                     headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'num_departments', 'total_visitors', 'key_highlights', 'photos_url', 'poster_url', 'brochure_url'],
-                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', 'CSE, ECE, ME', '3', '500', 'Robot Demo', 'https://example.com/photos', 'https://example.com/poster.pdf', 'https://example.com/brochure.pdf']
+                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', '"CSE, ECE, ME"', '3', '500', 'Robot Demo', 'https://example.com/photos', 'https://example.com/poster.pdf', 'https://example.com/brochure.pdf']
                 };
             case 'nptel_local_chapters':
                 return {
@@ -197,8 +197,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                 };
             case 'nptel_enrollments':
                 return {
-                    headers: ['enrollment_year', 'student_name', 'enrollment_semester', 'certification_earned', 'certification_date'],
-                    sample: ['2023', 'John Doe', 'Spring', 'TRUE', '2023-05-20']
+                    headers: ['enrollment_year', 'course_code', 'student_name', 'enrollment_semester', 'certification_earned', 'certification_date'],
+                    sample: ['2023', 'NPTEL123', 'John Doe', 'Spring', 'TRUE', '2023-05-20']
                 };
             case 'uba_projects':
                 return {

@@ -139,7 +139,35 @@ function NptelSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
+
+          {!isPublicView && user && user.role_id === 3 && (
+            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Local Chapters
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Courses
+              </button>
+              <button
+                className="upload-data-btn"
+                onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              >
+                Upload Enrollments
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Summary Tiles */}
         <div className="summary-grid">
@@ -223,31 +251,7 @@ function NptelSection({ user, isPublicView = false }) {
                 <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
               </p>
             </div>
-            {isPublicView ? null : (user && user.role_id === 3 && (
-              <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                <button
-                  className="upload-data-btn"
-                  onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Upload Local Chapters
-                </button>
-                <button
-                  className="upload-data-btn"
-                  onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Upload Courses
-                </button>
-                <button
-                  className="upload-data-btn"
-                  onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Upload Enrollments
-                </button>
-              </div>
-            ))}
+
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
