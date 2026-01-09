@@ -27,29 +27,35 @@ html, body {
   color: var(--text-main);
 }
 
+/* Offset page for FIXED HEADER */
+body {
+  padding-top: 72px; /* desktop header height */
+}
+
 #root {
   width: 100%;
   min-height: 100vh;
 }
 
-/* ================= HEADER ================= */
+/* ================= HEADER (FIXED) ================= */
 .main-header {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  /* CRITICAL FIX */
   padding: 1rem 2.5rem;
-  box-sizing: border-box;
-
   background: var(--off-white);
   border-bottom: 1px solid var(--border-light);
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  position: relative;
+
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 1000;
 }
 
+/* LEFT HEADER */
 .header-left {
   display: flex;
   align-items: center;
@@ -60,17 +66,50 @@ html, body {
   color: inherit;
 }
 
+/* LOGO + TEXT CONTAINER */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* LOGO IMAGE */
+.logo-image {
+  height: 32px;               /* Desktop size */
+  width: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+}
+
+/* TEXT STACK */
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+/* INSTITUTE NAME */
 .logo-text {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--accent);
+  white-space: nowrap;
+}
+
+/* TAGLINE */
+.logo-tagline {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
 /* ================= PROFILE ================= */
 .header-right {
   position: relative;
-
-  /* PREVENT EDGE CLIPPING */
   margin-right: 0.5rem;
 }
 
@@ -102,13 +141,11 @@ html, body {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-
   background: #ffffff;
   border: 1px solid var(--border-light);
   border-radius: 10px;
   min-width: 260px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-
   overflow: hidden;
   z-index: 1001;
 }
@@ -191,60 +228,14 @@ html, body {
   padding: 2rem;
 }
 
-.welcome-section {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 3rem 1rem;
-  text-align: center;
-}
-
-.welcome-section h1 {
-  font-size: 2.4rem;
-}
-
-.welcome-section p {
-  color: var(--text-muted);
-}
-
-/* ================= CSV PREVIEW ================= */
-.csv-preview {
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 1rem;
-  background: #ffffff;
-  overflow-x: auto;
-}
-
-.csv-preview table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.csv-preview th,
-.csv-preview td {
-  border: 1px solid var(--border-light);
-  padding: 0.5rem 0.75rem;
-  white-space: nowrap;
-}
-
-.csv-preview th {
-  background: var(--off-white-2);
-  font-weight: 600;
-}
-
-.csv-preview tbody tr:hover {
-  background: rgba(247, 166, 0, 0.08);
-}
-
 /* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
-  .main-header {
-    padding: 1rem 2rem;
+  body {
+    padding-top: 68px;
   }
 
-  .header-right {
-    margin-right: 0.25rem;
+  .main-header {
+    padding: 1rem 2rem;
   }
 
   .nav-link {
@@ -254,4 +245,27 @@ html, body {
   .main-content {
     padding: 1rem;
   }
+}
+
+@media (max-width: 640px) {
+  body {
+    padding-top: 64px;
+  }
+
+  .logo-image {
+    height: 24px;     /* Mobile size */
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .logo-tagline {
+    font-size: 0.65rem;
+  }
+}
+
+/* Optional utility */
+.logo-image.large {
+  height: 52px;
 }

@@ -1,4 +1,5 @@
 import './Page.css';
+import './PeopleCampus.css';
 
 function InnovationEntrepreneurship() {
   return (

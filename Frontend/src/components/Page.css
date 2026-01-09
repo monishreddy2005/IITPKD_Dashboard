@@ -1,38 +1,56 @@
-/* ================= PAGE STRUCTURE ================= */
-.page-container {
-  width: 100%;
-  min-height: calc(100vh - 180px);
-  padding: 2rem;
-  background-color: #f5f5f5;
-  box-sizing: border-box;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 .page-content {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem 3rem;
+
   /* Original Orange Color Maintained */
-  background-color: #f8b225df; 
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background-color: #f8b225df;
+
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   box-sizing: border-box;
-  overflow: hidden; /* Prevents child elements from bleeding out */
+  overflow: hidden;
+
+  /* Typography defaults */
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: #1f1f1f;
+  line-height: 1.6;
 }
 
-/* ================= READABLE H1 TITLE ================= */
-.page-content h1 {
-  /* Using a deep charcoal for maximum contrast against orange */
-  color: #1a1a1a; 
-  font-size: 2.5rem;
+/* ✅ Automatically style page title (first h1 only) */
+.page-content > h1 {
+  font-size: 32px;
   font-weight: 800;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  /* Replaced blue border with a dark one for better color harmony */
-  border-bottom: 3px solid #1a1a1a; 
-  /* Subtle light shadow to help letters pop against the orange */
-  text-shadow: 0.5px 0.5px 0px rgba(255, 255, 255, 0.4);
-  letter-spacing: -0.01em;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+
+  color: #111111; /* Professional near-black */
+
+  /* Very subtle lift */
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  margin: 0 0 10px 0;
+}
+
+/* Subtitle text (your existing <p>) */
+.page-content > p {
+  color: #2a2a2a;
+  margin-bottom: 1.25rem;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .page-content {
+    padding: 2rem;
+  }
+
+  .page-content > h1 {
+    font-size: 26px;
+    -webkit-text-stroke: 0.8px #000000;
+  }
 }
 
 .page-content > p {
@@ -133,5 +151,181 @@
 @media (max-width: 480px) {
   .filter-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ===================================================== */
+/* FORCE LIGHT SUMMARY CARDS – INNOVATION PAGE */
+/* ===================================================== */
+
+/* Card container */
+.page-content .summary-card {
+  background-color: #fffaf0 !important; /* off-white */
+  border: 1px solid rgba(247, 166, 0, 0.35);
+  border-radius: 14px;
+
+  padding: 1.5rem 1.75rem;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  color: #111111 !important;
+}
+
+/* Remove any dark overlays or gradients */
+.page-content .summary-card::before,
+.page-content .summary-card::after {
+  background: none !important;
+}
+
+/* Label text */
+.page-content .summary-card-label {
+  color: #92400e !important; /* dark orange */
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+/* Value text */
+.page-content .summary-card-value {
+  color: #111111 !important;
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+/* Optional subtle accent line (top) */
+.page-content .summary-card {
+  position: relative;
+}
+
+.page-content .summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 4px;
+}
+
+/* Hover polish */
+.page-content .summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+}
+/* ===================================================== */
+/* FORCE LIGHT GRIEVANCE TABLE WRAPPER */
+/* ===================================================== */
+
+.page-content .grievance-table-wrapper {
+  background-color: #fffaf0 !important; /* warm off-white */
+  border-radius: 16px;
+  padding: 2rem;
+
+  border: 1px solid rgba(247, 166, 0, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.1);
+
+  color: #111111;
+}
+
+/* Header inside grievance wrapper */
+.page-content .grievance-table-wrapper .chart-header h2 {
+  color: #111111;
+}
+
+.page-content .grievance-table-wrapper .chart-header p {
+  color: #111111;
+}
+
+/* Remove any inherited dark backgrounds */
+.page-content .grievance-table-wrapper *,
+.page-content .grievance-table-wrapper *::before,
+.page-content .grievance-table-wrapper *::after {
+  background-color: transparent;
+}
+
+/* FILTER PANEL INSIDE GRIEVANCE WRAPPER */
+.page-content .grievance-table-wrapper .filter-panel {
+  background-color: #ffffff !important;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* TABLE WRAPPER */
+.page-content .grievance-table-wrapper .table-responsive {
+  background-color: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+/* TABLE STYLING */
+.page-content .grievance-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+}
+
+.page-content .grievance-table-wrapper th {
+  background-color: #fff7ed;
+  color: #92400e;
+  font-weight: 600;
+  padding: 0.85rem;
+  border-bottom: 1px solid #f3e8ff;
+}
+
+.page-content .grievance-table-wrapper td {
+  padding: 0.75rem;
+  color: #111111;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Row hover */
+.page-content .grievance-table-wrapper tbody tr:hover {
+  background-color: #fffbeb;
+}
+
+/* No-data message */
+.page-content .grievance-table-wrapper .no-data {
+  color: #6b7280;
+  padding: 1.5rem;
+}
+
+/* Pagination buttons (inside wrapper) */
+.page-content .grievance-table-wrapper button {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.page-content .grievance-table-wrapper button:disabled {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+/* ===================================================== */
+/* NORMALIZE PAGE HEADERS (Innovation = Outreach style) */
+/* ===================================================== */
+
+/* Any h1 inside page-content (direct or wrapped) */
+.page-content h1 {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.4px;
+  color: #111111;
+  margin: 0 0 10px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Reduce visual weight when h1 is inside a flex header (Innovation page) */
+.page-content > div > h1 {
+  font-size: 30px;   /* matches Outreach visual scale */
+}
+
+/* Mobile parity */
+@media (max-width: 640px) {
+  .page-content h1 {
+    font-size: 26px;
   }
 }

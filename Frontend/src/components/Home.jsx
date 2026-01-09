@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import './Home.css';
+import IIPKD_Logo from '../assets/IITPKD_Logo.png';
 
 function Home({ user, onLogout }) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -46,14 +47,26 @@ function Home({ user, onLogout }) {
     <div className="home-container">
       {/* Header with Logo and User Profile */}
       <header className="main-header">
-        <div className="header-left">
-          <Link to="/" className="logo-link">
-            <div className="logo-container">
-              <span className="logo-text">IIT Palakkad</span>
-            </div>
-          </Link>
-        </div>
-        
+<div className="header-left">
+  <Link to="/" className="logo-link">
+    <div className="logo-container">
+      <img
+        src={IIPKD_Logo}
+        alt="IIT Palakkad Logo"
+        className="logo-image"
+      />
+
+      <div className="logo-text-group">
+        <span className="logo-text">
+          Indian Institute of Technology Palakkad
+        </span>
+        <span className="logo-tagline">
+          Nurturing Minds For a Better World
+        </span>
+      </div>
+    </div>
+  </Link>
+</div>        
         <div className="header-right">
           <div 
             ref={dropdownRef}
