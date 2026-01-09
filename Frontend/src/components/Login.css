@@ -1,0 +1,176 @@
+/* ================= ROOT THEME ================= */
+:root {
+  --off-white: #faf9f7;
+  --off-white-2: #f2f1ee;
+  --text-main: #2b2b2b;
+  --text-muted: #6b7280;
+
+  --accent: #f7a600;
+  --accent-dark: #d88f00;
+
+  --border-light: #e3e1dc;
+}
+
+/* ================= PAGE BACKGROUND ================= */
+body {
+  background: linear-gradient(
+    135deg,
+    rgba(247, 166, 0, 0.15),
+    rgba(255, 255, 255, 1)
+  );
+}
+
+/* ================= LOGIN CARD ================= */
+.card {
+  max-width: 420px;
+  margin: 8vh auto;
+  padding: 2.5rem 2.75rem;
+
+  background: #ffffff;
+  border-radius: 16px;
+
+  border: 1px solid rgba(247, 166, 0, 0.35);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(247, 166, 0, 0.12);
+
+  animation: fadeInUp 0.4s ease;
+}
+
+/* ================= TITLE ================= */
+.card h1 {
+  margin: 0 0 1.75rem 0;
+  text-align: center;
+
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+/* ================= FORM INPUTS ================= */
+.card input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+
+  font-size: 0.95rem;
+  color: var(--text-main);
+
+  background-color: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card input::placeholder {
+  color: #9ca3af;
+}
+
+.card input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(247, 166, 0, 0.25);
+}
+
+/* ================= PRIMARY BUTTON ================= */
+.card button[type="submit"] {
+  margin-top: 0.5rem;
+
+  background: linear-gradient(
+    135deg,
+    #f7a600,
+    #f8b225
+  );
+  color: #ffffff;
+
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem;
+
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+
+  box-shadow: 0 6px 16px rgba(247, 166, 0, 0.45);
+}
+
+.card button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(247, 166, 0, 0.6);
+}
+
+.card button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.card button[type="submit"]:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ================= ERROR MESSAGE ================= */
+.card p {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.card p[style*="color: red"] {
+  color: #b91c1c !important;
+  background: rgba(185, 28, 28, 0.08);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+/* ================= TOGGLE LINK ================= */
+.card button:not([type="submit"]) {
+  margin-top: 1.25rem;
+  background: none;
+  border: none;
+
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+
+  transition: color 0.2s ease;
+}
+
+.card button:not([type="submit"]):hover {
+  color: #92400e;
+  text-decoration: underline;
+}
+
+/* ================= ANIMATION ================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 480px) {
+  .card {
+    margin: 5vh 1rem;
+    padding: 2rem;
+  }
+
+  .card h1 {
+    font-size: 1.6rem;
+  }
+}

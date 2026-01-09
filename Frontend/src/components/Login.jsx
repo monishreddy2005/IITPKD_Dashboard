@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import './Login.css';
 // The Login component receives a prop `onLoginSuccess` from App.jsx
 // which it will call with the token and user data after a successful login/signup.
 function Login({ onLoginSuccess }) {
