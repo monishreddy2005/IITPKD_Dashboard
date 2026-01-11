@@ -105,6 +105,11 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                     headers: ['empname', 'email', 'phonenumber', 'bloodgroup', 'dateofbirth', 'gender', 'department', 'currentdesignationid', 'isactive', 'category', 'pwd_exs', 'state'],
                     sample: ['Jane Smith', 'jane@example.com', '9876543210', 'O+', '1990-01-01', 'Female', 'Computer Science', '1', 'TRUE', 'Gen', 'FALSE', 'Kerala']
                 };
+            case 'employment_history':
+                return {
+                    headers: ['employeeid', 'designationid', 'designation', 'dateofjoining', 'dateofrelieving', 'appointmentmode', 'natureofappointment', 'isonlien', 'lienstartdate', 'lienenddate', 'lienduration', 'status', 'remarks'],
+                    sample: ['1', '2', 'Assistant Professor', '2020-01-15', '', 'Direct', 'Regular', 'No', '', '', '', 'Active', 'Initial appointment']
+                };
             case 'igrs_yearwise':
                 return {
                     headers: ['grievance_year', 'total_grievances_filed', 'grievances_resolved', 'grievances_pending'],

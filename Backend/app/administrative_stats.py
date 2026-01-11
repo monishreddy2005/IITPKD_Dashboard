@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from .db import get_db_connection
 from .auth import token_required
 import psycopg2.extras
+from datetime import date
 
 administrative_bp = Blueprint('administrative', __name__)
 
@@ -127,6 +128,126 @@ def get_filter_options(current_user_id):
     finally:
         if conn:
             cur.close()
+            conn.close()
+
+
+@administrative_bp.route('/stats/faculty-gender-last-five-years', methods=['GET'])
+@token_required
+def get_faculty_gender_last_five_years(current_user_id):
+    """
+    Returns faculty gender distribution for the last five calendar years (stacked by year).
+    A faculty member is counted for a year if their employment_history overlaps that year.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        current_year = date.today().year
+        genders = ['Male', 'Female', 'Other', 'Transgender']
+        
+        # Generate year labels
+        year_labels = []
+        for i in range(5, 0, -1):
+            yr = current_year - i
+            label = f"{yr}-{str((yr + 1) % 100).zfill(2)}"
+            year_labels.append((yr, label))
+        
+        # Query for faculty employment by year and gender
+        rows = []
+        for year_start, label in year_labels:
+            for gender in genders:
+                cur.execute(
+                    """
+                    SELECT COUNT(DISTINCT e.employeeid) AS count
+                    FROM employment_history h
+                    JOIN employee e ON e.employeeid = h.employeeid
+                    LEFT JOIN designation d ON COALESCE(h.designationid, e.currentdesignationid) = d.designationid
+                    WHERE h.dateofjoining <= make_date(%s, 12, 31)
+                      AND (h.dateofrelieving IS NULL OR h.dateofrelieving >= make_date(%s, 1, 1))
+                      AND e.gender = %s
+                      AND (
+                          COALESCE(h.designation, d.designationname, '') ILIKE '%%Professor%%'
+                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Assistant%%'
+                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Associate%%'
+                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Faculty%%'
+                      );
+                    """,
+                    (year_start, year_start, gender)
+                )
+                result = cur.fetchone()
+                count = result['count'] if result and result.get('count') is not None else 0
+                rows.append({
+                    'year_start': year_start,
+                    'label': label,
+                    'gender': gender,
+                    'count': count
+                })
+
+        # Normalize into per-year dictionary
+        year_map = {}
+        
+        # Process rows - should have 20 rows (5 years * 4 genders)
+        for row in rows:
+            try:
+                label = row.get('label', '')
+                gender = row.get('gender', 'Unknown')
+                count = row.get('count', 0)
+                
+                if not label:
+                    continue
+                    
+                if gender not in genders:
+                    gender = 'Other'
+                    
+                try:
+                    count = int(count) if count else 0
+                except (ValueError, TypeError):
+                    count = 0
+                
+                if label not in year_map:
+                    year_map[label] = {g: 0 for g in genders}
+                if gender in genders:
+                    year_map[label][gender] = count
+            except Exception as e:
+                import traceback
+                print(f"Error processing row: {e}")
+                print(f"Row data: {row}")
+                print(f"Traceback: {traceback.format_exc()}")
+                continue
+
+        # Build labels list in correct order
+        labels = [label for _, label in year_labels]
+        
+        # Ensure all years are in year_map (should already be there, but just in case)
+        for _, label in year_labels:
+            if label not in year_map:
+                year_map[label] = {g: 0 for g in genders}
+
+        data = []
+        for label in labels:
+            entry = {'year_label': label}
+            entry.update(year_map[label])
+            entry['total'] = sum(year_map[label].values())
+            data.append(entry)
+
+        return jsonify({'data': data}), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        traceback_str = traceback.format_exc()
+        print(f"Error fetching faculty gender last five years: {error_msg}")
+        print(f"Traceback: {traceback_str}")
+        return jsonify({'message': f'Failed to fetch faculty gender distribution: {error_msg}'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
             conn.close()
 
 @administrative_bp.route('/stats/faculty-by-department-designation', methods=['GET'])

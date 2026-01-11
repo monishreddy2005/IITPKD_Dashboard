@@ -6,7 +6,8 @@ import {
   fetchStaffCount,
   fetchGenderDistribution,
   fetchCategoryDistribution,
-  fetchDepartmentBreakdown
+  fetchDepartmentBreakdown,
+  fetchFacultyGenderLastFiveYears
 } from '../services/administrativeStats';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
@@ -14,9 +15,16 @@ import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const GENDER_COLORS = ['#667eea', '#764ba2', '#f093fb'];
+const FACULTY_GENDER_COLORS = {
+  Male: '#4f8ef7',
+  Female: '#f5b400',
+  Other: '#e85a4f',
+  Transgender: '#5bbfad'
+};
 
 function AdministrativeSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('employee');
   const [filterOptions, setFilterOptions] = useState({
     department: [],
     designation: [],
@@ -73,6 +81,11 @@ function AdministrativeSection({ user, isPublicView = false }) {
   const [departmentLoading, setDepartmentLoading] = useState(false);
   const [departmentError, setDepartmentError] = useState(null);
   const [departmentTotal, setDepartmentTotal] = useState(0);
+
+  // Faculty gender over last five years
+  const [facultyGenderSeries, setFacultyGenderSeries] = useState([]);
+  const [facultyGenderLoading, setFacultyGenderLoading] = useState(false);
+  const [facultyGenderError, setFacultyGenderError] = useState(null);
 
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
@@ -207,6 +220,26 @@ function AdministrativeSection({ user, isPublicView = false }) {
     loadDepartmentData();
   }, [filters, employeeType, token]);
 
+  // Fetch faculty gender trend (last five years)
+  useEffect(() => {
+    const loadFacultyGenderTrend = async () => {
+      if (!token) return;
+      try {
+        setFacultyGenderLoading(true);
+        setFacultyGenderError(null);
+        const result = await fetchFacultyGenderLastFiveYears(token);
+        setFacultyGenderSeries(result.data || []);
+      } catch (err) {
+        console.error('Error loading faculty gender trend:', err);
+        setFacultyGenderError(err.message || 'Failed to load faculty gender trend.');
+      } finally {
+        setFacultyGenderLoading(false);
+      }
+    };
+
+    loadFacultyGenderTrend();
+  }, [token]);
+
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
@@ -307,6 +340,59 @@ function AdministrativeSection({ user, isPublicView = false }) {
           </div>
         )}
 
+        {/* Faculty Gender Trend (Last 5 Years) */}
+        <div className="chart-section">
+          <div className="chart-header">
+            <div>
+              <h2>Faculty Gender Trend (Last 5 Years)</h2>
+              <p className="chart-description">
+                Stacked view of faculty counts by gender, based on employment history overlap with each year.
+              </p>
+            </div>
+          </div>
+
+          {facultyGenderLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner" />
+              <p>Loading faculty gender trend...</p>
+            </div>
+          ) : facultyGenderError ? (
+            <div className="error-message">{facultyGenderError}</div>
+          ) : facultyGenderSeries.length === 0 ? (
+            <div className="no-data">No faculty records available to display.</div>
+          ) : (
+            <div className="chart-container">
+              <h3 className="chart-heading">Gender-wise Faculty Count</h3>
+              <ResponsiveContainer width="100%" height={360}>
+                <BarChart data={facultyGenderSeries} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis
+                    dataKey="year_label"
+                    angle={-12}
+                    textAnchor="end"
+                    height={70}
+                    stroke="#000000"
+                    tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                    label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#000000', fontSize: 14, fontWeight: 'bold' } }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    stroke="#000000"
+                    tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                    label={{ value: 'Faculty Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 14, fontWeight: 'bold' } }}
+                  />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ paddingTop: '12px', fontWeight: 'bold' }} />
+                  <Bar dataKey="Male" stackId="gender" name="Male" fill={FACULTY_GENDER_COLORS.Male} />
+                  <Bar dataKey="Female" stackId="gender" name="Female" fill={FACULTY_GENDER_COLORS.Female} />
+                  <Bar dataKey="Other" stackId="gender" name="Other" fill={FACULTY_GENDER_COLORS.Other} />
+                  <Bar dataKey="Transgender" stackId="gender" name="Transgender" fill={FACULTY_GENDER_COLORS.Transgender} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
         {/* Faculty by Department and Designation */}
         <div className="chart-section">
           {/* Filter Panel */}
@@ -318,13 +404,22 @@ function AdministrativeSection({ user, isPublicView = false }) {
                   Clear All Filters
                 </button>
                 {isPublicView ? null : (user && user.role_id === 3 && (
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => setIsUploadModalOpen(true)}
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                  >
-                    Upload Data
-                  </button>
+                  <>
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => { setActiveUploadTable('employee'); setIsUploadModalOpen(true); }}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Employees
+                    </button>
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => { setActiveUploadTable('employment_history'); setIsUploadModalOpen(true); }}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Employment History
+                    </button>
+                  </>
                 ))}
               </div>
             </div>
@@ -758,7 +853,7 @@ function AdministrativeSection({ user, isPublicView = false }) {
         <DataUploadModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          tableName="employee"
+          tableName={activeUploadTable}
           token={token}
         />
       </div>
