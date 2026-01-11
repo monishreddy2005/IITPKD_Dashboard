@@ -21,13 +21,14 @@
 }
 
 /* ✅ Automatically style page title (first h1 only) */
-.page-content > h1 {
+.page-content>h1 {
   font-size: 32px;
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.4px;
 
-  color: #111111; /* Professional near-black */
+  color: #111111;
+  /* Professional near-black */
 
   /* Very subtle lift */
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -36,7 +37,7 @@
 }
 
 /* Subtitle text (your existing <p>) */
-.page-content > p {
+.page-content>p {
   color: #2a2a2a;
   margin-bottom: 1.25rem;
 }
@@ -47,19 +48,42 @@
     padding: 2rem;
   }
 
-  .page-content > h1 {
+  .page-content>h1 {
     font-size: 26px;
     -webkit-text-stroke: 0.8px #000000;
   }
 }
 
-.page-content > p {
+.page-content>p {
   /* Darkened for better readability on orange */
-  color: #2d2d2d; 
+  color: #2d2d2d;
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 1rem;
 }
+
+/* ================= CHART HEADINGS ================= */
+.chart-heading {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333333;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  display: inline-block;
+}
+
+.chart-container,
+.bar-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 
 /* ================= FILTER SECTION FIXES ================= */
 .filter-panel {
@@ -71,7 +95,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   /* Ensures panel stays within page-content */
   width: 100%;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 .filter-grid {
@@ -87,7 +111,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-width: 0; /* Prevents grid items from expanding past container */
+  min-width: 0;
+  /* Prevents grid items from expanding past container */
 }
 
 /* FIXED DROPDOWN ICONS */
@@ -142,7 +167,7 @@
   .page-content h1 {
     font-size: 2rem;
   }
-  
+
   .filter-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -160,7 +185,8 @@
 
 /* Card container */
 .page-content .summary-card {
-  background-color: #fffaf0 !important; /* off-white */
+  background-color: #fffaf0 !important;
+  /* off-white */
   border: 1px solid rgba(247, 166, 0, 0.35);
   border-radius: 14px;
 
@@ -178,7 +204,8 @@
 
 /* Label text */
 .page-content .summary-card-label {
-  color: #92400e !important; /* dark orange */
+  color: #92400e !important;
+  /* dark orange */
   font-size: 0.95rem;
   font-weight: 500;
   margin-bottom: 0.4rem;
@@ -212,12 +239,14 @@
   transform: translateY(-4px);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
 }
+
 /* ===================================================== */
 /* FORCE LIGHT GRIEVANCE TABLE WRAPPER */
 /* ===================================================== */
 
 .page-content .grievance-table-wrapper {
-  background-color: #fffaf0 !important; /* warm off-white */
+  background-color: #fffaf0 !important;
+  /* warm off-white */
   border-radius: 16px;
   padding: 2rem;
 
@@ -319,8 +348,9 @@
 }
 
 /* Reduce visual weight when h1 is inside a flex header (Innovation page) */
-.page-content > div > h1 {
-  font-size: 30px;   /* matches Outreach visual scale */
+.page-content>div>h1 {
+  font-size: 30px;
+  /* matches Outreach visual scale */
 }
 
 /* Mobile parity */

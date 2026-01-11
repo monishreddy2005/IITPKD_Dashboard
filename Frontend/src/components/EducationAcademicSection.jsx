@@ -165,104 +165,6 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          </div>
-
-          {isPublicView ? null : (user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('industry_courses'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Industry Courses
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('academic_program_launch'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Programs
-              </button>
-            </div>
-          ))}
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="department-filter">Department</label>
-              <select
-                id="department-filter"
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="course-year-filter">Course Year</label>
-              <select
-                id="course-year-filter"
-                className="filter-select"
-                value={filters.course_year}
-                onChange={(e) => handleFilterChange('course_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.course_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="program-type-filter">Program Type</label>
-              <select
-                id="program-type-filter"
-                className="filter-select"
-                value={filters.program_type}
-                onChange={(e) => handleFilterChange('program_type', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.program_types.map((ptype) => (
-                  <option key={ptype} value={ptype}>
-                    {ptype}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="program-year-filter">Program Launch Year</label>
-              <select
-                id="program-year-filter"
-                className="filter-select"
-                value={filters.program_year}
-                onChange={(e) => handleFilterChange('program_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.program_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
         {loading ? (
           <div className="loading-container">
             <div className="loading-spinner" />
@@ -299,9 +201,107 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             </div>
 
             <div className="chart-section">
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="clear-filters-btn" onClick={handleClearFilters}>
+                      Clear Filters
+                    </button>
+                    {isPublicView ? null : (user && user.role_id === 3 && (
+                      <>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('industry_courses'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Industry Courses
+                        </button>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('academic_program_launch'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Programs
+                        </button>
+                      </>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="department-filter">Department</label>
+                    <select
+                      id="department-filter"
+                      className="filter-select"
+                      value={filters.department}
+                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="course-year-filter">Course Year</label>
+                    <select
+                      id="course-year-filter"
+                      className="filter-select"
+                      value={filters.course_year}
+                      onChange={(e) => handleFilterChange('course_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.course_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="program-type-filter">Program Type</label>
+                    <select
+                      id="program-type-filter"
+                      className="filter-select"
+                      value={filters.program_type}
+                      onChange={(e) => handleFilterChange('program_type', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.program_types.map((ptype) => (
+                        <option key={ptype} value={ptype}>
+                          {ptype}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="program-year-filter">Program Launch Year</label>
+                    <select
+                      id="program-year-filter"
+                      className="filter-select"
+                      value={filters.program_year}
+                      onChange={(e) => handleFilterChange('program_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.program_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div className="chart-header">
                 <div>
-                  <h2>Industry-linked Courses · Yearly Trend</h2>
                   <p className="chart-description">
                     Track how many courses were offered with industry collaboration across academic years.
                   </p>
@@ -312,13 +312,14 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                 <div className="no-data">No industry course data available for the selected filters.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Industry-linked Courses · Yearly Trend</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <LineChart data={courseTrendChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="year" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                       <Line type="monotone" dataKey="course_count" name="Courses" stroke="#6366f1" strokeWidth={3} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -329,7 +330,6 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>New Academic Programmes Introduced</h2>
                   <p className="chart-description">
                     Visualise programme launches by year and type to understand growth in offerings.
                   </p>
@@ -340,13 +340,14 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                 <div className="no-data">No programme launch data available for the selected filters.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">New Academic Programmes Introduced</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <BarChart data={programStatsChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="year" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
                       {filterOptions.program_types.map((ptype, idx) => (
                         <Bar key={ptype} dataKey={ptype} name={ptype} stackId="a" fill={PROGRAM_COLORS[idx % PROGRAM_COLORS.length]} />
                       ))}
@@ -370,7 +371,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
               {!courseList.length ? (
                 <div className="no-data">No industry courses found for the selected filters.</div>
               ) : (
-                <div className="table-responsive">
+                <div className="table-responsive icsr-table-scrollable">
                   <table className="grievance-table">
                     <thead>
                       <tr>

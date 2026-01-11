@@ -192,51 +192,63 @@ function NptelSection({ user, isPublicView = false }) {
         {/* Enrollments Over Time */}
         {enrollmentsOverTime.length > 0 && (
           <div className="chart-section">
-            <h2>Enrollments Over Time</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={enrollmentsOverTime}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="enrollment_year" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="total_enrollments" stroke="#4f46e5" name="Total Enrollments" />
-                <Line type="monotone" dataKey="certifications" stroke="#22c55e" name="Certifications" />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="chart-header">
+              <p className="chart-description">Trend of student enrollments and certifications over the years.</p>
+            </div>
+            <div className="chart-container">
+              <h3 className="chart-heading">Enrollments Over Time</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={enrollmentsOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis dataKey="enrollment_year" stroke="#cbd5f5" />
+                  <YAxis stroke="#cbd5f5" />
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                  <Line type="monotone" dataKey="total_enrollments" stroke="#4f46e5" name="Total Enrollments" strokeWidth={3} />
+                  <Line type="monotone" dataKey="certifications" stroke="#22c55e" name="Certifications" strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
 
         {/* Course Category Breakdown */}
         {courseCategories.length > 0 && (
           <div className="chart-section">
-            <h2>Course Category Breakdown</h2>
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie
-                  data={courseCategories}
-                  dataKey="count"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  label
-                >
-                  {courseCategories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="chart-header">
+              <p className="chart-description">Distribution of courses across different categories.</p>
+            </div>
+            <div className="chart-container">
+              <h3 className="chart-heading">Course Category Breakdown</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={courseCategories}
+                    dataKey="count"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    label
+                  >
+                    {courseCategories.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
 
         {/* Certification Ratio */}
         {certificationRatio.total_enrollments > 0 && (
           <div className="chart-section">
-            <h2>Certification Ratio</h2>
+            <div className="chart-header">
+              <p className="chart-description">Ratio of certified vs. not certified enrollments.</p>
+            </div>
             <div style={{ marginBottom: '1rem' }}>
               <p>
                 <strong>Certification Rate:</strong> {certificationRatio.certification_rate}%
@@ -252,25 +264,28 @@ function NptelSection({ user, isPublicView = false }) {
               </p>
             </div>
 
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={certificationData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label
-                >
-                  {certificationData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#f97316'} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="chart-container">
+              <h3 className="chart-heading">Certification Ratio</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={certificationData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
+                    {certificationData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#f97316'} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
       </div>

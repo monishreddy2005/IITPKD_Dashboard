@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered } from '../services/academicStats';
+import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered, fetchGenderTrends, fetchProgramTrends } from '../services/academicStats';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb'];
+const TREND_COLORS = ['#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#ff9a9e', '#fbc2eb', '#a18cd1', '#fad0c4', '#ffd1ff', '#a6c1ee'];
 
 function AcademicSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -50,6 +51,13 @@ function AcademicSection({ user, isPublicView = false }) {
   const [strengthLoading, setStrengthLoading] = useState(false);
   const [strengthError, setStrengthError] = useState(null);
   const [strengthTotal, setStrengthTotal] = useState(0);
+
+  // Trend Data State
+  const [genderTrendData, setGenderTrendData] = useState([]);
+  const [genderTrendLoading, setGenderTrendLoading] = useState(true);
+  const [programTrendData, setProgramTrendData] = useState([]);
+  const [programTrendPrograms, setProgramTrendPrograms] = useState([]);
+  const [programTrendLoading, setProgramTrendLoading] = useState(true);
 
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
@@ -152,6 +160,36 @@ function AcademicSection({ user, isPublicView = false }) {
     loadStudentStrength();
   }, [strengthFilters, token]);
 
+  // Fetch trend data on mount
+  useEffect(() => {
+    const loadTrends = async () => {
+      if (!token) return;
+
+      try {
+        setGenderTrendLoading(true);
+        setProgramTrendLoading(true);
+
+        // Fetch Gender Trends
+        const genderTrends = await fetchGenderTrends({}, token);
+        setGenderTrendData(genderTrends.data);
+        setGenderTrendLoading(false);
+
+        // Fetch Program Trends
+        const programTrends = await fetchProgramTrends({}, token);
+        setProgramTrendData(programTrends.data);
+        setProgramTrendPrograms(programTrends.programs);
+        setProgramTrendLoading(false);
+
+      } catch (err) {
+        console.error('Error loading trends:', err);
+        setGenderTrendLoading(false);
+        setProgramTrendLoading(false);
+      }
+    };
+
+    loadTrends();
+  }, [token]);
+
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
@@ -209,15 +247,15 @@ function AcademicSection({ user, isPublicView = false }) {
 
   const CustomLegend = ({ payload }) => {
     return (
-      <div className="custom-legend">
+      <div className="custom-legend" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '15px', marginTop: '20px' }}>
         {payload.map((entry, index) => (
-          <div key={index} className="legend-item">
+          <div key={index} className="legend-item" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <span
               className="legend-color"
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: entry.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}
             ></span>
-            <span className="legend-label">{entry.value}</span>
-            <span className="legend-value">{genderData[entry.value] || 0}</span>
+            <span className="legend-label" style={{ fontWeight: '600', color: '#495057', marginRight: '8px' }}>{entry.value}</span>
+            <span className="legend-value" style={{ fontWeight: 'bold', color: '#212529' }}>{genderData[entry.value] || 0}</span>
           </div>
         ))}
       </div>
@@ -227,7 +265,18 @@ function AcademicSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Academic Section - Gender Distribution</h1>}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          {!isPublicView && <h1>Academic Section - Gender & Strength</h1>}
+          {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4) && (
+            <button
+              className="upload-data-btn"
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+            >
+              Upload Data
+            </button>
+          ))}
+        </div>
 
         {error && (
           <div className="error-message">
@@ -235,199 +284,306 @@ function AcademicSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {/* Filter Panel */}
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear All Filters
-            </button>
-            {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4) && (
-              <button
-                className="upload-data-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-                style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-              >
-                Upload Data
-              </button>
-            ))}
-          </div>
-
-          <div className="filter-grid">
-            {/* Year of Admission */}
-            <div className="filter-group">
-              <label htmlFor="year-filter">Year of Admission</label>
-              <select
-                id="year-filter"
-                value={filters.yearofadmission === 'All' ? 'All' : filters.yearofadmission || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === 'All') {
-                    handleFilterChange('yearofadmission', 'All');
-                  } else if (value === '') {
-                    handleFilterChange('yearofadmission', null);
-                  } else {
-                    handleFilterChange('yearofadmission', parseInt(value));
-                  }
-                }}
-                className="filter-select"
-              >
-                <option value="">Select Year</option>
-                <option value="All">All</option>
-                {filterOptions.yearofadmission.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+        {/* 1. Year vs Gender Distribution Trend (Latest 5 Years) */}
+        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+          <div className="chart-section">
+            <div className="chart-header">
+              <p className="chart-description">Gender distribution trends over the last 5 years.</p>
             </div>
-
-            {/* Program */}
-            <div className="filter-group">
-              <label htmlFor="program-filter">Program</label>
-              <select
-                id="program-filter"
-                value={filters.program || 'All'}
-                onChange={(e) => handleFilterChange('program', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.program.map(program => (
-                  <option key={program} value={program}>{program}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Batch */}
-            <div className="filter-group">
-              <label htmlFor="batch-filter">Batch</label>
-              <select
-                id="batch-filter"
-                value={filters.batch || 'All'}
-                onChange={(e) => handleFilterChange('batch', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.batch.map(batch => (
-                  <option key={batch} value={batch}>{batch}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Branch */}
-            <div className="filter-group">
-              <label htmlFor="branch-filter">Branch</label>
-              <select
-                id="branch-filter"
-                value={filters.branch || 'All'}
-                onChange={(e) => handleFilterChange('branch', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.branch.map(branch => (
-                  <option key={branch} value={branch}>{branch}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Department */}
-            <div className="filter-group">
-              <label htmlFor="department-filter">Department</label>
-              <select
-                id="department-filter"
-                value={filters.department || 'All'}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.department.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category */}
-            <div className="filter-group">
-              <label htmlFor="category-filter">Category</label>
-              <select
-                id="category-filter"
-                value={filters.category || 'All'}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.category.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* PWD */}
-            <div className="filter-group">
-              <label htmlFor="pwd-filter">PWD</label>
-              <select
-                id="pwd-filter"
-                value={filters.pwd === true ? 'true' : filters.pwd === false ? 'false' : 'All'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  handleFilterChange('pwd', value === 'true' ? true : value === 'false' ? false : null);
-                }}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
+            {genderTrendLoading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading gender trends...</p>
+              </div>
+            ) : (
+              genderTrendData.length > 0 ? (
+                <div className="bar-chart-container">
+                  <h3 className="chart-heading">Year vs Gender Distribution (Trend)</h3>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={genderTrendData.slice(-5)} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis
+                        dataKey="year"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Students', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555', color: '#fff' }}
+                        cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                      />
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
+                        iconType="rect"
+                      />
+                      <Bar dataKey="Male" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Female" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Transgender" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="no-data"><p>No trend data available.</p></div>
+              )
+            )}
           </div>
         </div>
 
-        {/* Chart Section */}
-        <div className="chart-section">
-          {loading ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p>Loading data...</p>
-            </div>
-          ) : (
-            <>
-              {total > 0 ? (
-                <>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <PieChart>
-                        <Pie
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={120}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="chart-info">
-                    <CustomLegend payload={chartData.map((item, index) => ({
-                      value: item.name,
-                      color: COLORS[index % COLORS.length]
-                    }))} />
-                    <div className="total-count">
-                      <strong>Total Students: {total}</strong>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="no-data">
-                  <p>No data available for the selected filters.</p>
+        {/* 2. Gender Distribution Pie Chart (With Filters) */}
+        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+          <h2>Gender Distribution (Pie Chart)</h2>
+          
+          {/* Chart Section */}
+          <div className="chart-section">
+            {/* Filter Panel */}
+            <div className="filter-panel">
+              <div className="filter-header">
+                <h3>Filters</h3>
+                <button className="clear-filters-btn" onClick={handleClearFilters}>
+                  Clear All Filters
+                </button>
+              </div>
+
+              <div className="filter-grid">
+                {/* Year of Admission */}
+                <div className="filter-group">
+                  <label htmlFor="year-filter">Year of Admission</label>
+                  <select
+                    id="year-filter"
+                    value={filters.yearofadmission === 'All' ? 'All' : filters.yearofadmission || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === 'All') {
+                        handleFilterChange('yearofadmission', 'All');
+                      } else if (value === '') {
+                        handleFilterChange('yearofadmission', null);
+                      } else {
+                        handleFilterChange('yearofadmission', parseInt(value));
+                      }
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="">Select Year</option>
+                    <option value="All">All</option>
+                    {filterOptions.yearofadmission.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Program */}
+                <div className="filter-group">
+                  <label htmlFor="program-filter">Program</label>
+                  <select
+                    id="program-filter"
+                    value={filters.program || 'All'}
+                    onChange={(e) => handleFilterChange('program', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.program.map(program => (
+                      <option key={program} value={program}>{program}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Batch */}
+                <div className="filter-group">
+                  <label htmlFor="batch-filter">Batch</label>
+                  <select
+                    id="batch-filter"
+                    value={filters.batch || 'All'}
+                    onChange={(e) => handleFilterChange('batch', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.batch.map(batch => (
+                      <option key={batch} value={batch}>{batch}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Branch */}
+                <div className="filter-group">
+                  <label htmlFor="branch-filter">Branch</label>
+                  <select
+                    id="branch-filter"
+                    value={filters.branch || 'All'}
+                    onChange={(e) => handleFilterChange('branch', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.branch.map(branch => (
+                      <option key={branch} value={branch}>{branch}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Department */}
+                <div className="filter-group">
+                  <label htmlFor="department-filter">Department</label>
+                  <select
+                    id="department-filter"
+                    value={filters.department || 'All'}
+                    onChange={(e) => handleFilterChange('department', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.department.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Category */}
+                <div className="filter-group">
+                  <label htmlFor="category-filter">Category</label>
+                  <select
+                    id="category-filter"
+                    value={filters.category || 'All'}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.category.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* PWD */}
+                <div className="filter-group">
+                  <label htmlFor="pwd-filter">PWD</label>
+                  <select
+                    id="pwd-filter"
+                    value={filters.pwd === true ? 'true' : filters.pwd === false ? 'false' : 'All'}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleFilterChange('pwd', value === 'true' ? true : value === 'false' ? false : null);
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            {loading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading data...</p>
+              </div>
+            ) : (
+              <>
+                {total > 0 ? (
+                  <>
+                    <div className="chart-container">
+                      <h3 className="chart-heading">Gender Distribution</h3>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <PieChart>
+                          <Pie
+                            data={chartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={120}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {chartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="chart-info">
+                      <CustomLegend payload={chartData.map((item, index) => ({
+                        value: item.name,
+                        color: COLORS[index % COLORS.length]
+                      }))} />
+                      <div className="total-count">
+                        <strong>Total Students: {total}</strong>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-data">
+                    <p>No data available for the selected filters.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Student Strength by Program Year-wise (Latest 5 Years) */}
+        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+          <div className="chart-section">
+            <div className="chart-header">
+              <p className="chart-description">Student strength trends by program over the last 5 years.</p>
+            </div>
+            {programTrendLoading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading program trends...</p>
+              </div>
+            ) : (
+              programTrendData.length > 0 ? (
+                <div className="bar-chart-container">
+                  <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
+                  <ResponsiveContainer width="100%" height={500}>
+                    <BarChart data={programTrendData.slice(-5)} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                      <XAxis
+                        dataKey="year"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Students', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555', color: '#fff' }}
+                        cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                      />
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
+                        iconType="rect"
+                      />
+                      {programTrendPrograms.map((program, index) => (
+                        <Bar
+                          key={program}
+                          dataKey={program}
+                          stackId="a"
+                          fill={TREND_COLORS[index % TREND_COLORS.length]}
+                        />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="no-data"><p>No program trend data available.</p></div>
+              )
+            )}
+          </div>
         </div>
 
         {/* Student Strength Section */}
@@ -440,87 +596,77 @@ function AcademicSection({ user, isPublicView = false }) {
             </div>
           )}
 
-          {/* Filter Panel */}
-          <div className="filter-panel">
-            <div className="filter-header">
-              <h3>Filters</h3>
-              <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
-                Clear All Filters
-              </button>
-              {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4 ) && (
-                <button
-                  className="upload-data-btn"
-                  onClick={() => setIsUploadModalOpen(true)}
-                  style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                >
-                  Upload Data
-                </button>
-              ))}
-            </div>
-
-            <div className="filter-grid">
-              {/* Year of Admission */}
-              <div className="filter-group">
-                <label htmlFor="strength-year-filter">Year of Admission</label>
-                <select
-                  id="strength-year-filter"
-                  value={strengthFilters.yearofadmission === 'All' ? 'All' : strengthFilters.yearofadmission || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === 'All') {
-                      handleStrengthFilterChange('yearofadmission', 'All');
-                    } else if (value === '') {
-                      handleStrengthFilterChange('yearofadmission', null);
-                    } else {
-                      handleStrengthFilterChange('yearofadmission', parseInt(value));
-                    }
-                  }}
-                  className="filter-select"
-                >
-                  <option value="">Select Year</option>
-                  <option value="All">All</option>
-                  {filterOptions.yearofadmission.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Category */}
-              <div className="filter-group">
-                <label htmlFor="strength-category-filter">Category</label>
-                <select
-                  id="strength-category-filter"
-                  value={strengthFilters.category || 'All'}
-                  onChange={(e) => handleStrengthFilterChange('category', e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="All">All</option>
-                  {filterOptions.category.map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* State */}
-              <div className="filter-group">
-                <label htmlFor="strength-state-filter">State</label>
-                <select
-                  id="strength-state-filter"
-                  value={strengthFilters.state || 'All'}
-                  onChange={(e) => handleStrengthFilterChange('state', e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="All">All</option>
-                  {filterOptions.state.map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* Bar Chart Section */}
           <div className="chart-section">
+            {/* Filter Panel */}
+            <div className="filter-panel">
+              <div className="filter-header">
+                <h3>Filters</h3>
+                <button className="clear-filters-btn" onClick={handleClearStrengthFilters}>
+                  Clear All Filters
+                </button>
+              </div>
+
+              <div className="filter-grid">
+                {/* Year of Admission */}
+                <div className="filter-group">
+                  <label htmlFor="strength-year-filter">Year of Admission</label>
+                  <select
+                    id="strength-year-filter"
+                    value={strengthFilters.yearofadmission === 'All' ? 'All' : strengthFilters.yearofadmission || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === 'All') {
+                        handleStrengthFilterChange('yearofadmission', 'All');
+                      } else if (value === '') {
+                        handleStrengthFilterChange('yearofadmission', null);
+                      } else {
+                        handleStrengthFilterChange('yearofadmission', parseInt(value));
+                      }
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="">Select Year</option>
+                    <option value="All">All</option>
+                    {filterOptions.yearofadmission.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Category */}
+                <div className="filter-group">
+                  <label htmlFor="strength-category-filter">Category</label>
+                  <select
+                    id="strength-category-filter"
+                    value={strengthFilters.category || 'All'}
+                    onChange={(e) => handleStrengthFilterChange('category', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.category.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* State */}
+                <div className="filter-group">
+                  <label htmlFor="strength-state-filter">State</label>
+                  <select
+                    id="strength-state-filter"
+                    value={strengthFilters.state || 'All'}
+                    onChange={(e) => handleStrengthFilterChange('state', e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.state.map(state => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
             {strengthLoading ? (
               <div className="loading-container">
                 <div className="loading-spinner"></div>
@@ -531,29 +677,34 @@ function AcademicSection({ user, isPublicView = false }) {
                 {strengthTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
+                      <h3 className="chart-heading">Student Strength by Program</h3>
                       <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={studentStrengthData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                        <BarChart data={studentStrengthData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={100}
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Program', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <YAxis
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Students', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <Tooltip
                             content={<StackedBarTooltip total={strengthTotal} />}
                             cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                           />
                           <Legend
-                            wrapperStyle={{ paddingTop: '20px' }}
+                            align="right"
+                            verticalAlign="top"
+                            wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }}
                             iconType="rect"
-                            formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
+                            formatter={(value) => <span style={{ color: '#000000', fontWeight: '600', padding: '0 5px' }}>{value}</span>}
                           />
                           <Bar
                             dataKey="Male"
@@ -591,15 +742,14 @@ function AcademicSection({ user, isPublicView = false }) {
             )}
           </div>
         </div>
+        {/* Upload Modal */}
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName="student"
+          token={token}
+        />
       </div>
-
-      {/* Upload Modal */}
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName="student"
-        token={token}
-      />
     </div>
   );
 }

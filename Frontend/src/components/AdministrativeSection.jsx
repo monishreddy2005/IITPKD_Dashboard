@@ -263,17 +263,18 @@ function AdministrativeSection({ user, isPublicView = false }) {
   };
 
   // Custom Legend for Pie Chart
+  // Custom Legend for Pie Chart
   const CustomLegend = ({ payload, data }) => {
     return (
-      <div className="custom-legend">
+      <div className="custom-legend" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '15px', marginTop: '20px' }}>
         {payload.map((entry, index) => (
-          <div key={index} className="legend-item">
+          <div key={index} className="legend-item" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <span
               className="legend-color"
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: entry.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}
             ></span>
-            <span className="legend-label">{entry.value}</span>
-            <span className="legend-value">{data[entry.value] || 0}</span>
+            <span className="legend-label" style={{ fontWeight: '600', color: '#495057', marginRight: '8px' }}>{entry.value}</span>
+            <span className="legend-value" style={{ fontWeight: 'bold', color: '#212529' }}>{data[entry.value] || 0}</span>
           </div>
         ))}
       </div>
@@ -306,127 +307,127 @@ function AdministrativeSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {/* Filter Panel */}
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear All Filters
-            </button>
-            {isPublicView ? null : (user && user.role_id === 3 && (
-              <button
-                className="upload-data-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-                style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-              >
-                Upload Data
-              </button>
-            ))}
-          </div>
-
-          <div className="filter-grid">
-            {/* Employee Type */}
-            <div className="filter-group">
-              <label htmlFor="employee-type-filter">Employee Type</label>
-              <select
-                id="employee-type-filter"
-                value={employeeType}
-                onChange={(e) => setEmployeeType(e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                <option value="Faculty">Faculty</option>
-                <option value="Staff">Staff</option>
-              </select>
-            </div>
-
-            {/* Department */}
-            <div className="filter-group">
-              <label htmlFor="department-filter">Department</label>
-              <select
-                id="department-filter"
-                value={filters.department || 'All'}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.department.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Designation */}
-            <div className="filter-group">
-              <label htmlFor="designation-filter">Designation</label>
-              <select
-                id="designation-filter"
-                value={filters.designation || 'All'}
-                onChange={(e) => handleFilterChange('designation', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.designation.map(desig => (
-                  <option key={desig} value={desig}>{desig}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Gender */}
-            <div className="filter-group">
-              <label htmlFor="gender-filter">Gender</label>
-              <select
-                id="gender-filter"
-                value={filters.gender || 'All'}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.gender.map(gender => (
-                  <option key={gender} value={gender}>{gender}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category */}
-            <div className="filter-group">
-              <label htmlFor="category-filter">Category</label>
-              <select
-                id="category-filter"
-                value={filters.category || 'All'}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.category.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Active Status */}
-            <div className="filter-group">
-              <label htmlFor="active-filter">Status</label>
-              <select
-                id="active-filter"
-                value={filters.isactive === true ? 'true' : filters.isactive === false ? 'false' : 'All'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  handleFilterChange('isactive', value === 'true' ? true : value === 'false' ? false : null);
-                }}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
         {/* Faculty by Department and Designation */}
         <div className="chart-section">
-          <h2 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>Faculty Count by Department and Designation</h2>
+          {/* Filter Panel */}
+          <div className="filter-panel">
+            <div className="filter-header">
+              <h3>Filters</h3>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button className="clear-filters-btn" onClick={handleClearFilters}>
+                  Clear All Filters
+                </button>
+                {isPublicView ? null : (user && user.role_id === 3 && (
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                  >
+                    Upload Data
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-grid">
+              {/* Employee Type */}
+              <div className="filter-group">
+                <label htmlFor="employee-type-filter">Employee Type</label>
+                <select
+                  id="employee-type-filter"
+                  value={employeeType}
+                  onChange={(e) => setEmployeeType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  <option value="Faculty">Faculty</option>
+                  <option value="Staff">Staff</option>
+                </select>
+              </div>
+
+              {/* Department */}
+              <div className="filter-group">
+                <label htmlFor="department-filter">Department</label>
+                <select
+                  id="department-filter"
+                  value={filters.department || 'All'}
+                  onChange={(e) => handleFilterChange('department', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.department.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Designation */}
+              <div className="filter-group">
+                <label htmlFor="designation-filter">Designation</label>
+                <select
+                  id="designation-filter"
+                  value={filters.designation || 'All'}
+                  onChange={(e) => handleFilterChange('designation', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.designation.map(desig => (
+                    <option key={desig} value={desig}>{desig}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Gender */}
+              <div className="filter-group">
+                <label htmlFor="gender-filter">Gender</label>
+                <select
+                  id="gender-filter"
+                  value={filters.gender || 'All'}
+                  onChange={(e) => handleFilterChange('gender', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.gender.map(gender => (
+                    <option key={gender} value={gender}>{gender}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category */}
+              <div className="filter-group">
+                <label htmlFor="category-filter">Category</label>
+                <select
+                  id="category-filter"
+                  value={filters.category || 'All'}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.category.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Active Status */}
+              <div className="filter-group">
+                <label htmlFor="active-filter">Status</label>
+                <select
+                  id="active-filter"
+                  value={filters.isactive === true ? 'true' : filters.isactive === false ? 'false' : 'All'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleFilterChange('isactive', value === 'true' ? true : value === 'false' ? false : null);
+                  }}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
           {facultyLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
@@ -437,29 +438,32 @@ function AdministrativeSection({ user, isPublicView = false }) {
               {facultyTotal > 0 ? (
                 <>
                   <div className="bar-chart-container">
+                    <h3 className="chart-heading">Faculty Count by Department and Designation</h3>
                     <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                      <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                         <XAxis
                           dataKey="name"
                           angle={-45}
                           textAnchor="end"
                           height={100}
-                          stroke="#e0e0e0"
-                          tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                         />
                         <YAxis
-                          stroke="#e0e0e0"
-                          tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Number of Faculty', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                         />
                         <Tooltip
                           content={<CustomTooltip />}
                           cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                         />
                         <Legend
-                          wrapperStyle={{ paddingTop: '20px' }}
+                          wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
                           iconType="rect"
-                          formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
+                          formatter={(value) => <span style={{ color: '#000000', fontWeight: '600', padding: '0 5px' }}>{value}</span>}
                         />
                         {designations.map((desig, index) => (
                           <Bar
@@ -629,20 +633,23 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 {categoryTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
+                      <h3 className="chart-heading">Category Distribution</h3>
                       <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={categoryChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                        <BarChart data={categoryChartData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={100}
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Category', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <YAxis
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <Tooltip
                             content={<CustomTooltip total={categoryTotal} />}
@@ -693,29 +700,34 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 {departmentTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
+                      <h3 className="chart-heading">Department Breakdown</h3>
                       <ResponsiveContainer width="100%" height={500}>
-                        <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                        <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={120}
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 11 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <YAxis
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <Tooltip
                             content={<CustomTooltip total={departmentTotal} />}
                             cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                           />
                           <Legend
-                            wrapperStyle={{ paddingTop: '20px' }}
+                            align="right"
+                            verticalAlign="top"
+                            wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }}
                             iconType="rect"
-                            formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
+                            formatter={(value) => <span style={{ color: '#000000', fontWeight: '600', padding: '0 5px' }}>{value}</span>}
                           />
                           <Bar dataKey="Faculty_Male" stackId="faculty" fill="#667eea" />
                           <Bar dataKey="Faculty_Female" stackId="faculty" fill="#764ba2" />
@@ -741,16 +753,16 @@ function AdministrativeSection({ user, isPublicView = false }) {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Upload Modal */}
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName="employee"
-        token={token}
-      />
-    </div >
+        {/* Upload Modal */}
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName="employee"
+          token={token}
+        />
+      </div>
+    </div>
   );
 }
 

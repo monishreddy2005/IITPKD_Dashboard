@@ -130,7 +130,6 @@ function IgrcSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Year-wise Grievance Trend</h2>
                   <p className="chart-description">
                     Visual comparison of total grievances filed against resolutions and pending cases.
                   </p>
@@ -141,16 +140,29 @@ function IgrcSection({ user, isPublicView = false }) {
                 <div className="no-data">No grievance records available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Year-wise Grievance Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={yearlyData}>
+                    <BarChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="year" stroke="#cbd5f5" />
-                      <YAxis stroke="#cbd5f5" />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Grievances', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
                         cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                       />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                        iconType="rect" 
+                      />
                       <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />
                       <Bar dataKey="resolved" name="Resolved" fill={BAR_COLORS.resolved} />
                       <Bar dataKey="pending" name="Pending" fill={BAR_COLORS.pending} />

@@ -66,6 +66,11 @@ function IarSection({ user, isPublicView = false }) {
   const [countryDistribution, setCountryDistribution] = useState([]);
   const [outcomeBreakdown, setOutcomeBreakdown] = useState([]);
 
+  // Sort outcome breakdown by total alumni in descending order
+  const sortedOutcomeBreakdown = useMemo(() => {
+    return [...outcomeBreakdown].sort((a, b) => (b.total || 0) - (a.total || 0));
+  }, [outcomeBreakdown]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -153,113 +158,6 @@ function IarSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button
-              className="clear-filters-btn"
-              onClick={() =>
-                setFilters({
-                  year: 'All',
-                  department: 'All',
-                  gender: 'All',
-                  program: 'All',
-                  category: 'All'
-                })
-              }
-            >
-              Clear Filters
-            </button>
-          </div>
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="yearFilter">Year of Admission</label>
-              <select
-                id="yearFilter"
-                className="filter-select"
-                value={filters.year}
-                onChange={(e) => handleFilterChange('year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.years?.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="departmentFilter">Department</label>
-              <select
-                id="departmentFilter"
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.departments?.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="programFilter">Program</label>
-              <select
-                id="programFilter"
-                className="filter-select"
-                value={filters.program}
-                onChange={(e) => handleFilterChange('program', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.programs?.map((program) => (
-                  <option key={program} value={program}>
-                    {program}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="genderFilter">Gender</label>
-              <select
-                id="genderFilter"
-                className="filter-select"
-                value={filters.gender}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.genders?.map((gender) => (
-                  <option key={gender} value={gender}>
-                    {gender}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="categoryFilter">Category</label>
-              <select
-                id="categoryFilter"
-                className="filter-select"
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.categories?.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
         {loading ? (
           <div className="loading-container">
             <div className="loading-spinner" />
@@ -286,9 +184,115 @@ function IarSection({ user, isPublicView = false }) {
             </div>
 
             <div className="chart-section">
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <button
+                    className="clear-filters-btn"
+                    onClick={() =>
+                      setFilters({
+                        year: 'All',
+                        department: 'All',
+                        gender: 'All',
+                        program: 'All',
+                        category: 'All'
+                      })
+                    }
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="yearFilter">Year of Admission</label>
+                    <select
+                      id="yearFilter"
+                      className="filter-select"
+                      value={filters.year}
+                      onChange={(e) => handleFilterChange('year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.years?.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="departmentFilter">Department</label>
+                    <select
+                      id="departmentFilter"
+                      className="filter-select"
+                      value={filters.department}
+                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.departments?.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="programFilter">Program</label>
+                    <select
+                      id="programFilter"
+                      className="filter-select"
+                      value={filters.program}
+                      onChange={(e) => handleFilterChange('program', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.programs?.map((program) => (
+                        <option key={program} value={program}>
+                          {program}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="genderFilter">Gender</label>
+                    <select
+                      id="genderFilter"
+                      className="filter-select"
+                      value={filters.gender}
+                      onChange={(e) => handleFilterChange('gender', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.genders?.map((gender) => (
+                        <option key={gender} value={gender}>
+                          {gender}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="categoryFilter">Category</label>
+                    <select
+                      id="categoryFilter"
+                      className="filter-select"
+                      value={filters.category}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.categories?.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div className="chart-header">
                 <div>
-                  <h2>Outcome Trend Over Years</h2>
                   <p className="chart-description">
                     Track the proportion of alumni opting for higher studies versus corporate roles across admission
                     years.
@@ -300,13 +304,26 @@ function IarSection({ user, isPublicView = false }) {
                 <div className="no-data">No trend data available for the selected filters.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Outcome Trend Over Years</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <LineChart data={trendData}>
+                    <LineChart data={trendData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="year" stroke="#cbd5f5" />
-                      <YAxis stroke="#cbd5f5" />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                        iconType="plainline" 
+                      />
                       <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={3} />
                       <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={3} />
                       <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={3} />
@@ -319,7 +336,6 @@ function IarSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>State-wise Alumni Distribution</h2>
                   <p className="chart-description">
                     Alumni counts mapped to Indian states based on their registered home state.
                   </p>
@@ -330,13 +346,26 @@ function IarSection({ user, isPublicView = false }) {
                 <div className="no-data">No state distribution data to display.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">State-wise Alumni Distribution</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={stateDistribution}>
+                    <BarChart data={stateDistribution} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="state" stroke="#cbd5f5" />
-                      <YAxis stroke="#cbd5f5" />
+                      <XAxis 
+                        dataKey="state" 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'State', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                        iconType="rect" 
+                      />
                       <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -347,7 +376,6 @@ function IarSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Global Alumni Reach</h2>
                   <p className="chart-description">
                     Breakdown of alumni locations across countries to understand international presence.
                   </p>
@@ -358,6 +386,7 @@ function IarSection({ user, isPublicView = false }) {
                 <div className="no-data">No country distribution data to display.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Global Alumni Reach</h3>
                   <ResponsiveContainer width="100%" height={380}>
                     <PieChart>
                       <Pie
@@ -374,7 +403,7 @@ function IarSection({ user, isPublicView = false }) {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -384,7 +413,6 @@ function IarSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Outcome by Department</h2>
                   <p className="chart-description">
                     Compare higher studies versus corporate career paths chosen by alumni from each department.
                   </p>
@@ -396,13 +424,31 @@ function IarSection({ user, isPublicView = false }) {
               ) : (
                 <>
                   <div className="chart-container">
+                    <h3 className="chart-heading">Outcome by Department</h3>
                     <ResponsiveContainer width="100%" height={420}>
-                      <BarChart data={outcomeBreakdown}>
+                      <BarChart data={sortedOutcomeBreakdown} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis dataKey="department" stroke="#cbd5f5" />
-                        <YAxis stroke="#cbd5f5" />
+                        <XAxis 
+                          dataKey="department" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <YAxis 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
                         <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                        <Legend />
+                        <Legend 
+                          align="right"
+                          verticalAlign="top"
+                          wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }} 
+                          iconType="rect" 
+                        />
                         <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} />
                         <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} />
                       </BarChart>
@@ -419,7 +465,7 @@ function IarSection({ user, isPublicView = false }) {
                       </div>
                     </div>
 
-                    <div className="table-responsive">
+                    <div className="table-responsive iar-outcome-table-scrollable">
                       <table className="grievance-table">
                         <thead>
                           <tr>
@@ -430,7 +476,7 @@ function IarSection({ user, isPublicView = false }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {outcomeBreakdown.map((row) => (
+                          {sortedOutcomeBreakdown.map((row) => (
                             <tr key={row.department}>
                               <td>{row.department}</td>
                               <td>{row.total}</td>

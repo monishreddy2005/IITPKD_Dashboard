@@ -173,36 +173,46 @@ function OpenHouseSection({ user, isPublicView = false }) {
         {/* Event Timeline Chart */}
         {timeline.length > 0 && (
           <div className="chart-section">
-            <h2>Event Timeline</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={timeline}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="event_year" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="event_count" stroke="#4f46e5" name="Events" />
-                <Line type="monotone" dataKey="total_visitors" stroke="#22c55e" name="Visitors" />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="chart-header">
+              <p className="chart-description">Trend of events and visitor counts over the years.</p>
+            </div>
+            <div className="chart-container">
+              <h3 className="chart-heading">Event Timeline</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={timeline}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis dataKey="event_year" stroke="#cbd5f5" />
+                  <YAxis stroke="#cbd5f5" />
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                  <Line type="monotone" dataKey="event_count" stroke="#4f46e5" name="Events" strokeWidth={3} />
+                  <Line type="monotone" dataKey="total_visitors" stroke="#22c55e" name="Visitors" strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
 
         {/* Participation Trends Chart */}
         {timeline.length > 0 && (
           <div className="chart-section">
-            <h2>Participation Trends</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={timeline}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="event_year" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="avg_departments" fill="#0ea5e9" name="Avg. Departments" />
-                <Bar dataKey="total_visitors" fill="#f97316" name="Total Visitors" />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="chart-header">
+              <p className="chart-description">Average departmental participation vs total visitors.</p>
+            </div>
+            <div className="chart-container">
+              <h3 className="chart-heading">Participation Trends</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={timeline}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis dataKey="event_year" stroke="#cbd5f5" />
+                  <YAxis stroke="#cbd5f5" />
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                  <Bar dataKey="avg_departments" fill="#0ea5e9" name="Avg. Departments" />
+                  <Bar dataKey="total_visitors" fill="#f97316" name="Total Visitors" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         )}
 
