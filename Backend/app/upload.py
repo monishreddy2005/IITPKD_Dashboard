@@ -618,6 +618,42 @@ def upload_csv(current_user_id):
         if not data_to_insert:
              return jsonify({'message': 'CSV file contains no data rows.'}), 400
 
+        # --- DEDUPLICATION: Remove duplicate rows based on conflict keys ---
+        # PostgreSQL's ON CONFLICT cannot handle duplicate keys within the same INSERT statement
+        # We deduplicate by keeping the first occurrence of each unique key combination
+        duplicates_removed = 0
+        if conflict_keys_db:
+            seen_keys = set()
+            deduplicated_data = []
+            
+            # Find indices of conflict key columns in columns_to_insert
+            conflict_indices = []
+            for key in conflict_keys_db:
+                for idx, col in enumerate(columns_to_insert):
+                    if col.lower() == key.lower():
+                        conflict_indices.append(idx)
+                        break
+            
+            for row_tuple in data_to_insert:
+                # Create a tuple of conflict key values for this row
+                key_tuple = tuple(row_tuple[i] for i in conflict_indices if i < len(row_tuple))
+                
+                # Skip if we've seen this key combination before
+                if key_tuple in seen_keys:
+                    duplicates_removed += 1
+                    continue
+                
+                seen_keys.add(key_tuple)
+                deduplicated_data.append(row_tuple)
+            
+            data_to_insert = deduplicated_data
+        
+        if not data_to_insert:
+             return jsonify({
+                 'message': 'CSV file contains no unique data rows after deduplication.',
+                 'details': 'All rows were duplicates based on the unique key(s) for this table.'
+             }), 400
+
         # Execute the bulk "upsert"
         # execute_values is highly efficient for this
         psycopg2.extras.execute_values(cur, query, data_to_insert)
@@ -625,7 +661,11 @@ def upload_csv(current_user_id):
         # Commit the transaction
         conn.commit()
         
-        return jsonify({'message': f"Successfully updated {len(data_to_insert)} rows in '{table_name}'."}), 200
+        message = f"Successfully updated {len(data_to_insert)} rows in '{table_name}'."
+        if duplicates_removed > 0:
+            message += f" Removed {duplicates_removed} duplicate row(s) based on unique key(s): {', '.join(conflict_keys_db)}."
+        
+        return jsonify({'message': message}), 200
 
     except psycopg2.errors.UniqueViolation as e:
         safe_rollback(conn)

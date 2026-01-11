@@ -273,3 +273,36 @@
     grid-template-columns: 1fr; /* Single column on phones */
   }
 }
+
+/* Scrollable table styling for Education Administrative Section */
+.table-responsive {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(247, 166, 0, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+.table-responsive::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(247, 166, 0, 0.5);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: rgba(247, 166, 0, 0.7);
+}
+
+.table-responsive tbody tr:hover {
+  background-color: #fffbeb;
+}
+
+.table-responsive tbody tr:nth-child(even) {
+  background-color: rgba(255, 251, 235, 0.3);
+}

@@ -157,3 +157,13 @@ CREATE TABLE IF NOT EXISTS employment_history (
     createddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     modifieddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS nirf_ranking (
+    ranking_id SERIAL PRIMARY KEY,
+    year INT UNIQUE NOT NULL,
+    tlr_score DECIMAL(5, 2),
+    rpc_score DECIMAL(5, 2),
+    go_score DECIMAL(5, 2),
+    oi_score DECIMAL(5, 2),
+    pr_score DECIMAL(5, 2)
+);

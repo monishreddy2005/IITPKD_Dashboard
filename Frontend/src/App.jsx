@@ -22,6 +22,7 @@ import EwdSection from './components/EwdSection';
 import IarSection from './components/IarSection';
 import PlacementSection from './components/PlacementSection';
 import EducationAcademicSection from './components/EducationAcademicSection';
+import EducationAdministrativeSection from './components/EducationAdministrativeSection';
 import ResearchIcsrSection from './components/ResearchIcsrSection';
 import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
 import ResearchLibrarySection from './components/ResearchLibrarySection';
@@ -114,7 +115,7 @@ function App() {
           <Route path="research/library" element={<ResearchLibrarySection user={user} />} />
           <Route path="education" element={<Education user={user} />} />
           <Route path="education/placements" element={<PlacementSection user={user} />} />
-          <Route path="education/administrative-section" element={<AdministrativeSection user={user} />} />
+          <Route path="education/administrative-section" element={<EducationAdministrativeSection user={user} />} />
           <Route path="education/academic-section" element={<EducationAcademicSection user={user} />} />
           <Route path="industry-connect" element={<IndustryConnect user={user} />} />
           <Route path="innovation-entrepreneurship" element={<InnovationSection user={user} />} />
