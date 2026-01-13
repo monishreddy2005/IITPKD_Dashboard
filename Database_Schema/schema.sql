@@ -167,3 +167,33 @@ CREATE TABLE IF NOT EXISTS nirf_ranking (
     oi_score DECIMAL(5, 2),
     pr_score DECIMAL(5, 2)
 );
+
+-- ======================
+-- FACULTY ENGAGEMENT TABLE
+-- ======================
+
+CREATE TABLE IF NOT EXISTS faculty_engagement (
+    engagement_code VARCHAR(50) PRIMARY KEY,
+
+    faculty_name VARCHAR(100) NOT NULL,
+
+    engagement_type VARCHAR(50) NOT NULL
+        CHECK (engagement_type IN ('Adjunct','Honorary','Visiting','FacultyFellow','PoP')),
+
+    department VARCHAR(100),
+
+    startdate DATE,
+
+    enddate DATE,
+
+    duration_months INT
+        CHECK (duration_months >= 0),
+
+    year INT
+        CHECK (year >= 2000),
+
+    remarks TEXT,
+
+    createddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    modifieddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

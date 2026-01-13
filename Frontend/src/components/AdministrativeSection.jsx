@@ -532,45 +532,55 @@ function AdministrativeSection({ user, isPublicView = false }) {
             <>
               {facultyTotal > 0 ? (
                 <>
-                  <div className="bar-chart-container">
+<div className="bar-chart-container">
                     <h3 className="chart-heading">Faculty Count by Department and Designation</h3>
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis
-                          dataKey="name"
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                          stroke="#000000"
-                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                          label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                        />
-                        <YAxis
-                          stroke="#000000"
-                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                          label={{ value: 'Number of Faculty', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                        />
-                        <Tooltip
-                          content={<CustomTooltip />}
-                          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
-                        />
-                        <Legend
-                          wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
-                          iconType="rect"
-                          formatter={(value) => <span style={{ color: '#000000', fontWeight: '600', padding: '0 5px' }}>{value}</span>}
-                        />
-                        {designations.map((desig, index) => (
-                          <Bar
-                            key={desig}
-                            dataKey={desig}
-                            stackId="a"
-                            fill={COLORS[index % COLORS.length]}
-                            radius={index === designations.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+                        <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#000000' }}>Department</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={450}>
+                        <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 60, bottom: 120 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis
+                            dataKey="name"
+                            angle={-45}
+                            textAnchor="end"
+                            height={110}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                            interval={0}
                           />
+                          <YAxis
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Faculty', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <Tooltip
+                            content={<CustomTooltip />}
+                            cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                          />
+                          {designations.map((desig, index) => (
+                            <Bar
+                              key={desig}
+                              dataKey={desig}
+                              stackId="a"
+                              fill={COLORS[index % COLORS.length]}
+                              radius={index === designations.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
+                            />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px', marginTop: '10px', padding: '0 20px' }}>
+                        {designations.map((desig, index) => (
+                          <div key={desig} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                            <span
+                              style={{ backgroundColor: COLORS[index % COLORS.length], width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}
+                            ></span>
+                            <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>{desig}</span>
+                          </div>
                         ))}
-                      </BarChart>
-                    </ResponsiveContainer>
+                      </div>
+                    </div>
                   </div>
                   <div className="chart-info">
                     <div className="total-count">
@@ -795,44 +805,68 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 {departmentTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
-                      <h3 className="chart-heading">Department Breakdown</h3>
-                      <ResponsiveContainer width="100%" height={500}>
-                        <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis
-                            dataKey="name"
-                            angle={-45}
-                            textAnchor="end"
-                            height={120}
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <YAxis
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <Tooltip
-                            content={<CustomTooltip total={departmentTotal} />}
-                            cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
-                          />
-                          <Legend
-                            align="right"
-                            verticalAlign="top"
-                            wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }}
-                            iconType="rect"
-                            formatter={(value) => <span style={{ color: '#000000', fontWeight: '600', padding: '0 5px' }}>{value}</span>}
-                          />
-                          <Bar dataKey="Faculty_Male" stackId="faculty" fill="#667eea" />
-                          <Bar dataKey="Faculty_Female" stackId="faculty" fill="#764ba2" />
-                          <Bar dataKey="Faculty_Other" stackId="faculty" fill="#f093fb" />
-                          <Bar dataKey="Staff_Male" stackId="staff" fill="#4facfe" />
-                          <Bar dataKey="Staff_Female" stackId="staff" fill="#00f2fe" />
-                          <Bar dataKey="Staff_Other" stackId="staff" fill="#43e97b" radius={[0, 0, 8, 8]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+  <h3 className="chart-heading">Department Breakdown</h3>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+      <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#000000' }}>Department</span>
+    </div>
+    <ResponsiveContainer width="100%" height={500}>
+      <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 60, bottom: 120 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+        <XAxis
+          dataKey="name"
+          angle={-45}
+          textAnchor="end"
+          height={110}
+          stroke="#000000"
+          tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+          interval={0}
+        />
+        <YAxis
+          stroke="#000000"
+          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+          label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+        />
+        <Tooltip
+          content={<CustomTooltip total={departmentTotal} />}
+          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+        />
+        <Bar dataKey="Faculty_Male" stackId="faculty" fill="#667eea" name="Faculty Male" />
+        <Bar dataKey="Faculty_Female" stackId="faculty" fill="#764ba2" name="Faculty Female" />
+        <Bar dataKey="Faculty_Other" stackId="faculty" fill="#f093fb" name="Faculty Other" />
+        <Bar dataKey="Staff_Male" stackId="staff" fill="#4facfe" name="Staff Male" />
+        <Bar dataKey="Staff_Female" stackId="staff" fill="#00f2fe" name="Staff Female" />
+        <Bar dataKey="Staff_Other" stackId="staff" fill="#43e97b" radius={[0, 0, 8, 8]} name="Staff Other" />
+      </BarChart>
+    </ResponsiveContainer>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px', marginTop: '10px', padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#667eea', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Male</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#764ba2', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Female</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#f093fb', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Other</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#4facfe', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Male</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#00f2fe', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Female</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#43e97b', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Other</span>
+      </div>
+    </div>
+  </div>
+</div>
                     <div className="chart-info">
                       <div className="total-count">
                         <strong>Total Employees: {departmentTotal}</strong>
