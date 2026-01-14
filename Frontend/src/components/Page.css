@@ -183,7 +183,7 @@
 /* FORCE LIGHT SUMMARY CARDS – INNOVATION PAGE */
 /* ===================================================== */
 
-/* Card container */
+/* Card container with proper overflow handling */
 .page-content .summary-card {
   background-color: #fffaf0 !important;
   /* off-white */
@@ -194,6 +194,12 @@
 
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   color: #111111 !important;
+  
+  /* FIX: Prevent overflow */
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
 /* Remove any dark overlays or gradients */
@@ -202,20 +208,43 @@
   background: none !important;
 }
 
-/* Label text */
+/* Label text with wrapping */
 .page-content .summary-card-label {
   color: #92400e !important;
   /* dark orange */
   font-size: 0.95rem;
   font-weight: 500;
   margin-bottom: 0.4rem;
+  
+  /* FIX: Ensure label wraps properly */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.3;
 }
 
-/* Value text */
+/* Value text with overflow handling */
 .page-content .summary-card-value {
   color: #111111 !important;
   font-size: 1.9rem;
   font-weight: 700;
+  
+  /* FIX: Prevent value overflow */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+
+/* Subtitle text (if present) */
+.page-content .summary-card .summary-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.3rem;
+  
+  /* FIX: Wrap subtitle */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
 }
 
 /* Optional subtle accent line (top) */
@@ -238,6 +267,21 @@
 .page-content .summary-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+}
+
+/* Mobile adjustments for summary cards */
+@media (max-width: 768px) {
+  .page-content .summary-card {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .page-content .summary-card-label {
+    font-size: 0.875rem;
+  }
+  
+  .page-content .summary-card-value {
+    font-size: 1.5rem;
+  }
 }
 
 /* ===================================================== */

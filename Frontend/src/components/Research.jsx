@@ -1,39 +1,50 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import ResearchPublicView from './ResearchPublicView';
+import { useState } from 'react';
 
 import './Page.css';
 import './PeopleCampus.css';
 
-const RESEARCH_SECTIONS = [
-  {
-    code: 'I',
-    title: 'ICSR Section',
-    description: 'Industrial consultancy & sponsored research metrics',
-    route: '/research/icsr'
-  },
-  {
-    code: 'A',
-    title: 'Administrative Section',
-    description: 'Faculty industry externships and collaborations',
-    route: '/research/administrative-section'
-  },
-  {
-    code: 'L',
-    title: 'Library',
-    description: 'Research publications and scholarly outputs',
-    route: '/research/library'
-  }
-];
+// 🔹 ADDITION: import public view
+import ResearchPublicView from './ResearchPublicView';
 
 function Research({ user }) {
-  const [showPublicView, setShowPublicView] = useState(false);
+
+  // 🔹 ADDITION: get role_id safely
   const roleId = user?.role_id;
 
+  // 🔹 ADDITION: toggle public view for non-public users
+  const [showPublicView, setShowPublicView] = useState(false);
+
+  const sections = [
+    {
+      title: 'ICSR Section',
+      route: '/research/icsr',
+      description: 'Industrial consultancy & sponsored research metrics',
+      // 🔹 ADDITION
+      allowedRoles: [3]
+    },
+    {
+      title: 'Administrative Section',
+      route: '/research/administrative-section',
+      description: 'Faculty industry externships and collaborations',
+      // 🔹 ADDITION
+      allowedRoles: [3, 2]
+    },
+    {
+      title: 'Library',
+      route: '/research/library',
+      description: 'Research publications and scholarly outputs',
+      // 🔹 ADDITION
+      allowedRoles: [3]
+    }
+  ];
+
+  // 🔹 ADDITION: If public user → always show public view
   if (roleId === 1) {
     return <ResearchPublicView user={user} />;
   }
 
+  // 🔹 ADDITION: If non-public user explicitly chooses public view
   if (showPublicView) {
     return (
       <div className="page-container">
@@ -43,8 +54,9 @@ function Research({ user }) {
             onClick={() => setShowPublicView(false)}
             style={{ marginBottom: '1rem' }}
           >
-            ← Back to Research Modules
+            ← Back to Admin View
           </button>
+
           <ResearchPublicView user={user} />
         </div>
       </div>
@@ -54,30 +66,47 @@ function Research({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Research Modules</h1>
-        <p>
-          Discover IIT Palakkad&apos;s research ecosystem. Select a module to explore project portfolios, collaborations, and
-          scholarly achievements.
-        </p>
+        <h1>Research</h1>
+        <p>Explore different research modules of IIT Palakkad.</p>
 
-        {roleId === 3 && (
-          <div style={{ marginBottom: '2rem' }}>
-            <button className="upload-data-btn" onClick={() => setShowPublicView(true)}>
-              View Public Page
-            </button>
-          </div>
-        )}
+        {/* 🔹 ADDITION: Public view button for non-public users */}
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(true)}
+          >
+            View Public Page
+          </button>
+        </div>
 
         <div className="people-campus-grid">
-          {RESEARCH_SECTIONS.map((section) => (
-            <Link key={section.route} to={section.route} className="people-campus-card">
-              <div className="card-icon">{section.code}</div>
-              <div className="card-content">
-                <h2>{section.title}</h2>
-                <p>{section.description}</p>
-              </div>
-            </Link>
-          ))}
+          {sections.map((section, index) => {
+
+            // 🔹 EXISTING role-based visibility logic
+            const isSuperAdmin = roleId === 3;
+            const isAllowed =
+              isSuperAdmin ||
+              (section.allowedRoles && section.allowedRoles.includes(roleId));
+
+            if (!isAllowed) {
+              return null;
+            }
+
+            return (
+              <Link
+                key={index}
+                to={section.route}
+                className="people-campus-card"
+              >
+                <div className="card-icon">
+                  {section.title.charAt(0)}
+                </div>
+                <h3 className="card-title">{section.title}</h3>
+                <p className="card-description">{section.description}</p>
+                <div className="card-arrow">→</div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

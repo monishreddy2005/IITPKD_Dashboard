@@ -128,14 +128,6 @@ function Header({ user, onLogout }) {
                                 <button className="dropdown-item" onClick={handleProfileClick}>
                                     Check Profile
                                 </button>
-                                {canUploadData && (
-                                    <>
-                                        <button className="dropdown-item" onClick={handleUploadClick}>
-                                            Upload Data
-                                        </button>
-                                        <div className="dropdown-divider"></div>
-                                    </>
-                                )}
                                 <button className="dropdown-item" onClick={onLogout}>
                                     Logout
                                 </button>

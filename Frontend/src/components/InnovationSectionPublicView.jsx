@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import InnovationSectionPublicView from './InnovationSectionPublicView';
 import {
   ResponsiveContainer,
   LineChart,
@@ -11,9 +10,7 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell,
-  BarChart,
-  Bar
+  Cell
 } from 'recharts';
 import {
   fetchInnovationSummary,
@@ -24,23 +21,13 @@ import {
 } from '../services/innovationStats';
 import './Page.css';
 import './PeopleCampus.css';
-import DataUploadModal from './DataUploadModal';
 
-const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const SECTOR_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function InnovationSection({ user }) {
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+function InnovationSectionPublicView({ user }) {
   const token = localStorage.getItem('authToken');
-  const [showPublicView, setShowPublicView] = useState(false);
-
-  // 🔹 Get role_id safely
-  const roleId = user?.role_id;
-  const allowedRoles = [3, 8]; // Super Admin and Innovation
-  const isSuperAdmin = roleId === 3;
-  const isAllowed = isSuperAdmin || (allowedRoles && allowedRoles.includes(roleId));
 
   const [summary, setSummary] = useState({
     total_incubatees: 0,
@@ -201,49 +188,13 @@ function InnovationSection({ user }) {
         projects: s.projects
       }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 8); // Top 8 sectors
+      .slice(0, 8);
   }, [sectorDistribution]);
-
-  // 🔹 MOVED AFTER ALL HOOKS: If public user → always show public view
-  if (roleId === 1) {
-    return <InnovationSectionPublicView user={user} />;
-  }
-
-  // 🔹 MOVED AFTER ALL HOOKS: If non-public user explicitly chooses public view
-  if (showPublicView) {
-    return (
-      <div className="page-container">
-        <div className="page-content">
-          <button
-            className="upload-data-btn"
-            onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
-          >
-            ← Back to Admin View
-          </button>
-
-          <InnovationSectionPublicView user={user} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="page-container">
       <div className="page-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1>Innovation & Entrepreneurship</h1>
-
-          {/* 🔹 Public view button for non-public users */}
-          <div style={{ marginBottom: '1rem' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setShowPublicView(true)}
-            >
-              View Public Page
-            </button>
-          </div>
-        </div>
+        <h1>Innovation & Entrepreneurship</h1>
         <p>
           Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation)
           and IPTIF (IIT Palakkad Technology IHub Foundation).
@@ -346,16 +297,6 @@ function InnovationSection({ user }) {
                   <button className="clear-filters-btn" onClick={handleClearFilters}>
                     Clear Filters
                   </button>
-                  {/* Only Super Admin can upload */}
-                  {isSuperAdmin && (
-                    <button
-                      className="upload-data-btn"
-                      onClick={() => setIsUploadModalOpen(true)}
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                    >
-                      Upload Startups
-                    </button>
-                  )}
                 </div>
               </div>
               <div className="filter-grid">
@@ -423,95 +364,88 @@ function InnovationSection({ user }) {
               </div>
             </div>
 
-          {startupsList.length > 0 ? (
-            <>
-              <div className="table-responsive icsr-table-scrollable">
-                <table className="grievance-table">
-                  <thead>
-                    <tr>
-                      <th>Startup Name</th>
-                      <th>Founder</th>
-                      <th>Innovation / Focus Area</th>
-                      <th>Year</th>
-                      <th>Status</th>
-                      <th>Sector</th>
-                      <th>IIT Palakkad</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {startupsList.map((startup) => (
-                      <tr key={startup.startup_id}>
-                        <td>{startup.startup_name}</td>
-                        <td>{startup.founder_name}</td>
-                        <td>{startup.innovation_focus_area || '—'}</td>
-                        <td>{startup.year_of_incubation}</td>
-                        <td>{startup.status}</td>
-                        <td>{startup.sector || '—'}</td>
-                        <td>{startup.is_from_iitpkd ? '✓ Yes' : 'No'}</td>
+            {startupsList.length > 0 ? (
+              <>
+                <div className="table-responsive icsr-table-scrollable">
+                  <table className="grievance-table">
+                    <thead>
+                      <tr>
+                        <th>Startup Name</th>
+                        <th>Founder</th>
+                        <th>Innovation / Focus Area</th>
+                        <th>Year</th>
+                        <th>Status</th>
+                        <th>Sector</th>
+                        <th>IIT Palakkad</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {pagination.total_pages > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  marginTop: '2rem'
-                }}>
-                  <button
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page === 1 ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Previous
-                  </button>
-                  <span>
-                    Page {pagination.page} of {pagination.total_pages} ({formatNumber(pagination.total)} total)
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.total_pages}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Next
-                  </button>
+                    </thead>
+                    <tbody>
+                      {startupsList.map((startup) => (
+                        <tr key={startup.startup_id}>
+                          <td>{startup.startup_name}</td>
+                          <td>{startup.founder_name}</td>
+                          <td>{startup.innovation_focus_area || '—'}</td>
+                          <td>{startup.year_of_incubation}</td>
+                          <td>{startup.status}</td>
+                          <td>{startup.sector || '—'}</td>
+                          <td>{startup.is_from_iitpkd ? '✓ Yes' : 'No'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="no-data">No startups found for the selected filters.</div>
-          )}
+
+                {/* Pagination */}
+                {pagination.total_pages > 1 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    marginTop: '2rem'
+                  }}>
+                    <button
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: pagination.page === 1 ? '#ccc' : '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {pagination.page} of {pagination.total_pages} ({formatNumber(pagination.total)} total)
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.total_pages}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="no-data">No startups found for the selected filters.</div>
+            )}
           </div>
         </div>
       </div>
-
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName="startups"
-        token={token}
-        />
-    </div >
+    </div>
   );
 }
 
-export default InnovationSection;
+export default InnovationSectionPublicView;

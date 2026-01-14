@@ -110,7 +110,9 @@ function NptelSection({ user, isPublicView = false }) {
   }, [token]);
 
   if (loading) {
-    return (
+    return isPublicView ? (
+      <p>Loading...</p>
+    ) : (
       <div className="page-container">
         <div className="page-content">
           <h1>NPTEL – CCE</h1>
@@ -121,7 +123,9 @@ function NptelSection({ user, isPublicView = false }) {
   }
 
   if (error) {
-    return (
+    return isPublicView ? (
+      <p className="error-message">{error}</p>
+    ) : (
       <div className="page-container">
         <div className="page-content">
           <h1>NPTEL – CCE</h1>
@@ -136,159 +140,157 @@ function NptelSection({ user, isPublicView = false }) {
     { name: 'Not Certified', value: certificationRatio.not_certified }
   ];
 
-  return (
-    <div className={isPublicView ? "" : "page-container"}>
-      <div className={isPublicView ? "" : "page-content"}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
+  const content = (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
 
-          {!isPublicView && user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Local Chapters
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Courses
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Enrollments
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Summary Tiles */}
-        <div className="summary-grid">
-          <div className="summary-card">
-            <h3>Total Courses Offered</h3>
-            <p className="summary-value">{formatNumber(summary.total_courses)}</p>
-          </div>
-          <div className="summary-card">
-            <h3>Total Enrollments</h3>
-            <p className="summary-value">{formatNumber(summary.total_enrollments)}</p>
-          </div>
-          <div className="summary-card">
-            <h3>Certifications Completed</h3>
-            <p className="summary-value">{formatNumber(summary.certifications_completed)}</p>
-          </div>
-          <div className="summary-card">
-            <h3>Local Chapters</h3>
-            <p className="summary-value">{formatNumber(summary.local_chapters)}</p>
-          </div>
-        </div>
-
-        {/* Enrollments Over Time */}
-        {enrollmentsOverTime.length > 0 && (
-          <div className="chart-section">
-            <div className="chart-header">
-              <p className="chart-description">Trend of student enrollments and certifications over the years.</p>
-            </div>
-            <div className="chart-container">
-              <h3 className="chart-heading">Enrollments Over Time</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={enrollmentsOverTime}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="enrollment_year" stroke="#cbd5f5" />
-                  <YAxis stroke="#cbd5f5" />
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                  <Line type="monotone" dataKey="total_enrollments" stroke="#4f46e5" name="Total Enrollments" strokeWidth={3} />
-                  <Line type="monotone" dataKey="certifications" stroke="#22c55e" name="Certifications" strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Course Category Breakdown */}
-        {courseCategories.length > 0 && (
-          <div className="chart-section">
-            <div className="chart-header">
-              <p className="chart-description">Distribution of courses across different categories.</p>
-            </div>
-            <div className="chart-container">
-              <h3 className="chart-heading">Course Category Breakdown</h3>
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={courseCategories}
-                    dataKey="count"
-                    nameKey="category"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    label
-                  >
-                    {courseCategories.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Certification Ratio */}
-        {certificationRatio.total_enrollments > 0 && (
-          <div className="chart-section">
-            <div className="chart-header">
-              <p className="chart-description">Ratio of certified vs. not certified enrollments.</p>
-            </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <p>
-                <strong>Certification Rate:</strong> {certificationRatio.certification_rate}%
-              </p>
-              <p>
-                <strong>Total Enrollments:</strong> {formatNumber(certificationRatio.total_enrollments)}
-              </p>
-              <p>
-                <strong>Certified:</strong> {formatNumber(certificationRatio.certified)}
-              </p>
-              <p>
-                <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
-              </p>
-            </div>
-
-            <div className="chart-container">
-              <h3 className="chart-heading">Certification Ratio</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={certificationData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {certificationData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#f97316'} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+        {!isPublicView && user && user.role_id === 3 && (
+          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              className="upload-data-btn"
+              onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Local Chapters
+            </button>
+            <button
+              className="upload-data-btn"
+              onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Courses
+            </button>
+            <button
+              className="upload-data-btn"
+              onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            >
+              Upload Enrollments
+            </button>
           </div>
         )}
       </div>
+
+      {/* Summary Tiles */}
+      <div className="summary-grid">
+        <div className="summary-card">
+          <h3>Total Courses Offered</h3>
+          <p className="summary-value">{formatNumber(summary.total_courses)}</p>
+        </div>
+        <div className="summary-card">
+          <h3>Total Enrollments</h3>
+          <p className="summary-value">{formatNumber(summary.total_enrollments)}</p>
+        </div>
+        <div className="summary-card">
+          <h3>Certifications Completed</h3>
+          <p className="summary-value">{formatNumber(summary.certifications_completed)}</p>
+        </div>
+        <div className="summary-card">
+          <h3>Local Chapters</h3>
+          <p className="summary-value">{formatNumber(summary.local_chapters)}</p>
+        </div>
+      </div>
+
+      {/* Enrollments Over Time */}
+      {enrollmentsOverTime.length > 0 && (
+        <div className="chart-section">
+          <div className="chart-header">
+            <p className="chart-description">Trend of student enrollments and certifications over the years.</p>
+          </div>
+          <div className="chart-container">
+            <h3 className="chart-heading">Enrollments Over Time</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={enrollmentsOverTime}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis dataKey="enrollment_year" stroke="#cbd5f5" />
+                <YAxis stroke="#cbd5f5" />
+                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                <Line type="monotone" dataKey="total_enrollments" stroke="#4f46e5" name="Total Enrollments" strokeWidth={3} />
+                <Line type="monotone" dataKey="certifications" stroke="#22c55e" name="Certifications" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Course Category Breakdown */}
+      {courseCategories.length > 0 && (
+        <div className="chart-section">
+          <div className="chart-header">
+            <p className="chart-description">Distribution of courses across different categories.</p>
+          </div>
+          <div className="chart-container">
+            <h3 className="chart-heading">Course Category Breakdown</h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                <Pie
+                  data={courseCategories}
+                  dataKey="count"
+                  nameKey="category"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  label
+                >
+                  {courseCategories.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Certification Ratio */}
+      {certificationRatio.total_enrollments > 0 && (
+        <div className="chart-section">
+          <div className="chart-header">
+            <p className="chart-description">Ratio of certified vs. not certified enrollments.</p>
+          </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <p>
+              <strong>Certification Rate:</strong> {certificationRatio.certification_rate}%
+            </p>
+            <p>
+              <strong>Total Enrollments:</strong> {formatNumber(certificationRatio.total_enrollments)}
+            </p>
+            <p>
+              <strong>Certified:</strong> {formatNumber(certificationRatio.certified)}
+            </p>
+            <p>
+              <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
+            </p>
+          </div>
+
+          <div className="chart-container">
+            <h3 className="chart-heading">Certification Ratio</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={certificationData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
+                  {certificationData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#f97316'} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       <DataUploadModal
         isOpen={isUploadModalOpen}
@@ -296,9 +298,22 @@ function NptelSection({ user, isPublicView = false }) {
         tableName={activeUploadTable}
         token={token}
       />
+    </>
+  );
+
+  // If public view, return content without wrappers
+  if (isPublicView) {
+    return content;
+  }
+
+  // If not public view, wrap in page-container and page-content
+  return (
+    <div className="page-container">
+      <div className="page-content">
+        {content}
+      </div>
     </div>
   );
 }
 
 export default NptelSection;
-
