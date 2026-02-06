@@ -23,7 +23,8 @@ UPDATABLE_TABLES = {
     # that is expected to be in the CSV.
     'designation': ['designationname'],
     'employee': ['email'],
-    'employment_history': ['historyid'],  # Uses SERIAL ID
+    # ✅ CORRECT
+    'employment_history': ['employeeid', 'designationid', 'dateofjoining'],  # Uses SERIAL ID
     'additional_roles': ['roleid'],  # Uses SERIAL ID
     'externship_info': ['externid'],  # Uses SERIAL ID
     'igrs_yearwise': ['grievance_year'],

@@ -199,6 +199,15 @@
 }
 
 /* Loading Spinner */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  min-height: 300px;
+}
+
 .loading-spinner {
   width: 48px;
   height: 48px;
@@ -255,6 +264,123 @@
   display: inline-block;
 }
 
+/* ================= CHART CONTAINERS WITH EMPTY STATE ================= */
+/* Common styles for all charts with empty state overlay */
+.trend-chart,
+.pie-chart,
+.bar-chart-container {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.chart-heading {
+  color: var(--text-main);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* ================= APPLE-LEVEL EMPTY STATE ================= */
+.trend-empty-state {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6c757d;
+
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+
+  /* ENTRY — calm but confident */
+  transition:
+    opacity 260ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 260ms cubic-bezier(0.25, 0.8, 0.25, 1),
+    visibility 0ms linear 0ms;
+}
+
+/* EXIT — slower, delayed, perceptual */
+.trend-empty-state.hidden {
+  opacity: 0;
+  transform: translateY(4px) scale(0.992);
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity 520ms cubic-bezier(0.16, 1, 0.3, 1) 140ms,
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1) 140ms,
+    visibility 0ms linear 660ms;
+}
+
+.trend-empty-state p {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: opacity, transform;
+
+  transition:
+    opacity 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trend-empty-state.hidden p {
+  opacity: 0;
+  transform: translateY(2px);
+}
+
+/* Chart blur effect when empty */
+.trend-chart .recharts-wrapper,
+.pie-chart .recharts-wrapper,
+.bar-chart-container .recharts-wrapper {
+  transition:
+    filter 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trend-chart.has-empty .recharts-wrapper,
+.pie-chart.has-empty .recharts-wrapper,
+.bar-chart-container.has-empty .recharts-wrapper {
+  filter: blur(1px);
+  opacity: 0.65;
+}
+
+/* Chart info section */
+.chart-info {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.total-count {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  margin-top: 1rem;
+}
+
+/* No data fallback (if needed for legacy support) */
+.no-data {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
 /* ================= RESPONSIVE ================= */
 @media (max-width: 768px) {
   .filter-header {
@@ -266,6 +392,10 @@
   .filter-grid {
     grid-template-columns: 1fr 1fr; /* Two columns on mobile-ish tablets */
   }
+
+  .chart-section .filter-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
@@ -274,6 +404,7 @@
   }
 }
 
+/* ================= SCROLLBAR STYLING ================= */
 /* Scrollable table styling for Education Administrative Section */
 .table-responsive {
   scrollbar-width: thin;
@@ -305,4 +436,39 @@
 
 .table-responsive tbody tr:nth-child(even) {
   background-color: rgba(255, 251, 235, 0.3);
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInSoft {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= PIE CHART SPECIFIC ================= */
+.pie-chart {
+  position: relative;
+  min-height: 400px;
+}
+
+/* ================= BAR CHART SPECIFIC ================= */
+.bar-chart-container {
+  position: relative;
+  min-height: 400px;
 }

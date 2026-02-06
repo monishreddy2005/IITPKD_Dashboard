@@ -124,7 +124,6 @@ function PeopleCampus({ user }) {
                 </div>
                 <h3 className="card-title">{section.title}</h3>
                 <p className="card-description">{section.description}</p>
-                <div className="card-arrow">→</div>
               </Link>
             );
           })}
