@@ -59,6 +59,8 @@ function IccSection({ user, isPublicView = false }) {
           resolved: row.complaints_resolved,
           pending: row.complaints_pending
         }));
+        // Sort in descending order (newest first)
+        formattedYearly.sort((a, b) => b.year - a.year);
         setYearlyData(formattedYearly);
 
         const summaryData = summaryResponse?.data || {};
@@ -129,7 +131,6 @@ function IccSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Year-wise Complaint Trend</h2>
                   <p className="chart-description">
                     Overview of total complaints vis-à-vis resolved and pending cases.
                   </p>
@@ -140,8 +141,9 @@ function IccSection({ user, isPublicView = false }) {
                 <div className="no-data">No complaint records available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Year-wise Complaint Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <AreaChart data={yearlyData}>
+                    <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                       <defs>
                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
@@ -157,13 +159,25 @@ function IccSection({ user, isPublicView = false }) {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis dataKey="year" stroke="#cbd5f5" />
-                      <YAxis stroke="#cbd5f5" />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
+                      <YAxis 
+                        stroke="#000000"
+                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                        label={{ value: 'Number of Complaints', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                      />
                       <Tooltip
                         contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
                         cursor={{ strokeDasharray: '4 2', stroke: '#667eea' }}
                       />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                        iconType="rect" 
+                      />
                       <Area
                         type="monotone"
                         dataKey="total"
@@ -204,7 +218,7 @@ function IccSection({ user, isPublicView = false }) {
               {yearlyData.length === 0 ? (
                 <div className="no-data">No records available to display.</div>
               ) : (
-                <div className="table-responsive">
+                <div className="table-responsive icc-yearly-table-scrollable">
                   <table className="grievance-table">
                     <thead>
                       <tr>

@@ -430,3 +430,81 @@ def get_type_distribution(current_user_id):
         if conn:
             conn.close()
 
+
+@education_bp.route('/list', methods=['GET'])
+@token_required
+def get_faculty_engagement_list(current_user_id):
+    if not faculty_engagement_table_exists():
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+
+    filters = {
+        'year': request.args.get('year'),
+        'department': request.args.get('department'),
+        'engagement_type': request.args.get('engagement_type')
+    }
+    where_clause, params = build_filter_query(filters)
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor()
+        cur.execute(
+            f"""
+            SELECT
+                engagement_code,
+                faculty_name,
+                engagement_type,
+                department,
+                startdate,
+                enddate,
+                duration_months,
+                year,
+                remarks
+            FROM faculty_engagement
+            {where_clause}
+            ORDER BY year DESC, faculty_name ASC
+            """,
+            params
+        )
+        rows = cur.fetchall()
+        
+        # Convert rows to list of dicts
+        result = []
+        for row in rows:
+            result.append({
+                'engagement_code': row.get('engagement_code'),
+                'faculty_name': row.get('faculty_name'),
+                'engagement_type': row.get('engagement_type'),
+                'department': row.get('department'),
+                'startdate': row.get('startdate').isoformat() if row.get('startdate') else None,
+                'enddate': row.get('enddate').isoformat() if row.get('enddate') else None,
+                'duration_months': row.get('duration_months'),
+                'year': row.get('year'),
+                'remarks': row.get('remarks')
+            })
+        
+        return jsonify({'data': result}), 200
+    except UndefinedTable:
+        return jsonify({
+            'message': (
+                "Faculty engagement table not found. Please apply the latest schema.sql "
+                "so the education dashboards can load data."
+            )
+        }), 500
+    except Exception as exc:
+        print(f"Education list error: {exc}")
+        return jsonify({'message': 'Failed to fetch faculty engagement list.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+

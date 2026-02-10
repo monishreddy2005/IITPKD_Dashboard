@@ -1,0 +1,227 @@
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  animation: fadeOut 0.3s ease-out 1.7s forwards;
+}
+
+.splash-screen.visible {
+  opacity: 1;
+}
+
+.splash-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.9);
+}
+
+.splash-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ================= OVAL BACKGROUND CONTAINER ================= */
+/* This creates the white oval background covering logo and name */
+.splash-oval-container {
+  /* ⚙️ ADJUST TRANSPARENCY: Use rgba() for background transparency */
+  /* Format: rgba(red, green, blue, alpha) where alpha = 0.0 (fully transparent) to 1.0 (fully opaque) */
+  /* Examples: rgba(255,255,255,0.9) = 90% opaque white, rgba(255,255,255,0.5) = 50% transparent white */
+  background-color: rgba(255, 255, 255, 0.2);
+  /* ⚙️ Change last value (0.5) to adjust transparency: 0.0 = invisible, 1.0 = solid */
+  /* Alternative: Use hex with alpha: #ffffff80 (80 = ~50% opacity in hex) */
+  /* Or use solid color: #ffffff (no transparency) */
+
+  /* ⚙️ ADJUST BLUR: backdrop-filter blurs the background image behind the oval */
+  /* Higher values = more blur (e.g., 20px = heavy blur, 5px = light blur) */
+  /* Set to 0px or remove property to disable blur effect */
+  backdrop-filter: blur(8px);
+  /* ⚙️ Change blur amount: 0px = no blur, 5px = light, 10px = medium, 20px = heavy */
+  -webkit-backdrop-filter: blur(10px);
+  /* Browser compatibility for Safari */
+
+  border-radius: 50%;
+  /* ⚙️ ADJUST SHAPE: Lower value (e.g., 30px) = more rounded rectangle, 50% = perfect oval */
+  padding: 80px 100px;
+  /* ⚙️ ADJUST SIZE: First value = vertical padding, second = horizontal padding */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  /* ⚙️ ADJUST SHADOW: Change rgba values for shadow color/intensity */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: slideDownOval 1.5s ease-out forwards;
+  opacity: 0;
+  /* ⚙️ NOTE: This opacity is for animation only - don't change here for transparency */
+  min-width: 500px;
+  /* ⚙️ ADJUST WIDTH: Minimum width of the oval container */
+  min-height: 400px;
+  /* ⚙️ ADJUST HEIGHT: Minimum height of the oval container */
+}
+
+.splash-logo-container {
+  animation: slideDownLogo 1.5s ease-out forwards;
+  opacity: 0;
+  margin-bottom: 15px;
+  /* ⚙️ ADJUST SPACING: Space between logo and text (reduced to bring text closer to logo) */
+}
+
+.splash-logo {
+  height: 400px;
+  /* ⚙️ ADJUST LOGO SIZE: Doubled from 200px to 400px */
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.splash-text-container {
+  animation: slideDownText 1.5s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.splash-text {
+  font-size: 5rem;
+  /* ⚙️ ADJUST TEXT SIZE: Change this value (e.g., 4rem, 6rem) */
+  font-weight: 700;
+  /* ⚙️ ADJUST FONT WEIGHT: Options: 400 (normal), 600 (semi-bold), 700 (bold), 800 (extra-bold) */
+  color: #2b2b2b;
+  /* ⚙️ ADJUST TEXT COLOR: Change to any color (e.g., #000000, #1a1a1a, #333333) */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  /* ⚙️ ADJUST TEXT SHADOW: Modify rgba values or remove entirely */
+  margin: 0;
+  letter-spacing: 3px;
+  /* ⚙️ ADJUST LETTER SPACING: Increase/decrease spacing between letters */
+  text-align: center;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* ⚙️ ADJUST FONT: Change font family */
+}
+
+@keyframes slideDownOval {
+  0% {
+    transform: translateY(-120px);
+    /* ⚙️ ADJUST START POSITION: How far up the oval starts */
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDownLogo {
+  0% {
+    transform: translateY(-100px);
+    /* ⚙️ ADJUST START POSITION: How far up the logo starts */
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDownText {
+  0% {
+    transform: translateY(-80px);
+    /* ⚙️ ADJUST START POSITION: How far up the text starts */
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* ================= RESPONSIVE ADJUSTMENTS ================= */
+@media (max-width: 768px) {
+  .splash-oval-container {
+    padding: 40px 60px;
+    /* ⚙️ ADJUST MOBILE PADDING: Reduce padding for smaller screens */
+    min-width: 350px;
+    /* ⚙️ ADJUST MOBILE WIDTH */
+    min-height: 300px;
+    /* ⚙️ ADJUST MOBILE HEIGHT */
+  }
+
+  .splash-logo {
+    height: 280px;
+    /* ⚙️ ADJUST MOBILE LOGO SIZE: Doubled from 140px to 280px */
+  }
+
+  .splash-text {
+    font-size: 3.5rem;
+    /* ⚙️ ADJUST MOBILE TEXT SIZE */
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .splash-oval-container {
+    padding: 30px 40px;
+    /* ⚙️ ADJUST SMALL MOBILE PADDING */
+    min-width: 280px;
+    /* ⚙️ ADJUST SMALL MOBILE WIDTH */
+    min-height: 250px;
+    /* ⚙️ ADJUST SMALL MOBILE HEIGHT */
+  }
+
+  .splash-logo {
+    height: 200px;
+    /* ⚙️ ADJUST SMALL MOBILE LOGO SIZE: Doubled from 100px to 200px */
+  }
+
+  .splash-text {
+    font-size: 2.5rem;
+    /* ⚙️ ADJUST SMALL MOBILE TEXT SIZE */
+    letter-spacing: 1.5px;
+  }
+}

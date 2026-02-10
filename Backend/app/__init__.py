@@ -57,6 +57,7 @@ def create_app():
     from . import innovation_module
     from . import industry_connect_module
     from . import outreach_extension_module
+    from . import nirf_stats
 
     # Register the blueprints
     # All routes from auth.py will be prefixed with /auth
@@ -64,6 +65,9 @@ def create_app():
     
     # All routes from dashboard.py will be prefixed with /api
     app.register_blueprint(dashboard.dashboard_bp, url_prefix='/api')
+    
+    # Register NIRF stats blueprint
+    app.register_blueprint(nirf_stats.nirf_bp, url_prefix='/api/nirf')
     
     # Register the upload blueprint
     app.register_blueprint(upload.upload_bp, url_prefix='/api')

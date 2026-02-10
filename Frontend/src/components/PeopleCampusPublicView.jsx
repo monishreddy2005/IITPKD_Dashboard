@@ -12,6 +12,7 @@ import IarSection from './IarSection';
 function PeopleCampusPublicView({ user }) {
   return (
     <div className="page-container">
+      <div className="page-content">
         <h1>People & Campus — Public Dashboard</h1>
         <p>
           This public dashboard presents consolidated academic and administrative
@@ -53,6 +54,7 @@ function PeopleCampusPublicView({ user }) {
           <h2 className="section-title">International & Alumni Relations (IAR)</h2>
           <IarSection user={user} isPublicView={true} />
         </section>
+      </div>
     </div>
   );
 }

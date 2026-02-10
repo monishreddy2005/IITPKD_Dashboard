@@ -204,18 +204,18 @@ function IcsrSection({ user, isPublicView = false }) {
         {/* Year-wise Distribution Chart */}
         <div className="chart-section">
           <div className="chart-header">
-            <h2>Year-wise Event Distribution</h2>
             <p className="chart-description">Distribution of industry events and participating departments over time.</p>
           </div>
           {yearlyChartData.length > 0 ? (
             <div className="chart-container">
+              <h3 className="chart-heading">Year-wise Event Distribution</h3>
               <ResponsiveContainer width="100%" height={360}>
                 <BarChart data={yearlyChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                   <XAxis dataKey="year" stroke="#cbd5f5" />
                   <YAxis stroke="#cbd5f5" />
                   <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
                   <Bar dataKey="events" name="Events" fill="#667eea" />
                   <Bar dataKey="departments" name="Departments" fill="#43e97b" />
                 </BarChart>
@@ -229,11 +229,11 @@ function IcsrSection({ user, isPublicView = false }) {
         {/* Event Types Distribution Chart */}
         <div className="chart-section">
           <div className="chart-header">
-            <h2>Event Types Distribution</h2>
             <p className="chart-description">Frequency of different types of industry interaction events.</p>
           </div>
           {eventTypesPieData.length > 0 ? (
             <div className="chart-container">
+              <h3 className="chart-heading">Event Types Distribution</h3>
               <ResponsiveContainer width="100%" height={360}>
                 <PieChart>
                   <Pie
@@ -250,7 +250,7 @@ function IcsrSection({ user, isPublicView = false }) {
                     ))}
                   </Pie>
                   <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -266,25 +266,27 @@ function IcsrSection({ user, isPublicView = false }) {
             <p className="chart-description">Search and filter through all industry interaction events.</p>
           </div>
 
-          <div className="filter-panel">
-            <div className="filter-header">
-              <h3>Filters</h3>
-              <button className="clear-filters-btn" onClick={handleClearFilters}>
-                Clear Filters
-              </button>
-            </div>
-            <div className="filter-grid">
-              {isPublicView ? null : (user && user.role_id === 3 && (
-                <div className="filter-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => setIsUploadModalOpen(true)}
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                  >
-                    Upload Industry Events
+          <div className="chart-section">
+            {/* Filter Panel */}
+            <div className="filter-panel">
+              <div className="filter-header">
+                <h3>Filters</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="clear-filters-btn" onClick={handleClearFilters}>
+                    Clear Filters
                   </button>
+                  {isPublicView ? null : (user && user.role_id === 3 && (
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => setIsUploadModalOpen(true)}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Industry Events
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="filter-grid">
               <div className="filter-group">
                 <label>Event Type</label>
                 <select
@@ -413,6 +415,7 @@ function IcsrSection({ user, isPublicView = false }) {
           ) : (
             <div className="no-data">No events found for the selected filters.</div>
           )}
+          </div>
         </div>
       </div>
     </div>

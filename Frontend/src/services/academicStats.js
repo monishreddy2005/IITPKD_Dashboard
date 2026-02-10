@@ -42,7 +42,7 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
   try {
     // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
-    
+
     Object.keys(filters).forEach(key => {
       const value = filters[key];
       if (value !== null && value !== undefined && value !== '') {
@@ -56,7 +56,7 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
         }
       }
     });
-    
+
     const response = await axios.get(
       `${API_BASE_URL}/stats/gender-distribution-filtered?${params.toString()}`,
       {
@@ -89,7 +89,7 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
   try {
     // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
-    
+
     Object.keys(filters).forEach(key => {
       const value = filters[key];
       if (value !== null && value !== undefined && value !== '') {
@@ -101,7 +101,7 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
         }
       }
     });
-    
+
     const response = await axios.get(
       `${API_BASE_URL}/stats/student-strength?${params.toString()}`,
       {
@@ -115,6 +115,80 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
     console.error('Error fetching student strength:', error);
     if (error.response) {
       throw new Error(error.response.data.message || 'Failed to fetch student strength');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
+ * Fetches gender distribution trends (grouped by year).
+ * @param {Object} filters - Filter object
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Trend data
+ */
+export const fetchGenderTrends = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '' && value !== 'All') {
+        if (key === 'pwd' && typeof value === 'boolean') {
+          params.append(key, value.toString());
+        } else {
+          params.append(key, value);
+        }
+      }
+    });
+
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/gender-trends?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching gender trends:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch gender trends');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
+ * Fetches student strength by program trends (grouped by year).
+ * @param {Object} filters - Filter object
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Trend data
+ */
+export const fetchProgramTrends = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '' && value !== 'All') {
+        params.append(key, value);
+      }
+    });
+
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/program-trends?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching program trends:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch program trends');
     }
     throw new Error('Network error. Please check if the backend server is running.');
   }

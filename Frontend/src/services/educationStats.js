@@ -72,3 +72,12 @@ export const fetchTypeDistribution = async (filters, token) => {
   }
 };
 
+export const fetchFacultyEngagementList = async (filters, token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/list${buildQuery(filters)}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch faculty engagement list');
+  }
+};
+

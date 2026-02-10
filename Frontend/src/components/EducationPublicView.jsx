@@ -1,5 +1,5 @@
 import PlacementSection from './PlacementSection';
-import AdministrativeSection from './AdministrativeSection';
+import EducationAdministrativeSection from './EducationAdministrativeSection';
 import EducationAcademicSection from './EducationAcademicSection';
 
 function EducationPublicView({ user }) {
@@ -20,7 +20,7 @@ function EducationPublicView({ user }) {
                 {/* ================= Administrative Public View ================= */}
                 <section style={{ marginTop: '4rem' }}>
                     <h2 className="section-title">Administrative Section</h2>
-                    <AdministrativeSection user={user} isPublicView={true} />
+                    <EducationAdministrativeSection user={user} isPublicView={true} />
                 </section>
 
                 {/* ================= Academic Public View ================= */}

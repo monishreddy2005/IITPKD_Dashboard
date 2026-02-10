@@ -47,32 +47,252 @@ function CreateUser({ user, token }) {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess('User created successfully');
+      // Reset form
+      setForm({
+        email: '',
+        username: '',
+        display_name: '',
+        password: '',
+        role_id: ''
+      });
     } catch (err) {
       setError(err.response?.data?.message || 'Error creating user');
     }
   };
 
   return (
-    <div className="card">
-      <h1>Create User</h1>
+    <div className="card" style={{
+      maxWidth: '480px',
+      margin: '2rem auto',
+      padding: '2rem',
+      backgroundColor: '#ffffff',
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
+    }}>
+      <h1 style={{
+        fontSize: '1.75rem',
+        fontWeight: '700',
+        marginBottom: '1.5rem',
+        color: '#1f2937',
+        textAlign: 'center'
+      }}>Create User</h1>
 
-      <form onSubmit={handleSubmit}>
-        <input name="email" placeholder="Email" onChange={handleChange} required />
-        <input name="username" placeholder="Username" onChange={handleChange} required />
-        <input name="display_name" placeholder="Display Name" onChange={handleChange} />
-        <input name="password" type="password" placeholder="Temporary Password" onChange={handleChange} required />
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '0.5rem'
+          }}>Email</label>
+          <input 
+            name="email" 
+            type="email"
+            placeholder="user@example.com" 
+            value={form.email}
+            onChange={handleChange} 
+            required 
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
 
-        <select name="role_id" onChange={handleChange} required>
-          <option value="">Select Role</option>
-          {roles.map(role => (
-            <option key={role.id} value={role.id}>{role.name}</option>
-          ))}
-        </select>
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '0.5rem'
+          }}>Username</label>
+          <input 
+            name="username" 
+            placeholder="username" 
+            value={form.username}
+            onChange={handleChange} 
+            required 
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
 
-        <button type="submit">Create User</button>
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '0.5rem'
+          }}>Display Name</label>
+          <input 
+            name="display_name" 
+            placeholder="John Doe" 
+            value={form.display_name}
+            onChange={handleChange} 
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {success && <p style={{ color: 'green' }}>{success}</p>}
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '0.5rem'
+          }}>Temporary Password</label>
+          <input 
+            name="password" 
+            type="password" 
+            placeholder="••••••••" 
+            value={form.password}
+            onChange={handleChange} 
+            required 
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          />
+        </div>
+
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '0.5rem'
+          }}>Role</label>
+          <select 
+            name="role_id" 
+            value={form.role_id}
+            onChange={handleChange} 
+            required
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              fontSize: '1rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              outline: 'none',
+              transition: 'border-color 0.2s',
+              backgroundColor: '#ffffff',
+              cursor: 'pointer',
+              appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23374151' d='M8 11L3 6h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              backgroundSize: '16px',
+              paddingRight: '2.5rem',
+              boxSizing: 'border-box'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+          >
+            <option value="">Select Role</option>
+            {roles.map(role => (
+              <option key={role.id} value={role.id}>{role.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <button 
+          type="submit"
+          style={{
+            width: '100%',
+            padding: '0.875rem',
+            fontSize: '1rem',
+            fontWeight: '600',
+            color: '#ffffff',
+            backgroundColor: '#f59e0b',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            marginTop: '0.5rem',
+            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#d97706';
+            e.target.style.transform = 'translateY(-1px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.35)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = '#f59e0b';
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 2px 8px rgba(245, 158, 11, 0.25)';
+          }}
+        >
+          Create User
+        </button>
+
+        {error && (
+          <div style={{
+            padding: '0.75rem',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            color: '#dc2626',
+            fontSize: '0.875rem',
+            marginTop: '0.5rem'
+          }}>
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div style={{
+            padding: '0.75rem',
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: '8px',
+            color: '#16a34a',
+            fontSize: '0.875rem',
+            marginTop: '0.5rem'
+          }}>
+            {success}
+          </div>
+        )}
       </form>
     </div>
   );

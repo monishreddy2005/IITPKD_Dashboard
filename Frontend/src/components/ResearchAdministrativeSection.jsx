@@ -218,63 +218,6 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          </div>
-
-          {isPublicView ? null : (user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Externships
-              </button>
-            </div>
-          ))}
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="externship-dept-filter">Department</label>
-              <select
-                id="externship-dept-filter"
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.externship_departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="externship-year-filter">Externship Year</label>
-              <select
-                id="externship-year-filter"
-                className="filter-select"
-                value={filters.externship_year}
-                onChange={(e) => handleFilterChange('externship_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.externship_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
         <div className="summary-cards">
           <div className="summary-card">
             <h3>Total Externships</h3>
@@ -308,48 +251,112 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
         {!loading && (
           <>
             <section className="chart-section">
-              <div className="chart-header">
-                <h2>Year-wise Industry Externships</h2>
-                <p className="chart-description">
-                  Distribution of externship engagements by type across the selected timeframe.
-                </p>
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="clear-filters-btn" onClick={handleClearFilters}>
+                      Clear Filters
+                    </button>
+                    {isPublicView ? null : (user && user.role_id === 3 && (
+                      <button
+                        className="upload-data-btn"
+                        onClick={() => setIsUploadModalOpen(true)}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                      >
+                        Upload Externships
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="externship-dept-filter">Department</label>
+                    <select
+                      id="externship-dept-filter"
+                      className="filter-select"
+                      value={filters.department}
+                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.externship_departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="externship-year-filter">Externship Year</label>
+                    <select
+                      id="externship-year-filter"
+                      className="filter-select"
+                      value={filters.externship_year}
+                      onChange={(e) => handleFilterChange('externship_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.externship_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={340}>
-                <BarChart data={yearlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  {externshipTypeKeys.map((type, index) => (
-                    <Bar
-                      key={type}
-                      dataKey={type}
-                      stackId="externships"
-                      fill={TYPE_COLORS[index % TYPE_COLORS.length]}
-                      radius={index === externshipTypeKeys.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="chart-header">
+                <div>
+                  <p className="chart-description">
+                    Distribution of externship engagements by type across the selected timeframe.
+                  </p>
+                </div>
+              </div>
+              <div className="chart-container">
+                <h3 className="chart-heading">Year-wise Industry Externships</h3>
+                <ResponsiveContainer width="100%" height={340}>
+                  <BarChart data={yearlyChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                    {externshipTypeKeys.map((type, index) => (
+                      <Bar
+                        key={type}
+                        dataKey={type}
+                        stackId="externships"
+                        fill={TYPE_COLORS[index % TYPE_COLORS.length]}
+                        radius={index === externshipTypeKeys.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>Department-wise Participation</h2>
-                <p className="chart-description">
-                  Departments ranked by the number of externships completed with industry partners.
-                </p>
+                <div>
+                  <p className="chart-description">
+                    Departments ranked by the number of externships completed with industry partners.
+                  </p>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={departmentChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="department" stroke="#9ca3af" tick={{ fontSize: 12 }} interval={0} angle={-20} dy={12} />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Bar dataKey="total" fill="#60a5fa" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Department-wise Participation</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={departmentChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="department" stroke="#9ca3af" tick={{ fontSize: 12 }} interval={0} angle={-20} dy={12} />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Bar dataKey="total" fill="#60a5fa" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="grievance-table-wrapper">
@@ -357,7 +364,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
               <p className="chart-description">
                 Detailed listing of faculty externships including industry partner, duration, and timeline.
               </p>
-              <div className="table-responsive">
+              <div className="table-responsive icsr-table-scrollable">
                 <table className="grievance-table">
                   <thead>
                     <tr>

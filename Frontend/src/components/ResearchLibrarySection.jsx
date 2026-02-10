@@ -197,103 +197,6 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          </div>
-
-          {isPublicView ? null : (user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ marginBottom: '1rem' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Publications
-              </button>
-            </div>
-          ))}
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="library-dept-filter">Department</label>
-              <select
-                id="library-dept-filter"
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.publication_departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="library-year-filter">Publication Year</label>
-              <select
-                id="library-year-filter"
-                className="filter-select"
-                value={filters.publication_year}
-                onChange={(e) => handleFilterChange('publication_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.publication_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="library-type-filter">Publication Type</label>
-              <select
-                id="library-type-filter"
-                className="filter-select"
-                value={filters.publication_type}
-                onChange={(e) => handleFilterChange('publication_type', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.publication_types.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="summary-cards">
-          <div className="summary-card">
-            <h3>Total Publications</h3>
-            <p className="summary-value">{formatNumber(summary.total)}</p>
-            <span className="summary-subtitle">Filtered scholarly outputs</span>
-          </div>
-          <div className="summary-card">
-            <h3>Latest Reporting Year</h3>
-            <p className="summary-value">{formatDateYear(summary.latest_year)}</p>
-            <span className="summary-subtitle">Most recent publication year available</span>
-          </div>
-          <div className="summary-card">
-            <h3>Departments Contributing</h3>
-            <p className="summary-value">{formatNumber(participatingDepartments)}</p>
-            <span className="summary-subtitle">Active departments in selection</span>
-          </div>
-          <div className="summary-card">
-            <h3>Journal vs Conference (J/C)</h3>
-            <p className="summary-value">{journalVsConference}</p>
-            <span className="summary-subtitle">Publication mix for current filters</span>
-          </div>
-        </div>
-
         {loading && (
           <div className="loading-state">
             <div className="loading-spinner" />
@@ -304,68 +207,147 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
         {!loading && (
           <>
             <section className="chart-section">
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="clear-filters-btn" onClick={handleClearFilters}>
+                      Clear Filters
+                    </button>
+                    {isPublicView ? null : (user && user.role_id === 3 && (
+                      <button
+                        className="upload-data-btn"
+                        onClick={() => setIsUploadModalOpen(true)}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                      >
+                        Upload Publications
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="library-dept-filter">Department</label>
+                    <select
+                      id="library-dept-filter"
+                      className="filter-select"
+                      value={filters.department}
+                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.publication_departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="library-year-filter">Publication Year</label>
+                    <select
+                      id="library-year-filter"
+                      className="filter-select"
+                      value={filters.publication_year}
+                      onChange={(e) => handleFilterChange('publication_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.publication_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="library-type-filter">Publication Type</label>
+                    <select
+                      id="library-type-filter"
+                      className="filter-select"
+                      value={filters.publication_type}
+                      onChange={(e) => handleFilterChange('publication_type', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.publication_types.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div className="chart-header">
-                <h2>Year-wise Publication Trend</h2>
                 <p className="chart-description">
                   Longitudinal view of publications produced across the selected department and type filters.
                 </p>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={trendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="publications" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Year-wise Publication Trend</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={trendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                    <Line type="monotone" dataKey="publications" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>Department-wise Publications</h2>
                 <p className="chart-description">
                   Departments ranked by number of publications under current filters.
                 </p>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={departmentChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="department" stroke="#9ca3af" tick={{ fontSize: 12 }} interval={0} angle={-20} dy={12} />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Bar dataKey="total" fill="#22c55e" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Department-wise Publications</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={departmentChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="department" stroke="#9ca3af" tick={{ fontSize: 12 }} interval={0} angle={-20} dy={12} />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Bar dataKey="total" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>Publication Type Distribution</h2>
                 <p className="chart-description">
                   Snapshot of publication formats (journal, conference, monographs, etc.) for the current selection.
                 </p>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  <Pie
-                    data={typePieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={110}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                  >
-                    {typePieData.map((entry, index) => (
-                      <Cell key={entry.name} fill={TYPE_COLORS[index % TYPE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Publication Type Distribution</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+                    <Pie
+                      data={typePieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={110}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                    >
+                      {typePieData.map((entry, index) => (
+                        <Cell key={entry.name} fill={TYPE_COLORS[index % TYPE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="grievance-table-wrapper">
@@ -373,7 +355,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
               <p className="chart-description">
                 Detailed list of publications satisfying the selected filters, including faculty and publication venue.
               </p>
-              <div className="table-responsive">
+              <div className="table-responsive icsr-table-scrollable">
                 <table className="grievance-table">
                   <thead>
                     <tr>

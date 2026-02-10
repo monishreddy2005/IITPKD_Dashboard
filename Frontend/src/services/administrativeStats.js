@@ -224,3 +224,28 @@ export const fetchDepartmentBreakdown = async (filters, employeeType, token) => 
   }
 };
 
+/**
+ * Fetches faculty gender distribution for the last five years.
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Array of year-wise gender counts
+ */
+export const fetchFacultyGenderLastFiveYears = async (token) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/faculty-gender-last-five-years`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching faculty gender last five years:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch faculty gender data');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+

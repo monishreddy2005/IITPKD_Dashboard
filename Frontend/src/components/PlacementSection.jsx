@@ -253,104 +253,6 @@ function PlacementSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          </div>
-
-          {isPublicView ? null : (user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Placement Summaries
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Recruiters
-              </button>
-            </div>
-          ))}
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="placement-year-filter">Year</label>
-              <select
-                id="placement-year-filter"
-                className="filter-select"
-                value={filters.year}
-                onChange={(e) => handleFilterChange('year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="placement-program-filter">Program</label>
-              <select
-                id="placement-program-filter"
-                className="filter-select"
-                value={filters.program}
-                onChange={(e) => handleFilterChange('program', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.programs.map((program) => (
-                  <option key={program} value={program}>
-                    {program}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="placement-gender-filter">Gender</label>
-              <select
-                id="placement-gender-filter"
-                className="filter-select"
-                value={filters.gender}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.genders.map((gender) => (
-                  <option key={gender} value={gender}>
-                    {gender}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="placement-sector-filter">Sector</label>
-              <select
-                id="placement-sector-filter"
-                className="filter-select"
-                value={filters.sector}
-                onChange={(e) => handleFilterChange('sector', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.sectors.map((sector) => (
-                  <option key={sector} value={sector}>
-                    {sector}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
         {loading ? (
           <div className="loading-container">
             <div className="loading-spinner" />
@@ -392,9 +294,107 @@ function PlacementSection({ user, isPublicView = false }) {
             </div>
 
             <div className="chart-section">
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="clear-filters-btn" onClick={handleClearFilters}>
+                      Clear Filters
+                    </button>
+                    {isPublicView ? null : (user && user.role_id === 3 && (
+                      <>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Placement Summaries
+                        </button>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Recruiters
+                        </button>
+                      </>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="placement-year-filter">Year</label>
+                    <select
+                      id="placement-year-filter"
+                      className="filter-select"
+                      value={filters.year}
+                      onChange={(e) => handleFilterChange('year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="placement-program-filter">Program</label>
+                    <select
+                      id="placement-program-filter"
+                      className="filter-select"
+                      value={filters.program}
+                      onChange={(e) => handleFilterChange('program', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.programs.map((program) => (
+                        <option key={program} value={program}>
+                          {program}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="placement-gender-filter">Gender</label>
+                    <select
+                      id="placement-gender-filter"
+                      className="filter-select"
+                      value={filters.gender}
+                      onChange={(e) => handleFilterChange('gender', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.genders.map((gender) => (
+                        <option key={gender} value={gender}>
+                          {gender}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="placement-sector-filter">Sector</label>
+                    <select
+                      id="placement-sector-filter"
+                      className="filter-select"
+                      value={filters.sector}
+                      onChange={(e) => handleFilterChange('sector', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.sectors.map((sector) => (
+                        <option key={sector} value={sector}>
+                          {sector}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
               <div className="chart-header">
                 <div>
-                  <h2>Placement Percentage Trend</h2>
                   <p className="chart-description">Track how overall placement conversion has evolved across years.</p>
                 </div>
               </div>
@@ -403,13 +403,14 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No placement trend data available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Placement Percentage Trend</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <LineChart data={placementTrendChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="year" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                       <Line type="monotone" dataKey="percentage" name="Placement %" stroke="#38bdf8" strokeWidth={3} />
                       <Line type="monotone" dataKey="placed" name="Placed" stroke="#22c55e" strokeWidth={2} />
                       <Line type="monotone" dataKey="registered" name="Registered" stroke="#6366f1" strokeWidth={2} />
@@ -422,7 +423,6 @@ function PlacementSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Gender-wise Placement Share</h2>
                   <p className="chart-description">Understand gender balance in placement outcomes.</p>
                 </div>
               </div>
@@ -431,6 +431,7 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No gender-wise data available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Gender-wise Placement Share</h3>
                   <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
                       <Pie
@@ -447,7 +448,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -457,7 +458,6 @@ function PlacementSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Program-wise Placement Status</h2>
                   <p className="chart-description">Compare registrations and offers across UG, PG, and PhD cohorts.</p>
                 </div>
               </div>
@@ -466,13 +466,14 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No program-wise data available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Program-wise Placement Status</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <BarChart data={programStatusChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="program" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
                       <Bar dataKey="registered" name="Registered" fill="#6366f1" />
                       <Bar dataKey="placed" name="Placed" fill="#22c55e" />
                     </BarChart>
@@ -484,7 +485,6 @@ function PlacementSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Recruiters per Year</h2>
                   <p className="chart-description">Monitor company participation and total offers year over year.</p>
                 </div>
               </div>
@@ -493,13 +493,14 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No recruiter statistics available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Recruiters per Year</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <BarChart data={recruiterChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="year" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
                       <Bar dataKey="companies" name="Companies" fill="#f59e0b" />
                       <Bar dataKey="offers" name="Offers" fill="#38bdf8" />
                     </BarChart>
@@ -511,7 +512,6 @@ function PlacementSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Sector-wise Company Split</h2>
                   <p className="chart-description">Distribution of visiting recruiters by industry sector.</p>
                 </div>
               </div>
@@ -520,6 +520,7 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No sector-wise data available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Sector-wise Company Split</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <PieChart>
                       <Pie
@@ -536,7 +537,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         ))}
                       </Pie>
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -546,7 +547,6 @@ function PlacementSection({ user, isPublicView = false }) {
             <div className="chart-section">
               <div className="chart-header">
                 <div>
-                  <h2>Package Trends</h2>
                   <p className="chart-description">Track average package trends across years.</p>
                 </div>
               </div>
@@ -555,13 +555,14 @@ function PlacementSection({ user, isPublicView = false }) {
                 <div className="no-data">No package trend data available.</div>
               ) : (
                 <div className="chart-container">
+                  <h3 className="chart-heading">Package Trends</h3>
                   <ResponsiveContainer width="100%" height={360}>
                     <LineChart data={packageTrendChartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis dataKey="year" stroke="#cbd5f5" />
                       <YAxis stroke="#cbd5f5" />
                       <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                       <Line type="monotone" dataKey="average" name="Average Package" stroke="#10b981" strokeWidth={3} />
                       <Line type="monotone" dataKey="highest" name="Highest Package" stroke="#3b82f6" strokeWidth={2} />
                       <Line type="monotone" dataKey="lowest" name="Lowest Package" stroke="#ef4444" strokeWidth={2} />

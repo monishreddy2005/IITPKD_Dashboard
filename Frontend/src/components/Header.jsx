@@ -5,9 +5,34 @@ import IIPKD_Logo from '../assets/IITPKD_Logo.png';
 
 function Header({ user, onLogout }) {
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [showNavbar, setShowNavbar] = useState(true);
+    const lastScrollY = useRef(0);
     const navigate = useNavigate();
     const location = useLocation();
     const dropdownRef = useRef(null);
+
+    // Handle scroll to hide/show navbar
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            // If scrolling down AND past threshold (100px), hide navbar
+            if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+                setShowNavbar(false);
+            } else {
+                // If scrolling up, show navbar
+                setShowNavbar(true);
+            }
+
+            lastScrollY.current = currentScrollY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -103,14 +128,6 @@ function Header({ user, onLogout }) {
                                 <button className="dropdown-item" onClick={handleProfileClick}>
                                     Check Profile
                                 </button>
-                                {canUploadData && (
-                                    <>
-                                        <button className="dropdown-item" onClick={handleUploadClick}>
-                                            Upload Data
-                                        </button>
-                                        <div className="dropdown-divider"></div>
-                                    </>
-                                )}
                                 <button className="dropdown-item" onClick={onLogout}>
                                     Logout
                                 </button>
@@ -121,7 +138,7 @@ function Header({ user, onLogout }) {
             </header>
 
             {/* Navigation Bar */}
-            <nav className="main-navbar">
+            <nav className={`main-navbar ${showNavbar ? '' : 'navbar-hidden'}`}>
                 <Link
                     to="/people-campus"
                     className={`nav-link ${location.pathname === '/people-campus' ? 'active' : ''}`}

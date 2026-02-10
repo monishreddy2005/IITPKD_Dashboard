@@ -52,6 +52,43 @@ const formatCurrency = (value) => {
   }).format(numeric);
 };
 
+const formatScaledCurrency = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) {
+    return { value: '0', unit: '' };
+  }
+  
+  const crore = 10000000; // 1 crore = 1,00,00,000
+  const lakh = 100000; // 1 lakh = 1,00,000
+  
+  if (numeric >= crore) {
+    const crores = numeric / crore;
+    return {
+      value: new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: crores % 1 === 0 ? 0 : 2
+      }).format(crores),
+      unit: crores === 1 ? 'Crore' : 'Crores'
+    };
+  } else if (numeric >= lakh) {
+    const lakhs = numeric / lakh;
+    return {
+      value: new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: lakhs % 1 === 0 ? 0 : 2
+      }).format(lakhs),
+      unit: lakhs === 1 ? 'Lakh' : 'Lakhs'
+    };
+  } else {
+    return {
+      value: new Intl.NumberFormat('en-IN', {
+        maximumFractionDigits: 0
+      }).format(numeric),
+      unit: ''
+    };
+  }
+};
+
 const formatDate = (value) => {
   if (!value) return '–';
   const date = new Date(value);
@@ -297,163 +334,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear Filters
-            </button>
-          </div>
-
-          {isPublicView ? null : (user && user.role_id === 3 && (
-            <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('research_projects'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Projects
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload MoUs
-              </button>
-              <button
-                className="upload-data-btn"
-                onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                Upload Patents
-              </button>
-            </div>
-          ))}
-
-          <div className="filter-grid">
-            <div className="filter-group">
-              <label htmlFor="department-filter">Department</label>
-              <select
-                id="department-filter"
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="project-year-filter">Project Year</label>
-              <select
-                id="project-year-filter"
-                className="filter-select"
-                value={filters.project_year}
-                onChange={(e) => handleFilterChange('project_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="project-type-filter">Project Type</label>
-              <select
-                id="project-type-filter"
-                className="filter-select"
-                value={filters.project_type}
-                onChange={(e) => handleFilterChange('project_type', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_types.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="project-status-filter">Project Status</label>
-              <select
-                id="project-status-filter"
-                className="filter-select"
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="mou-year-filter">MoU Year</label>
-              <select
-                id="mou-year-filter"
-                className="filter-select"
-                value={filters.mou_year}
-                onChange={(e) => handleFilterChange('mou_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.mou_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="patent-year-filter">Patent Year</label>
-              <select
-                id="patent-year-filter"
-                className="filter-select"
-                value={filters.patent_year}
-                onChange={(e) => handleFilterChange('patent_year', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.patent_years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="patent-status-filter">Patent Status</label>
-              <select
-                id="patent-status-filter"
-                className="filter-select"
-                value={filters.patent_status}
-                onChange={(e) => handleFilterChange('patent_status', e.target.value)}
-              >
-                <option value="All">All</option>
-                {filterOptions.patent_statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="summary-cards">
+        <div className="summary-cards icsr-summary-cards">
           <div className="summary-card">
             <h3>Total Sanctioned Projects</h3>
             <p className="summary-value">{formatNumber(summary.total_projects)}</p>
@@ -471,7 +352,15 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           </div>
           <div className="summary-card">
             <h3>Consultancy Revenue</h3>
-            <p className="summary-value">{formatCurrency(summary.consultancy_revenue)}</p>
+            {(() => {
+              const scaled = formatScaledCurrency(summary.consultancy_revenue);
+              return (
+                <p className="summary-value">
+                  ₹{scaled.value}
+                  {scaled.unit && <span style={{ fontSize: '0.65em', fontWeight: '500', marginLeft: '0.25rem' }}>{scaled.unit}</span>}
+                </p>
+              );
+            })()}
             <span className="summary-subtitle">Amount sanctioned across consultancy projects</span>
           </div>
           <div className="summary-card">
@@ -499,87 +388,260 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
         {!loading && (
           <>
             <section className="chart-section">
-              <div className="chart-header">
-                <h2>Externally Funded Project Trend</h2>
-                <p className="chart-description">
-                  Annual count of externally funded projects with the selected filters.
-                </p>
+              {/* Filter Panel */}
+              <div className="filter-panel">
+                <div className="filter-header">
+                  <h3>Filters</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button className="clear-filters-btn" onClick={handleClearFilters}>
+                      Clear Filters
+                    </button>
+                    {isPublicView ? null : (user && user.role_id === 3 && (
+                      <>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('research_projects'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Projects
+                        </button>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload MoUs
+                        </button>
+                        <button
+                          className="upload-data-btn"
+                          onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
+                          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          Upload Patents
+                        </button>
+                      </>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-grid">
+                  <div className="filter-group">
+                    <label htmlFor="department-filter">Department</label>
+                    <select
+                      id="department-filter"
+                      className="filter-select"
+                      value={filters.department}
+                      onChange={(e) => handleFilterChange('department', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.project_departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="project-year-filter">Project Year</label>
+                    <select
+                      id="project-year-filter"
+                      className="filter-select"
+                      value={filters.project_year}
+                      onChange={(e) => handleFilterChange('project_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.project_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="project-type-filter">Project Type</label>
+                    <select
+                      id="project-type-filter"
+                      className="filter-select"
+                      value={filters.project_type}
+                      onChange={(e) => handleFilterChange('project_type', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.project_types.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="project-status-filter">Project Status</label>
+                    <select
+                      id="project-status-filter"
+                      className="filter-select"
+                      value={filters.status}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.project_statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="mou-year-filter">MoU Year</label>
+                    <select
+                      id="mou-year-filter"
+                      className="filter-select"
+                      value={filters.mou_year}
+                      onChange={(e) => handleFilterChange('mou_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.mou_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="patent-year-filter">Patent Year</label>
+                    <select
+                      id="patent-year-filter"
+                      className="filter-select"
+                      value={filters.patent_year}
+                      onChange={(e) => handleFilterChange('patent_year', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.patent_years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="filter-group">
+                    <label htmlFor="patent-status-filter">Patent Status</label>
+                    <select
+                      id="patent-status-filter"
+                      className="filter-select"
+                      value={filters.patent_status}
+                      onChange={(e) => handleFilterChange('patent_status', e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      {filterOptions.patent_statuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={projectTrendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="projects" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="chart-header">
+                <div>
+                  <p className="chart-description">
+                    Annual count of externally funded projects with the selected filters.
+                  </p>
+                </div>
+              </div>
+              <div className="chart-container">
+                <h3 className="chart-heading">Externally Funded Project Trend</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={projectTrendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                    <Line type="monotone" dataKey="projects" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>Consultancy Revenue Trend</h2>
-                <p className="chart-description">
-                  Year-wise sanctioned consultancy revenue (₹), showcasing industry engagement momentum.
-                </p>
+                <div>
+                  <p className="chart-description">
+                    Year-wise sanctioned consultancy revenue (₹), showcasing industry engagement momentum.
+                  </p>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <LineChart data={consultancyTrendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Legend />
-                  <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Consultancy Revenue Trend</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={consultancyTrendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                    <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>MoUs Signed Per Year</h2>
-                <p className="chart-description">
-                  Timeline of research and industry collaboration agreements formalised through MoUs.
-                </p>
+                <div>
+                  <p className="chart-description">
+                    Timeline of research and industry collaboration agreements formalised through MoUs.
+                  </p>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={mouTrendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  <Bar dataKey="total" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">MoUs Signed Per Year</h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={mouTrendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                    <Bar dataKey="total" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </section>
 
             <section className="chart-section">
               <div className="chart-header">
-                <h2>Patents Filed vs Granted (Year-wise)</h2>
-                <p className="chart-description">
-                  Stacked breakdown of innovation outputs across filing, granting, and publication stages.
-                </p>
+                <div>
+                  <p className="chart-description">
+                    Stacked breakdown of innovation outputs across filing, granting, and publication stages.
+                  </p>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={360}>
-                <BarChart data={patentTrendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#9ca3af" />
-                  <YAxis allowDecimals={false} stroke="#9ca3af" />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  {PATENT_STATUS_ORDER.map((status) => (
-                    <Bar
-                      key={status}
-                      dataKey={status}
-                      stackId="patents"
-                      fill={PATENT_COLORS[status]}
-                      radius={status === 'Published' ? [6, 6, 0, 0] : [0, 0, 0, 0]}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="chart-container">
+                <h3 className="chart-heading">Patents Filed vs Granted (Year-wise)</h3>
+                <ResponsiveContainer width="100%" height={360}>
+                  <BarChart data={patentTrendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" stroke="#9ca3af" />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" />
+                    <Tooltip formatter={(value) => formatNumber(value)} contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                    {PATENT_STATUS_ORDER.map((status) => (
+                      <Bar
+                        key={status}
+                        dataKey={status}
+                        stackId="patents"
+                        fill={PATENT_COLORS[status]}
+                        radius={status === 'Published' ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
 
               <div className="patent-summary-grid">
                 {patentOverall.map((item) => (
@@ -594,92 +656,90 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
               </div>
             </section>
 
-            <div className="dual-grid">
-              <section className="grievance-table-wrapper">
-                <h2>Key Research & Consultancy Projects</h2>
-                <p className="chart-description">
-                  Detailed snapshot of currently selected projects filtered by department, year, and status.
-                </p>
-                <div className="table-responsive">
-                  <table className="grievance-table">
-                    <thead>
+            <section className="grievance-table-wrapper">
+              <h2>Key Research & Consultancy Projects</h2>
+              <p className="chart-description">
+                Detailed snapshot of currently selected projects filtered by department, year, and status.
+              </p>
+              <div className="table-responsive icsr-table-scrollable">
+                <table className="grievance-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Principal Investigator</th>
+                      <th>Type</th>
+                      <th>Department</th>
+                      <th>Funding / Client</th>
+                      <th>Amount (₹)</th>
+                      <th>Status</th>
+                      <th>Timeline</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectList.length === 0 && (
                       <tr>
-                        <th>Title</th>
-                        <th>Principal Investigator</th>
-                        <th>Type</th>
-                        <th>Department</th>
-                        <th>Funding / Client</th>
-                        <th>Amount (₹)</th>
-                        <th>Status</th>
-                        <th>Timeline</th>
+                        <td colSpan={8}>No projects match the selected filters.</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {projectList.length === 0 && (
-                        <tr>
-                          <td colSpan={8}>No projects match the selected filters.</td>
-                        </tr>
-                      )}
-                      {projectList.map((project) => (
-                        <tr key={project.project_id}>
-                          <td>{project.project_title}</td>
-                          <td>{project.principal_investigator || '—'}</td>
-                          <td>{project.project_type}</td>
-                          <td>{project.department || '—'}</td>
-                          <td>{project.project_type === 'Consultancy' ? project.client_organization || '—' : project.funding_agency || '—'}</td>
-                          <td>{formatCurrency(project.amount_sanctioned || 0)}</td>
-                          <td>{project.status}</td>
-                          <td>
-                            {formatDate(project.start_date)} → {formatDate(project.end_date)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+                    )}
+                    {projectList.map((project) => (
+                      <tr key={project.project_id}>
+                        <td>{project.project_title}</td>
+                        <td>{project.principal_investigator || '—'}</td>
+                        <td>{project.project_type}</td>
+                        <td>{project.department || '—'}</td>
+                        <td>{project.project_type === 'Consultancy' ? project.client_organization || '—' : project.funding_agency || '—'}</td>
+                        <td>{formatCurrency(project.amount_sanctioned || 0)}</td>
+                        <td>{project.status}</td>
+                        <td>
+                          {formatDate(project.start_date)} → {formatDate(project.end_date)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-              <section className="grievance-table-wrapper">
-                <h2>Memoranda of Understanding (MoUs)</h2>
-                <p className="chart-description">Strategic collaborations powering research and innovation.</p>
-                <div className="table-responsive">
-                  <table className="grievance-table">
-                    <thead>
+            <section className="grievance-table-wrapper">
+              <h2>Memoranda of Understanding (MoUs)</h2>
+              <p className="chart-description">Strategic collaborations powering research and innovation.</p>
+              <div className="table-responsive icsr-table-scrollable">
+                <table className="grievance-table">
+                  <thead>
+                    <tr>
+                      <th>Partner</th>
+                      <th>Collaboration Focus</th>
+                      <th>Date Signed</th>
+                      <th>Validity</th>
+                      <th>Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mouList.length === 0 && (
                       <tr>
-                        <th>Partner</th>
-                        <th>Collaboration Focus</th>
-                        <th>Date Signed</th>
-                        <th>Validity</th>
-                        <th>Remarks</th>
+                        <td colSpan={5}>No MoUs found for the selected filters.</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {mouList.length === 0 && (
-                        <tr>
-                          <td colSpan={5}>No MoUs found for the selected filters.</td>
-                        </tr>
-                      )}
-                      {mouList.map((mou) => (
-                        <tr key={mou.mou_id}>
-                          <td>{mou.partner_name}</td>
-                          <td>{mou.collaboration_nature || '—'}</td>
-                          <td>{formatDate(mou.date_signed)}</td>
-                          <td>{formatDate(mou.validity_end)}</td>
-                          <td>{mou.remarks || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            </div>
+                    )}
+                    {mouList.map((mou) => (
+                      <tr key={mou.mou_id}>
+                        <td>{mou.partner_name}</td>
+                        <td>{mou.collaboration_nature || '—'}</td>
+                        <td>{formatDate(mou.date_signed)}</td>
+                        <td>{formatDate(mou.validity_end)}</td>
+                        <td>{mou.remarks || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
             <section className="grievance-table-wrapper">
               <h2>Patent Dossier</h2>
               <p className="chart-description">
                 End-to-end tracking of patent filings, grants, and publications emerging from ICSR efforts.
               </p>
-              <div className="table-responsive">
+              <div className="table-responsive icsr-table-scrollable">
                 <table className="grievance-table">
                   <thead>
                     <tr>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import InnovationSectionPublicView from './InnovationSectionPublicView';
 import {
   ResponsiveContainer,
   LineChart,
@@ -33,10 +34,13 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 function InnovationSection({ user }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
-  const [isPublicViewMode, setIsPublicViewMode] = useState(false);
+  const [showPublicView, setShowPublicView] = useState(false);
 
-  // Determine effective public view state: true if user is public (role 1) OR explicitly toggled
-  const isPublicView = user?.role_id === 1 || isPublicViewMode;
+  // 🔹 Get role_id safely
+  const roleId = user?.role_id;
+  const allowedRoles = [3, 8]; // Super Admin and Innovation
+  const isSuperAdmin = roleId === 3;
+  const isAllowed = isSuperAdmin || (allowedRoles && allowedRoles.includes(roleId));
 
   const [summary, setSummary] = useState({
     total_incubatees: 0,
@@ -200,33 +204,45 @@ function InnovationSection({ user }) {
       .slice(0, 8); // Top 8 sectors
   }, [sectorDistribution]);
 
+  // 🔹 MOVED AFTER ALL HOOKS: If public user → always show public view
+  if (roleId === 1) {
+    return <InnovationSectionPublicView user={user} />;
+  }
+
+  // 🔹 MOVED AFTER ALL HOOKS: If non-public user explicitly chooses public view
+  if (showPublicView) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(false)}
+            style={{ marginBottom: '1rem' }}
+          >
+            ← Back to Admin View
+          </button>
+
+          <InnovationSectionPublicView user={user} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container">
       <div className="page-content">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1>Innovation & Entrepreneurship</h1>
 
-          {/* Public View Toggle for Admins */}
-          {!isPublicView && user && user.role_id === 3 && (
+          {/* 🔹 Public view button for non-public users */}
+          <div style={{ marginBottom: '1rem' }}>
             <button
               className="upload-data-btn"
-              onClick={() => setIsPublicViewMode(true)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              onClick={() => setShowPublicView(true)}
             >
               View Public Page
             </button>
-          )}
-
-          {/* Back Button for Admins in Public Mode */}
-          {isPublicViewMode && user && user.role_id === 3 && (
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsPublicViewMode(false)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-            >
-              ← Back to Admin View
-            </button>
-          )}
+          </div>
         </div>
         <p>
           Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation)
@@ -258,18 +274,18 @@ function InnovationSection({ user }) {
         {/* Yearly Growth Chart */}
         <div className="chart-section">
           <div className="chart-header">
-            <h2>Year-wise Growth</h2>
             <p className="chart-description">Growth of incubatees, startups, and innovation projects over time.</p>
           </div>
           {yearlyChartData.length > 0 ? (
             <div className="chart-container">
+              <h3 className="chart-heading">Year-wise Growth</h3>
               <ResponsiveContainer width="100%" height={360}>
                 <LineChart data={yearlyChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                   <XAxis dataKey="year" stroke="#cbd5f5" />
                   <YAxis stroke="#cbd5f5" />
                   <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                   <Line type="monotone" dataKey="incubatees" name="Incubatees" stroke="#667eea" strokeWidth={3} />
                   <Line type="monotone" dataKey="startups" name="Startups" stroke="#764ba2" strokeWidth={2} />
                   <Line type="monotone" dataKey="innovationProjects" name="Innovation Projects" stroke="#43e97b" strokeWidth={2} />
@@ -284,11 +300,11 @@ function InnovationSection({ user }) {
         {/* Sector Distribution Chart */}
         <div className="chart-section">
           <div className="chart-header">
-            <h2>Sector-wise Innovation Distribution</h2>
             <p className="chart-description">Distribution of startups and innovation projects by sector.</p>
           </div>
           {sectorPieData.length > 0 ? (
             <div className="chart-container">
+              <h3 className="chart-heading">Sector-wise Innovation Distribution</h3>
               <ResponsiveContainer width="100%" height={360}>
                 <PieChart>
                   <Pie
@@ -305,7 +321,7 @@ function InnovationSection({ user }) {
                     ))}
                   </Pie>
                   <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -321,92 +337,95 @@ function InnovationSection({ user }) {
             <p className="chart-description">Search and filter through all startups and incubatees.</p>
           </div>
 
-          <div className="filter-panel">
-            <div className="filter-header">
-              <h3>Filters</h3>
-              <button className="clear-filters-btn" onClick={handleClearFilters}>
-                Clear Filters
-              </button>
-            </div>
-            <div className="filter-grid">
-              {isPublicView ? null : (user && user.role_id === 3 && (
-                <div className="filter-group" style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => setIsUploadModalOpen(true)}
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                  >
-                    Upload Startups
+          <div className="chart-section">
+            {/* Filter Panel */}
+            <div className="filter-panel">
+              <div className="filter-header">
+                <h3>Filters</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="clear-filters-btn" onClick={handleClearFilters}>
+                    Clear Filters
                   </button>
+                  {/* Only Super Admin can upload */}
+                  {isSuperAdmin && (
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => setIsUploadModalOpen(true)}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Startups
+                    </button>
+                  )}
                 </div>
-              ))}
-              <div className="filter-group">
-                <label>Status</label>
-                <select
-                  className="filter-select"
-                  value={filters.status}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                >
-                  <option value="All">All</option>
-                  {filterOptions.statuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
               </div>
-              <div className="filter-group">
-                <label>Sector</label>
-                <select
-                  className="filter-select"
-                  value={filters.sector}
-                  onChange={(e) => handleFilterChange('sector', e.target.value)}
-                >
-                  <option value="All">All</option>
-                  {filterOptions.sectors.map(sector => (
-                    <option key={sector} value={sector}>{sector}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Year</label>
-                <select
-                  className="filter-select"
-                  value={filters.year}
-                  onChange={(e) => handleFilterChange('year', e.target.value)}
-                >
-                  <option value="All">All Years</option>
-                  {filterOptions.years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>
+              <div className="filter-grid">
+                <div className="filter-group">
+                  <label>Status</label>
+                  <select
+                    className="filter-select"
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.statuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Sector</label>
+                  <select
+                    className="filter-select"
+                    value={filters.sector}
+                    onChange={(e) => handleFilterChange('sector', e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {filterOptions.sectors.map(sector => (
+                      <option key={sector} value={sector}>{sector}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Year</label>
+                  <select
+                    className="filter-select"
+                    value={filters.year}
+                    onChange={(e) => handleFilterChange('year', e.target.value)}
+                  >
+                    <option value="All">All Years</option>
+                    {filterOptions.years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={filters.iitpkd_only}
+                      onChange={(e) => handleFilterChange('iitpkd_only', e.target.checked)}
+                      style={{ marginRight: '0.5rem' }}
+                    />
+                    IIT Palakkad Only
+                  </label>
+                </div>
+                <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Search</label>
                   <input
-                    type="checkbox"
-                    checked={filters.iitpkd_only}
-                    onChange={(e) => handleFilterChange('iitpkd_only', e.target.checked)}
-                    style={{ marginRight: '0.5rem' }}
+                    type="text"
+                    placeholder="Search by startup name, founder, or innovation area..."
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                    className="filter-select"
+                    style={{ width: '100%' }}
                   />
-                  IIT Palakkad Only
-                </label>
-              </div>
-              <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Search</label>
-                <input
-                  type="text"
-                  placeholder="Search by startup name, founder, or innovation area..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="filter-select"
-                  style={{ width: '100%' }}
-                />
+                </div>
               </div>
             </div>
-          </div>
 
           {startupsList.length > 0 ? (
             <>
-              <div className="table-responsive">
+              <div className="table-responsive icsr-table-scrollable">
                 <table className="grievance-table">
                   <thead>
                     <tr>
@@ -481,6 +500,7 @@ function InnovationSection({ user }) {
           ) : (
             <div className="no-data">No startups found for the selected filters.</div>
           )}
+          </div>
         </div>
       </div>
 
@@ -489,10 +509,9 @@ function InnovationSection({ user }) {
         onClose={() => setIsUploadModalOpen(false)}
         tableName="startups"
         token={token}
-      />
+        />
     </div >
   );
 }
 
 export default InnovationSection;
-

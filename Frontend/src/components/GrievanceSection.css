@@ -5,6 +5,12 @@
   margin: 2rem 0;
 }
 
+/* ICSR Summary Cards - Single row layout */
+.icsr-summary-cards {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  min-width: 100%;
+}
+
 .summary-card {
   background-color: #2a2a2a;
   border: 1px solid #444;
@@ -92,6 +98,138 @@
   background-color: rgba(248, 178, 37, 0.87);
 }
 
+/* ICC Yearly Table - Scrollable with fixed height for 5 rows */
+/* Each row is approximately 50px (padding 0.85rem top/bottom + content) */
+/* Header row: ~50px, 5 data rows: ~250px, Total: ~300px */
+.icc-yearly-table-scrollable {
+  height: 300px !important; /* Fixed height for exactly 5 rows + header */
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  border-radius: 6px;
+  position: relative;
+  display: block;
+}
+
+.icc-yearly-table-scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.icc-yearly-table-scrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.icc-yearly-table-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(248, 178, 37, 0.5);
+  border-radius: 4px;
+}
+
+.icc-yearly-table-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 178, 37, 0.7);
+}
+
+/* Sticky header for ICC yearly table */
+.icc-yearly-table-scrollable .grievance-table {
+  margin: 0;
+}
+
+.icc-yearly-table-scrollable .grievance-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(248, 178, 37, 0.87);
+}
+
+/* IAR Departmental Outcome Table - Scrollable with fixed height for 5 rows */
+/* Each row is approximately 50px (padding 0.85rem top/bottom + content) */
+/* Header row: ~50px, 5 data rows: ~250px, Total: ~300px */
+.iar-outcome-table-scrollable {
+  height: 300px !important; /* Fixed height for exactly 5 rows + header */
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  border-radius: 6px;
+  position: relative;
+  display: block;
+}
+
+.iar-outcome-table-scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.iar-outcome-table-scrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.iar-outcome-table-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(248, 178, 37, 0.5);
+  border-radius: 4px;
+}
+
+.iar-outcome-table-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 178, 37, 0.7);
+}
+
+/* Sticky header for IAR outcome table */
+.iar-outcome-table-scrollable .grievance-table {
+  margin: 0;
+}
+
+.iar-outcome-table-scrollable .grievance-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(248, 178, 37, 0.87);
+}
+
+/* ICSR Tables - Scrollable with fixed height for 10 rows */
+/* Each row is approximately 50px (padding 0.85rem top/bottom + content) */
+/* Header row: ~50px, 10 data rows: ~500px, Total: ~550px */
+.icsr-table-scrollable {
+  height: 550px !important; /* Fixed height for exactly 10 rows + header */
+  max-height: 550px !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  border-radius: 6px;
+  position: relative;
+  display: block;
+}
+
+.icsr-table-scrollable::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.icsr-table-scrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.icsr-table-scrollable::-webkit-scrollbar-thumb {
+  background: rgba(248, 178, 37, 0.5);
+  border-radius: 4px;
+}
+
+.icsr-table-scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 178, 37, 0.7);
+}
+
+/* Sticky header for ICSR tables */
+.icsr-table-scrollable .grievance-table {
+  margin: 0;
+}
+
+.icsr-table-scrollable .grievance-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(248, 178, 37, 0.87);
+}
+
 .grievance-table th,
 .grievance-table td {
   padding: 0.85rem 1rem;
@@ -145,6 +283,10 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
+  .icsr-summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .chart-section,
   .grievance-table-wrapper {
     padding: 1.5rem;
@@ -158,6 +300,10 @@
 @media (max-width: 480px) {
   .summary-cards {
     grid-template-columns: 1fr;
+  }
+
+  .icsr-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .summary-card {

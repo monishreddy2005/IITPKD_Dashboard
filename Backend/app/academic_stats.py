@@ -332,3 +332,140 @@ def get_student_strength(current_user_id):
             cur.close()
             conn.close()
 
+@academic_bp.route('/stats/gender-trends', methods=['GET'])
+@token_required
+def get_gender_trends(current_user_id):
+    """Fetches gender distribution grouped by year of admission."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+        
+        # Get filter parameters (excluding yearofadmission since we group by it)
+        filters = {
+            'program': request.args.get('program', type=str),
+            'batch': request.args.get('batch', type=str),
+            'branch': request.args.get('branch', type=str),
+            'department': request.args.get('department', type=str),
+            'category': request.args.get('category', type=str),
+            'pwd': request.args.get('pwd', type=str)
+        }
+        
+        # Normalize PWD
+        if filters['pwd'] == 'true':
+            filters['pwd'] = True
+        elif filters['pwd'] == 'false':
+            filters['pwd'] = False
+        elif filters['pwd'] == '' or filters['pwd'] is None:
+            filters['pwd'] = None
+            
+        where_clause, params = build_filter_query(filters)
+        
+        # Query: Group by Year and Gender
+        query = f"""
+            SELECT yearofadmission, gender, COUNT(*) as count
+            FROM student
+            {where_clause}
+            GROUP BY yearofadmission, gender
+            ORDER BY yearofadmission;
+        """
+        
+        cur = conn.cursor()
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        # Process results into: { year: { Male: X, Female: Y, ... } }
+        year_data = {}
+        for row in results:
+            year = row['yearofadmission']
+            if year is None: continue
+            
+            gender = row['gender']
+            count = row['count']
+            
+            if year not in year_data:
+                year_data[year] = {'year': year, 'Male': 0, 'Female': 0, 'Transgender': 0}
+            
+            if gender in year_data[year]:
+                year_data[year][gender] = count
+                
+        # Convert to list and sort by year
+        data = sorted(list(year_data.values()), key=lambda x: x['year'])
+        
+        return jsonify({'data': data}), 200
+        
+    except Exception as e:
+        print(f"Error fetching gender trends: {e}")
+        return jsonify({'message': 'An error occurred while fetching gender trends.'}), 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+@academic_bp.route('/stats/program-trends', methods=['GET'])
+@token_required
+def get_program_trends(current_user_id):
+    """Fetches student strength by program grouped by year of admission."""
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+            
+        # Get filter parameters
+        filters = {
+            'category': request.args.get('category', type=str),
+            'state': request.args.get('state', type=str)
+        }
+        
+        where_clause, params = build_filter_query(filters)
+        
+        # Query: Group by Year and Program
+        query = f"""
+            SELECT yearofadmission, program, COUNT(*) as count
+            FROM student
+            {where_clause}
+            GROUP BY yearofadmission, program
+            ORDER BY yearofadmission;
+        """
+        
+        cur = conn.cursor()
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        # Process results into: { year: { year: 2023, B.Tech: 10, M.Tech: 5... } }
+        year_data = {}
+        all_programs = set()
+        
+        for row in results:
+            year = row['yearofadmission']
+            if year is None: continue
+            
+            program = row['program']
+            count = row['count']
+            all_programs.add(program)
+            
+            if year not in year_data:
+                year_data[year] = {'year': year}
+            
+            year_data[year][program] = count
+            
+        # Ensure all programs exist in each year object (fill with 0)
+        final_data = []
+        for year in sorted(year_data.keys()):
+            entry = year_data[year]
+            for prog in all_programs:
+                if prog not in entry:
+                    entry[prog] = 0
+            final_data.append(entry)
+            
+        return jsonify({'data': final_data, 'programs': list(all_programs)}), 200
+        
+    except Exception as e:
+        print(f"Error fetching program trends: {e}")
+        return jsonify({'message': 'An error occurred while fetching program trends.'}), 500
+    finally:
+        if conn:
+            cur.close()
+            conn.close()

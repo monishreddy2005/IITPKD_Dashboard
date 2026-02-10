@@ -6,7 +6,8 @@ import {
   fetchStaffCount,
   fetchGenderDistribution,
   fetchCategoryDistribution,
-  fetchDepartmentBreakdown
+  fetchDepartmentBreakdown,
+  fetchFacultyGenderLastFiveYears
 } from '../services/administrativeStats';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
@@ -14,9 +15,16 @@ import './AcademicSection.css';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
 const GENDER_COLORS = ['#667eea', '#764ba2', '#f093fb'];
+const FACULTY_GENDER_COLORS = {
+  Male: '#4f8ef7',
+  Female: '#f5b400',
+  Other: '#e85a4f',
+  Transgender: '#5bbfad'
+};
 
 function AdministrativeSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('employee');
   const [filterOptions, setFilterOptions] = useState({
     department: [],
     designation: [],
@@ -73,6 +81,11 @@ function AdministrativeSection({ user, isPublicView = false }) {
   const [departmentLoading, setDepartmentLoading] = useState(false);
   const [departmentError, setDepartmentError] = useState(null);
   const [departmentTotal, setDepartmentTotal] = useState(0);
+
+  // Faculty gender over last five years
+  const [facultyGenderSeries, setFacultyGenderSeries] = useState([]);
+  const [facultyGenderLoading, setFacultyGenderLoading] = useState(false);
+  const [facultyGenderError, setFacultyGenderError] = useState(null);
 
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
@@ -207,6 +220,26 @@ function AdministrativeSection({ user, isPublicView = false }) {
     loadDepartmentData();
   }, [filters, employeeType, token]);
 
+  // Fetch faculty gender trend (last five years)
+  useEffect(() => {
+    const loadFacultyGenderTrend = async () => {
+      if (!token) return;
+      try {
+        setFacultyGenderLoading(true);
+        setFacultyGenderError(null);
+        const result = await fetchFacultyGenderLastFiveYears(token);
+        setFacultyGenderSeries(result.data || []);
+      } catch (err) {
+        console.error('Error loading faculty gender trend:', err);
+        setFacultyGenderError(err.message || 'Failed to load faculty gender trend.');
+      } finally {
+        setFacultyGenderLoading(false);
+      }
+    };
+
+    loadFacultyGenderTrend();
+  }, [token]);
+
   const handleFilterChange = (filterName, value) => {
     setFilters(prev => ({
       ...prev,
@@ -263,17 +296,18 @@ function AdministrativeSection({ user, isPublicView = false }) {
   };
 
   // Custom Legend for Pie Chart
+  // Custom Legend for Pie Chart
   const CustomLegend = ({ payload, data }) => {
     return (
-      <div className="custom-legend">
+      <div className="custom-legend" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '15px', marginTop: '20px' }}>
         {payload.map((entry, index) => (
-          <div key={index} className="legend-item">
+          <div key={index} className="legend-item" style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <span
               className="legend-color"
-              style={{ backgroundColor: entry.color }}
+              style={{ backgroundColor: entry.color, width: '12px', height: '12px', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}
             ></span>
-            <span className="legend-label">{entry.value}</span>
-            <span className="legend-value">{data[entry.value] || 0}</span>
+            <span className="legend-label" style={{ fontWeight: '600', color: '#495057', marginRight: '8px' }}>{entry.value}</span>
+            <span className="legend-value" style={{ fontWeight: 'bold', color: '#212529' }}>{data[entry.value] || 0}</span>
           </div>
         ))}
       </div>
@@ -306,127 +340,189 @@ function AdministrativeSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {/* Filter Panel */}
-        <div className="filter-panel">
-          <div className="filter-header">
-            <h2>Filters</h2>
-            <button className="clear-filters-btn" onClick={handleClearFilters}>
-              Clear All Filters
-            </button>
-            {isPublicView ? null : (user && user.role_id === 3 && (
-              <button
-                className="upload-data-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-                style={{ marginLeft: '1rem', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-              >
-                Upload Data
-              </button>
-            ))}
-          </div>
-
-          <div className="filter-grid">
-            {/* Employee Type */}
-            <div className="filter-group">
-              <label htmlFor="employee-type-filter">Employee Type</label>
-              <select
-                id="employee-type-filter"
-                value={employeeType}
-                onChange={(e) => setEmployeeType(e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                <option value="Faculty">Faculty</option>
-                <option value="Staff">Staff</option>
-              </select>
-            </div>
-
-            {/* Department */}
-            <div className="filter-group">
-              <label htmlFor="department-filter">Department</label>
-              <select
-                id="department-filter"
-                value={filters.department || 'All'}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.department.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Designation */}
-            <div className="filter-group">
-              <label htmlFor="designation-filter">Designation</label>
-              <select
-                id="designation-filter"
-                value={filters.designation || 'All'}
-                onChange={(e) => handleFilterChange('designation', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.designation.map(desig => (
-                  <option key={desig} value={desig}>{desig}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Gender */}
-            <div className="filter-group">
-              <label htmlFor="gender-filter">Gender</label>
-              <select
-                id="gender-filter"
-                value={filters.gender || 'All'}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.gender.map(gender => (
-                  <option key={gender} value={gender}>{gender}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category */}
-            <div className="filter-group">
-              <label htmlFor="category-filter">Category</label>
-              <select
-                id="category-filter"
-                value={filters.category || 'All'}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                {filterOptions.category.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Active Status */}
-            <div className="filter-group">
-              <label htmlFor="active-filter">Status</label>
-              <select
-                id="active-filter"
-                value={filters.isactive === true ? 'true' : filters.isactive === false ? 'false' : 'All'}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  handleFilterChange('isactive', value === 'true' ? true : value === 'false' ? false : null);
-                }}
-                className="filter-select"
-              >
-                <option value="All">All</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
+        {/* Faculty Gender Trend (Last 5 Years) */}
+        <div className="chart-section">
+          <div className="chart-header">
+            <div>
+              <h2>Faculty Gender Trend (Last 5 Years)</h2>
+              <p className="chart-description">
+                Stacked view of faculty counts by gender, based on employment history overlap with each year.
+              </p>
             </div>
           </div>
+
+          {facultyGenderLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner" />
+              <p>Loading faculty gender trend...</p>
+            </div>
+          ) : facultyGenderError ? (
+            <div className="error-message">{facultyGenderError}</div>
+          ) : facultyGenderSeries.length === 0 ? (
+            <div className="no-data">No faculty records available to display.</div>
+          ) : (
+            <div className="chart-container">
+              <h3 className="chart-heading">Gender-wise Faculty Count</h3>
+              <ResponsiveContainer width="100%" height={360}>
+                <BarChart data={facultyGenderSeries} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis
+                    dataKey="year_label"
+                    angle={-12}
+                    textAnchor="end"
+                    height={70}
+                    stroke="#000000"
+                    tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                    label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#000000', fontSize: 14, fontWeight: 'bold' } }}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    stroke="#000000"
+                    tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                    label={{ value: 'Faculty Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 14, fontWeight: 'bold' } }}
+                  />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ paddingTop: '12px', fontWeight: 'bold' }} />
+                  <Bar dataKey="Male" stackId="gender" name="Male" fill={FACULTY_GENDER_COLORS.Male} />
+                  <Bar dataKey="Female" stackId="gender" name="Female" fill={FACULTY_GENDER_COLORS.Female} />
+                  <Bar dataKey="Other" stackId="gender" name="Other" fill={FACULTY_GENDER_COLORS.Other} />
+                  <Bar dataKey="Transgender" stackId="gender" name="Transgender" fill={FACULTY_GENDER_COLORS.Transgender} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         {/* Faculty by Department and Designation */}
         <div className="chart-section">
-          <h2 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>Faculty Count by Department and Designation</h2>
+          {/* Filter Panel */}
+          <div className="filter-panel">
+            <div className="filter-header">
+              <h3>Filters</h3>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button className="clear-filters-btn" onClick={handleClearFilters}>
+                  Clear All Filters
+                </button>
+                {isPublicView ? null : (user && user.role_id === 3 && (
+                  <>
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => { setActiveUploadTable('employee'); setIsUploadModalOpen(true); }}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Employees
+                    </button>
+                    <button
+                      className="upload-data-btn"
+                      onClick={() => { setActiveUploadTable('employment_history'); setIsUploadModalOpen(true); }}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
+                    >
+                      Upload Employment History
+                    </button>
+                  </>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-grid">
+              {/* Employee Type */}
+              <div className="filter-group">
+                <label htmlFor="employee-type-filter">Employee Type</label>
+                <select
+                  id="employee-type-filter"
+                  value={employeeType}
+                  onChange={(e) => setEmployeeType(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  <option value="Faculty">Faculty</option>
+                  <option value="Staff">Staff</option>
+                </select>
+              </div>
+
+              {/* Department */}
+              <div className="filter-group">
+                <label htmlFor="department-filter">Department</label>
+                <select
+                  id="department-filter"
+                  value={filters.department || 'All'}
+                  onChange={(e) => handleFilterChange('department', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.department.map(dept => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Designation */}
+              <div className="filter-group">
+                <label htmlFor="designation-filter">Designation</label>
+                <select
+                  id="designation-filter"
+                  value={filters.designation || 'All'}
+                  onChange={(e) => handleFilterChange('designation', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.designation.map(desig => (
+                    <option key={desig} value={desig}>{desig}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Gender */}
+              <div className="filter-group">
+                <label htmlFor="gender-filter">Gender</label>
+                <select
+                  id="gender-filter"
+                  value={filters.gender || 'All'}
+                  onChange={(e) => handleFilterChange('gender', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.gender.map(gender => (
+                    <option key={gender} value={gender}>{gender}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category */}
+              <div className="filter-group">
+                <label htmlFor="category-filter">Category</label>
+                <select
+                  id="category-filter"
+                  value={filters.category || 'All'}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  {filterOptions.category.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Active Status */}
+              <div className="filter-group">
+                <label htmlFor="active-filter">Status</label>
+                <select
+                  id="active-filter"
+                  value={filters.isactive === true ? 'true' : filters.isactive === false ? 'false' : 'All'}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    handleFilterChange('isactive', value === 'true' ? true : value === 'false' ? false : null);
+                  }}
+                  className="filter-select"
+                >
+                  <option value="All">All</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
           {facultyLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
@@ -436,42 +532,55 @@ function AdministrativeSection({ user, isPublicView = false }) {
             <>
               {facultyTotal > 0 ? (
                 <>
-                  <div className="bar-chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis
-                          dataKey="name"
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                          stroke="#e0e0e0"
-                          tick={{ fill: '#e0e0e0', fontSize: 12 }}
-                        />
-                        <YAxis
-                          stroke="#e0e0e0"
-                          tick={{ fill: '#e0e0e0', fontSize: 12 }}
-                        />
-                        <Tooltip
-                          content={<CustomTooltip />}
-                          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
-                        />
-                        <Legend
-                          wrapperStyle={{ paddingTop: '20px' }}
-                          iconType="rect"
-                          formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
-                        />
-                        {designations.map((desig, index) => (
-                          <Bar
-                            key={desig}
-                            dataKey={desig}
-                            stackId="a"
-                            fill={COLORS[index % COLORS.length]}
-                            radius={index === designations.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
+<div className="bar-chart-container">
+                    <h3 className="chart-heading">Faculty Count by Department and Designation</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+                        <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#000000' }}>Department</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={450}>
+                        <BarChart data={facultyChartData} margin={{ top: 20, right: 30, left: 60, bottom: 120 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis
+                            dataKey="name"
+                            angle={-45}
+                            textAnchor="end"
+                            height={110}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+                            interval={0}
                           />
+                          <YAxis
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Faculty', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <Tooltip
+                            content={<CustomTooltip />}
+                            cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+                          />
+                          {designations.map((desig, index) => (
+                            <Bar
+                              key={desig}
+                              dataKey={desig}
+                              stackId="a"
+                              fill={COLORS[index % COLORS.length]}
+                              radius={index === designations.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
+                            />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px', marginTop: '10px', padding: '0 20px' }}>
+                        {designations.map((desig, index) => (
+                          <div key={desig} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                            <span
+                              style={{ backgroundColor: COLORS[index % COLORS.length], width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}
+                            ></span>
+                            <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>{desig}</span>
+                          </div>
                         ))}
-                      </BarChart>
-                    </ResponsiveContainer>
+                      </div>
+                    </div>
                   </div>
                   <div className="chart-info">
                     <div className="total-count">
@@ -629,20 +738,23 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 {categoryTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
+                      <h3 className="chart-heading">Category Distribution</h3>
                       <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={categoryChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                        <BarChart data={categoryChartData} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                           <XAxis
                             dataKey="name"
                             angle={-45}
                             textAnchor="end"
                             height={100}
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Category', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <YAxis
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                           />
                           <Tooltip
                             content={<CustomTooltip total={categoryTotal} />}
@@ -693,39 +805,68 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 {departmentTotal > 0 ? (
                   <>
                     <div className="bar-chart-container">
-                      <ResponsiveContainer width="100%" height={500}>
-                        <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis
-                            dataKey="name"
-                            angle={-45}
-                            textAnchor="end"
-                            height={120}
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 11 }}
-                          />
-                          <YAxis
-                            stroke="#e0e0e0"
-                            tick={{ fill: '#e0e0e0', fontSize: 12 }}
-                          />
-                          <Tooltip
-                            content={<CustomTooltip total={departmentTotal} />}
-                            cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
-                          />
-                          <Legend
-                            wrapperStyle={{ paddingTop: '20px' }}
-                            iconType="rect"
-                            formatter={(value) => <span style={{ color: '#e0e0e0' }}>{value}</span>}
-                          />
-                          <Bar dataKey="Faculty_Male" stackId="faculty" fill="#667eea" />
-                          <Bar dataKey="Faculty_Female" stackId="faculty" fill="#764ba2" />
-                          <Bar dataKey="Faculty_Other" stackId="faculty" fill="#f093fb" />
-                          <Bar dataKey="Staff_Male" stackId="staff" fill="#4facfe" />
-                          <Bar dataKey="Staff_Female" stackId="staff" fill="#00f2fe" />
-                          <Bar dataKey="Staff_Other" stackId="staff" fill="#43e97b" radius={[0, 0, 8, 8]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+  <h3 className="chart-heading">Department Breakdown</h3>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px' }}>
+      <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#000000' }}>Department</span>
+    </div>
+    <ResponsiveContainer width="100%" height={500}>
+      <BarChart data={departmentData} margin={{ top: 20, right: 30, left: 60, bottom: 120 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+        <XAxis
+          dataKey="name"
+          angle={-45}
+          textAnchor="end"
+          height={110}
+          stroke="#000000"
+          tick={{ fill: '#000000', fontSize: 13, fontWeight: 'bold' }}
+          interval={0}
+        />
+        <YAxis
+          stroke="#000000"
+          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+          label={{ value: 'Number of Employees', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+        />
+        <Tooltip
+          content={<CustomTooltip total={departmentTotal} />}
+          cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
+        />
+        <Bar dataKey="Faculty_Male" stackId="faculty" fill="#667eea" name="Faculty Male" />
+        <Bar dataKey="Faculty_Female" stackId="faculty" fill="#764ba2" name="Faculty Female" />
+        <Bar dataKey="Faculty_Other" stackId="faculty" fill="#f093fb" name="Faculty Other" />
+        <Bar dataKey="Staff_Male" stackId="staff" fill="#4facfe" name="Staff Male" />
+        <Bar dataKey="Staff_Female" stackId="staff" fill="#00f2fe" name="Staff Female" />
+        <Bar dataKey="Staff_Other" stackId="staff" fill="#43e97b" radius={[0, 0, 8, 8]} name="Staff Other" />
+      </BarChart>
+    </ResponsiveContainer>
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '15px', marginTop: '10px', padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#667eea', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Male</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#764ba2', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Female</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#f093fb', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Faculty Other</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#4facfe', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Male</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#00f2fe', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Female</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <span style={{ backgroundColor: '#43e97b', width: '16px', height: '16px', borderRadius: '3px', display: 'inline-block', marginRight: '8px' }}></span>
+        <span style={{ fontWeight: '600', color: '#212529', fontSize: '14px' }}>Staff Other</span>
+      </div>
+    </div>
+  </div>
+</div>
                     <div className="chart-info">
                       <div className="total-count">
                         <strong>Total Employees: {departmentTotal}</strong>
@@ -741,16 +882,16 @@ function AdministrativeSection({ user, isPublicView = false }) {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Upload Modal */}
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName="employee"
-        token={token}
-      />
-    </div >
+        {/* Upload Modal */}
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName={activeUploadTable}
+          token={token}
+        />
+      </div>
+    </div>
   );
 }
 

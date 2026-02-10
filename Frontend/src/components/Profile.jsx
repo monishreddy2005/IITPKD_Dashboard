@@ -50,19 +50,6 @@ function Profile({ user }) {
                 </div>
               )}
             </div>
-            
-            {/* Upload Data Option - Only visible to role_id 2 or 3 */}
-            {canUploadData && (
-              <div className="profile-actions">
-                <button 
-                  className="upload-data-btn"
-                  onClick={handleUploadClick}
-                >
-                  Upload Data
-                </button>
-              </div>
-            )}
-
             {/* ✅ ADDITION: Create User - Only Super Admin */}
             {isAdmin && (
               <div className="profile-actions">

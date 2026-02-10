@@ -77,7 +77,9 @@ function UbaSection({ user, isPublicView = false }) {
   };
 
   if (loading && projects.length === 0) {
-    return (
+    return isPublicView ? (
+      <p>Loading...</p>
+    ) : (
       <div className="page-container">
         <div className="page-content">
           <h1>UBA (Unnat Bharat Abhiyan)</h1>
@@ -88,7 +90,9 @@ function UbaSection({ user, isPublicView = false }) {
   }
 
   if (error) {
-    return (
+    return isPublicView ? (
+      <p className="error-message">{error}</p>
+    ) : (
       <div className="page-container">
         <div className="page-content">
           <h1>UBA (Unnat Bharat Abhiyan)</h1>
@@ -98,112 +102,105 @@ function UbaSection({ user, isPublicView = false }) {
     );
   }
 
-  return (
-    <div className="page-container">
-      <div className="page-content">
-        {isPublicView ? (
-          <h1>UBA (Unnat Bharat Abhiyan)</h1>
-        ) : (
-          <h1>UBA (Unnat Bharat Abhiyan) – Faculty Coordinator</h1>
-        )}
+  const content = (
+    <>
+      {!isPublicView && <h1>UBA (Unnat Bharat Abhiyan) – Faculty Coordinator</h1>}
 
-
-        {isPublicView ? null : (user && user.role_id === 3 && (
-          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => { setActiveUploadTable('uba_projects'); setIsUploadModalOpen(true); }}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-            >
-              Upload Projects
-            </button>
-            <button
-              className="upload-data-btn"
-              onClick={() => { setActiveUploadTable('uba_events'); setIsUploadModalOpen(true); }}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-            >
-              Upload Events
-            </button>
-          </div>
-        ))}
-
-        {/* Impact Summary */}
-        <div className="summary-grid">
-          <div className="summary-card">
-            <h3>Total Projects</h3>
-            <p className="summary-value">{formatNumber(summary.total_projects)}</p>
-          </div>
-          <div className="summary-card">
-            <h3>Total Events</h3>
-            <p className="summary-value">{formatNumber(summary.total_events)}</p>
-          </div>
+      {isPublicView ? null : (user && user.role_id === 3 && (
+        <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <button
+            className="upload-data-btn"
+            onClick={() => { setActiveUploadTable('uba_projects'); setIsUploadModalOpen(true); }}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+          >
+            Upload Projects
+          </button>
+          <button
+            className="upload-data-btn"
+            onClick={() => { setActiveUploadTable('uba_events'); setIsUploadModalOpen(true); }}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+          >
+            Upload Events
+          </button>
         </div>
+      ))}
 
-        {/* Projects List */}
-        <div className="chart-section">
-          <h2>UBA Projects</h2>
-          <div className="projects-grid">
-            {projects.length === 0 ? (
-              <p>No projects found</p>
-            ) : (
-              projects.map((project) => (
-                <div key={project.project_id} className="project-card">
-                  <h3>{project.project_title}</h3>
-                  <p><strong>Coordinator:</strong> {project.coordinator_name}</p>
-                  <p><strong>Status:</strong> {project.project_status}</p>
-                  {project.start_date && (
-                    <p><strong>Start Date:</strong> {new Date(project.start_date).toLocaleDateString()}</p>
-                  )}
-                  {project.end_date && (
-                    <p><strong>End Date:</strong> {new Date(project.end_date).toLocaleDateString()}</p>
-                  )}
-                  <p><strong>Events:</strong> {project.event_count || 0}</p>
-                  {project.intervention_description && (
-                    <p><strong>Description:</strong> {project.intervention_description}</p>
-                  )}
-                  {project.collaboration_partners && (
-                    <p><strong>Partners:</strong> {project.collaboration_partners}</p>
-                  )}
-                  <button
-                    onClick={() => handleProjectClick(project.project_id)}
-                    className="view-events-btn"
-                  >
-                    {selectedProject === project.project_id ? 'Hide Events' : 'View Events'}
-                  </button>
+      {/* Impact Summary */}
+      <div className="summary-grid">
+        <div className="summary-card">
+          <h3>Total Projects</h3>
+          <p className="summary-value">{formatNumber(summary.total_projects)}</p>
+        </div>
+        <div className="summary-card">
+          <h3>Total Events</h3>
+          <p className="summary-value">{formatNumber(summary.total_events)}</p>
+        </div>
+      </div>
 
-                  {/* Events for this project */}
-                  {selectedProject === project.project_id && projectEvents.length > 0 && (
-                    <div className="project-events">
-                      <h4>Events</h4>
-                      {projectEvents.map((event) => (
-                        <div key={event.event_id} className="event-item">
-                          <h5>{event.event_title}</h5>
-                          <p><strong>Type:</strong> {event.event_type || '-'}</p>
-                          <p><strong>Date:</strong> {new Date(event.event_date).toLocaleDateString()}</p>
-                          {event.location && <p><strong>Location:</strong> {event.location}</p>}
-                          {event.description && <p>{event.description}</p>}
-                          {event.photos_url && (
-                            <p>
-                              <a href={event.photos_url} target="_blank" rel="noopener noreferrer">
-                                View Photos
-                              </a>
-                            </p>
-                          )}
-                          {event.brochure_url && (
-                            <p>
-                              <a href={event.brochure_url} target="_blank" rel="noopener noreferrer">
-                                View Brochure
-                              </a>
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+      {/* Projects List */}
+      <div className="chart-section">
+        <h2>UBA Projects</h2>
+        <div className="projects-grid">
+          {projects.length === 0 ? (
+            <p>No projects found</p>
+          ) : (
+            projects.map((project) => (
+              <div key={project.project_id} className="project-card">
+                <h3>{project.project_title}</h3>
+                <p><strong>Coordinator:</strong> {project.coordinator_name}</p>
+                <p><strong>Status:</strong> {project.project_status}</p>
+                {project.start_date && (
+                  <p><strong>Start Date:</strong> {new Date(project.start_date).toLocaleDateString()}</p>
+                )}
+                {project.end_date && (
+                  <p><strong>End Date:</strong> {new Date(project.end_date).toLocaleDateString()}</p>
+                )}
+                <p><strong>Events:</strong> {project.event_count || 0}</p>
+                {project.intervention_description && (
+                  <p><strong>Description:</strong> {project.intervention_description}</p>
+                )}
+                {project.collaboration_partners && (
+                  <p><strong>Partners:</strong> {project.collaboration_partners}</p>
+                )}
+                <button
+                  onClick={() => handleProjectClick(project.project_id)}
+                  className="view-events-btn"
+                >
+                  {selectedProject === project.project_id ? 'Hide Events' : 'View Events'}
+                </button>
+
+                {/* Events for this project */}
+                {selectedProject === project.project_id && projectEvents.length > 0 && (
+                  <div className="project-events">
+                    <h4>Events</h4>
+                    {projectEvents.map((event) => (
+                      <div key={event.event_id} className="event-item">
+                        <h5>{event.event_title}</h5>
+                        <p><strong>Type:</strong> {event.event_type || '-'}</p>
+                        <p><strong>Date:</strong> {new Date(event.event_date).toLocaleDateString()}</p>
+                        {event.location && <p><strong>Location:</strong> {event.location}</p>}
+                        {event.description && <p>{event.description}</p>}
+                        {event.photos_url && (
+                          <p>
+                            <a href={event.photos_url} target="_blank" rel="noopener noreferrer">
+                              View Photos
+                            </a>
+                          </p>
+                        )}
+                        {event.brochure_url && (
+                          <p>
+                            <a href={event.brochure_url} target="_blank" rel="noopener noreferrer">
+                              View Brochure
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -213,9 +210,22 @@ function UbaSection({ user, isPublicView = false }) {
         tableName={activeUploadTable}
         token={token}
       />
+    </>
+  );
+
+  // If public view, return content without wrappers
+  if (isPublicView) {
+    return content;
+  }
+
+  // If not public view, wrap in page-container and page-content
+  return (
+    <div className="page-container">
+      <div className="page-content">
+        {content}
+      </div>
     </div>
   );
 }
 
 export default UbaSection;
-
