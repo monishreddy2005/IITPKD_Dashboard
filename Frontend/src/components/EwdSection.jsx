@@ -48,6 +48,7 @@ function EwdSection({ user, isPublicView = false }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeView, setActiveView] = useState('electricity'); // 'electricity' | 'perCapita' | 'environment'
 
   const token = localStorage.getItem('authToken');
 
@@ -264,188 +265,218 @@ function EwdSection({ user, isPublicView = false }) {
                 </div>
               </div>
             )}
+            {/* View selector for different EWD charts */}
+            <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'electricity' ? 'active' : ''}`}
+                onClick={() => setActiveView('electricity')}
+              >
+                Annual Electricity
+              </button>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'perCapita' ? 'active' : ''}`}
+                onClick={() => setActiveView('perCapita')}
+              >
+                Per Capita Trends
+              </button>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'environment' ? 'active' : ''}`}
+                onClick={() => setActiveView('environment')}
+              >
+                Environmental Summary
+              </button>
+            </div>
 
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Institution-wide electricity usage (kWh) recorded by EWD each financial year.
-                  </p>
-                </div>
-              </div>
-
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No EWD records available.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Annual Electricity Consumption</h3>
-                  <div style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
-                    Scale: 1 unit = 1,000 kWh
+            {activeView === 'electricity' && (
+              <div className="chart-section">
+                <div className="chart-header">
+                  <div>
+                    <p className="chart-description">
+                      Institution-wide electricity usage (kWh) recorded by EWD each financial year.
+                    </p>
                   </div>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={scaledYearlyData} margin={{ top: 20, right: 30, left: 70, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Electricity Consumption (in thousands of kWh)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
-                        formatter={(value) => {
-                          // Convert scaled value back to actual value for display
-                          const actualValue = value * 1000;
-                          return [formatNumber(actualValue), 'kWh'];
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="rect" 
-                      />
-                      <Bar dataKey="annualElectricityScaled" name="Annual electricity (in thousands of kWh)" fill={ENERGY_BAR_COLOR} />
-                    </BarChart>
-                  </ResponsiveContainer>
                 </div>
-              )}
-            </div>
 
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Electricity and water consumption metrics normalised per capita for better comparability across
-                    years.
-                  </p>
-                </div>
+                {yearlyData.length === 0 ? (
+                  <div className="no-data">No EWD records available.</div>
+                ) : (
+                  <div className="chart-container">
+                    <h3 className="chart-heading">Annual Electricity Consumption</h3>
+                    <div style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '0.85rem', color: '#666', fontStyle: 'italic' }}>
+                      Scale: 1 unit = 1,000 kWh
+                    </div>
+                    <ResponsiveContainer width="100%" height={420}>
+                      <BarChart data={scaledYearlyData} margin={{ top: 20, right: 30, left: 70, bottom: 60 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis 
+                          dataKey="year" 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <YAxis 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Electricity Consumption (in thousands of kWh)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
+                          formatter={(value) => {
+                            // Convert scaled value back to actual value for display
+                            const actualValue = value * 1000;
+                            return [formatNumber(actualValue), 'kWh'];
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                          iconType="rect" 
+                        />
+                        <Bar dataKey="annualElectricityScaled" name="Annual electricity (in thousands of kWh)" fill={ENERGY_BAR_COLOR} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
+            )}
 
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No per capita consumption records available.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Per Capita Consumption Trends</h3>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Per Capita Consumption', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
-                        formatter={(value, name) => {
-                          const suffix =
-                            name === 'Per capita electricity' ? 'kWh' : 'litres';
-                          return [formatDecimal(value), suffix];
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="plainline" 
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="perCapitaElectricity"
-                        name="Per capita electricity"
-                        stroke={ELECTRICITY_LINE_COLOR}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="perCapitaWater"
-                        name="Per capita water"
-                        stroke={WATER_LINE_COLOR}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="perCapitaRecycled"
-                        name="Per capita recycled water"
-                        stroke={RECYCLED_LINE_COLOR}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+            {activeView === 'perCapita' && (
+              <div className="chart-section">
+                <div className="chart-header">
+                  <div>
+                    <p className="chart-description">
+                      Electricity and water consumption metrics normalised per capita for better comparability across
+                      years.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Green coverage (sq.m) illustrates campus sustainability efforts over time.
-                  </p>
-                </div>
+                {yearlyData.length === 0 ? (
+                  <div className="no-data">No per capita consumption records available.</div>
+                ) : (
+                  <div className="chart-container">
+                    <h3 className="chart-heading">Per Capita Consumption Trends</h3>
+                    <ResponsiveContainer width="100%" height={420}>
+                      <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis 
+                          dataKey="year" 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <YAxis 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Per Capita Consumption', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
+                          formatter={(value, name) => {
+                            const suffix =
+                              name === 'Per capita electricity' ? 'kWh' : 'litres';
+                            return [formatDecimal(value), suffix];
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                          iconType="plainline" 
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="perCapitaElectricity"
+                          name="Per capita electricity"
+                          stroke={ELECTRICITY_LINE_COLOR}
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="perCapitaWater"
+                          name="Per capita water"
+                          stroke={WATER_LINE_COLOR}
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="perCapitaRecycled"
+                          name="Per capita recycled water"
+                          stroke={RECYCLED_LINE_COLOR}
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
+            )}
 
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No environmental records available.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Environmental Summary</h3>
-                  <ResponsiveContainer width="100%" height={360}>
-                    <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                      <defs>
-                        <linearGradient id="colorGreenCoverage" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={GREEN_AREA_STROKE} stopOpacity={0.8} />
-                          <stop offset="95%" stopColor={GREEN_AREA_STROKE} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Green Coverage (sq.m)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
-                        formatter={(value) => [formatDecimal(value), 'sq.m']}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="rect" 
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="greenCoverage"
-                        name="Green coverage (sq.m)"
-                        stroke={GREEN_AREA_STROKE}
-                        fill={GREEN_AREA_FILL}
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+            {activeView === 'environment' && (
+              <div className="chart-section">
+                <div className="chart-header">
+                  <div>
+                    <p className="chart-description">
+                      Green coverage (sq.m) illustrates campus sustainability efforts over time.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {yearlyData.length === 0 ? (
+                  <div className="no-data">No environmental records available.</div>
+                ) : (
+                  <div className="chart-container">
+                    <h3 className="chart-heading">Environmental Summary</h3>
+                    <ResponsiveContainer width="100%" height={360}>
+                      <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                        <defs>
+                          <linearGradient id="colorGreenCoverage" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={GREEN_AREA_STROKE} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={GREEN_AREA_STROKE} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                        <XAxis 
+                          dataKey="year" 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <YAxis 
+                          stroke="#000000"
+                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                          label={{ value: 'Green Coverage (sq.m)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                        />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
+                          formatter={(value) => [formatDecimal(value), 'sq.m']}
+                        />
+                        <Legend 
+                          wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                          iconType="rect" 
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="greenCoverage"
+                          name="Green coverage (sq.m)"
+                          stroke={GREEN_AREA_STROKE}
+                          fill={GREEN_AREA_FILL}
+                          strokeWidth={3}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
