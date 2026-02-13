@@ -25,6 +25,7 @@ const BAR_COLORS = {
 function IgrcSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('All');
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -60,6 +61,8 @@ function IgrcSection({ user, isPublicView = false }) {
           pending: row.grievances_pending
         }));
 
+        // Sort by year ascending for consistent dropdown order
+        formattedYearly.sort((a, b) => a.year - b.year);
         setYearlyData(formattedYearly);
 
         const summaryData = summaryResponse?.data || {};
@@ -125,6 +128,24 @@ function IgrcSection({ user, isPublicView = false }) {
                 <p className="summary-value accent-warning">{summary.pending}</p>
                 <span className="summary-subtitle">Grievances currently in process</span>
               </div>
+
+              {/* Year filter */}
+              <div className="summary-card">
+                <h3>Filter by Year</h3>
+                <select
+                  className="filter-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  <option value="All">All Years</option>
+                  {yearlyData.map((row) => (
+                    <option key={row.year} value={row.year}>
+                      {row.year}
+                    </option>
+                  ))}
+                </select>
+                <span className="summary-subtitle">Focus on a specific grievance year</span>
+              </div>
             </div>
 
             <div className="chart-section">
@@ -142,7 +163,14 @@ function IgrcSection({ user, isPublicView = false }) {
                 <div className="chart-container">
                   <h3 className="chart-heading">Year-wise Grievance Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                    <BarChart
+                      data={
+                        selectedYear === 'All'
+                          ? yearlyData
+                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                      }
+                      margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis 
                         dataKey="year" 

@@ -25,6 +25,7 @@ const AREA_COLORS = {
 function IccSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('All');
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -59,8 +60,8 @@ function IccSection({ user, isPublicView = false }) {
           resolved: row.complaints_resolved,
           pending: row.complaints_pending
         }));
-        // Sort in descending order (newest first)
-        formattedYearly.sort((a, b) => b.year - a.year);
+        // Sort in ascending order for a natural dropdown order
+        formattedYearly.sort((a, b) => a.year - b.year);
         setYearlyData(formattedYearly);
 
         const summaryData = summaryResponse?.data || {};
@@ -126,6 +127,24 @@ function IccSection({ user, isPublicView = false }) {
                 <p className="summary-value accent-warning">{summary.pending}</p>
                 <span className="summary-subtitle">Complaints currently under review</span>
               </div>
+
+              {/* Year filter */}
+              <div className="summary-card">
+                <h3>Filter by Year</h3>
+                <select
+                  className="filter-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  <option value="All">All Years</option>
+                  {yearlyData.map((row) => (
+                    <option key={row.year} value={row.year}>
+                      {row.year}
+                    </option>
+                  ))}
+                </select>
+                <span className="summary-subtitle">Focus on a specific complaints year</span>
+              </div>
             </div>
 
             <div className="chart-section">
@@ -143,7 +162,14 @@ function IccSection({ user, isPublicView = false }) {
                 <div className="chart-container">
                   <h3 className="chart-heading">Year-wise Complaint Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                    <AreaChart
+                      data={
+                        selectedYear === 'All'
+                          ? yearlyData
+                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                      }
+                      margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                    >
                       <defs>
                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
@@ -230,7 +256,10 @@ function IccSection({ user, isPublicView = false }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {yearlyData.map((row) => {
+                      {(selectedYear === 'All'
+                        ? yearlyData
+                        : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                      ).map((row) => {
                         const statusLabel =
                           row.pending === 0 ? (
                             <span className="status-pill resolved">All Resolved</span>
