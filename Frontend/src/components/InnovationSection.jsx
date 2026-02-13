@@ -36,6 +36,9 @@ function InnovationSection({ user }) {
   const token = localStorage.getItem('authToken');
   const [showPublicView, setShowPublicView] = useState(false);
 
+  // View type selection with radio buttons
+  const [viewType, setViewType] = useState('yearlyGrowth'); // 'yearlyGrowth' | 'sectorDistribution' | 'startupsDirectory'
+
   // 🔹 Get role_id safely
   const roleId = user?.role_id;
   const allowedRoles = [3, 8]; // Super Admin and Innovation
@@ -204,12 +207,35 @@ function InnovationSection({ user }) {
       .slice(0, 8); // Top 8 sectors
   }, [sectorDistribution]);
 
-  // 🔹 MOVED AFTER ALL HOOKS: If public user → always show public view
+  // Custom Tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: '#fff',
+          padding: '10px',
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>{label || payload[0].name}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ margin: '0', color: entry.color }}>
+              {entry.name}: {formatNumber(entry.value)}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // 🔹 If public user → always show public view
   if (roleId === 1) {
     return <InnovationSectionPublicView user={user} />;
   }
 
-  // 🔹 MOVED AFTER ALL HOOKS: If non-public user explicitly chooses public view
+  // 🔹 If non-public user explicitly chooses public view
   if (showPublicView) {
     return (
       <div className="page-container">
@@ -234,7 +260,7 @@ function InnovationSection({ user }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1>Innovation & Entrepreneurship</h1>
 
-          {/* 🔹 Public view button for non-public users */}
+          {/* Public view button for non-public users */}
           <div style={{ marginBottom: '1rem' }}>
             <button
               className="upload-data-btn"
@@ -244,263 +270,790 @@ function InnovationSection({ user }) {
             </button>
           </div>
         </div>
-        <p>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
           Track incubatees, startups, and innovation projects at TECHIN (Technology Innovation Foundation)
           and IPTIF (IIT Palakkad Technology IHub Foundation).
         </p>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ 
+          padding: '10px', 
+          backgroundColor: '#f8d7da', 
+          color: '#721c24', 
+          borderRadius: '4px', 
+          marginBottom: '20px' 
+        }}>{error}</div>}
 
         {/* Summary Cards */}
-        <div className="summary-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-          <div className="summary-card">
-            <div className="summary-card-label">Total Incubatees</div>
-            <div className="summary-card-value">{formatNumber(summary.total_incubatees)}</div>
+        <div className="summary-cards" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '20px', 
+          marginBottom: '30px' 
+        }}>
+          <div className="summary-card" style={{ 
+            padding: '20px', 
+            backgroundColor: '#667eea', 
+            color: 'white', 
+            borderRadius: '10px', 
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(102, 126, 234, 0.2)'
+          }}>
+            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
+              Total Incubatees
+            </div>
+            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
+              {formatNumber(summary.total_incubatees)}
+            </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-card-label">Total Startups</div>
-            <div className="summary-card-value">{formatNumber(summary.total_startups)}</div>
+          <div className="summary-card" style={{ 
+            padding: '20px', 
+            backgroundColor: '#764ba2', 
+            color: 'white', 
+            borderRadius: '10px', 
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(118, 75, 162, 0.2)'
+          }}>
+            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
+              Total Startups
+            </div>
+            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
+              {formatNumber(summary.total_startups)}
+            </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-card-label">Innovation Projects</div>
-            <div className="summary-card-value">{formatNumber(summary.total_innovation_projects)}</div>
+          <div className="summary-card" style={{ 
+            padding: '20px', 
+            backgroundColor: '#43e97b', 
+            color: 'white', 
+            borderRadius: '10px', 
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(67, 233, 123, 0.2)'
+          }}>
+            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
+              Innovation Projects
+            </div>
+            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
+              {formatNumber(summary.total_innovation_projects)}
+            </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-card-label">Startups from IIT Palakkad</div>
-            <div className="summary-card-value">{formatNumber(summary.startups_from_iitpkd)}</div>
+          <div className="summary-card" style={{ 
+            padding: '20px', 
+            backgroundColor: '#f093fb', 
+            color: 'white', 
+            borderRadius: '10px', 
+            textAlign: 'center',
+            boxShadow: '0 4px 6px rgba(240, 147, 251, 0.2)'
+          }}>
+            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
+              Startups from IITPKD
+            </div>
+            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
+              {formatNumber(summary.startups_from_iitpkd)}
+            </div>
           </div>
         </div>
 
-        {/* Yearly Growth Chart */}
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Growth of incubatees, startups, and innovation projects over time.</p>
-          </div>
-          {yearlyChartData.length > 0 ? (
-            <div className="chart-container">
-              <h3 className="chart-heading">Year-wise Growth</h3>
-              <ResponsiveContainer width="100%" height={360}>
-                <LineChart data={yearlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" stroke="#cbd5f5" />
-                  <YAxis stroke="#cbd5f5" />
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                  <Line type="monotone" dataKey="incubatees" name="Incubatees" stroke="#667eea" strokeWidth={3} />
-                  <Line type="monotone" dataKey="startups" name="Startups" stroke="#764ba2" strokeWidth={2} />
-                  <Line type="monotone" dataKey="innovationProjects" name="Innovation Projects" stroke="#43e97b" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+        {/* Filter Panel with Radio Buttons for View Selection */}
+        <div className="filter-panel" style={{ 
+          marginBottom: '20px', 
+          padding: '20px', 
+          backgroundColor: '#f8f9fa', 
+          borderRadius: '8px', 
+          border: '1px solid #e9ecef' 
+        }}>
+          <div className="filter-header" style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '15px' 
+          }}>
+            <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <button 
+                className="clear-filters-btn" 
+                onClick={handleClearFilters}
+                style={{ 
+                  padding: '8px 16px', 
+                  backgroundColor: '#dc3545', 
+                  color: '#fff', 
+                  border: 'none', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Clear Filters
+              </button>
+              {/* Only Super Admin can upload */}
+              {isSuperAdmin && (
+                <button
+                  className="upload-data-btn"
+                  onClick={() => setIsUploadModalOpen(true)}
+                  style={{ 
+                    padding: '8px 16px', 
+                    backgroundColor: '#28a745', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Upload Startups
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="no-data">No yearly growth data available.</div>
-          )}
+          </div>
+          
+          {/* View Type Selection - Radio Buttons */}
+          <div style={{ 
+            marginBottom: '20px', 
+            padding: '15px', 
+            backgroundColor: '#e9ecef', 
+            borderRadius: '6px',
+            border: '1px solid #dee2e6'
+          }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '10px', 
+              fontWeight: '600', 
+              color: '#333',
+              fontSize: '14px'
+            }}>
+              Select View Type:
+            </label>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px'
+            }}>
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                backgroundColor: viewType === 'yearlyGrowth' ? '#667eea' : 'white',
+                color: viewType === 'yearlyGrowth' ? 'white' : '#333',
+                borderRadius: '6px',
+                transition: 'all 0.3s ease',
+                border: viewType === 'yearlyGrowth' ? '2px solid #667eea' : '2px solid #ced4da'
+              }}>
+                <input
+                  type="radio"
+                  name="viewType"
+                  value="yearlyGrowth"
+                  checked={viewType === 'yearlyGrowth'}
+                  onChange={(e) => setViewType(e.target.value)}
+                  style={{ 
+                    accentColor: '#667eea',
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span style={{ fontWeight: viewType === 'yearlyGrowth' ? 'bold' : 'normal' }}>
+                  📈 Yearly Growth
+                </span>
+              </label>
+
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                backgroundColor: viewType === 'sectorDistribution' ? '#4f46e5' : 'white',
+                color: viewType === 'sectorDistribution' ? 'white' : '#333',
+                borderRadius: '6px',
+                transition: 'all 0.3s ease',
+                border: viewType === 'sectorDistribution' ? '2px solid #4f46e5' : '2px solid #ced4da'
+              }}>
+                <input
+                  type="radio"
+                  name="viewType"
+                  value="sectorDistribution"
+                  checked={viewType === 'sectorDistribution'}
+                  onChange={(e) => setViewType(e.target.value)}
+                  style={{ 
+                    accentColor: '#4f46e5',
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span style={{ fontWeight: viewType === 'sectorDistribution' ? 'bold' : 'normal' }}>
+                  📊 Sector Distribution
+                </span>
+              </label>
+
+              <label style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                backgroundColor: viewType === 'startupsDirectory' ? '#f97316' : 'white',
+                color: viewType === 'startupsDirectory' ? 'white' : '#333',
+                borderRadius: '6px',
+                transition: 'all 0.3s ease',
+                border: viewType === 'startupsDirectory' ? '2px solid #f97316' : '2px solid #ced4da'
+              }}>
+                <input
+                  type="radio"
+                  name="viewType"
+                  value="startupsDirectory"
+                  checked={viewType === 'startupsDirectory'}
+                  onChange={(e) => setViewType(e.target.value)}
+                  style={{ 
+                    accentColor: '#f97316',
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span style={{ fontWeight: viewType === 'startupsDirectory' ? 'bold' : 'normal' }}>
+                  📋 Startups Directory
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="filter-grid" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: '15px' 
+          }}>
+            <div className="filter-group">
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                Status
+              </label>
+              <select
+                className="filter-select"
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+              >
+                <option value="All">All Status</option>
+                {filterOptions.statuses.map(status => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                Sector
+              </label>
+              <select
+                className="filter-select"
+                value={filters.sector}
+                onChange={(e) => handleFilterChange('sector', e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+              >
+                <option value="All">All Sectors</option>
+                {filterOptions.sectors.map(sector => (
+                  <option key={sector} value={sector}>{sector}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                Year
+              </label>
+              <select
+                className="filter-select"
+                value={filters.year}
+                onChange={(e) => handleFilterChange('year', e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+              >
+                <option value="All">All Years</option>
+                {filterOptions.years.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group" style={{ display: 'flex', alignItems: 'center', marginTop: '24px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={filters.iitpkd_only}
+                  onChange={(e) => handleFilterChange('iitpkd_only', e.target.checked)}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                />
+                <span style={{ fontWeight: '600', color: '#555' }}>IIT Palakkad Only</span>
+              </label>
+            </div>
+
+            <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search by startup name, founder, or innovation area..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="filter-select"
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+              />
+            </div>
+          </div>
+
+          {/* Active Filters Summary */}
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '10px', 
+            backgroundColor: '#e9ecef', 
+            borderRadius: '4px',
+            fontSize: '14px'
+          }}>
+            <strong>Active Filters:</strong>{' '}
+            {filters.status !== 'All' && <span style={{ marginRight: '10px' }}>📌 Status: {filters.status}</span>}
+            {filters.sector !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Sector: {filters.sector}</span>}
+            {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
+            {filters.iitpkd_only && <span style={{ marginRight: '10px' }}>🎓 IITPKD Only</span>}
+            {filters.search && <span style={{ marginRight: '10px' }}>🔍 Search: "{filters.search}"</span>}
+            {filters.status === 'All' && filters.sector === 'All' && filters.year === 'All' && !filters.iitpkd_only && !filters.search && 
+              <span>No filters applied (showing all data)</span>
+            }
+          </div>
         </div>
 
-        {/* Sector Distribution Chart */}
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Distribution of startups and innovation projects by sector.</p>
-          </div>
-          {sectorPieData.length > 0 ? (
-            <div className="chart-container">
-              <h3 className="chart-heading">Sector-wise Innovation Distribution</h3>
-              <ResponsiveContainer width="100%" height={360}>
-                <PieChart>
-                  <Pie
-                    data={sectorPieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={130}
-                    label={({ name, value }) => `${name} (${value})`}
-                  >
-                    {sectorPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={SECTOR_COLORS[index % SECTOR_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="no-data">No sector distribution data available.</div>
-          )}
-        </div>
-
-        {/* Filters and Startups Table */}
-        <div className="grievance-table-wrapper">
-          <div className="chart-header">
-            <h2>Startups Directory</h2>
-            <p className="chart-description">Search and filter through all startups and incubatees.</p>
-          </div>
-
-          <div className="chart-section">
-            {/* Filter Panel */}
-            <div className="filter-panel">
-              <div className="filter-header">
-                <h3>Filters</h3>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button className="clear-filters-btn" onClick={handleClearFilters}>
-                    Clear Filters
-                  </button>
-                  {/* Only Super Admin can upload */}
-                  {isSuperAdmin && (
-                    <button
-                      className="upload-data-btn"
-                      onClick={() => setIsUploadModalOpen(true)}
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
-                    >
-                      Upload Startups
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="filter-grid">
-                <div className="filter-group">
-                  <label>Status</label>
-                  <select
-                    className="filter-select"
-                    value={filters.status}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.statuses.map(status => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Sector</label>
-                  <select
-                    className="filter-select"
-                    value={filters.sector}
-                    onChange={(e) => handleFilterChange('sector', e.target.value)}
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.sectors.map(sector => (
-                      <option key={sector} value={sector}>{sector}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>Year</label>
-                  <select
-                    className="filter-select"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                  >
-                    <option value="All">All Years</option>
-                    {filterOptions.years.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={filters.iitpkd_only}
-                      onChange={(e) => handleFilterChange('iitpkd_only', e.target.checked)}
-                      style={{ marginRight: '0.5rem' }}
-                    />
-                    IIT Palakkad Only
-                  </label>
-                </div>
-                <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Search</label>
-                  <input
-                    type="text"
-                    placeholder="Search by startup name, founder, or innovation area..."
-                    value={filters.search}
-                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                    className="filter-select"
-                    style={{ width: '100%' }}
-                  />
-                </div>
-              </div>
-            </div>
-
-          {startupsList.length > 0 ? (
-            <>
-              <div className="table-responsive icsr-table-scrollable">
-                <table className="grievance-table">
-                  <thead>
-                    <tr>
-                      <th>Startup Name</th>
-                      <th>Founder</th>
-                      <th>Innovation / Focus Area</th>
-                      <th>Year</th>
-                      <th>Status</th>
-                      <th>Sector</th>
-                      <th>IIT Palakkad</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {startupsList.map((startup) => (
-                      <tr key={startup.startup_id}>
-                        <td>{startup.startup_name}</td>
-                        <td>{startup.founder_name}</td>
-                        <td>{startup.innovation_focus_area || '—'}</td>
-                        <td>{startup.year_of_incubation}</td>
-                        <td>{startup.status}</td>
-                        <td>{startup.sector || '—'}</td>
-                        <td>{startup.is_from_iitpkd ? '✓ Yes' : 'No'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        {/* Single View Section based on radio selection */}
+        <div className="chart-section" style={{ 
+          marginBottom: '30px', 
+          padding: '20px', 
+          backgroundColor: '#fff', 
+          borderRadius: '10px', 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+        }}>
+          {/* Yearly Growth Chart */}
+          {viewType === 'yearlyGrowth' && (
+            <div>
+              <div className="chart-header" style={{ marginBottom: '20px' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>📈</span> Year-wise Growth
+                </h2>
+                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                  Growth of incubatees, startups, and innovation projects over time.
+                </p>
               </div>
 
-              {/* Pagination */}
-              {pagination.total_pages > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  marginTop: '2rem'
-                }}>
-                  <button
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page === 1 ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Previous
-                  </button>
-                  <span>
-                    Page {pagination.page} of {pagination.total_pages} ({formatNumber(pagination.total)} total)
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.total_pages}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Next
-                  </button>
+              {yearlyChartData.length > 0 ? (
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <LineChart data={yearlyChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis 
+                        dataKey="year" 
+                        stroke="#666"
+                        tick={{ fill: '#666', fontSize: 12 }}
+                        label={{ 
+                          value: 'Year', 
+                          position: 'insideBottom', 
+                          offset: -10,
+                          style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
+                        }}
+                      />
+                      <YAxis 
+                        stroke="#666"
+                        tick={{ fill: '#666', fontSize: 12 }}
+                        label={{ 
+                          value: 'Count', 
+                          angle: -90, 
+                          position: 'insideLeft',
+                          style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
+                        }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                      <Line 
+                        type="monotone" 
+                        dataKey="incubatees" 
+                        name="Incubatees" 
+                        stroke="#667eea" 
+                        strokeWidth={3} 
+                        dot={{ r: 6, fill: '#667eea' }}
+                        activeDot={{ r: 8 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="startups" 
+                        name="Startups" 
+                        stroke="#764ba2" 
+                        strokeWidth={2} 
+                        dot={{ r: 4 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="innovationProjects" 
+                        name="Innovation Projects" 
+                        stroke="#43e97b" 
+                        strokeWidth={2} 
+                        dot={{ r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+
+                  {/* Chart Statistics */}
+                  <div style={{ 
+                    marginTop: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e0e0e0',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '15px'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '24px' }}>
+                        {yearlyChartData.reduce((sum, item) => sum + item.incubatees, 0)}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Total Incubatees</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#764ba2', fontWeight: 'bold', fontSize: '24px' }}>
+                        {yearlyChartData.reduce((sum, item) => sum + item.startups, 0)}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Total Startups</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#43e97b', fontWeight: 'bold', fontSize: '24px' }}>
+                        {yearlyChartData.reduce((sum, item) => sum + item.innovationProjects, 0)}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Total Projects</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                        {yearlyChartData.length}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                  No yearly growth data available.
                 </div>
               )}
-            </>
-          ) : (
-            <div className="no-data">No startups found for the selected filters.</div>
+            </div>
           )}
-          </div>
+
+          {/* Sector Distribution Chart */}
+          {viewType === 'sectorDistribution' && (
+            <div>
+              <div className="chart-header" style={{ marginBottom: '20px' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>📊</span> Sector-wise Innovation Distribution
+                </h2>
+                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                  Distribution of startups and innovation projects by sector.
+                </p>
+              </div>
+
+              {sectorPieData.length > 0 ? (
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={450}>
+                    <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
+                      <Pie
+                        data={sectorPieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={150}
+                        label={({ name, value }) => `${name} (${value})`}
+                        labelLine={{ stroke: '#666', strokeWidth: 1 }}
+                      >
+                        {sectorPieData.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={SECTOR_COLORS[index % SECTOR_COLORS.length]}
+                            stroke="#fff"
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name, props) => {
+                          if (name === 'value') return `${value} total`;
+                          return value;
+                        }}
+                        contentStyle={{ 
+                          backgroundColor: '#fff', 
+                          border: '1px solid #ccc', 
+                          borderRadius: '4px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                        }}
+                      />
+                      <Legend 
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                        wrapperStyle={{
+                          paddingLeft: '20px',
+                          fontWeight: 'bold',
+                          fontSize: '12px'
+                        }}
+                        iconType="circle"
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+
+                  {/* Sector Statistics */}
+                  <div style={{ 
+                    marginTop: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e0e0e0',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '15px'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
+                        {sectorPieData.length}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Sectors</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                        {sectorPieData.reduce((sum, item) => sum + item.value, 0)}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Total Entities</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                        {sectorPieData.reduce((sum, item) => sum + (item.startups || 0), 0)}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Total Startups</div>
+                    </div>
+                  </div>
+
+                  {/* Sector Details */}
+                  <div style={{ 
+                    marginTop: '15px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: '10px'
+                  }}>
+                    {sectorPieData.map((sector, index) => (
+                      <div key={sector.name} style={{
+                        padding: '12px',
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '6px',
+                        border: `1px solid ${SECTOR_COLORS[index % SECTOR_COLORS.length]}`,
+                      }}>
+                        <div style={{ fontSize: '14px', fontWeight: 'bold', color: SECTOR_COLORS[index % SECTOR_COLORS.length], marginBottom: '5px' }}>
+                          {sector.name}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                          <span>Startups: <strong>{sector.startups}</strong></span>
+                          <span>Projects: <strong>{sector.projects}</strong></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                  No sector distribution data available.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Startups Directory Table */}
+          {viewType === 'startupsDirectory' && (
+            <div>
+              <div className="chart-header" style={{ marginBottom: '20px' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '24px' }}>📋</span> Startups Directory
+                </h2>
+                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                  Search and filter through all startups and incubatees.
+                </p>
+              </div>
+
+              {startupsList.length > 0 ? (
+                <div>
+                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                    <table className="grievance-table" style={{ 
+                      width: '100%', 
+                      borderCollapse: 'collapse',
+                      backgroundColor: '#fff',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: '1px solid #e0e0e0'
+                    }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f97316', color: 'white' }}>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Startup Name</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Founder</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Innovation / Focus Area</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Year</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>Sector</th>
+                          <th style={{ padding: '12px', textAlign: 'left' }}>IIT Palakkad</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {startupsList.map((startup, index) => (
+                          <tr 
+                            key={startup.startup_id}
+                            style={{ 
+                              backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                              borderBottom: '1px solid #e0e0e0'
+                            }}
+                          >
+                            <td style={{ padding: '12px', fontWeight: '500' }}>{startup.startup_name}</td>
+                            <td style={{ padding: '12px' }}>{startup.founder_name}</td>
+                            <td style={{ padding: '12px' }}>{startup.innovation_focus_area || '—'}</td>
+                            <td style={{ padding: '12px' }}>{startup.year_of_incubation}</td>
+                            <td style={{ padding: '12px' }}>
+                              <span style={{ 
+                                backgroundColor: startup.status === 'Active' ? '#dcfce7' : '#fee2e2',
+                                color: startup.status === 'Active' ? '#166534' : '#991b1b',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                              }}>
+                                {startup.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px' }}>
+                              {startup.sector && (
+                                <span style={{ 
+                                  backgroundColor: '#e0e7ff',
+                                  color: '#3730a3',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {startup.sector}
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px', textAlign: 'center' }}>
+                              <span style={{ 
+                                backgroundColor: startup.is_from_iitpkd ? '#dcfce7' : '#f3f4f6',
+                                color: startup.is_from_iitpkd ? '#166534' : '#6b7280',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 'bold'
+                              }}>
+                                {startup.is_from_iitpkd ? '✓ Yes' : 'No'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Table Statistics */}
+                  <div style={{ 
+                    marginTop: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e0e0e0',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '15px'
+                  }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                        {startupsList.length}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Showing</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                        {startupsList.filter(s => s.status === 'Active').length}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Active</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                        {startupsList.filter(s => s.is_from_iitpkd).length}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>IITPKD Startups</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '24px' }}>
+                        {new Set(startupsList.map(s => s.sector).filter(Boolean)).size}
+                      </div>
+                      <div style={{ color: '#666', fontSize: '14px' }}>Sectors</div>
+                    </div>
+                  </div>
+
+                  {/* Pagination */}
+                  {pagination.total_pages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      marginTop: '2rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      <button
+                        onClick={() => handlePageChange(pagination.page - 1)}
+                        disabled={pagination.page === 1}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: pagination.page === 1 ? '#ccc' : '#f97316',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: pagination.page === 1 ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        ← Previous
+                      </button>
+                      <span style={{ color: '#666', fontSize: '14px' }}>
+                        Page <strong>{pagination.page}</strong> of <strong>{pagination.total_pages}</strong> 
+                        <span style={{ marginLeft: '8px', color: '#999' }}>
+                          ({formatNumber(pagination.total)} total)
+                        </span>
+                      </span>
+                      <button
+                        onClick={() => handlePageChange(pagination.page + 1)}
+                        disabled={pagination.page >= pagination.total_pages}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#f97316',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        Next →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="no-data" style={{ textAlign: 'center', padding: '60px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                  <p style={{ color: '#666', fontSize: '16px' }}>No startups found for the selected filters.</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -509,8 +1062,8 @@ function InnovationSection({ user }) {
         onClose={() => setIsUploadModalOpen(false)}
         tableName="startups"
         token={token}
-        />
-    </div >
+      />
+    </div>
   );
 }
 
