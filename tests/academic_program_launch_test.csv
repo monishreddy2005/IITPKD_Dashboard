@@ -1,0 +1,11 @@
+program_code,program_name,program_type,department,launch_year,oelp_students
+DS-2023,B.Tech in Data Science,UG,DS,2023,0
+AI-2024,M.Tech in AI & ML,PG,CSE,2024,0
+EV-2022,Certificate in EV Technology,Certificate,EE,2022,15
+ROB-2023,M.Tech in Robotics,Interdisciplinary,ME,2023,0
+PHY-2021,M.Sc in Physics,PG,PH,2021,0
+ENV-2020,M.Tech in Environmental Engg,PG,CE,2020,0
+CYB-2024,Certificate in Cyber Security,Certificate,CSE,2024,20
+MAT-2019,M.Sc in Mathematics,PG,MA,2019,0
+IOT-2023,B.Tech in IoT,UG,EE,2023,0
+BIO-2022,M.Tech in Bio-Engineering,Interdisciplinary,BSBE,2022,0

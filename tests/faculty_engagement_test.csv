@@ -1,0 +1,11 @@
+engagement_code,faculty_name,engagement_type,department,startdate,enddate,duration_months,year,remarks
+FENG001,Dr. Emily Chen,Visiting,CSE,2023-01-15,2023-04-14,3,2023,Introduction to AI Ethics
+FENG002,Prof. David Lee,Adjunct,EE,2022-08-01,2023-07-31,12,2022,VLSI Design Course
+FENG003,Dr. Sarah Khan,Honorary,ME,2023-05-20,2023-06-20,1,2023,Workshop on Robotics
+FENG004,Mr. Rajesh Kumar,PoP,CE,2021-09-01,2023-08-31,24,2021,Concrete Technology Expert
+FENG005,Dr. Anjali Gupta,FacultyFellow,DS,2023-02-01,2024-01-31,12,2023,Data Science Research
+FENG006,Prof. Michael Brown,Visiting,PH,2022-11-15,2023-01-14,2,2022,Quantum Mechanics Seminar
+FENG007,Dr. Priya Sharma,Adjunct,CH,2020-07-01,2022-06-30,24,2020,Polymer Chemistry
+FENG008,Mr. Amit Patel,PoP,CSE,2023-06-01,2024-05-31,12,2023,Cybersecurity Bootcamp
+FENG009,Dr. John Doe,FacultyFellow,EE,2021-03-01,2023-02-28,24,2021,Renewable Energy Systems
+FENG010,Prof. Jane Smith,Honorary,ME,2019-12-01,2020-01-31,2,2019,Fluid Dynamics Lecture Series

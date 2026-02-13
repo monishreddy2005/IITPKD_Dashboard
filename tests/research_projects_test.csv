@@ -1,0 +1,11 @@
+project_id,project_title,principal_investigator,department,project_type,funding_agency,client_organization,amount_sanctioned,start_date,end_date,status
+1,AI for Healthcare,Dr. Smith,CSE,Funded,DST,Ministry of Health,5000000,2023-01-01,2025-12-31,Ongoing
+2,Sustainable Energy Solutions,Prof. Rao,EE,Funded,SERB,,3000000,2021-06-01,2024-05-31,Completed
+3,Smart City Traffic Management,Dr. Anjali,CE,Consultancy,,L&T Construction,1500000,2022-03-01,2023-08-31,Ongoing
+4,Water Purification Tech,Dr. Paul,CH,Funded,Jal Jeevan Mission,,4500000,2020-04-01,2023-03-31,Completed
+5,Blockchain for Supply Chain,Prof. Das,CSE,Consultancy,,Flipkart,2000000,2023-05-01,2024-04-30,Ongoing
+6,Cybersecurity Framework Design,Dr. Nair,CSE,Funded,DRDO,,6000000,2022-09-01,2025-08-31,Ongoing
+7,Agricultural IoT Sensors,Mr. Singh,ME,Funded,ICAR,,2500000,2021-01-15,2024-01-14,Completed
+8,Robotics Automation in Manufacturing,Dr. George,ME,Consultancy,,Tata Motors,3500000,2021-11-01,2023-10-31,Completed
+9,Deep Learning for Diagnostics,Ms. Priya,DS,Funded,ICMR,,4000000,2023-02-01,2026-01-31,Ongoing
+10,Cloud Infrastructure Optimization,Mr. Kumar,CSE,Consultancy,,AWS,1800000,2023-06-01,2024-05-31,Ongoing

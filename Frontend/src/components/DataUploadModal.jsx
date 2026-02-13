@@ -216,6 +216,12 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                     sample: ['Water Conservation', 'Awareness Camp', 'Workshop', '2023-03-22', 'Village Hall', 'Community meeting', '', '']
                 };
 
+            case 'industry_events':
+                return {
+                    headers: ['event_title', 'event_type', 'industry_partner', 'event_date', 'duration_hours', 'department', 'description'],
+                    sample: ['AI Symposium', 'Conference', 'Google', '2023-10-15', '8', 'CSE', 'Annual AI catchup']
+                };
+
             default:
                 return { headers: [], sample: [] };
         }

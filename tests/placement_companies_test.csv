@@ -1,0 +1,11 @@
+placement_year,company_name,sector,offers,hires,is_top_recruiter
+2023,Google,IT,10,8,True
+2023,Microsoft,IT,12,10,True
+2023,L&T,Core Engineering,20,15,False
+2023,Tata Motors,Automotive,8,5,False
+2022,Amazon,IT,15,12,True
+2022,Qualcomm,Electronics,10,9,True
+2022,Texas Instruments,Electronics,6,5,False
+2022,Deloitte,Consulting,18,16,False
+2021,Goldman Sachs,Finance,5,4,True
+2021,Flipkart,E-commerce,7,6,True

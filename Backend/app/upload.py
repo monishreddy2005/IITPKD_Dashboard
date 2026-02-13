@@ -629,6 +629,7 @@ def upload_csv(current_user_id):
             deduplicated_data = []
             
             # Find indices of conflict key columns in columns_to_insert
+            # Find indices of conflict key columns in columns_to_insert
             conflict_indices = []
             for key in conflict_keys_db:
                 for idx, col in enumerate(columns_to_insert):
@@ -636,19 +637,25 @@ def upload_csv(current_user_id):
                         conflict_indices.append(idx)
                         break
             
-            for row_tuple in data_to_insert:
-                # Create a tuple of conflict key values for this row
-                key_tuple = tuple(row_tuple[i] for i in conflict_indices if i < len(row_tuple))
+            # Only perform deduplication if we found the conflict keys in the data
+            if conflict_indices:
+                seen_keys = set()
+                deduplicated_data = []
                 
-                # Skip if we've seen this key combination before
-                if key_tuple in seen_keys:
-                    duplicates_removed += 1
-                    continue
+                for row_tuple in data_to_insert:
+                    # Create a tuple of conflict key values for this row
+                    # Safe because we only iterate if conflict_indices is not empty
+                    key_tuple = tuple(row_tuple[i] for i in conflict_indices if i < len(row_tuple))
+                    
+                    # Skip if we've seen this key combination before
+                    if key_tuple in seen_keys:
+                        duplicates_removed += 1
+                        continue
+                    
+                    seen_keys.add(key_tuple)
+                    deduplicated_data.append(row_tuple)
                 
-                seen_keys.add(key_tuple)
-                deduplicated_data.append(row_tuple)
-            
-            data_to_insert = deduplicated_data
+                data_to_insert = deduplicated_data
         
         if not data_to_insert:
              return jsonify({

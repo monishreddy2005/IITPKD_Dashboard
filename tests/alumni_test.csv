@@ -1,0 +1,11 @@
+rollno,alumniidno,name,yearofgraduation,department,program,category,gender,homestate,jobstate,outcome,employer_or_institution
+101901001,ALM001,Amit Kumar,2019,CSE,B.Tech,General,Male,Kerala,Karnataka,Corporate,Infosys
+112001002,ALM002,Priya Singh,2020,EE,M.Tech,OBC,Female,Tamil Nadu,Maharashtra,HigherStudies,IIT Bombay
+122101003,ALM003,Rahul Verma,2021,ME,PhD,SC,Male,Delhi,USA,HigherStudies,Stanford University
+132201004,ALM004,Sita Reddi,2022,PH,M.Sc,EWS,Female,Karnataka,Karnataka,Corporate,TCS
+142301005,ALM005,Vikram Joshi,2023,CH,MS,General,Male,Maharashtra,Germany,HigherStudies,TU Munich
+152401006,ALM006,Anjali Menon,2024,CE,B.Tech,ST,Female,Kerala,Kerala,Entrepreneurship,Self Employed
+162501007,ALM007,Rohan Das,2025,DS,PhD,OBC,Male,West Bengal,Karnataka,Corporate,Amazon
+171801008,ALM008,Kavya Nair,2018,CSE,B.Tech,General,Female,Kerala,USA,Corporate,Google
+181901009,ALM009,Arjun Rao,2019,EE,M.Tech,General,Male,Andhra Pradesh,Telangana,Other,Civil Services
+192001010,ALM010,Meera Krishnan,2020,ME,B.Tech,OBC,Female,Tamil Nadu,UK,HigherStudies,Imperial College London

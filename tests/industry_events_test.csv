@@ -1,0 +1,11 @@
+event_title,event_type,industry_partner,event_date,duration_hours,department,description
+AI in Healthcare Symposium,Conference,Google Health,2023-11-15,8.0,CSE,Symposium on latest AI trends in medical diagnostics.
+Future of EV Mobility,Panel Discussion,Tesla India,2023-10-10,3.5,EE,Discussion on challenges and opportunities in EV adoption.
+Cybersecurity Workshop,Workshop,Palo Alto Networks,2023-09-05,6.0,CSE,Hands-on workshop on network security.
+Sustainable Construction Tech,Seminar,L&T Construction,2023-08-20,2.0,CE,Seminar on green building materials.
+Data Science Hackathon,Hackathon,Kaggle,2023-07-15,24.0,DS,24-hour hackathon solving real-world data problems.
+Robotics Process Automation,Training Program,UiPath,2023-06-10,16.0,ME,Certification training on RPA tools.
+5G Network Architecture,Industrial Talk,Ericsson,2023-05-25,1.5,EE,Talk by industry expert on 5G deployment.
+Biotech Innovations,Networking Event,Biocon,2023-04-12,4.0,BSBE,Networking session for biotech startups and students.
+Quantum Computing Basics,Seminar,IBM Quantum,2023-03-18,2.0,PH,Introductory lecture on quantum bits and gates.
+Smart Manufacturing Visit,Industry Visit,Siemens Factory,2023-02-28,5.0,ME,Field trip to Siemens smart factory in Bangalore.

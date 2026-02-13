@@ -23,6 +23,8 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 
+import DataUploadModal from './DataUploadModal';
+
 const EVENT_TYPE_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
@@ -60,6 +62,10 @@ function IcsrSection({ user, isPublicView = false }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Upload Modal State
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('industry_events');
 
   // Load filter options on mount
   useEffect(() => {
@@ -132,13 +138,13 @@ function IcsrSection({ user, isPublicView = false }) {
           token
         );
         setEventsList(result.data || []);
-        setPagination(result.pagination || pagination);
+        setPagination(prev => result.pagination || prev);
       } catch (err) {
         console.error('Error loading events:', err);
       }
     };
     loadEvents();
-  }, [filters, pagination.page, token]);
+  }, [filters, pagination.page, pagination.per_page, token]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
@@ -200,6 +206,12 @@ function IcsrSection({ user, isPublicView = false }) {
             <div className="summary-card-value">{formatNumber(summary.departments_involved)}</div>
           </div>
         </div>
+
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '2rem', fontSize: '1.2rem', color: '#666' }}>
+            Loading data...
+          </div>
+        )}
 
         {/* Year-wise Distribution Chart */}
         <div className="chart-section">
@@ -278,7 +290,10 @@ function IcsrSection({ user, isPublicView = false }) {
                   {isPublicView ? null : (user && user.role_id === 3 && (
                     <button
                       className="upload-data-btn"
-                      onClick={() => setIsUploadModalOpen(true)}
+                      onClick={() => {
+                        setActiveUploadTable('industry_events');
+                        setIsUploadModalOpen(true);
+                      }}
                       style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
                     >
                       Upload Industry Events
@@ -287,136 +302,144 @@ function IcsrSection({ user, isPublicView = false }) {
                 </div>
               </div>
               <div className="filter-grid">
-              <div className="filter-group">
-                <label>Event Type</label>
-                <select
-                  className="filter-select"
-                  value={filters.event_type}
-                  onChange={(e) => handleFilterChange('event_type', e.target.value)}
-                >
-                  <option value="All">All Types</option>
-                  {filterOptions.event_types.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Department</label>
-                <select
-                  className="filter-select"
-                  value={filters.department}
-                  onChange={(e) => handleFilterChange('department', e.target.value)}
-                >
-                  <option value="All">All Departments</option>
-                  {filterOptions.departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Year</label>
-                <select
-                  className="filter-select"
-                  value={filters.year}
-                  onChange={(e) => handleFilterChange('year', e.target.value)}
-                >
-                  <option value="All">All Years</option>
-                  {filterOptions.years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Search</label>
-                <input
-                  type="text"
-                  placeholder="Search by event title, industry partner, or description..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="filter-select"
-                  style={{ width: '100%' }}
-                />
+                <div className="filter-group">
+                  <label>Event Type</label>
+                  <select
+                    className="filter-select"
+                    value={filters.event_type}
+                    onChange={(e) => handleFilterChange('event_type', e.target.value)}
+                  >
+                    <option value="All">All Types</option>
+                    {filterOptions.event_types.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Department</label>
+                  <select
+                    className="filter-select"
+                    value={filters.department}
+                    onChange={(e) => handleFilterChange('department', e.target.value)}
+                  >
+                    <option value="All">All Departments</option>
+                    {filterOptions.departments.map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Year</label>
+                  <select
+                    className="filter-select"
+                    value={filters.year}
+                    onChange={(e) => handleFilterChange('year', e.target.value)}
+                  >
+                    <option value="All">All Years</option>
+                    {filterOptions.years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Search</label>
+                  <input
+                    type="text"
+                    placeholder="Search by event title, industry partner, or description..."
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                    className="filter-select"
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {eventsList.length > 0 ? (
-            <>
-              <div className="table-responsive">
-                <table className="grievance-table">
-                  <thead>
-                    <tr>
-                      <th>Event Title</th>
-                      <th>Type</th>
-                      <th>Industry Partner</th>
-                      <th>Date</th>
-                      <th>Duration (hrs)</th>
-                      <th>Department</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {eventsList.map((event) => (
-                      <tr key={event.event_id}>
-                        <td>{event.event_title}</td>
-                        <td>{event.event_type}</td>
-                        <td>{event.industry_partner || '—'}</td>
-                        <td>{event.event_date ? new Date(event.event_date).toLocaleDateString() : '—'}</td>
-                        <td>{event.duration_hours ? `${event.duration_hours}` : '—'}</td>
-                        <td>{event.department || '—'}</td>
+            {eventsList.length > 0 ? (
+              <>
+                <div className="table-responsive">
+                  <table className="grievance-table">
+                    <thead>
+                      <tr>
+                        <th>Event Title</th>
+                        <th>Type</th>
+                        <th>Industry Partner</th>
+                        <th>Date</th>
+                        <th>Duration (hrs)</th>
+                        <th>Department</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              {pagination.total_pages > 1 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  marginTop: '2rem'
-                }}>
-                  <button
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page === 1 ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Previous
-                  </button>
-                  <span>
-                    Page {pagination.page} of {pagination.total_pages} ({formatNumber(pagination.total)} total)
-                  </span>
-                  <button
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.total_pages}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#4f46e5',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    Next
-                  </button>
+                    </thead>
+                    <tbody>
+                      {eventsList.map((event) => (
+                        <tr key={event.event_id}>
+                          <td>{event.event_title}</td>
+                          <td>{event.event_type}</td>
+                          <td>{event.industry_partner || '—'}</td>
+                          <td>{event.event_date ? new Date(event.event_date).toLocaleDateString() : '—'}</td>
+                          <td>{event.duration_hours ? `${event.duration_hours}` : '—'}</td>
+                          <td>{event.department || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="no-data">No events found for the selected filters.</div>
-          )}
+
+                {/* Pagination */}
+                {pagination.total_pages > 1 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    marginTop: '2rem'
+                  }}>
+                    <button
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: pagination.page === 1 ? '#ccc' : '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {pagination.page} of {pagination.total_pages} ({formatNumber(pagination.total)} total)
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.total_pages}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#4f46e5',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="no-data">No events found for the selected filters.</div>
+            )}
           </div>
         </div>
+
+        {/* Upload Modal */}
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName={activeUploadTable}
+          token={token}
+        />
       </div>
     </div>
   );
