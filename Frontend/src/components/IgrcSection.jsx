@@ -26,6 +26,11 @@ function IgrcSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState('All');
+  const [visibleMetrics, setVisibleMetrics] = useState({
+    filed: true,
+    resolved: true,
+    pending: true
+  });
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -155,6 +160,54 @@ function IgrcSection({ user, isPublicView = false }) {
                     Visual comparison of total grievances filed against resolutions and pending cases.
                   </p>
                 </div>
+                <div className="metric-toggle-group">
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.filed ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, filed: !prev.filed };
+                        // Ensure at least one metric stays visible
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Filed
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.resolved ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, resolved: !prev.resolved };
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Resolved
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.pending ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, pending: !prev.pending };
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Pending
+                  </button>
+                </div>
               </div>
 
               {yearlyData.length === 0 ? (
@@ -191,9 +244,15 @@ function IgrcSection({ user, isPublicView = false }) {
                         wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
                         iconType="rect" 
                       />
-                      <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />
-                      <Bar dataKey="resolved" name="Resolved" fill={BAR_COLORS.resolved} />
-                      <Bar dataKey="pending" name="Pending" fill={BAR_COLORS.pending} />
+                      {visibleMetrics.filed && (
+                        <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />
+                      )}
+                      {visibleMetrics.resolved && (
+                        <Bar dataKey="resolved" name="Resolved" fill={BAR_COLORS.resolved} />
+                      )}
+                      {visibleMetrics.pending && (
+                        <Bar dataKey="pending" name="Pending" fill={BAR_COLORS.pending} />
+                      )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

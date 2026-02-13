@@ -26,6 +26,11 @@ function IccSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState('All');
+  const [visibleMetrics, setVisibleMetrics] = useState({
+    total: true,
+    resolved: true,
+    pending: true
+  });
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -154,6 +159,53 @@ function IccSection({ user, isPublicView = false }) {
                     Overview of total complaints vis-à-vis resolved and pending cases.
                   </p>
                 </div>
+                <div className="metric-toggle-group">
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.total ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, total: !prev.total };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Total
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.resolved ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, resolved: !prev.resolved };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Resolved
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.pending ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, pending: !prev.pending };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Pending
+                  </button>
+                </div>
               </div>
 
               {yearlyData.length === 0 ? (
@@ -204,27 +256,33 @@ function IccSection({ user, isPublicView = false }) {
                         wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
                         iconType="rect" 
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="total"
-                        name="Total"
-                        stroke={AREA_COLORS.total}
-                        fill="url(#colorTotal)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="resolved"
-                        name="Resolved"
-                        stroke={AREA_COLORS.resolved}
-                        fill="url(#colorResolved)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="pending"
-                        name="Pending"
-                        stroke={AREA_COLORS.pending}
-                        fill="url(#colorPending)"
-                      />
+                      {visibleMetrics.total && (
+                        <Area
+                          type="monotone"
+                          dataKey="total"
+                          name="Total"
+                          stroke={AREA_COLORS.total}
+                          fill="url(#colorTotal)"
+                        />
+                      )}
+                      {visibleMetrics.resolved && (
+                        <Area
+                          type="monotone"
+                          dataKey="resolved"
+                          name="Resolved"
+                          stroke={AREA_COLORS.resolved}
+                          fill="url(#colorResolved)"
+                        />
+                      )}
+                      {visibleMetrics.pending && (
+                        <Area
+                          type="monotone"
+                          dataKey="pending"
+                          name="Pending"
+                          stroke={AREA_COLORS.pending}
+                          fill="url(#colorPending)"
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
