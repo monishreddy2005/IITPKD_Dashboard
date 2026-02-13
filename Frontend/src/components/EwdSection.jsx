@@ -115,6 +115,14 @@ function EwdSection({ user, isPublicView = false }) {
     return yearlyData.map(row => row.year).sort((a, b) => b - a); // Sort descending
   }, [yearlyData]);
 
+  // Yearly data filtered based on selectedYear for use in charts
+  const filteredYearlyData = useMemo(() => {
+    if (!yearlyData.length) return [];
+    // When "Latest" is selected (selectedYear === null), show full multi-year trend
+    if (selectedYear === null) return yearlyData;
+    return yearlyData.filter(row => row.year === selectedYear);
+  }, [yearlyData, selectedYear]);
+
   // Get selected year data or latest year data
   const selectedYearData = useMemo(() => {
     if (selectedYear === null) {
@@ -153,11 +161,11 @@ function EwdSection({ user, isPublicView = false }) {
 
   // Scale data for Annual Electricity Consumption chart (divide by 1000 to show in thousands)
   const scaledYearlyData = useMemo(() => {
-    return yearlyData.map(row => ({
+    return filteredYearlyData.map(row => ({
       ...row,
       annualElectricityScaled: row.annualElectricity / 1000 // Scale to thousands
     }));
-  }, [yearlyData]);
+  }, [filteredYearlyData]);
 
   return (
     <div className={isPublicView ? "" : "page-container"}>
@@ -300,7 +308,7 @@ function EwdSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
-                {yearlyData.length === 0 ? (
+                {filteredYearlyData.length === 0 ? (
                   <div className="no-data">No EWD records available.</div>
                 ) : (
                   <div className="chart-container">
@@ -353,13 +361,13 @@ function EwdSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
-                {yearlyData.length === 0 ? (
+                {filteredYearlyData.length === 0 ? (
                   <div className="no-data">No per capita consumption records available.</div>
                 ) : (
                   <div className="chart-container">
                     <h3 className="chart-heading">Per Capita Consumption Trends</h3>
                     <ResponsiveContainer width="100%" height={420}>
-                      <LineChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                      <LineChart data={filteredYearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                         <XAxis 
                           dataKey="year" 
@@ -428,13 +436,13 @@ function EwdSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
-                {yearlyData.length === 0 ? (
+                {filteredYearlyData.length === 0 ? (
                   <div className="no-data">No environmental records available.</div>
                 ) : (
                   <div className="chart-container">
                     <h3 className="chart-heading">Environmental Summary</h3>
                     <ResponsiveContainer width="100%" height={360}>
-                      <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                      <AreaChart data={filteredYearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
                         <defs>
                           <linearGradient id="colorGreenCoverage" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={GREEN_AREA_STROKE} stopOpacity={0.8} />
