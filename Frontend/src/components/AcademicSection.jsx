@@ -82,6 +82,9 @@ function AcademicSection({ user, isPublicView = false }) {
     state: null
   });
 
+  // UI state to control which chart block is visible
+  const [activeChart, setActiveChart] = useState('genderTrend'); // 'genderTrend' | 'genderPie' | 'programTrend' | 'programStrength'
+
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
 
@@ -378,10 +381,43 @@ function AcademicSection({ user, isPublicView = false }) {
           </div>
         )}
 
+        {/* Chart selector tabs */}
+        <div className="chart-tabs">
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'genderTrend' ? 'active' : ''}`}
+            onClick={() => setActiveChart('genderTrend')}
+          >
+            Year vs Gender (Trend)
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'genderPie' ? 'active' : ''}`}
+            onClick={() => setActiveChart('genderPie')}
+          >
+            Gender Distribution (Pie)
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'programTrend' ? 'active' : ''}`}
+            onClick={() => setActiveChart('programTrend')}
+          >
+            Student Strength by Program (Trend)
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'programStrength' ? 'active' : ''}`}
+            onClick={() => setActiveChart('programStrength')}
+          >
+            Student Strength by Program
+          </button>
+        </div>
+
         {/* 1. Year vs Gender Distribution Trend */}
-        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-          <h2>Year vs Gender Distribution (Trend)</h2>
-          <div className="chart-section">
+        {activeChart === 'genderTrend' && (
+          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+            <h2>Year vs Gender Distribution (Trend)</h2>
+            <div className="chart-section">
             <div className="chart-header">
               <p className="chart-description">Gender distribution trends over the last 5 years.</p>
             </div>
@@ -516,62 +552,64 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-            <div className={`bar-chart-container trend-chart ${hasTrendData ? '' : 'has-empty'}`}>
-              <h3 className="chart-heading">Year vs Gender Distribution (Trend)</h3>
+              <div className={`bar-chart-container trend-chart ${hasTrendData ? '' : 'has-empty'}`}>
+                <h3 className="chart-heading">Year vs Gender Distribution (Trend)</h3>
 
-              <div className={`trend-empty-state ${hasTrendData ? 'hidden' : ''}`}>
-                <p>No information available for the selected filter</p>
+                <div className={`trend-empty-state ${hasTrendData ? 'hidden' : ''}`}>
+                  <p>No information available for the selected filter</p>
+                </div>
+
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart
+                    data={displayGenderTrendData}
+                    margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+
+                    <XAxis
+                      dataKey="year"
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      stroke="#000"
+                      tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
+                    />
+
+                    <YAxis
+                      domain={[0, 'dataMax + 5']}
+                      allowDecimals={false}
+                      stroke="#000"
+                      tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
+                    />
+
+                    <Tooltip />
+                    <Legend />
+
+                    {(selectedGender === 'All' || selectedGender === 'Male') && (
+                      <Bar dataKey="Male" fill={COLORS[0]} {...BAR_ANIMATION} />
+                    )}
+
+                    {(selectedGender === 'All' || selectedGender === 'Female') && (
+                      <Bar dataKey="Female" fill={COLORS[1]} {...BAR_ANIMATION} />
+                    )}
+
+                    {(selectedGender === 'All' || selectedGender === 'Transgender') && (
+                      <Bar dataKey="Transgender" fill={COLORS[2]} {...BAR_ANIMATION} />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart
-                  data={displayGenderTrendData}
-                  margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-
-                  <XAxis
-                    dataKey="year"
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                    stroke="#000"
-                    tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
-                  />
-
-                  <YAxis
-                    domain={[0, 'dataMax + 5']}
-                    allowDecimals={false}
-                    stroke="#000"
-                    tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
-                  />
-
-                  <Tooltip />
-                  <Legend />
-
-                  {(selectedGender === 'All' || selectedGender === 'Male') && (
-                    <Bar dataKey="Male" fill={COLORS[0]} {...BAR_ANIMATION} />
-                  )}
-
-                  {(selectedGender === 'All' || selectedGender === 'Female') && (
-                    <Bar dataKey="Female" fill={COLORS[1]} {...BAR_ANIMATION} />
-                  )}
-
-                  {(selectedGender === 'All' || selectedGender === 'Transgender') && (
-                    <Bar dataKey="Transgender" fill={COLORS[2]} {...BAR_ANIMATION} />
-                  )}
-                </BarChart>
-              </ResponsiveContainer>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 2. Gender Distribution Pie Chart */}
-        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-          <h2>Gender Distribution (Pie Chart)</h2>
-          
-          <div className="chart-section">
+        {activeChart === 'genderPie' && (
+          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+            <h2>Gender Distribution (Pie Chart)</h2>
+            
+            <div className="chart-section">
             <div className="filter-panel">
               <div className="filter-header">
                 <h3>Filters</h3>
@@ -700,53 +738,55 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-            <div className={`chart-container pie-chart ${hasPieData ? '' : 'has-empty'}`}>
-              <h3 className="chart-heading">Gender Distribution</h3>
+              <div className={`chart-container pie-chart ${hasPieData ? '' : 'has-empty'}`}>
+                <h3 className="chart-heading">Gender Distribution</h3>
 
-              <div className={`trend-empty-state ${hasPieData ? 'hidden' : ''}`}>
-                <p>No information available for the selected filter</p>
-              </div>
-
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    dataKey="value"
-                    isAnimationActive
-                    animationDuration={700}
-                    animationEasing="ease-out"
-                    animationBegin={80}
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {hasPieData && (
-                <div className="chart-info">
-                  <CustomLegend payload={chartData.map((item, index) => ({
-                    value: item.name,
-                    color: COLORS[index % COLORS.length]
-                  }))} />
-                  <div className="total-count">
-                    <strong>Total Students: {total}</strong>
-                  </div>
+                <div className={`trend-empty-state ${hasPieData ? 'hidden' : ''}`}>
+                  <p>No information available for the selected filter</p>
                 </div>
-              )}
+
+                <ResponsiveContainer width="100%" height={400}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={120}
+                      dataKey="value"
+                      isAnimationActive
+                      animationDuration={700}
+                      animationEasing="ease-out"
+                      animationBegin={80}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {hasPieData && (
+                  <div className="chart-info">
+                    <CustomLegend payload={chartData.map((item, index) => ({
+                      value: item.name,
+                      color: COLORS[index % COLORS.length]
+                    }))} />
+                    <div className="total-count">
+                      <strong>Total Students: {total}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 3. Student Strength by Program Trend */}
-        <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-          <h2>Student Strength by Program (Trend)</h2>
-          <div className="chart-section">
+        {activeChart === 'programTrend' && (
+          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
+            <h2>Student Strength by Program (Trend)</h2>
+            <div className="chart-section">
             <div className="chart-header">
               <p className="chart-description">Student strength trends by program over the last 5 years.</p>
             </div>
@@ -791,46 +831,48 @@ function AcademicSection({ user, isPublicView = false }) {
                 </div>
               </div>
             </div>
-            <div className={`bar-chart-container trend-chart ${hasProgramTrendData ? '' : 'has-empty'}`}>
-              <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
+              <div className={`bar-chart-container trend-chart ${hasProgramTrendData ? '' : 'has-empty'}`}>
+                <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
 
-              <div className={`trend-empty-state ${hasProgramTrendData ? 'hidden' : ''}`}>
-                <p>No information available for the selected filter</p>
+                <div className={`trend-empty-state ${hasProgramTrendData ? 'hidden' : ''}`}>
+                  <p>No information available for the selected filter</p>
+                </div>
+
+                <ResponsiveContainer width="100%" height={500}>
+                  <BarChart data={programTrendData.slice(-5)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis dataKey="year" angle={-45} height={80} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {programTrendPrograms.map((program, index) => (
+                      <Bar
+                        key={program}
+                        dataKey={program}
+                        stackId="a"
+                        fill={TREND_COLORS[index % TREND_COLORS.length]}
+                        {...BAR_ANIMATION}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-
-              <ResponsiveContainer width="100%" height={500}>
-                <BarChart data={programTrendData.slice(-5)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="year" angle={-45} height={80} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {programTrendPrograms.map((program, index) => (
-                    <Bar
-                      key={program}
-                      dataKey={program}
-                      stackId="a"
-                      fill={TREND_COLORS[index % TREND_COLORS.length]}
-                      {...BAR_ANIMATION}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 4. Student Strength by Program */}
-        <div className="student-strength-section">
-          <h2>Student Strength by Program</h2>
+        {activeChart === 'programStrength' && (
+          <div className="student-strength-section">
+            <h2>Student Strength by Program</h2>
 
-          {strengthError && (
-            <div className="error-message">
-              {strengthError}
-            </div>
-          )}
+            {strengthError && (
+              <div className="error-message">
+                {strengthError}
+              </div>
+            )}
 
-          <div className="chart-section">
+            <div className="chart-section">
             <div className="filter-panel">
               <div className="filter-header">
                 <h3>Filters</h3>
@@ -897,34 +939,35 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-            <div className={`bar-chart-container trend-chart ${hasStrengthData ? '' : 'has-empty'}`}>
-              <h3 className="chart-heading">Student Strength by Program</h3>
+              <div className={`bar-chart-container trend-chart ${hasStrengthData ? '' : 'has-empty'}`}>
+                <h3 className="chart-heading">Student Strength by Program</h3>
 
-              <div className={`trend-empty-state ${hasStrengthData ? 'hidden' : ''}`}>
-                <p>No information available for the selected filter</p>
-              </div>
-
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={studentStrengthData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} />
-                  <YAxis />
-                  <Tooltip content={<StackedBarTooltip total={strengthTotal} />} />
-                  <Legend />
-                  <Bar dataKey="Male" stackId="a" fill="#667eea" {...BAR_ANIMATION} />
-                  <Bar dataKey="Female" stackId="a" fill="#764ba2" {...BAR_ANIMATION} />
-                  <Bar dataKey="Transgender" stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
-                </BarChart>
-              </ResponsiveContainer>
-
-              {hasStrengthData && (
-                <div className="chart-info">
-                  <strong>Total Students: {strengthTotal}</strong>
+                <div className={`trend-empty-state ${hasStrengthData ? 'hidden' : ''}`}>
+                  <p>No information available for the selected filter</p>
                 </div>
-              )}
+
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={studentStrengthData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" angle={-45} />
+                    <YAxis />
+                    <Tooltip content={<StackedBarTooltip total={strengthTotal} />} />
+                    <Legend />
+                    <Bar dataKey="Male" stackId="a" fill="#667eea" {...BAR_ANIMATION} />
+                    <Bar dataKey="Female" stackId="a" fill="#764ba2" {...BAR_ANIMATION} />
+                    <Bar dataKey="Transgender" stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
+                  </BarChart>
+                </ResponsiveContainer>
+
+                {hasStrengthData && (
+                  <div className="chart-info">
+                    <strong>Total Students: {strengthTotal}</strong>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <DataUploadModal
           isOpen={isUploadModalOpen}
