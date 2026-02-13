@@ -1,0 +1,11 @@
+employeeid,designationid,dateofjoining,designation,appointmentmode,natureofappointment,isonlien,lienstartdate,lienenddate,lienduration,status,remarks,dateofrelieving
+EMP001,8,2020-01-15,Junior assistant,Direct,Regular,No,,,,Active,Joined as JA,
+EMP002,10,2019-06-01,Registrar,Deputation,Contract,No,,,,Active,On deputation,
+EMP003,9,2021-03-10,Section Officer,Direct,Regular,Yes,2023-01-01,2023-12-31,1 Year,Active,On Lien,
+EMP004,11,2022-08-20,Assistant Registrar,Direct,Probation,No,,,,Active,,
+EMP005,8,2018-05-12,Junior assistant,Direct,Regular,No,,,,Relieved,Resigned,2023-05-12
+EMP006,10,2020-11-01,Registrar,Direct,Regular,No,,,,Active,,
+EMP007,8,2021-02-15,Junior assistant,Compassionate,Regular,No,,,,Active,,
+EMP008,11,2019-09-01,Assistant Registrar,Direct,Regular,No,,,,Transferred,Transferred to other dept,2024-01-01
+EMP009,1,2017-07-01,Senior Administrative Officer,Promotion,Regular,No,,,,Active,,
+EMP010,11,2023-01-10,Assistant Registrar,Direct,Contract,No,,,,Active,,

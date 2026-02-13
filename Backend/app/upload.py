@@ -697,6 +697,13 @@ def upload_csv(current_user_id):
             'details': f"Value has incorrect type. Error: {str(e).strip()}"
         }), 400
 
+    except psycopg2.errors.ForeignKeyViolation as e:
+        safe_rollback(conn)
+        return jsonify({
+            'message': 'Foreign Key Constraint Violation',
+            'details': f"Referenced record not found. Please ensure you have uploaded the dependent data first. Error: {str(e).split('DETAIL:')[-1].strip()}"
+        }), 400
+
     except Exception as e:
         # Rollback any changes if an error occurs
         safe_rollback(conn)
