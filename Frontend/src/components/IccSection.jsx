@@ -31,6 +31,7 @@ function IccSection({ user, isPublicView = false }) {
     resolved: true,
     pending: true
   });
+  const [activeView, setActiveView] = useState('chart'); // 'chart' | 'table'
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -152,7 +153,26 @@ function IccSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-            <div className="chart-section">
+            {/* View selector for chart vs table */}
+            <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'chart' ? 'active' : ''}`}
+                onClick={() => setActiveView('chart')}
+              >
+                Trend View
+              </button>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'table' ? 'active' : ''}`}
+                onClick={() => setActiveView('table')}
+              >
+                Yearly Statistics
+              </button>
+            </div>
+
+            {activeView === 'chart' && (
+              <div className="chart-section">
               <div className="chart-header">
                 <div>
                   <p className="chart-description">
@@ -287,61 +307,66 @@ function IccSection({ user, isPublicView = false }) {
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
-            <div className="grievance-table-wrapper">
-              <div className="chart-header">
-                <div>
-                  <h2>Yearly Complaint Statistics</h2>
-                  <p className="chart-description">
-                    Detailed breakdown of total complaints and their resolution status.
-                  </p>
+            {activeView === 'table' && (
+              <div className="chart-section">
+                <div className="grievance-table-wrapper">
+                  <div className="chart-header">
+                    <div>
+                      <h2>Yearly Complaint Statistics</h2>
+                      <p className="chart-description">
+                        Detailed breakdown of total complaints and their resolution status.
+                      </p>
+                    </div>
+                  </div>
+
+                  {yearlyData.length === 0 ? (
+                    <div className="no-data">No records available to display.</div>
+                  ) : (
+                    <div className="table-responsive icc-yearly-table-scrollable">
+                      <table className="grievance-table">
+                        <thead>
+                          <tr>
+                            <th>Year</th>
+                            <th>Total Complaints</th>
+                            <th>Resolved</th>
+                            <th>Pending</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(selectedYear === 'All'
+                            ? yearlyData
+                            : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                          ).map((row) => {
+                            const statusLabel =
+                              row.pending === 0 ? (
+                                <span className="status-pill resolved">All Resolved</span>
+                              ) : row.resolved === 0 ? (
+                                <span className="status-pill pending">All Pending</span>
+                              ) : (
+                                <span className="status-pill mixed">Mixed</span>
+                              );
+
+                            return (
+                              <tr key={row.year}>
+                                <td>{row.year}</td>
+                                <td>{row.total}</td>
+                                <td>{row.resolved}</td>
+                                <td>{row.pending}</td>
+                                <td>{statusLabel}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No records available to display.</div>
-              ) : (
-                <div className="table-responsive icc-yearly-table-scrollable">
-                  <table className="grievance-table">
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Total Complaints</th>
-                        <th>Resolved</th>
-                        <th>Pending</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(selectedYear === 'All'
-                        ? yearlyData
-                        : yearlyData.filter((row) => String(row.year) === String(selectedYear))
-                      ).map((row) => {
-                        const statusLabel =
-                          row.pending === 0 ? (
-                            <span className="status-pill resolved">All Resolved</span>
-                          ) : row.resolved === 0 ? (
-                            <span className="status-pill pending">All Pending</span>
-                          ) : (
-                            <span className="status-pill mixed">Mixed</span>
-                          );
-
-                        return (
-                          <tr key={row.year}>
-                            <td>{row.year}</td>
-                            <td>{row.total}</td>
-                            <td>{row.resolved}</td>
-                            <td>{row.pending}</td>
-                            <td>{statusLabel}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            )}
           </>
         )}
       </div>
