@@ -50,6 +50,7 @@ UPDATABLE_TABLES = {
     'nptel_enrollments': ['enrollment_id'],  # Uses SERIAL ID
     'uba_projects': ['project_id'],  # Uses SERIAL ID
     'uba_events': ['event_id'],  # Uses SERIAL ID
+    'nirf_ranking': ['year'],
     # 'users' and 'roles' are intentionally left out here for security.
     # You can add them if you need to, but be very careful.
     # 'roles': ['name'],

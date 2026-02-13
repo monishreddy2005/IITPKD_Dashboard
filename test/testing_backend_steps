@@ -1,7 +1,0 @@
-for backend we can create user by signing up. verification is not added yet it will be added later
-for checking without creating account following credential can be used
-    email: demo@test.com
-    password: demo
-
-also first postgress sql should be already installed and have corresponding tables matching with the databse.
-before running flask backend/.env needs to be updataed according the postgress and password of the system. 
