@@ -363,7 +363,7 @@ function AcademicSection({ user, isPublicView = false }) {
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          {!isPublicView && <h1>Academic Section - Gender & Strength</h1>}
+          {!isPublicView && <h1>Student Overview</h1>}
           {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4) && (
             <button
               className="upload-data-btn"

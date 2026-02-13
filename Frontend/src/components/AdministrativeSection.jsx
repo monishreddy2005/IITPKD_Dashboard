@@ -87,6 +87,9 @@ function AdministrativeSection({ user, isPublicView = false }) {
   const [facultyGenderLoading, setFacultyGenderLoading] = useState(false);
   const [facultyGenderError, setFacultyGenderError] = useState(null);
 
+  // UI state to control which chart block is visible
+  const [activeChart, setActiveChart] = useState('facultyTrend'); // 'facultyTrend' | 'facultyDept' | 'staffCount' | 'genderDistribution' | 'categoryDistribution' | 'departmentBreakdown'
+
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
 
@@ -340,8 +343,55 @@ function AdministrativeSection({ user, isPublicView = false }) {
           </div>
         )}
 
+        {/* Chart selector tabs */}
+        <div className="chart-tabs">
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'facultyTrend' ? 'active' : ''}`}
+            onClick={() => setActiveChart('facultyTrend')}
+          >
+            Faculty Gender Trend
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'facultyDept' ? 'active' : ''}`}
+            onClick={() => setActiveChart('facultyDept')}
+          >
+            Faculty by Department &amp; Designation
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'staffCount' ? 'active' : ''}`}
+            onClick={() => setActiveChart('staffCount')}
+          >
+            Staff Count
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'genderDistribution' ? 'active' : ''}`}
+            onClick={() => setActiveChart('genderDistribution')}
+          >
+            Gender Distribution
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'categoryDistribution' ? 'active' : ''}`}
+            onClick={() => setActiveChart('categoryDistribution')}
+          >
+            Category Distribution
+          </button>
+          <button
+            type="button"
+            className={`chart-tab ${activeChart === 'departmentBreakdown' ? 'active' : ''}`}
+            onClick={() => setActiveChart('departmentBreakdown')}
+          >
+            Department Breakdown
+          </button>
+        </div>
+
         {/* Faculty Gender Trend (Last 5 Years) */}
-        <div className="chart-section">
+        {activeChart === 'facultyTrend' && (
+          <div className="chart-section">
           <div className="chart-header">
             <div>
               <h2>Faculty Gender Trend (Last 5 Years)</h2>
@@ -391,10 +441,12 @@ function AdministrativeSection({ user, isPublicView = false }) {
               </ResponsiveContainer>
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Faculty by Department and Designation */}
-        <div className="chart-section">
+        {activeChart === 'facultyDept' && (
+          <div className="chart-section">
           {/* Filter Panel */}
           <div className="filter-panel">
             <div className="filter-header">
@@ -595,10 +647,12 @@ function AdministrativeSection({ user, isPublicView = false }) {
               )}
             </>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Staff Count */}
-        <div className="student-strength-section">
+        {activeChart === 'staffCount' && (
+          <div className="student-strength-section">
           <h2>Staff Count (Technical and Administrative)</h2>
 
           {staffError && (
@@ -655,10 +709,12 @@ function AdministrativeSection({ user, isPublicView = false }) {
               </>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Gender Distribution */}
-        <div className="student-strength-section">
+        {activeChart === 'genderDistribution' && (
+          <div className="student-strength-section">
           <h2>Gender Distribution</h2>
 
           {genderError && (
@@ -715,10 +771,12 @@ function AdministrativeSection({ user, isPublicView = false }) {
               </>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Category Distribution */}
-        <div className="student-strength-section">
+        {activeChart === 'categoryDistribution' && (
+          <div className="student-strength-section">
           <h2>Category Distribution</h2>
 
           {categoryError && (
@@ -782,10 +840,12 @@ function AdministrativeSection({ user, isPublicView = false }) {
               </>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Department Breakdown */}
-        <div className="student-strength-section">
+        {activeChart === 'departmentBreakdown' && (
+          <div className="student-strength-section">
           <h2>Department Breakdown (Faculty & Staff by Gender)</h2>
 
           {departmentError && (
@@ -881,7 +941,8 @@ function AdministrativeSection({ user, isPublicView = false }) {
               </>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Upload Modal */}
         <DataUploadModal
