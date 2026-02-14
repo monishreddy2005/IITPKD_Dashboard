@@ -1,0 +1,6 @@
+course_id,student_name,enrollment_semester,enrollment_year,certification_earned,certification_date
+17,Student A,Jan,2023,True,2023-05-15
+17,Student B,Jan,2023,False,
+17,Student C,Jan,2023,True,2023-05-15
+17,Student D,Jan,2023,True,2023-05-15
+17,Student E,Jan,2023,False,
