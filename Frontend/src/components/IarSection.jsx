@@ -74,6 +74,9 @@ function IarSection({ user, isPublicView = false }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // UI state to control which visualization block is visible
+  const [activeView, setActiveView] = useState('trend'); // 'trend' | 'state' | 'country' | 'outcome'
+
   const token = localStorage.getItem('authToken');
 
   useEffect(() => {
@@ -291,203 +294,245 @@ function IarSection({ user, isPublicView = false }) {
                   </div>
                 </div>
               </div>
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Track the proportion of alumni opting for higher studies versus corporate roles across admission
-                    years.
-                  </p>
-                </div>
+              {/* View selector for different IAR charts */}
+              <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
+                <button
+                  type="button"
+                  className={`chart-tab ${activeView === 'trend' ? 'active' : ''}`}
+                  onClick={() => setActiveView('trend')}
+                >
+                  Outcome Trend
+                </button>
+                <button
+                  type="button"
+                  className={`chart-tab ${activeView === 'state' ? 'active' : ''}`}
+                  onClick={() => setActiveView('state')}
+                >
+                  State Distribution
+                </button>
+                <button
+                  type="button"
+                  className={`chart-tab ${activeView === 'country' ? 'active' : ''}`}
+                  onClick={() => setActiveView('country')}
+                >
+                  Country Distribution
+                </button>
+                <button
+                  type="button"
+                  className={`chart-tab ${activeView === 'outcome' ? 'active' : ''}`}
+                  onClick={() => setActiveView('outcome')}
+                >
+                  Department Outcome
+                </button>
               </div>
 
-              {trendData.length === 0 ? (
-                <div className="no-data">No trend data available for the selected filters.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Outcome Trend Over Years</h3>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <LineChart data={trendData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="plainline" 
-                      />
-                      <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={3} />
-                      <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={3} />
-                      <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={3} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Alumni counts mapped to Indian states based on their registered home state.
-                  </p>
-                </div>
-              </div>
-
-              {stateDistribution.length === 0 ? (
-                <div className="no-data">No state distribution data to display.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">State-wise Alumni Distribution</h3>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={stateDistribution} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="state" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'State', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="rect" 
-                      />
-                      <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Breakdown of alumni locations across countries to understand international presence.
-                  </p>
-                </div>
-              </div>
-
-              {countryDistribution.length === 0 ? (
-                <div className="no-data">No country distribution data to display.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Global Alumni Reach</h3>
-                  <ResponsiveContainer width="100%" height={380}>
-                    <PieChart>
-                      <Pie
-                        dataKey="count"
-                        data={countryDistribution}
-                        nameKey="country"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={140}
-                        label={({ name, value }) => `${name} (${value})`}
-                      >
-                        {countryDistribution.map((entry, index) => (
-                          <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Compare higher studies versus corporate career paths chosen by alumni from each department.
-                  </p>
-                </div>
-              </div>
-
-              {outcomeBreakdown.length === 0 ? (
-                <div className="no-data">No departmental breakdown to display.</div>
-              ) : (
+              {activeView === 'trend' && (
                 <>
-                  <div className="chart-container">
-                    <h3 className="chart-heading">Outcome by Department</h3>
-                    <ResponsiveContainer width="100%" height={420}>
-                      <BarChart data={sortedOutcomeBreakdown} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis 
-                          dataKey="department" 
-                          angle={-45}
-                          textAnchor="end"
-                          height={100}
-                          stroke="#000000"
-                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                          label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                        />
-                        <YAxis 
-                          stroke="#000000"
-                          tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                          label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                        />
-                        <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                        <Legend 
-                          align="right"
-                          verticalAlign="top"
-                          wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }} 
-                          iconType="rect" 
-                        />
-                        <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} />
-                        <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  <div className="chart-header">
+                    <div>
+                      <p className="chart-description">
+                        Track the proportion of alumni opting for higher studies versus corporate roles across admission
+                        years.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="grievance-table-wrapper">
-                    <div className="chart-header">
-                      <div>
-                        <h2>Departmental Outcome Summary</h2>
-                        <p className="chart-description">
-                          Tabular view listing counts per department for transparency and export needs.
-                        </p>
+                  {trendData.length === 0 ? (
+                    <div className="no-data">No trend data available for the selected filters.</div>
+                  ) : (
+                    <div className="chart-container">
+                      <h3 className="chart-heading">Outcome Trend Over Years</h3>
+                      <ResponsiveContainer width="100%" height={420}>
+                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis 
+                            dataKey="year" 
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <YAxis 
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                          <Legend 
+                            wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                            iconType="plainline" 
+                          />
+                          <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={3} />
+                          <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={3} />
+                          <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={3} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeView === 'state' && (
+                <>
+                  <div className="chart-header">
+                    <div>
+                      <p className="chart-description">
+                        Alumni counts mapped to Indian states based on their registered home state.
+                      </p>
+                    </div>
+                  </div>
+
+                  {stateDistribution.length === 0 ? (
+                    <div className="no-data">No state distribution data to display.</div>
+                  ) : (
+                    <div className="chart-container">
+                      <h3 className="chart-heading">State-wise Alumni Distribution</h3>
+                      <ResponsiveContainer width="100%" height={420}>
+                        <BarChart data={stateDistribution} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis 
+                            dataKey="state" 
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'State', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <YAxis 
+                            stroke="#000000"
+                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                            label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                          />
+                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                          <Legend 
+                            wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
+                            iconType="rect" 
+                          />
+                          <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeView === 'country' && (
+                <>
+                  <div className="chart-header">
+                    <div>
+                      <p className="chart-description">
+                        Breakdown of alumni locations across countries to understand international presence.
+                      </p>
+                    </div>
+                  </div>
+
+                  {countryDistribution.length === 0 ? (
+                    <div className="no-data">No country distribution data to display.</div>
+                  ) : (
+                    <div className="chart-container">
+                      <h3 className="chart-heading">Global Alumni Reach</h3>
+                      <ResponsiveContainer width="100%" height={380}>
+                        <PieChart>
+                          <Pie
+                            dataKey="count"
+                            data={countryDistribution}
+                            nameKey="country"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={140}
+                            label={({ name, value }) => `${name} (${value})`}
+                          >
+                            {countryDistribution.map((entry, index) => (
+                              <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeView === 'outcome' && (
+                <>
+                  <div className="chart-header">
+                    <div>
+                      <p className="chart-description">
+                        Compare higher studies versus corporate career paths chosen by alumni from each department.
+                      </p>
+                    </div>
+                  </div>
+
+                  {outcomeBreakdown.length === 0 ? (
+                    <div className="no-data">No departmental breakdown to display.</div>
+                  ) : (
+                    <>
+                      <div className="chart-container">
+                        <h3 className="chart-heading">Outcome by Department</h3>
+                        <ResponsiveContainer width="100%" height={420}>
+                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                            <XAxis 
+                              dataKey="department" 
+                              angle={-45}
+                              textAnchor="end"
+                              height={100}
+                              stroke="#000000"
+                              tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                              label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                            />
+                            <YAxis 
+                              stroke="#000000"
+                              tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
+                              label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
+                            />
+                            <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                            <Legend 
+                              align="right"
+                              verticalAlign="top"
+                              wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }} 
+                              iconType="rect" 
+                            />
+                            <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} />
+                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} />
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
-                    </div>
 
-                    <div className="table-responsive iar-outcome-table-scrollable">
-                      <table className="grievance-table">
-                        <thead>
-                          <tr>
-                            <th>Department</th>
-                            <th>Total Alumni</th>
-                            <th>Higher Studies</th>
-                            <th>Corporate</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sortedOutcomeBreakdown.map((row) => (
-                            <tr key={row.department}>
-                              <td>{row.department}</td>
-                              <td>{row.total}</td>
-                              <td>{row.higher}</td>
-                              <td>{row.corporate}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                      <div className="grievance-table-wrapper">
+                        <div className="chart-header">
+                          <div>
+                            <h2>Departmental Outcome Summary</h2>
+                            <p className="chart-description">
+                              Tabular view listing counts per department for transparency and export needs.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="table-responsive iar-outcome-table-scrollable">
+                          <table className="grievance-table">
+                            <thead>
+                              <tr>
+                                <th>Department</th>
+                                <th>Total Alumni</th>
+                                <th>Higher Studies</th>
+                                <th>Corporate</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sortedOutcomeBreakdown.map((row) => (
+                                <tr key={row.department}>
+                                  <td>{row.department}</td>
+                                  <td>{row.total}</td>
+                                  <td>{row.higher}</td>
+                                  <td>{row.corporate}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>

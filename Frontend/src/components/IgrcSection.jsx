@@ -25,6 +25,12 @@ const BAR_COLORS = {
 function IgrcSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('All');
+  const [visibleMetrics, setVisibleMetrics] = useState({
+    filed: true,
+    resolved: true,
+    pending: true
+  });
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -60,6 +66,8 @@ function IgrcSection({ user, isPublicView = false }) {
           pending: row.grievances_pending
         }));
 
+        // Sort by year ascending for consistent dropdown order
+        formattedYearly.sort((a, b) => a.year - b.year);
         setYearlyData(formattedYearly);
 
         const summaryData = summaryResponse?.data || {};
@@ -125,6 +133,24 @@ function IgrcSection({ user, isPublicView = false }) {
                 <p className="summary-value accent-warning">{summary.pending}</p>
                 <span className="summary-subtitle">Grievances currently in process</span>
               </div>
+
+              {/* Year filter */}
+              <div className="summary-card">
+                <h3>Filter by Year</h3>
+                <select
+                  className="filter-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  <option value="All">All Years</option>
+                  {yearlyData.map((row) => (
+                    <option key={row.year} value={row.year}>
+                      {row.year}
+                    </option>
+                  ))}
+                </select>
+                <span className="summary-subtitle">Focus on a specific grievance year</span>
+              </div>
             </div>
 
             <div className="chart-section">
@@ -134,6 +160,54 @@ function IgrcSection({ user, isPublicView = false }) {
                     Visual comparison of total grievances filed against resolutions and pending cases.
                   </p>
                 </div>
+                <div className="metric-toggle-group">
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.filed ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, filed: !prev.filed };
+                        // Ensure at least one metric stays visible
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Filed
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.resolved ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, resolved: !prev.resolved };
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Resolved
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.pending ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, pending: !prev.pending };
+                        if (!next.filed && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Pending
+                  </button>
+                </div>
               </div>
 
               {yearlyData.length === 0 ? (
@@ -142,7 +216,14 @@ function IgrcSection({ user, isPublicView = false }) {
                 <div className="chart-container">
                   <h3 className="chart-heading">Year-wise Grievance Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <BarChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                    <BarChart
+                      data={
+                        selectedYear === 'All'
+                          ? yearlyData
+                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                      }
+                      margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                       <XAxis 
                         dataKey="year" 
@@ -163,9 +244,15 @@ function IgrcSection({ user, isPublicView = false }) {
                         wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
                         iconType="rect" 
                       />
-                      <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />
-                      <Bar dataKey="resolved" name="Resolved" fill={BAR_COLORS.resolved} />
-                      <Bar dataKey="pending" name="Pending" fill={BAR_COLORS.pending} />
+                      {visibleMetrics.filed && (
+                        <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />
+                      )}
+                      {visibleMetrics.resolved && (
+                        <Bar dataKey="resolved" name="Resolved" fill={BAR_COLORS.resolved} />
+                      )}
+                      {visibleMetrics.pending && (
+                        <Bar dataKey="pending" name="Pending" fill={BAR_COLORS.pending} />
+                      )}
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

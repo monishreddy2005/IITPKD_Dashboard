@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './DataUploadModal.css';
 
@@ -10,16 +10,34 @@ import './DataUploadModal.css';
  * @param {string} tableName - The backend table name to update (e.g., 'student').
  * @param {string} token - Auth token.
  */
-function DataUploadModal({ isOpen, onClose, tableName, token }) {
+function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewData, setPreviewData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+    const [uploadSuccess, setUploadSuccess] = useState(false);
+
+    // Reset state when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedFile(null);
+            setPreviewData(null);
+            setMessage(null);
+            setUploadSuccess(false);
+            setIsLoading(false);
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
-    // Reset state when closing (optional, but good UX if checking `isOpen` change)
-    // For simplicity, we assume parent unmounts or we reset on close if needed.
+    const handleClose = () => {
+        setSelectedFile(null);
+        setPreviewData(null);
+        setMessage(null);
+        setUploadSuccess(false);
+        setIsLoading(false);
+        onClose();
+    };
 
     const parseCSVPreview = (csvText) => {
         try {
@@ -42,6 +60,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
         const file = e.target.files[0];
         setSelectedFile(file);
         setMessage(null);
+        setUploadSuccess(false);
 
         if (file) {
             const reader = new FileReader();
@@ -75,8 +94,14 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                 }
             );
 
-            setMessage({ type: 'success', text: response.data.message || 'Upload successful!' });
-            // Optional: Close after delay or let user close
+            const successMsg = response.data.message || `Successfully updated table ${tableName}`;
+            setMessage({ type: 'success', text: successMsg });
+            setUploadSuccess(true);
+
+            if (onUploadSuccess) {
+                onUploadSuccess();
+            }
+
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'An error occurred during upload.';
             const errorDetails = error.response?.data?.details;
@@ -87,6 +112,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                 : errorMsg;
 
             setMessage({ type: 'error', text: finalMessage });
+            setUploadSuccess(false);
         } finally {
             setIsLoading(false);
         }
@@ -215,6 +241,18 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                     headers: ['project_title', 'event_title', 'event_type', 'event_date', 'location', 'description', 'photos_url', 'brochure_url'],
                     sample: ['Water Conservation', 'Awareness Camp', 'Workshop', '2023-03-22', 'Village Hall', 'Community meeting', '', '']
                 };
+
+            case 'industry_events':
+                return {
+                    headers: ['event_title', 'event_type', 'industry_partner', 'event_date', 'duration_hours', 'department', 'description'],
+                    sample: ['AI Symposium', 'Conference', 'Google', '2023-10-15', '8', 'CSE', 'Annual AI catchup']
+                };
+            case 'nirf_ranking':
+                return {
+                    headers: ['year', 'tlr_score', 'rpc_score', 'go_score', 'oi_score', 'pr_score'],
+                    sample: ['2023', '75.50', '80.20', '65.00', '70.10', '60.50']
+                };
+
             default:
                 return { headers: [], sample: [] };
         }
@@ -250,94 +288,124 @@ function DataUploadModal({ isOpen, onClose, tableName, token }) {
                 </div>
 
                 <div className="modal-body">
-                    <div className="warning-box">
-                        <span className="warning-icon">⚠️</span>
-                        <div>
-                            <strong>Warning:</strong> You are directly modifying the database.
-                            Ensure the CSV format matches the table schema exactly.
+                    {!uploadSuccess ? (
+                        <>
+                            <div className="warning-box">
+                                <span className="warning-icon">⚠️</span>
+                                <div>
+                                    <strong>Warning:</strong> You are directly modifying the database.
+                                    Ensure the CSV format matches the table schema exactly.
 
-                            <div style={{ marginTop: '0.5rem' }}>
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <button
+                                            className="download-template-btn"
+                                            onClick={handleDownloadTemplate}
+                                            style={{
+                                                backgroundColor: 'transparent',
+                                                border: '1px solid #f59e0b',
+                                                color: '#f59e0b',
+                                                padding: '0.25rem 0.5rem',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '0.85rem'
+                                            }}
+                                        >
+                                            Download CSV Template
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="required-format-section" style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#ccc' }}>
+                                <strong>Required Column Headers:</strong>
+                                <div style={{
+                                    backgroundColor: '#2d3748',
+                                    padding: '0.5rem',
+                                    borderRadius: '4px',
+                                    marginTop: '0.25rem',
+                                    fontFamily: 'monospace',
+                                    overflowX: 'auto',
+                                    whiteSpace: 'nowrap'
+                                }}>
+                                    {templateInfo.headers.join(', ')}
+                                </div>
+                            </div>
+
+                            <div className="file-input-container">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={handleFileChange}
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            {previewData && (
+                                <div className="preview-section">
+                                    <h4>CSV Preview (First 5 Rows)</h4>
+                                    <table className="preview-table">
+                                        <thead>
+                                            <tr>
+                                                {previewData.header.map((head, i) => <th key={i}>{head}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {previewData.rows.map((row, i) => (
+                                                <tr key={i}>
+                                                    {row.map((cell, j) => <td key={j}>{cell}</td>)}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+
+                            {message && (
+                                <div className={`status-message ${message.type}`}>
+                                    {message.text}
+                                </div>
+                            )}
+
+                            <div className="upload-actions">
+                                <button className="cancel-btn" onClick={onClose} disabled={isLoading}>
+                                    Cancel
+                                </button>
                                 <button
-                                    className="download-template-btn"
-                                    onClick={handleDownloadTemplate}
-                                    style={{
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid #f59e0b',
-                                        color: '#f59e0b',
-                                        padding: '0.25rem 0.5rem',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem'
-                                    }}
+                                    className="upload-btn"
+                                    onClick={handleUpload}
+                                    disabled={!selectedFile || isLoading}
                                 >
-                                    Download CSV Template
+                                    {isLoading ? 'Uploading...' : 'Confirm Upload'}
                                 </button>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="required-format-section" style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#ccc' }}>
-                        <strong>Required Column Headers:</strong>
-                        <div style={{
-                            backgroundColor: '#2d3748',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            marginTop: '0.25rem',
-                            fontFamily: 'monospace',
-                            overflowX: 'auto',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            {templateInfo.headers.join(', ')}
-                        </div>
-                    </div>
-
-                    <div className="file-input-container">
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileChange}
-                            disabled={isLoading}
-                        />
-                    </div>
-
-                    {previewData && (
-                        <div className="preview-section">
-                            <h4>CSV Preview (First 5 Rows)</h4>
-                            <table className="preview-table">
-                                <thead>
-                                    <tr>
-                                        {previewData.header.map((head, i) => <th key={i}>{head}</th>)}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {previewData.rows.map((row, i) => (
-                                        <tr key={i}>
-                                            {row.map((cell, j) => <td key={j}>{cell}</td>)}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        </>
+                    ) : (
+                        <div className="success-view" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>✅</div>
+                            <h3 style={{ color: '#2ecc71', marginBottom: '1rem' }}>Upload Successful!</h3>
+                            <p style={{ marginBottom: '2rem', color: '#555' }}>
+                                {message?.text || `Successfully updated table ${tableName}`}
+                            </p>
+                            <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '2rem' }}>
+                                Click OK to close this window.
+                            </p>
+                            <button
+                                onClick={handleClose}
+                                style={{
+                                    padding: '10px 30px',
+                                    backgroundColor: '#2ecc71',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                OK
+                            </button>
                         </div>
                     )}
-
-                    {message && (
-                        <div className={`status-message ${message.type}`}>
-                            {message.text}
-                        </div>
-                    )}
-
-                    <div className="upload-actions">
-                        <button className="cancel-btn" onClick={onClose} disabled={isLoading}>
-                            Cancel
-                        </button>
-                        <button
-                            className="upload-btn"
-                            onClick={handleUpload}
-                            disabled={!selectedFile || isLoading}
-                        >
-                            {isLoading ? 'Uploading...' : 'Confirm Upload'}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

@@ -28,4 +28,4 @@ yarn-debug.log*
 Backend/.env
 
 # backend app env file
-Backend/app/.env
+Backend/ .env

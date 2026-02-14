@@ -4,28 +4,34 @@ import './Page.css';
 import './EwdSection.css'; // Use EWD styles for cards
 import axios from 'axios';
 
-const NirfRankingSection = () => {
+import DataUploadModal from './DataUploadModal';
+
+const NirfRankingSection = ({ user }) => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/nirf/nirf_metrics');
+            // Ensure data is sorted by year
+            const sortedData = response.data.sort((a, b) => a.year - b.year);
+            setData(sortedData);
+            setLoading(false);
+        } catch (err) {
+            console.error("Error fetching NIRF data:", err);
+            setError("Failed to load NIRF ranking data. Please try again later.");
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/api/nirf/nirf_metrics');
-                // Ensure data is sorted by year
-                const sortedData = response.data.sort((a, b) => a.year - b.year);
-                setData(sortedData);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching NIRF data:", err);
-                setError("Failed to load NIRF ranking data. Please try again later.");
-                setLoading(false);
-            }
-        };
-
         fetchData();
     }, []);
+
+    const canUpload = user && [2, 3, 4].includes(user.role_id);
+    const token = localStorage.getItem('authToken');
 
     if (loading) {
         return (
@@ -41,14 +47,63 @@ const NirfRankingSection = () => {
     }
 
     if (data.length === 0) {
-        return null;
+        if (canUpload) {
+            return (
+                <div className="content-card" style={{ textAlign: 'center', padding: '3rem' }}>
+                    <h2 style={{ marginBottom: '1rem', color: '#1a237e' }}>NIRF Ranking Overview</h2>
+                    <p style={{ color: '#666', marginBottom: '2rem' }}>No NIRF ranking data available.</p>
+                    <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#1a237e',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            fontWeight: '600'
+                        }}
+                    >
+                        Upload Data
+                    </button>
+
+                    <DataUploadModal
+                        isOpen={isUploadModalOpen}
+                        onClose={() => setIsUploadModalOpen(false)}
+                        tableName="nirf_ranking"
+                        token={token}
+                        onUploadSuccess={fetchData}
+                    />
+                </div>
+            );
+        }
+        return null; // Don't show anything for regular users if no data
     }
 
     const latestStats = data[data.length - 1];
 
     return (
         <div className="content-card">
-            <h2 style={{ marginBottom: '20px', color: '#1a237e' }}>NIRF Ranking Overview</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0, color: '#1a237e' }}>NIRF Ranking Overview</h2>
+                {canUpload && (
+                    <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem'
+                        }}
+                    >
+                        Upload Data
+                    </button>
+                )}
+            </div>
 
             {/* Latest Stats Cards */}
             <h3 style={{ fontSize: '1.2rem', color: '#444', marginBottom: '1rem' }}>Latest Rankings (FY {latestStats.year})</h3>
@@ -112,6 +167,14 @@ const NirfRankingSection = () => {
                 <p><strong>TLR:</strong> Teaching, Learning & Resources | <strong>RPC:</strong> Research and Professional Practice</p>
                 <p><strong>GO:</strong> Graduation Outcomes | <strong>OI:</strong> Outreach and Inclusivity | <strong>PR:</strong> Perception</p>
             </div>
+
+            <DataUploadModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                tableName="nirf_ranking"
+                token={token}
+                onUploadSuccess={fetchData}
+            />
         </div>
     );
 };

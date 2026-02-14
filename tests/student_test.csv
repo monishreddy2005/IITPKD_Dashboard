@@ -1,0 +1,29 @@
+rollno,name,program,yearofadmission,batch,branch,department,pwd,state,category,gender,status
+111901001,John Doe,BTech,2019,Jul,Computer Science,CSE,No,Kerala,Gen,Male,Active
+122001002,Jane Smith,MTech,2020,Jan,Electrical Engineering,EE,Yes,Tamil Nadu,OBC,Female,Ongoing
+132101003,Rahul Kumar,PhD,2021,Jul,Mechanical Engineering,ME,No,Delhi,SC,Male,Slowpace
+142201004,Priya Singh,MSc,2022,Jan,Physics,PH,No,Karnataka,EWS,Female,Active
+152301005,Amit Sharma,MS,2023,Jul,Chemistry,CH,No,Maharashtra,Gen,Male,Graduated
+162401006,Suresh Menon,BTech,2024,Jul,Civil Engineering,CE,No,Kerala,ST,Male,Ongoing
+172501007,Lakshmi R,PhD,2025,Jan,Data Science,DS,Yes,Tamil Nadu,OBC,Female,Slowpace
+182001008,Kiran V,MTech,2020,Jul,Computer Science,CSE,No,Karnataka,Gen,Transgender,Graduated
+192101009,Anjali P,MSc,2021,Jul,Mathematics,MA,No,Kerala,Gen,Female,Active
+202201010,Vikram S,BTech,2022,Jul,Mechanical Engineering,ME,No,Maharashtra,EWS,Male,Ongoing
+212301011,Rohan Gupta,BTech,2023,Jul,Data Science,DS,No,Delhi,OBC,Male,Ongoing
+222101012,Meera Nair,PhD,2021,Jul,Computer Science,CSE,No,Kerala,Gen,Female,Ongoing
+232201013,Arjun Reddy,MTech,2022,Jul,Mechanical Engineering,ME,No,Andhra Pradesh,Gen,Male,Active
+242001014,Sneha Patil,BTech,2020,Jul,Civil Engineering,CE,No,Maharashtra,OBC,Female,Graduated
+252301015,Vivek Singh,MS,2023,Jan,Electrical Engineering,EE,Yes,Uttar Pradesh,SC,Male,Ongoing
+262401016,Kavya Das,MSc,2024,Jul,Chemistry,CH,No,West Bengal,Gen,Female,Ongoing
+272101017,Mohammed Zaid,BTech,2021,Jul,Computer Science,CSE,No,Telangana,OBC,Male,Graduated
+282201018,Divya K,PhD,2022,Jan,Physics,PH,No,Karnataka,ST,Female,Active
+292301019,Rajesh Iyer,MTech,2023,Jul,Data Science,DS,No,Tamil Nadu,Gen,Male,Ongoing
+302001020,Pooja Sharma,BTech,2020,Jul,Electrical Engineering,EE,No,Rajasthan,EWS,Female,Graduated
+312401021,Ankit Verma,MS,2024,Jul,Mechanical Engineering,ME,No,Madhya Pradesh,OBC,Male,Ongoing
+322101022,Swati Rao,MSc,2021,Jul,Mathematics,MA,No,Maharashtra,Gen,Female,Graduated
+332201023,Varun Nair,PhD,2022,Jul,Civil Engineering,CE,No,Kerala,SC,Male,Slowpace
+342301024,Nisha P,BTech,2023,Jul,Computer Science,CSE,Yes,Tamil Nadu,Gen,Female,Ongoing
+352001025,Siddharth M,MTech,2020,Jul,Electrical Engineering,EE,No,Karnataka,OBC,Male,Graduated
+362401026,Deepak Kumar,BTech,2024,Jul,Data Science,DS,No,Bihar,EWS,Male,Ongoing
+372101027,Riya George,PhD,2021,Jan,Chemistry,CH,No,Kerala,Gen,Female,Active
+382201028,Amitabh Roy,MTech,2022,Jul,Computer Science,CSE,No,West Bengal,SC,Male,Ongoing

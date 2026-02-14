@@ -33,7 +33,7 @@ const iitPalakkadImages = [
 
 ];
 
-function HomePage() {
+function HomePage({ user }) {
   const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = () => {
@@ -71,7 +71,7 @@ function HomePage() {
 
 
             {/* NIRF Ranking Section */}
-            <NirfRankingSection />
+            <NirfRankingSection user={user} />
 
             {/* Main Sections Overview */}
             <div className="content-card">
