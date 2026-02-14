@@ -101,7 +101,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HomePage />} />
+          <Route index element={<HomePage user={user} />} />
           <Route path="people-campus" element={<PeopleCampus user={user} />} />
           <Route path="people-campus/academic-section" element={<AcademicSection user={user} />} />
           <Route path="people-campus/administrative-section" element={<AdministrativeSection user={user} />} />

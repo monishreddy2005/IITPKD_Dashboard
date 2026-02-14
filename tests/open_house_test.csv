@@ -1,0 +1,6 @@
+event_year,event_date,theme,target_audience,departments_participated,num_departments,total_visitors,key_highlights,photos_url,poster_url,brochure_url
+2023,2023-11-20,Discover IIT Palakkad,School Students,"CSE, EE, ME, CE, DS, BSBE",6,1200,"Lab Demos, Science Experiments","https://example.com/oh/2023/photos","https://example.com/oh/2023/poster.jpg","https://example.com/oh/2023/brochure.pdf"
+2022,2022-12-15,Science for Society,General Public,"CSE, PH, CH, MA",4,800,"Robotics Show, Chemistry Magic","https://example.com/oh/2022/photos","https://example.com/oh/2022/poster.jpg","https://example.com/oh/2022/brochure.pdf"
+2021,2021-10-30,Virtual Open House,Online Audience,"All Departments",10,5000,"Virtual Campus Tour, Online Quizzes","https://example.com/oh/2021/photos","https://example.com/oh/2021/poster.jpg","https://example.com/oh/2021/brochure.pdf"
+2019,2019-11-10,Innovations at IITPKD,Industry & Alumni,"EE, ME, CE",3,600,"Project Expo, Tech Talks","https://example.com/oh/2019/photos","https://example.com/oh/2019/poster.jpg","https://example.com/oh/2019/brochure.pdf"
+2018,2018-09-25,Open Day 2018,School Students,"PH, CH, MA",3,450,"Physics Demos, Math Puzzles","https://example.com/oh/2018/photos","https://example.com/oh/2018/poster.jpg","https://example.com/oh/2018/brochure.pdf"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -67,86 +67,89 @@ function IcsrSection({ user, isPublicView = false }) {
   const [error, setError] = useState(null);
 
   // Upload Modal State
-  const [activeUploadTable, setActiveUploadTable] = useState('industry_events');
+  const [activeUploadTable] = useState('industry_events');
 
-  // Load filter options on mount
-  useEffect(() => {
-    const loadFilterOptions = async () => {
-      if (!token) return;
-      try {
-        const options = await fetchIcsrFilterOptions(token);
-        setFilterOptions(options);
-      } catch (err) {
-        console.error('Error loading filter options:', err);
-      }
-    };
-    loadFilterOptions();
+  // Data loading functions
+  const loadSummary = useCallback(async () => {
+    if (!token) return;
+    try {
+      setLoading(true);
+      const data = await fetchIcsrSummary(token);
+      setSummary(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load summary data');
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
-  // Load summary data
-  useEffect(() => {
-    const loadSummary = async () => {
-      if (!token) return;
-      try {
-        setLoading(true);
-        const data = await fetchIcsrSummary(token);
-        setSummary(data);
-      } catch (err) {
-        setError(err.message || 'Failed to load summary data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadYearlyDistribution = useCallback(async () => {
+    if (!token) return;
+    try {
+      const result = await fetchIcsrYearlyDistribution(token);
+      setYearlyDistribution(result.data || []);
+    } catch (err) {
+      console.error('Error loading yearly distribution:', err);
+    }
+  }, [token]);
+
+  const loadEventTypes = useCallback(async () => {
+    if (!token) return;
+    try {
+      const result = await fetchIcsrEventTypes(token);
+      setEventTypes(result.data || []);
+    } catch (err) {
+      console.error('Error loading event types:', err);
+    }
+  }, [token]);
+
+  const loadEvents = useCallback(async () => {
+    if (!token) return;
+    try {
+      const result = await fetchIcsrEvents(
+        filters,
+        pagination.page,
+        pagination.per_page,
+        token
+      );
+      setEventsList(result.data || []);
+      setPagination(prev => result.pagination || prev);
+    } catch (err) {
+      console.error('Error loading events:', err);
+    }
+  }, [token, filters, pagination.page, pagination.per_page]);
+
+  const loadFilterOptions = useCallback(async () => {
+    if (!token) return;
+    try {
+      const options = await fetchIcsrFilterOptions(token);
+      setFilterOptions(options);
+    } catch (err) {
+      console.error('Error loading filter options:', err);
+    }
+  }, [token]);
+
+  const refreshData = () => {
     loadSummary();
-  }, [token]);
-
-  // Load yearly distribution
-  useEffect(() => {
-    const loadYearlyDistribution = async () => {
-      if (!token) return;
-      try {
-        const result = await fetchIcsrYearlyDistribution(token);
-        setYearlyDistribution(result.data || []);
-      } catch (err) {
-        console.error('Error loading yearly distribution:', err);
-      }
-    };
     loadYearlyDistribution();
-  }, [token]);
-
-  // Load event types distribution
-  useEffect(() => {
-    const loadEventTypes = async () => {
-      if (!token) return;
-      try {
-        const result = await fetchIcsrEventTypes(token);
-        setEventTypes(result.data || []);
-      } catch (err) {
-        console.error('Error loading event types:', err);
-      }
-    };
     loadEventTypes();
-  }, [token]);
-
-  // Load events list
-  useEffect(() => {
-    const loadEvents = async () => {
-      if (!token) return;
-      try {
-        const result = await fetchIcsrEvents(
-          filters,
-          pagination.page,
-          pagination.per_page,
-          token
-        );
-        setEventsList(result.data || []);
-        setPagination(prev => result.pagination || prev);
-      } catch (err) {
-        console.error('Error loading events:', err);
-      }
-    };
     loadEvents();
-  }, [filters, pagination.page, pagination.per_page, token]);
+    // No need to reload filter options on every upload usually, but we can if new depts/types appear
+    loadFilterOptions();
+  };
+
+  // Initial Data Load
+  useEffect(() => {
+    loadFilterOptions();
+    loadSummary();
+    loadYearlyDistribution();
+    loadEventTypes();
+  }, [loadFilterOptions, loadSummary, loadYearlyDistribution, loadEventTypes]);
+
+  // Load events when filters/pagination change
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({
@@ -944,6 +947,7 @@ function IcsrSection({ user, isPublicView = false }) {
             onClose={() => setIsUploadModalOpen(false)}
             tableName={activeUploadTable}
             token={token}
+            onUploadSuccess={refreshData}
           />
         </div>
 
