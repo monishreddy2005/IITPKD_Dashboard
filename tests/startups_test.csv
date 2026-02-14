@@ -1,0 +1,11 @@
+startup_name,founder_name,innovation_focus_area,year_of_incubation,status,sector,is_from_iitpkd
+AgroBot,Ravi Kumar,AgriTech,2023,Active,Agriculture,True
+GreenCycle,Anjali Singh,CleanTech,2022,Active,Environment,True
+NeuroTech,Dr. Verma,HealthTech,2021,Graduated,Healthcare,False
+EduSim,Priya Menon,EdTech,2023,Active,Education,True
+SmartBuild,Rajesh Gupta,ConstructionTech,2020,Graduated,Infrastructure,False
+FinSecure,Amit Shah,FinTech,2022,Inactive,Finance,True
+SolarSolutions,Kavya Reddy,Renewable Energy,2019,Graduated,Energy,False
+BioMat,Dr. Nair,Biotech,2023,Active,Biotechnology,True
+CyberShield,Vikram Das,Cybersecurity,2021,Active,IT,False
+AquaPure,Meera Joshi,WaterTech,2022,Active,Environment,True

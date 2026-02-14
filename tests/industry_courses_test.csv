@@ -1,0 +1,11 @@
+course_title,department,industry_partner,year_offered,is_active
+AI in Finance,CSE,Goldman Sachs,2023,True
+Embedded Systems Design,EE,Intel,2022,True
+Automotive Engineering,ME,Mercedes-Benz,2023,True
+Smart Infrastructure,CE,L&T,2021,False
+Data Science for Business,DS,IBM,2023,True
+VLSI Verification,EE,Qualcomm,2022,True
+Pharmaceutical Process,CH,Dr. Reddy's,2020,False
+Robotics & Automation,ME,Siemens,2023,True
+Cloud Computing,CSE,AWS,2024,True
+Quantum Computing,PH,Google Quantum AI,2023,True

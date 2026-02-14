@@ -1,0 +1,11 @@
+rollno,name,program,yearofadmission,batch,branch,department,pwd,state,category,gender,status
+111901001,John Doe,B.Tech,2019,Jul,Computer Science,CSE,No,Kerala,General,Male,Active
+122001002,Jane Smith,M.Tech,2020,Jan,Electrical Engineering,EE,Yes,Tamil Nadu,OBC,Female,Ongoing
+132101003,Rahul Kumar,PhD,2021,Jul,Mechanical Engineering,ME,No,Delhi,SC,Male,Slowpace
+142201004,Priya Singh,M.Sc,2022,Jan,Physics,PH,No,Karnataka,EWS,Female,Active
+152301005,Amit Sharma,MS,2023,Jul,Chemistry,CH,No,Maharashtra,General,Male,Graduated
+162401006,Suresh Menon,B.Tech,2024,Jul,Civil Engineering,CE,No,Kerala,ST,Male,Ongoing
+172501007,Lakshmi R,PhD,2025,Jan,Data Science,DS,Yes,Tamil Nadu,OBC,Female,Slowpace
+182001008,Kiran V,M.Tech,2020,Jul,Computer Science,CSE,No,Karnataka,Gen,Transgender,Graduated
+192101009,Anjali P,M.Sc,2021,Jul,Mathematics,MA,No,Kerala,General,Female,Active
+202201010,Vikram S,B.Tech,2022,Jul,Mechanical Engineering,ME,No,Maharashtra,EWS,Male,Ongoing
