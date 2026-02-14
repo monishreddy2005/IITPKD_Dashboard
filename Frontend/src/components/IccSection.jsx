@@ -25,6 +25,13 @@ const AREA_COLORS = {
 function IccSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('All');
+  const [visibleMetrics, setVisibleMetrics] = useState({
+    total: true,
+    resolved: true,
+    pending: true
+  });
+  const [activeView, setActiveView] = useState('chart'); // 'chart' | 'table'
   const [summary, setSummary] = useState({
     total: 0,
     resolved: 0,
@@ -59,8 +66,8 @@ function IccSection({ user, isPublicView = false }) {
           resolved: row.complaints_resolved,
           pending: row.complaints_pending
         }));
-        // Sort in descending order (newest first)
-        formattedYearly.sort((a, b) => b.year - a.year);
+        // Sort in ascending order for a natural dropdown order
+        formattedYearly.sort((a, b) => a.year - b.year);
         setYearlyData(formattedYearly);
 
         const summaryData = summaryResponse?.data || {};
@@ -126,14 +133,98 @@ function IccSection({ user, isPublicView = false }) {
                 <p className="summary-value accent-warning">{summary.pending}</p>
                 <span className="summary-subtitle">Complaints currently under review</span>
               </div>
+
+              {/* Year filter */}
+              <div className="summary-card">
+                <h3>Filter by Year</h3>
+                <select
+                  className="filter-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                  <option value="All">All Years</option>
+                  {yearlyData.map((row) => (
+                    <option key={row.year} value={row.year}>
+                      {row.year}
+                    </option>
+                  ))}
+                </select>
+                <span className="summary-subtitle">Focus on a specific complaints year</span>
+              </div>
             </div>
 
-            <div className="chart-section">
+            {/* View selector for chart vs table */}
+            <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'chart' ? 'active' : ''}`}
+                onClick={() => setActiveView('chart')}
+              >
+                Trend View
+              </button>
+              <button
+                type="button"
+                className={`chart-tab ${activeView === 'table' ? 'active' : ''}`}
+                onClick={() => setActiveView('table')}
+              >
+                Yearly Statistics
+              </button>
+            </div>
+
+            {activeView === 'chart' && (
+              <div className="chart-section">
               <div className="chart-header">
                 <div>
                   <p className="chart-description">
                     Overview of total complaints vis-à-vis resolved and pending cases.
                   </p>
+                </div>
+                <div className="metric-toggle-group">
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.total ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, total: !prev.total };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Total
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.resolved ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, resolved: !prev.resolved };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Resolved
+                  </button>
+                  <button
+                    type="button"
+                    className={`metric-toggle ${visibleMetrics.pending ? 'active' : ''}`}
+                    onClick={() =>
+                      setVisibleMetrics(prev => {
+                        const next = { ...prev, pending: !prev.pending };
+                        if (!next.total && !next.resolved && !next.pending) {
+                          return prev;
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    Pending
+                  </button>
                 </div>
               </div>
 
@@ -143,7 +234,14 @@ function IccSection({ user, isPublicView = false }) {
                 <div className="chart-container">
                   <h3 className="chart-heading">Year-wise Complaint Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
-                    <AreaChart data={yearlyData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
+                    <AreaChart
+                      data={
+                        selectedYear === 'All'
+                          ? yearlyData
+                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                      }
+                      margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                    >
                       <defs>
                         <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
@@ -178,83 +276,97 @@ function IccSection({ user, isPublicView = false }) {
                         wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
                         iconType="rect" 
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="total"
-                        name="Total"
-                        stroke={AREA_COLORS.total}
-                        fill="url(#colorTotal)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="resolved"
-                        name="Resolved"
-                        stroke={AREA_COLORS.resolved}
-                        fill="url(#colorResolved)"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="pending"
-                        name="Pending"
-                        stroke={AREA_COLORS.pending}
-                        fill="url(#colorPending)"
-                      />
+                      {visibleMetrics.total && (
+                        <Area
+                          type="monotone"
+                          dataKey="total"
+                          name="Total"
+                          stroke={AREA_COLORS.total}
+                          fill="url(#colorTotal)"
+                        />
+                      )}
+                      {visibleMetrics.resolved && (
+                        <Area
+                          type="monotone"
+                          dataKey="resolved"
+                          name="Resolved"
+                          stroke={AREA_COLORS.resolved}
+                          fill="url(#colorResolved)"
+                        />
+                      )}
+                      {visibleMetrics.pending && (
+                        <Area
+                          type="monotone"
+                          dataKey="pending"
+                          name="Pending"
+                          stroke={AREA_COLORS.pending}
+                          fill="url(#colorPending)"
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
-            <div className="grievance-table-wrapper">
-              <div className="chart-header">
-                <div>
-                  <h2>Yearly Complaint Statistics</h2>
-                  <p className="chart-description">
-                    Detailed breakdown of total complaints and their resolution status.
-                  </p>
+            {activeView === 'table' && (
+              <div className="chart-section">
+                <div className="grievance-table-wrapper">
+                  <div className="chart-header">
+                    <div>
+                      <h2>Yearly Complaint Statistics</h2>
+                      <p className="chart-description">
+                        Detailed breakdown of total complaints and their resolution status.
+                      </p>
+                    </div>
+                  </div>
+
+                  {yearlyData.length === 0 ? (
+                    <div className="no-data">No records available to display.</div>
+                  ) : (
+                    <div className="table-responsive icc-yearly-table-scrollable">
+                      <table className="grievance-table">
+                        <thead>
+                          <tr>
+                            <th>Year</th>
+                            <th>Total Complaints</th>
+                            <th>Resolved</th>
+                            <th>Pending</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(selectedYear === 'All'
+                            ? yearlyData
+                            : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                          ).map((row) => {
+                            const statusLabel =
+                              row.pending === 0 ? (
+                                <span className="status-pill resolved">All Resolved</span>
+                              ) : row.resolved === 0 ? (
+                                <span className="status-pill pending">All Pending</span>
+                              ) : (
+                                <span className="status-pill mixed">Mixed</span>
+                              );
+
+                            return (
+                              <tr key={row.year}>
+                                <td>{row.year}</td>
+                                <td>{row.total}</td>
+                                <td>{row.resolved}</td>
+                                <td>{row.pending}</td>
+                                <td>{statusLabel}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No records available to display.</div>
-              ) : (
-                <div className="table-responsive icc-yearly-table-scrollable">
-                  <table className="grievance-table">
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Total Complaints</th>
-                        <th>Resolved</th>
-                        <th>Pending</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {yearlyData.map((row) => {
-                        const statusLabel =
-                          row.pending === 0 ? (
-                            <span className="status-pill resolved">All Resolved</span>
-                          ) : row.resolved === 0 ? (
-                            <span className="status-pill pending">All Pending</span>
-                          ) : (
-                            <span className="status-pill mixed">Mixed</span>
-                          );
-
-                        return (
-                          <tr key={row.year}>
-                            <td>{row.year}</td>
-                            <td>{row.total}</td>
-                            <td>{row.resolved}</td>
-                            <td>{row.pending}</td>
-                            <td>{statusLabel}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            )}
           </>
         )}
       </div>
