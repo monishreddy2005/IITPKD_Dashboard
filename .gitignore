@@ -24,8 +24,9 @@ __pycache__/
 npm-debug.log*
 yarn-debug.log*
 
-#backend env file
-Backend/.env
+#Backend app __pycache__
+Backend/app/__pycache__/ 
+*.pyc
 
 # backend app env file
 Backend/app/.env
