@@ -5,6 +5,7 @@ Frontend/.vite/
 
 # Python virtual environment
 venv/
+Backend/venv/
 
 # System files
 __pycache__/
