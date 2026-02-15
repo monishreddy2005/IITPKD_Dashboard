@@ -8,8 +8,26 @@
   --off-white-2: #f5f5f5;
 }
 
+/* Apple-like global optimizations for buttery smooth animations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enable GPU acceleration for smooth transitions */
+.chart-wrapper,
+.chart-view,
+.filter-select,
+.chart-type-select,
+.clear-filters-btn,
+.upload-data-btn {
+  will-change: auto;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 /* ================= ACADEMIC SECTION HEADER ================= */
-/* This targets the main title area to improve readability */
 .academic-section-header h1, 
 .academic-section-header h2 {
   color: #1a1a1a;
@@ -19,7 +37,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Horizontal line under title */
 .academic-section-header hr {
   border: 0;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
@@ -38,34 +55,220 @@
   animation: fadeIn 0.3s ease;
 }
 
-/* ================= FILTER PANEL ================= */
-.filter-panel {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 1.75rem;
+/* ================= SECTION HEADER WITH DROPDOWN ================= */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-title {
+  color: var(--text-main);
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.glimpse-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.glimpse-label {
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Chart Type Dropdown */
+.chart-type-select {
+  background-color: #ffffff;
+  color: var(--text-main);
+  border: 2px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0.75rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  min-width: 280px;
+  
+  /* Enhanced dropdown arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f7a600' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 16px) center;
+  background-size: 18px;
+  padding-right: 3.5rem;
+  
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  
+  /* Apple-like smooth transitions */
+  transition: 
+    border-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  will-change: border-color, background-color, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.chart-type-select:hover {
+  border-color: var(--accent);
+  background-color: #fffbf5;
+  box-shadow: 0 6px 16px rgba(247, 166, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+.chart-type-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(247, 166, 0, 0.2);
+  background-color: #ffffff;
+  transform: translateY(0);
+}
+
+.chart-type-select:active {
+  transform: scale(0.98);
+}
+
+.chart-type-select option {
+  padding: 0.75rem;
+  background-color: #ffffff;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Upload Button */
+.upload-data-btn {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(247, 166, 0, 0.3);
+  white-space: nowrap;
+  
+  /* Apple-like smooth transitions */
+  transition: 
+    background-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  will-change: transform, background-color, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.upload-data-btn:hover {
+  background: #d88f00;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(247, 166, 0, 0.4);
+}
+
+.upload-data-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ================= CHART SECTION (MAIN CONTAINER) ================= */
+.chart-section {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2.5rem;
   border: 1px solid var(--border-light);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  width: 100%;
-  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Chart Header */
+.chart-header {
+  margin-bottom: 1.5rem;
+}
+
+.chart-header h2 {
+  color: var(--text-main);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.chart-description {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ================= CHART VIEW TRANSITIONS ================= */
+.chart-view {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 2.5rem;
+  transform: translateY(20px);
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s linear 0.4s;
+  pointer-events: none;
+}
+
+.chart-view.active {
+  opacity: 1;
+  visibility: visible;
+  position: relative;
+  transform: translateY(0);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s linear 0s;
+  pointer-events: auto;
+}
+
+/* ================= FILTER PANEL (INSIDE CHART) ================= */
+.filter-panel {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border-light);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid var(--border-light);
 }
 
-.filter-header h2,
 .filter-header h3 {
   color: var(--text-main);
   margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
-/* Buttons */
+/* Clear Filters Button */
 .clear-filters-btn {
   background: var(--accent);
   color: #ffffff;
@@ -75,79 +278,106 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 16px rgba(247, 166, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(247, 166, 0, 0.3);
+  
+  /* Apple-like smooth transitions */
+  transition: 
+    background-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  will-change: transform, background-color, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 .clear-filters-btn:hover {
   background: #d88f00;
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(247, 166, 0, 0.4);
 }
 
-/* ================= FILTER GRID (FIXED LAYOUT) ================= */
+.clear-filters-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ================= FILTER GRID (RESPONSIVE) ================= */
 .filter-grid {
   display: grid;
-  /* Reduced min-width to 180px to prevent overflow on smaller screens */
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-width: 0; /* Ensures content doesn't force grid to expand */
 }
 
 .filter-group label {
   color: var(--text-main);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   margin-bottom: 4px;
+  letter-spacing: 0.01em;
 }
 
-/* Select Inputs (FIXED ICONS) */
+/* ================= PROFESSIONAL SELECT DROPDOWNS ================= */
 .filter-select {
-  width: 100%; /* Keeps it inside the div */
+  width: 100%;
   background-color: #ffffff;
   color: var(--text-main);
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 0.75rem;
+  border: 2px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   appearance: none;
   box-sizing: border-box;
-
-  /* Icon Positioning Fixed */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  
+  /* Enhanced dropdown arrow icon */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: calc(100% - 12px) center; 
-  background-size: 12px;
-  padding-right: 2.5rem;
-
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-position: calc(100% - 14px) center;
+  background-size: 16px;
+  padding-right: 3rem;
+  
+  /* Apple-like smooth transitions */
+  transition: 
+    border-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background-color 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  will-change: border-color, background-color, box-shadow;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 .filter-select:hover {
   border-color: var(--accent);
+  background-color: #fffbf5;
+  transform: translateY(-1px);
 }
 
 .filter-select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(247, 166, 0, 0.25);
+  box-shadow: 0 0 0 4px rgba(247, 166, 0, 0.15);
+  background-color: #ffffff;
+  transform: translateY(0);
 }
 
-/* ================= CHART SECTION ================= */
-.chart-section {
+.filter-select:active {
+  transform: scale(0.98);
+}
+
+.filter-select option {
+  padding: 0.5rem;
   background-color: #ffffff;
-  border-radius: 12px;
-  padding: 2rem;
-  border: 1px solid var(--border-light);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  color: var(--text-main);
 }
 
 /* ================= CHART TABS ================= */
@@ -155,26 +385,27 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .chart-tab {
-  border: 1px solid var(--border-light);
-  background-color: #f5f5f5;
+  border: 2px solid var(--border-light);
+  background-color: #ffffff;
   color: var(--text-main);
-  padding: 0.6rem 1.2rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
+  padding: 0.65rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
 .chart-tab:hover {
-  background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
+  background-color: #fffbf5;
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .chart-tab.active {
@@ -182,91 +413,199 @@
   color: #ffffff;
   border-color: var(--accent);
   box-shadow: 0 6px 16px rgba(247, 166, 0, 0.35);
+  transform: translateY(-2px);
 }
 
-/* ================= METRIC TOGGLE PILL FILTERS ================= */
-.metric-toggle-group {
+/* ================= CHART CONTAINERS ================= */
+.trend-chart,
+.pie-chart,
+.bar-chart-container {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid var(--border-light);
+}
+
+/* ================= APPLE-LIKE CHART WRAPPER TRANSITIONS ================= */
+.chart-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 400px;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.95) translateY(10px);
+  pointer-events: none;
+  
+  /* Apple's signature ease-in-out timing with longer duration */
+  transition: 
+    opacity 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0ms linear 600ms;
+  
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.chart-wrapper.active {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+  
+  /* Faster entry, no delay */
+  transition: 
+    opacity 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 500ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    visibility 0ms linear 0ms;
+}
+
+.chart-wrapper.inactive {
+  position: absolute;
+}
+
+/* Ensure smooth rendering for chart elements */
+.chart-wrapper .recharts-wrapper,
+.chart-wrapper .recharts-surface {
+  transition: opacity 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.chart-heading {
+  color: var(--text-main);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+/* ================= EMPTY STATE OVERLAY ================= */
+.trend-empty-state {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #6c757d;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s linear 0s;
+}
+
+.trend-empty-state.hidden {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+              visibility 0s linear 0.6s;
+}
+
+.trend-empty-state p {
+  margin: 0;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Chart blur effect when empty */
+.trend-chart .recharts-wrapper,
+.pie-chart .recharts-wrapper,
+.bar-chart-container .recharts-wrapper {
+  transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trend-chart.has-empty .recharts-wrapper,
+.pie-chart.has-empty .recharts-wrapper,
+.bar-chart-container.has-empty .recharts-wrapper {
+  filter: blur(2px);
+  opacity: 0.5;
+}
+
+/* ================= CHART INFO & LEGEND ================= */
+.chart-info {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.total-count {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-top: 1rem;
+}
+
+.custom-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.legend-item {
+  display: flex;
   align-items: center;
-}
-
-.metric-toggle {
-  border: 1px solid var(--border-light);
-  background-color: #f8fafc;
-  color: var(--text-main);
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
-}
-
-.metric-toggle:hover {
-  background-color: #ffffff;
-  border-color: var(--accent);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-  transform: translateY(-0.5px);
-}
-
-.metric-toggle.active {
-  background-color: var(--accent);
-  color: #ffffff;
-  border-color: var(--accent);
-  box-shadow: 0 4px 12px rgba(247, 166, 0, 0.35);
-}
-
-/* ================= COMPACT FILTER PANEL (INSIDE CHART) ================= */
-.chart-section .filter-panel {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background-color: #f8f9fa;
-  border: 1px solid var(--border-light);
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--off-white-2);
   border-radius: 8px;
-  box-shadow: none;
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
 }
 
-.chart-section .filter-header {
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-light);
+.legend-item:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
-.chart-section .filter-header h2,
-.chart-section .filter-header h3 {
-  font-size: 1rem;
-  font-weight: 600;
+.custom-tooltip {
+  background-color: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0.85rem 1.2rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 }
 
-.chart-section .clear-filters-btn {
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  box-shadow: 0 4px 8px rgba(247, 166, 0, 0.25);
+/* ================= STUDENT STRENGTH SECTION ================= */
+.student-strength-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border-light);
 }
 
-.chart-section .filter-grid {
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
+.student-strength-section h2 {
+  color: var(--text-main);
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 0.5rem;
+  display: inline-block;
 }
 
-.chart-section .filter-group {
-  gap: 0.25rem;
-}
-
-.chart-section .filter-group label {
-  font-size: 0.75rem;
-  margin-bottom: 2px;
-}
-
-.chart-section .filter-select {
-  padding: 0.5rem;
-  font-size: 0.85rem;
-  padding-right: 2rem;
-}
-
-/* Loading Spinner */
+/* ================= LOADING SPINNER ================= */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -289,191 +628,18 @@
   to { transform: rotate(360deg); }
 }
 
-/* ================= LEGEND & TOOLTIP ================= */
-.custom-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 1.5rem;
+/* ================= PIE & BAR CHART SPECIFIC ================= */
+.pie-chart {
+  position: relative;
+  min-height: 400px;
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--off-white-2);
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-}
-
-.custom-tooltip {
-  background-color: #ffffff;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* ================= STUDENT STRENGTH ================= */
-.student-strength-section {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid var(--border-light);
-}
-
-.student-strength-section h2 {
-  color: var(--text-main);
-  font-size: 1.75rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 3px solid var(--accent);
-  padding-bottom: 0.5rem;
-  display: inline-block;
-}
-
-/* ================= CHART CONTAINERS WITH EMPTY STATE ================= */
-/* Common styles for all charts with empty state overlay */
-.trend-chart,
-.pie-chart,
 .bar-chart-container {
   position: relative;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-top: 1rem;
-}
-
-.chart-heading {
-  color: var(--text-main);
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-/* ================= APPLE-LEVEL EMPTY STATE ================= */
-.trend-empty-state {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 1rem;
-  font-weight: 500;
-  color: #6c757d;
-
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(4px);
-
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  visibility: visible;
-
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-
-  /* ENTRY — calm but confident */
-  transition:
-    opacity 260ms cubic-bezier(0.25, 0.8, 0.25, 1),
-    transform 260ms cubic-bezier(0.25, 0.8, 0.25, 1),
-    visibility 0ms linear 0ms;
-}
-
-/* EXIT — slower, delayed, perceptual */
-.trend-empty-state.hidden {
-  opacity: 0;
-  transform: translateY(4px) scale(0.992);
-  visibility: hidden;
-  pointer-events: none;
-
-  transition:
-    opacity 520ms cubic-bezier(0.16, 1, 0.3, 1) 140ms,
-    transform 520ms cubic-bezier(0.16, 1, 0.3, 1) 140ms,
-    visibility 0ms linear 660ms;
-}
-
-.trend-empty-state p {
-  opacity: 1;
-  transform: translateY(0);
-  will-change: opacity, transform;
-
-  transition:
-    opacity 220ms cubic-bezier(0.4, 0, 0.2, 1),
-    transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.trend-empty-state.hidden p {
-  opacity: 0;
-  transform: translateY(2px);
-}
-
-/* Chart blur effect when empty */
-.trend-chart .recharts-wrapper,
-.pie-chart .recharts-wrapper,
-.bar-chart-container .recharts-wrapper {
-  transition:
-    filter 520ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.trend-chart.has-empty .recharts-wrapper,
-.pie-chart.has-empty .recharts-wrapper,
-.bar-chart-container.has-empty .recharts-wrapper {
-  filter: blur(1px);
-  opacity: 0.65;
-}
-
-/* Chart info section */
-.chart-info {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.total-count {
-  text-align: center;
-  font-size: 1.1rem;
-  color: var(--text-main);
-  margin-top: 1rem;
-}
-
-/* No data fallback (if needed for legacy support) */
-.no-data {
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 1rem;
-}
-
-/* ================= RESPONSIVE ================= */
-@media (max-width: 768px) {
-  .filter-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .filter-grid {
-    grid-template-columns: 1fr 1fr; /* Two columns on mobile-ish tablets */
-  }
-
-  .chart-section .filter-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .filter-grid {
-    grid-template-columns: 1fr; /* Single column on phones */
-  }
+  min-height: 400px;
 }
 
 /* ================= SCROLLBAR STYLING ================= */
-/* Scrollable table styling for Education Administrative Section */
 .table-responsive {
   scrollbar-width: thin;
   scrollbar-color: rgba(247, 166, 0, 0.5) rgba(255, 255, 255, 0.05);
@@ -506,6 +672,120 @@
   background-color: rgba(255, 251, 235, 0.3);
 }
 
+/* ================= RESPONSIVE BREAKPOINTS ================= */
+@media (max-width: 1024px) {
+  .filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-section {
+    padding: 1.5rem;
+  }
+
+  .chart-view {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .header-left {
+    width: 100%;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .glimpse-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .chart-type-select {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .upload-data-btn {
+    width: 100%;
+  }
+
+  .filter-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-section {
+    padding: 1.5rem;
+  }
+
+  .chart-view {
+    padding: 1.5rem;
+  }
+
+  .filter-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .chart-tabs {
+    gap: 0.5rem;
+  }
+
+  .chart-tab {
+    font-size: 0.85rem;
+    padding: 0.55rem 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-section {
+    padding: 1rem;
+  }
+
+  .chart-view {
+    padding: 1rem;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-panel {
+    padding: 1rem;
+  }
+
+  .chart-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .chart-heading {
+    font-size: 1.1rem;
+  }
+}
+
 /* ================= ANIMATIONS ================= */
 @keyframes fadeIn {
   from {
@@ -529,14 +809,44 @@
   }
 }
 
-/* ================= PIE CHART SPECIFIC ================= */
-.pie-chart {
-  position: relative;
-  min-height: 400px;
+/* ================= METRIC TOGGLE (IF NEEDED) ================= */
+.metric-toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-/* ================= BAR CHART SPECIFIC ================= */
-.bar-chart-container {
-  position: relative;
-  min-height: 400px;
+.metric-toggle {
+  border: 1px solid var(--border-light);
+  background-color: #f8fafc;
+  color: var(--text-main);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.metric-toggle:hover {
+  background-color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transform: translateY(-0.5px);
+}
+
+.metric-toggle.active {
+  background-color: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(247, 166, 0, 0.35);
+}
+
+/* ================= NO DATA FALLBACK ================= */
+.no-data {
+  padding: 3rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 1rem;
 }

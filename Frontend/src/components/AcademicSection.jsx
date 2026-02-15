@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered, fetchGenderTrends, fetchProgramTrends } from '../services/academicStats';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
@@ -60,14 +60,14 @@ function AcademicSection({ user, isPublicView = false }) {
   const [strengthTotal, setStrengthTotal] = useState(0);
 
   // Gender Trend Data State
-  const [selectedGender, setSelectedGender] = useState('All');
+  const [selectedGender, setSelectedGender] = useState('Total'); // 'Total' | 'All' | 'Male' | 'Female' | 'Transgender'
+  const [chartType, setChartType] = useState('Trend'); // 'Trend' | 'Bar'
   const [trendYears, setTrendYears] = useState(5);
   const [genderTrendData, setGenderTrendData] = useState([]);
   const [genderTrendLoading, setGenderTrendLoading] = useState(true);
   const [genderTrendFilters, setGenderTrendFilters] = useState({
     program: null,
     batch: null,
-    branch: null,
     department: null,
     category: null,
     pwd: null
@@ -83,7 +83,7 @@ function AcademicSection({ user, isPublicView = false }) {
   });
 
   // UI state to control which chart block is visible
-  const [activeChart, setActiveChart] = useState('genderTrend'); // 'genderTrend' | 'genderPie' | 'programTrend' | 'programStrength'
+  const [activeChart, setActiveChart] = useState('genderTrend'); // 'genderTrend' | 'programTrend' | 'programStrength'
 
   // Get token from localStorage
   const token = localStorage.getItem('authToken');
@@ -135,11 +135,22 @@ function AcademicSection({ user, isPublicView = false }) {
 
   const displayGenderTrendData = useMemo(() => {
     if (!genderTrendData || genderTrendData.length === 0) return [];
-    return genderTrendData.slice(-trendYears);
-  }, [genderTrendData, trendYears]);
+    const slicedData = genderTrendData.slice(-trendYears);
+    
+    // If 'Total' is selected, combine all genders into a single value
+    if (selectedGender === 'Total') {
+      return slicedData.map(d => ({
+        year: d.year,
+        Total: (d.Male || 0) + (d.Female || 0) + (d.Transgender || 0)
+      }));
+    }
+    
+    return slicedData;
+  }, [genderTrendData, trendYears, selectedGender]);
 
   const hasTrendData = displayGenderTrendData.some(
     d =>
+      (d.Total || 0) > 0 ||
       (d.Male || 0) > 0 ||
       (d.Female || 0) > 0 ||
       (d.Transgender || 0) > 0
@@ -298,13 +309,13 @@ function AcademicSection({ user, isPublicView = false }) {
     setGenderTrendFilters({
       program: null,
       batch: null,
-      branch: null,
       department: null,
       category: null,
       pwd: null
     });
     setTrendYears(5);
-    setSelectedGender('All');
+    setSelectedGender('Total');
+    setChartType('Trend');
   };
 
   const handleProgramTrendFilterChange = (filterName, value) => {
@@ -362,17 +373,17 @@ function AcademicSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          {!isPublicView && <h1>Student Overview</h1>}
-          {isPublicView ? null : (user && (user.role_id === 3 || user.role_id === 4) && (
+        <div className="section-header">
+          <div className="header-left">
+          </div>
+          {!isPublicView && user && (user.role_id === 3 || user.role_id === 4) && (
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
             >
               Upload Data
             </button>
-          ))}
+          )}
         </div>
 
         {error && (
@@ -381,45 +392,13 @@ function AcademicSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {/* Chart selector tabs */}
-        <div className="chart-tabs">
-          <button
-            type="button"
-            className={`chart-tab ${activeChart === 'genderTrend' ? 'active' : ''}`}
-            onClick={() => setActiveChart('genderTrend')}
-          >
-            Year vs Gender (Trend)
-          </button>
-          <button
-            type="button"
-            className={`chart-tab ${activeChart === 'genderPie' ? 'active' : ''}`}
-            onClick={() => setActiveChart('genderPie')}
-          >
-            Gender Distribution (Pie)
-          </button>
-          <button
-            type="button"
-            className={`chart-tab ${activeChart === 'programTrend' ? 'active' : ''}`}
-            onClick={() => setActiveChart('programTrend')}
-          >
-            Student Strength by Program (Trend)
-          </button>
-          <button
-            type="button"
-            className={`chart-tab ${activeChart === 'programStrength' ? 'active' : ''}`}
-            onClick={() => setActiveChart('programStrength')}
-          >
-            Student Strength by Program
-          </button>
-        </div>
-
-        {/* 1. Year vs Gender Distribution Trend */}
-        {activeChart === 'genderTrend' && (
-          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-            <h2>Year vs Gender Distribution (Trend)</h2>
-            <div className="chart-section">
+        {/* Chart Container with all charts rendered but visibility controlled */}
+        <div className="chart-section">
+          
+          {/* 1. Year vs Gender Distribution Trend */}
+          <div className={`chart-view ${activeChart === 'genderTrend' ? 'active' : ''}`}>
             <div className="chart-header">
-              <p className="chart-description">Gender distribution trends over the last 5 years.</p>
+              <h2>Student Overview</h2>
             </div>
 
             <div className="filter-panel">
@@ -431,6 +410,35 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
 
               <div className="filter-grid">
+                <div className="filter-group">
+                  <label htmlFor="chart-type-filter">Type of Graph</label>
+                  <select
+                    id="chart-type-filter"
+                    value={chartType}
+                    onChange={(e) => setChartType(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="Trend">Trend</option>
+                    <option value="Bar">Bar Chart</option>
+                  </select>
+                </div>
+                
+                <div className="filter-group">
+                  <label htmlFor="gender-trend-gender-filter">Gender</label>
+                  <select
+                    id="gender-trend-gender-filter"
+                    value={selectedGender}
+                    onChange={(e) => handleGenderSelection(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="Total">Total</option>
+                    <option value="All">Male:Female:Transgender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Transgender">Transgender</option>
+                  </select>
+                </div>
+                
                 <div className="filter-group">
                   <label htmlFor="gender-trend-program-filter">Program</label>
                   <select
@@ -445,20 +453,7 @@ function AcademicSection({ user, isPublicView = false }) {
                     ))}
                   </select>
                 </div>
-                <div className="filter-group">
-                  <label htmlFor="gender-trend-gender-filter">Gender</label>
-                  <select
-                    id="gender-trend-gender-filter"
-                    value={selectedGender}
-                    onChange={(e) => handleGenderSelection(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Transgender">Transgender</option>
-                  </select>
-                </div>
+                
                 <div className="filter-group">
                   <label htmlFor="gender-trend-batch-filter">Batch</label>
                   <select
@@ -470,21 +465,6 @@ function AcademicSection({ user, isPublicView = false }) {
                     <option value="All">All</option>
                     {filterOptions.batch.map(batch => (
                       <option key={batch} value={batch}>{batch}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="gender-trend-branch-filter">Branch</label>
-                  <select
-                    id="gender-trend-branch-filter"
-                    value={genderTrendFilters.branch || 'All'}
-                    onChange={(e) => handleGenderTrendFilterChange('branch', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.branch.map(branch => (
-                      <option key={branch} value={branch}>{branch}</option>
                     ))}
                   </select>
                 </div>
@@ -552,13 +532,134 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-              <div className={`bar-chart-container trend-chart ${hasTrendData ? '' : 'has-empty'}`}>
-                <h3 className="chart-heading">Year vs Gender Distribution (Trend)</h3>
+            <div className={`bar-chart-container trend-chart ${hasTrendData ? '' : 'has-empty'}`}>
+            
 
-                <div className={`trend-empty-state ${hasTrendData ? 'hidden' : ''}`}>
-                  <p>No information available for the selected filter</p>
-                </div>
+              <div className={`trend-empty-state ${hasTrendData ? 'hidden' : ''}`}>
+                <p>No information available for the selected filter</p>
+              </div>
 
+              {/* Line Chart - Always rendered, visibility controlled by CSS */}
+              <div className={`chart-wrapper ${chartType === 'Trend' ? 'active' : 'inactive'}`}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart
+                    data={displayGenderTrendData}
+                    margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
+
+                    <XAxis
+                      dataKey="year"
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      stroke="#000"
+                      tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
+                    />
+
+                    <YAxis
+                      domain={[0, 'dataMax + 5']}
+                      allowDecimals={false}
+                      stroke="#000"
+                      tick={{ fill: '#000', fontSize: 14, fontWeight: 'bold' }}
+                    />
+
+                    <Tooltip />
+                    <Legend />
+
+                    {selectedGender === 'Total' && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="Total" 
+                        stroke="#667eea" 
+                        strokeWidth={3}
+                        dot={{ fill: '#667eea', r: 5 }}
+                        activeDot={{ r: 7 }}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+
+                    {selectedGender === 'All' && (
+                      <>
+                        <Line 
+                          type="monotone" 
+                          dataKey="Male" 
+                          stroke={COLORS[0]} 
+                          strokeWidth={3}
+                          dot={{ fill: COLORS[0], r: 5 }}
+                          activeDot={{ r: 7 }}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="Female" 
+                          stroke={COLORS[1]} 
+                          strokeWidth={3}
+                          dot={{ fill: COLORS[1], r: 5 }}
+                          activeDot={{ r: 7 }}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="Transgender" 
+                          stroke={COLORS[2]} 
+                          strokeWidth={3}
+                          dot={{ fill: COLORS[2], r: 5 }}
+                          activeDot={{ r: 7 }}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                      </>
+                    )}
+
+                    {selectedGender === 'Male' && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="Male" 
+                        stroke={COLORS[0]} 
+                        strokeWidth={3}
+                        dot={{ fill: COLORS[0], r: 5 }}
+                        activeDot={{ r: 7 }}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+
+                    {selectedGender === 'Female' && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="Female" 
+                        stroke={COLORS[1]} 
+                        strokeWidth={3}
+                        dot={{ fill: COLORS[1], r: 5 }}
+                        activeDot={{ r: 7 }}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+
+                    {selectedGender === 'Transgender' && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="Transgender" 
+                        stroke={COLORS[2]} 
+                        strokeWidth={3}
+                        dot={{ fill: COLORS[2], r: 5 }}
+                        activeDot={{ r: 7 }}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bar Chart - Always rendered, visibility controlled by CSS */}
+              <div className={`chart-wrapper ${chartType === 'Bar' ? 'active' : 'inactive'}`}>
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart
                     data={displayGenderTrendData}
@@ -586,208 +687,81 @@ function AcademicSection({ user, isPublicView = false }) {
                     <Tooltip />
                     <Legend />
 
-                    {(selectedGender === 'All' || selectedGender === 'Male') && (
-                      <Bar dataKey="Male" fill={COLORS[0]} {...BAR_ANIMATION} />
+                    {selectedGender === 'Total' && (
+                      <Bar 
+                        dataKey="Total" 
+                        fill="#667eea" 
+                        isAnimationActive={true}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
                     )}
 
-                    {(selectedGender === 'All' || selectedGender === 'Female') && (
-                      <Bar dataKey="Female" fill={COLORS[1]} {...BAR_ANIMATION} />
+                    {selectedGender === 'All' && (
+                      <>
+                        <Bar 
+                          dataKey="Male" 
+                          fill={COLORS[0]} 
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                        <Bar 
+                          dataKey="Female" 
+                          fill={COLORS[1]} 
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                        <Bar 
+                          dataKey="Transgender" 
+                          fill={COLORS[2]} 
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
+                        />
+                      </>
                     )}
 
-                    {(selectedGender === 'All' || selectedGender === 'Transgender') && (
-                      <Bar dataKey="Transgender" fill={COLORS[2]} {...BAR_ANIMATION} />
+                    {selectedGender === 'Male' && (
+                      <Bar 
+                        dataKey="Male" 
+                        fill={COLORS[0]} 
+                        isAnimationActive={true}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+
+                    {selectedGender === 'Female' && (
+                      <Bar 
+                        dataKey="Female" 
+                        fill={COLORS[1]} 
+                        isAnimationActive={true}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
+                    )}
+
+                    {selectedGender === 'Transgender' && (
+                      <Bar 
+                        dataKey="Transgender" 
+                        fill={COLORS[2]} 
+                        isAnimationActive={true}
+                        animationDuration={800}
+                        animationEasing="ease-in-out"
+                      />
                     )}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
-        )}
 
-        {/* 2. Gender Distribution Pie Chart */}
-        {activeChart === 'genderPie' && (
-          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-            <h2>Gender Distribution (Pie Chart)</h2>
-            
-            <div className="chart-section">
-            <div className="filter-panel">
-              <div className="filter-header">
-                <h3>Filters</h3>
-                <button className="clear-filters-btn" onClick={handleClearFilters}>
-                  Clear All Filters
-                </button>
-              </div>
-
-              <div className="filter-grid">
-                <div className="filter-group">
-                  <label htmlFor="year-filter">Year of Admission</label>
-                  <select
-                    id="year-filter"
-                    value={filters.yearofadmission === 'All' ? 'All' : filters.yearofadmission || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === 'All') {
-                        handleFilterChange('yearofadmission', 'All');
-                      } else if (value === '') {
-                        handleFilterChange('yearofadmission', null);
-                      } else {
-                        handleFilterChange('yearofadmission', parseInt(value));
-                      }
-                    }}
-                    className="filter-select"
-                  >
-                    <option value="">Select Year</option>
-                    <option value="All">All</option>
-                    {filterOptions.yearofadmission.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="program-filter">Program</label>
-                  <select
-                    id="program-filter"
-                    value={filters.program || 'All'}
-                    onChange={(e) => handleFilterChange('program', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.program.map(program => (
-                      <option key={program} value={program}>{program}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="batch-filter">Batch</label>
-                  <select
-                    id="batch-filter"
-                    value={filters.batch || 'All'}
-                    onChange={(e) => handleFilterChange('batch', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.batch.map(batch => (
-                      <option key={batch} value={batch}>{batch}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="branch-filter">Branch</label>
-                  <select
-                    id="branch-filter"
-                    value={filters.branch || 'All'}
-                    onChange={(e) => handleFilterChange('branch', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.branch.map(branch => (
-                      <option key={branch} value={branch}>{branch}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="department-filter">Department</label>
-                  <select
-                    id="department-filter"
-                    value={filters.department || 'All'}
-                    onChange={(e) => handleFilterChange('department', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.department.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="category-filter">Category</label>
-                  <select
-                    id="category-filter"
-                    value={filters.category || 'All'}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    {filterOptions.category.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label htmlFor="pwd-filter">PWD</label>
-                  <select
-                    id="pwd-filter"
-                    value={filters.pwd === true ? 'true' : filters.pwd === false ? 'false' : 'All'}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleFilterChange('pwd', value === 'true' ? true : value === 'false' ? false : null);
-                    }}
-                    className="filter-select"
-                  >
-                    <option value="All">All</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-              <div className={`chart-container pie-chart ${hasPieData ? '' : 'has-empty'}`}>
-                <h3 className="chart-heading">Gender Distribution</h3>
-
-                <div className={`trend-empty-state ${hasPieData ? 'hidden' : ''}`}>
-                  <p>No information available for the selected filter</p>
-                </div>
-
-                <ResponsiveContainer width="100%" height={400}>
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={120}
-                      dataKey="value"
-                      isAnimationActive
-                      animationDuration={700}
-                      animationEasing="ease-out"
-                      animationBegin={80}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-
-                {hasPieData && (
-                  <div className="chart-info">
-                    <CustomLegend payload={chartData.map((item, index) => ({
-                      value: item.name,
-                      color: COLORS[index % COLORS.length]
-                    }))} />
-                    <div className="total-count">
-                      <strong>Total Students: {total}</strong>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 3. Student Strength by Program Trend */}
-        {activeChart === 'programTrend' && (
-          <div className="student-strength-section" style={{ marginBottom: '3rem' }}>
-            <h2>Student Strength by Program (Trend)</h2>
-            <div className="chart-section">
+          {/* 2. Student Strength by Program Trend */}
+          <div className={`chart-view ${activeChart === 'programTrend' ? 'active' : ''}`}>
             <div className="chart-header">
+              <h2>Student Strength by Program (Trend)</h2>
               <p className="chart-description">Student strength trends by program over the last 5 years.</p>
             </div>
 
@@ -831,40 +805,40 @@ function AcademicSection({ user, isPublicView = false }) {
                 </div>
               </div>
             </div>
-              <div className={`bar-chart-container trend-chart ${hasProgramTrendData ? '' : 'has-empty'}`}>
-                <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
+            
+            <div className={`bar-chart-container trend-chart ${hasProgramTrendData ? '' : 'has-empty'}`}>
+              <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
 
-                <div className={`trend-empty-state ${hasProgramTrendData ? 'hidden' : ''}`}>
-                  <p>No information available for the selected filter</p>
-                </div>
-
-                <ResponsiveContainer width="100%" height={500}>
-                  <BarChart data={programTrendData.slice(-5)}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis dataKey="year" angle={-45} height={80} />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    {programTrendPrograms.map((program, index) => (
-                      <Bar
-                        key={program}
-                        dataKey={program}
-                        stackId="a"
-                        fill={TREND_COLORS[index % TREND_COLORS.length]}
-                        {...BAR_ANIMATION}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className={`trend-empty-state ${hasProgramTrendData ? 'hidden' : ''}`}>
+                <p>No information available for the selected filter</p>
               </div>
+
+              <ResponsiveContainer width="100%" height={500}>
+                <BarChart data={programTrendData.slice(-5)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                  <XAxis dataKey="year" angle={-45} height={80} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  {programTrendPrograms.map((program, index) => (
+                    <Bar
+                      key={program}
+                      dataKey={program}
+                      stackId="a"
+                      fill={TREND_COLORS[index % TREND_COLORS.length]}
+                      {...BAR_ANIMATION}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        )}
 
-        {/* 4. Student Strength by Program */}
-        {activeChart === 'programStrength' && (
-          <div className="student-strength-section">
-            <h2>Student Strength by Program</h2>
+          {/* 3. Student Strength by Program */}
+          <div className={`chart-view ${activeChart === 'programStrength' ? 'active' : ''}`}>
+            <div className="chart-header">
+              <h2>Student Strength by Program</h2>
+            </div>
 
             {strengthError && (
               <div className="error-message">
@@ -872,7 +846,6 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             )}
 
-            <div className="chart-section">
             <div className="filter-panel">
               <div className="filter-header">
                 <h3>Filters</h3>
@@ -939,35 +912,35 @@ function AcademicSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-              <div className={`bar-chart-container trend-chart ${hasStrengthData ? '' : 'has-empty'}`}>
-                <h3 className="chart-heading">Student Strength by Program</h3>
+            <div className={`bar-chart-container trend-chart ${hasStrengthData ? '' : 'has-empty'}`}>
+              <h3 className="chart-heading">Student Strength by Program</h3>
 
-                <div className={`trend-empty-state ${hasStrengthData ? 'hidden' : ''}`}>
-                  <p>No information available for the selected filter</p>
-                </div>
-
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={studentStrengthData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} />
-                    <YAxis />
-                    <Tooltip content={<StackedBarTooltip total={strengthTotal} />} />
-                    <Legend />
-                    <Bar dataKey="Male" stackId="a" fill="#667eea" {...BAR_ANIMATION} />
-                    <Bar dataKey="Female" stackId="a" fill="#764ba2" {...BAR_ANIMATION} />
-                    <Bar dataKey="Transgender" stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
-                  </BarChart>
-                </ResponsiveContainer>
-
-                {hasStrengthData && (
-                  <div className="chart-info">
-                    <strong>Total Students: {strengthTotal}</strong>
-                  </div>
-                )}
+              <div className={`trend-empty-state ${hasStrengthData ? 'hidden' : ''}`}>
+                <p>No information available for the selected filter</p>
               </div>
+
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={studentStrengthData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} />
+                  <YAxis />
+                  <Tooltip content={<StackedBarTooltip total={strengthTotal} />} />
+                  <Legend />
+                  <Bar dataKey="Male" stackId="a" fill="#667eea" {...BAR_ANIMATION} />
+                  <Bar dataKey="Female" stackId="a" fill="#764ba2" {...BAR_ANIMATION} />
+                  <Bar dataKey="Transgender" stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
+                </BarChart>
+              </ResponsiveContainer>
+
+              {hasStrengthData && (
+                <div className="chart-info">
+                  <strong>Total Students: {strengthTotal}</strong>
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+        </div>
 
         <DataUploadModal
           isOpen={isUploadModalOpen}
