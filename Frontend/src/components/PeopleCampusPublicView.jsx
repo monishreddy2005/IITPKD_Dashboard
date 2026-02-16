@@ -18,46 +18,38 @@ function PeopleCampusPublicView({ user }) {
       id: 'academic',
       title: 'Student Overview',
       subtitle: '',
-      expandedTitle: 'Explore our bright minds to the better future.',
-      icon: '📚',
+      expandedTitle: 'Meet the minds shaping tomorrow.',
+      icon: '👩‍🎓',
       component: AcademicSection
     },
     {
       id: 'administrative',
       title: 'Employee Overview',
       subtitle: '',
-      expandedTitle: 'Meet the administrative team managing our institution',
+      expandedTitle: 'Dedicated Professionals. One Shared Mission.',
       icon: '🏛️',
       component: AdministrativeSection
     },
     {
-      id: 'igrc',
-      title: 'IGRC',
-      subtitle: 'Internal Grievance Resolution Cell',
-      expandedTitle: 'Dedicated to resolving internal grievances and ensuring fair resolution',
+      id: 'grievances',
+      title: 'Grievances',
+      subtitle: '',
+      expandedTitle: 'Ensuring fairness, safety, and respect for all members of our community',
       icon: '⚖️',
-      component: IgrcSection
-    },
-    {
-      id: 'icc',
-      title: 'ICC',
-      subtitle: 'Internal Complaints Committee',
-      expandedTitle: 'Committed to maintaining a safe and respectful campus environment',
-      icon: '🛡️',
-      component: IccSection
+      isGrievances: true // Special flag to handle dual components
     },
     {
       id: 'ewd',
-      title: 'EWD',
-      subtitle: 'Engineering & Works Division',
-      expandedTitle: 'Managing campus infrastructure, maintenance, and development projects',
+      title: 'Campus',
+      subtitle: '',
+      expandedTitle: 'Sustaining Today. Developing for Tomorrow.',
       icon: '🏗️',
       component: EwdSection
     },
     {
       id: 'iar',
-      title: 'IAR',
-      subtitle: 'International & Alumni Relations',
+      title: 'Our Global Community',
+      subtitle: '',
       expandedTitle: 'Fostering global partnerships and maintaining strong alumni connections',
       icon: '🌍',
       component: IarSection
@@ -97,7 +89,6 @@ function PeopleCampusPublicView({ user }) {
           <div className="expanded-section-view">
             {sections.map((section) => {
               if (section.id === activeSection) {
-                const SectionComponent = section.component;
                 return (
                   <div key={section.id} className="section-wrapper">
                     {/* White Card Container */}
@@ -113,9 +104,32 @@ function PeopleCampusPublicView({ user }) {
                         <p className="section-overview-text">{section.expandedTitle}</p>
                       </div>
                       
-                      {/* Section Content (includes h2 "Student Overview" heading) */}
+                      {/* Section Content */}
                       <div className="expanded-card-content">
-                        <SectionComponent user={user} isPublicView={true} />
+                        {section.isGrievances ? (
+                          // Special handling for Grievances - render both IGRC and ICC
+                          <div className="grievances-combined-section">
+                            {/* IGRC Section */}
+                            <div className="grievance-subsection">
+                              <div className="subsection-content">
+                                <IgrcSection user={user} isPublicView={true} />
+                              </div>
+                            </div>
+
+                            {/* ICC Section */}
+                            <div className="grievance-subsection">
+                              <div className="subsection-content">
+                                <IccSection user={user} isPublicView={true} />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          // Normal single component rendering
+                          (() => {
+                            const SectionComponent = section.component;
+                            return <SectionComponent user={user} isPublicView={true} />;
+                          })()
+                        )}
                       </div>
                     </div>
                   </div>
