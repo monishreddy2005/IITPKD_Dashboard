@@ -214,7 +214,6 @@ function IgrcSection({ user, isPublicView = false }) {
                 <div className="no-data">No grievance records available.</div>
               ) : (
                 <div className="chart-container">
-                  <h3 className="chart-heading">Year-wise Grievance Trend</h3>
                   <ResponsiveContainer width="100%" height={420}>
                     <BarChart
                       data={
