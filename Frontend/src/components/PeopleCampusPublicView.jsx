@@ -16,7 +16,7 @@ function PeopleCampusPublicView({ user }) {
   const sections = [
     {
       id: 'academic',
-      title: 'Student Overview',
+      title: 'Student Archive',
       subtitle: '',
       expandedTitle: 'Meet the minds shaping tomorrow.',
       icon: '👩‍🎓',
