@@ -265,12 +265,29 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 </div>
               </div>
 
-              {/* Empty state */}
-              <div className={`trend-empty-state ${hasData ? 'hidden' : ''}`}>
-                <p>No information available for the selected filters</p>
-              </div>
+<div style={{ position: 'relative', width: '100%', height: 420 }}>
+  {!hasData && (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(255, 255, 255, 0.75)',
+        backdropFilter: 'blur(2px)',
+        borderRadius: '8px',
+        pointerEvents: 'none',
+      }}
+    >
+      <p style={{ margin: 0, fontSize: '0.95rem', color: '#555', fontWeight: 500 }}>
+        No information available for the selected filters
+      </p>
+    </div>
+  )}
 
-              <ResponsiveContainer width="100%" height={420}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={employeeData}
                   margin={{ top: 5, right: 16, left: 0, bottom: 130 }}
@@ -290,6 +307,7 @@ function AdministrativeSection({ user, isPublicView = false }) {
                   <Bar dataKey="Other"       stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
                 </BarChart>
               </ResponsiveContainer>
+            </div>
             </div>
           </div>
         </div>
