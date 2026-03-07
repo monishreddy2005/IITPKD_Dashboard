@@ -30,4 +30,4 @@ Backend/app/__pycache__/
 *.pyc
 
 # backend app env file
-Backend/ .env
+Backend/.env
