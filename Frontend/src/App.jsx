@@ -32,6 +32,9 @@ import ConclaveSection from './components/ConclaveSection';
 import OpenHouseSection from './components/OpenHouseSection';
 import NptelSection from './components/NptelSection';
 import UbaSection from './components/UbaSection';
+import SocialEngagementsSection from './components/SocialEngagements'; 
+// Import the new Students Engagement component
+import StudentsEngagementSection from './components/StudentsEngagement'; // Adjust the import path as needed
 
 function App() {
   // State to hold the authentication token
@@ -125,6 +128,9 @@ function App() {
           <Route path="outreach-extension/open-house" element={<OpenHouseSection user={user} />} />
           <Route path="outreach-extension/nptel" element={<NptelSection user={user} />} />
           <Route path="outreach-extension/uba" element={<UbaSection user={user} />} />
+          {/* Add the new Students Engagement route */}
+          <Route path="outreach-extension/social-engagements" element={<SocialEngagementsSection user={user} />} />
+          <Route path="outreach-extension/students-engagement" element={<StudentsEngagementSection user={user} />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
           <Route path="create-user" element={<CreateUser user={user} token={token} />} />

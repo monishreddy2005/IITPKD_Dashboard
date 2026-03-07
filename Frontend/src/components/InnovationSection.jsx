@@ -306,71 +306,334 @@ function InnovationSectionContent({ user, isPublicView }) {
         marginBottom: '20px' 
       }}>{error}</div>}
 
-      {/* Summary Cards */}
-      <div className="summary-cards" style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-        gap: '20px', 
-        marginBottom: '30px' 
+      {/* Modern Summary Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '24px',
+        marginBottom: '40px'
       }}>
-        <div className="summary-card" style={{ 
-          padding: '20px', 
-          backgroundColor: '#667eea', 
-          color: 'white', 
-          borderRadius: '10px', 
-          textAlign: 'center',
-          boxShadow: '0 4px 6px rgba(102, 126, 234, 0.2)'
+        {/* Total Incubatees Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '20px',
+          padding: '24px',
+          boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
         }}>
-          <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-            Total Incubatees
-          </div>
-          <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-            {formatNumber(summary.total_incubatees)}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🚀</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '16px',
+                fontWeight: '500'
+              }}>Total Incubatees</h3>
+            </div>
+            <div style={{
+              fontSize: '40px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_incubatees)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '13px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Active incubatees
+              </span>
+            </div>
           </div>
         </div>
-        <div className="summary-card" style={{ 
-          padding: '20px', 
-          backgroundColor: '#764ba2', 
-          color: 'white', 
-          borderRadius: '10px', 
-          textAlign: 'center',
-          boxShadow: '0 4px 6px rgba(118, 75, 162, 0.2)'
+
+        {/* Total Startups Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          borderRadius: '20px',
+          padding: '24px',
+          boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
         }}>
-          <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-            Total Startups
-          </div>
-          <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-            {formatNumber(summary.total_startups)}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>💡</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '16px',
+                fontWeight: '500'
+              }}>Total Startups</h3>
+            </div>
+            <div style={{
+              fontSize: '40px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_startups)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '13px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Registered startups
+              </span>
+            </div>
           </div>
         </div>
-        <div className="summary-card" style={{ 
-          padding: '20px', 
-          backgroundColor: '#43e97b', 
-          color: 'white', 
-          borderRadius: '10px', 
-          textAlign: 'center',
-          boxShadow: '0 4px 6px rgba(67, 233, 123, 0.2)'
+
+        {/* Innovation Projects Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+          borderRadius: '20px',
+          padding: '24px',
+          boxShadow: '0 15px 35px rgba(67, 233, 123, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
         }}>
-          <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-            Innovation Projects
-          </div>
-          <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-            {formatNumber(summary.total_innovation_projects)}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🔬</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '16px',
+                fontWeight: '500'
+              }}>Innovation Projects</h3>
+            </div>
+            <div style={{
+              fontSize: '40px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_innovation_projects)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '13px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                R&D projects
+              </span>
+            </div>
           </div>
         </div>
-        <div className="summary-card" style={{ 
-          padding: '20px', 
-          backgroundColor: '#f093fb', 
-          color: 'white', 
-          borderRadius: '10px', 
-          textAlign: 'center',
-          boxShadow: '0 4px 6px rgba(240, 147, 251, 0.2)'
+
+        {/* Startups from IITPKD Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f97316 0%, #fbbf24 100%)',
+          borderRadius: '20px',
+          padding: '24px',
+          boxShadow: '0 15px 35px rgba(249, 115, 22, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
         }}>
-          <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-            Startups from IITPKD
-          </div>
-          <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-            {formatNumber(summary.startups_from_iitpkd)}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '12px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🎓</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '16px',
+                fontWeight: '500'
+              }}>IITPKD Startups</h3>
+            </div>
+            <div style={{
+              fontSize: '40px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.startups_from_iitpkd)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '13px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Founded by alumni
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -729,38 +992,39 @@ function InnovationSectionContent({ user, isPublicView }) {
                   borderRadius: '8px',
                   border: '1px solid #e0e0e0',
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '15px'
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '24px' }}>
                       {yearlyChartData.reduce((sum, item) => sum + item.incubatees, 0)}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Total Incubatees</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Total Incubatees</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#764ba2', fontWeight: 'bold', fontSize: '24px' }}>
                       {yearlyChartData.reduce((sum, item) => sum + item.startups, 0)}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Total Startups</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Total Startups</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#43e97b', fontWeight: 'bold', fontSize: '24px' }}>
                       {yearlyChartData.reduce((sum, item) => sum + item.innovationProjects, 0)}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Total Projects</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Total Projects</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                       {yearlyChartData.length}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                No yearly growth data available.
+                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
+                <p style={{ color: '#666', fontSize: '16px' }}>No yearly growth data available.</p>
               </div>
             )}
           </div>
@@ -835,49 +1099,50 @@ function InnovationSectionContent({ user, isPublicView }) {
                   borderRadius: '8px',
                   border: '1px solid #e0e0e0',
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: '15px'
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
                       {sectorPieData.length}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Sectors</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Sectors</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
                       {sectorPieData.reduce((sum, item) => sum + item.value, 0)}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Total Entities</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Total Entities</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                       {sectorPieData.reduce((sum, item) => sum + (item.startups || 0), 0)}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Total Startups</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Total Startups</div>
                   </div>
                 </div>
 
-                {/* Sector Details */}
+                {/* Sector Details Cards */}
                 <div style={{ 
-                  marginTop: '15px',
+                  marginTop: '20px',
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                   gap: '10px'
                 }}>
                   {sectorPieData.map((sector, index) => (
                     <div key={sector.name} style={{
                       padding: '12px',
                       backgroundColor: '#f8f9fa',
-                      borderRadius: '6px',
+                      borderRadius: '10px',
                       border: `1px solid ${SECTOR_COLORS[index % SECTOR_COLORS.length]}`,
+                      textAlign: 'center'
                     }}>
-                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: SECTOR_COLORS[index % SECTOR_COLORS.length], marginBottom: '5px' }}>
-                        {sector.name}
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{sector.name}</div>
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: SECTOR_COLORS[index % SECTOR_COLORS.length] }}>
+                        {sector.value}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span>Startups: <strong>{sector.startups}</strong></span>
-                        <span>Projects: <strong>{sector.projects}</strong></span>
+                      <div style={{ fontSize: '11px', color: '#999' }}>
+                        {sector.startups} startups · {sector.projects} projects
                       </div>
                     </div>
                   ))}
@@ -885,7 +1150,8 @@ function InnovationSectionContent({ user, isPublicView }) {
               </div>
             ) : (
               <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                No sector distribution data available.
+                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                <p style={{ color: '#666', fontSize: '16px' }}>No sector distribution data available.</p>
               </div>
             )}
           </div>
@@ -990,32 +1256,32 @@ function InnovationSectionContent({ user, isPublicView }) {
                   borderRadius: '8px',
                   border: '1px solid #e0e0e0',
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '15px'
                 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                       {startupsList.length}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Showing</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Showing</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
                       {startupsList.filter(s => s.status === 'Active').length}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Active</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Active</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
                       {startupsList.filter(s => s.is_from_iitpkd).length}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>IITPKD Startups</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>IITPKD Startups</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '24px' }}>
                       {new Set(startupsList.map(s => s.sector).filter(Boolean)).size}
                     </div>
-                    <div style={{ color: '#666', fontSize: '14px' }}>Sectors</div>
+                    <div style={{ color: '#666', fontSize: '12px' }}>Sectors</div>
                   </div>
                 </div>
 
@@ -1072,6 +1338,7 @@ function InnovationSectionContent({ user, isPublicView }) {
               </div>
             ) : (
               <div className="no-data" style={{ textAlign: 'center', padding: '60px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📋</span>
                 <p style={{ color: '#666', fontSize: '16px' }}>No startups found for the selected filters.</p>
               </div>
             )}

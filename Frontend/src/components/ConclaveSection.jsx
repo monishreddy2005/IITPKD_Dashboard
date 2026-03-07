@@ -57,200 +57,554 @@ function ConclaveSection({ user, isPublicView = false }) {
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
         {!isPublicView && <h1>Industry-Academia Conclave</h1>}
-        <p>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
           Explore the annual Industry-Academia Conclave events, themes, participating companies,
           and key highlights from each edition.
         </p>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ 
+          padding: '10px', 
+          backgroundColor: '#f8d7da', 
+          color: '#721c24', 
+          borderRadius: '4px', 
+          marginBottom: '20px' 
+        }}>{error}</div>}
 
-        {isPublicView ? null : (user && user.role_id === 3 && (
-          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {!isPublicView && user && user.role_id === 3 && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            marginBottom: '2rem',
+            flexWrap: 'wrap'
+          }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Conclave Data
+              <span>📤</span> Upload Conclave Data
             </button>
           </div>
-        ))}
+        )}
 
-        {/* Summary Cards */}
-        <div className="summary-cards" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-          <div className="summary-card">
-            <div className="summary-card-label">Total Conclaves</div>
-            <div className="summary-card-value">{formatNumber(summary.total_conclaves)}</div>
+        {/* Summary Cards - Modern Design */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '24px',
+          marginBottom: '40px'
+        }}>
+          {/* Total Conclaves Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '20px',
+            padding: '28px',
+            boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'pointer',
+            ':hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 20px 40px rgba(102, 126, 234, 0.4)'
+            }
+          }}>
+            {/* Decorative circles */}
+            <div style={{
+              position: 'absolute',
+              top: '-30px',
+              right: '-30px',
+              width: '150px',
+              height: '150px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '-40px',
+              left: '-40px',
+              width: '180px',
+              height: '180px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '50%'
+            }} />
+            
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                <span style={{
+                  fontSize: '32px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  padding: '10px',
+                  borderRadius: '12px'
+                }}>🎯</span>
+                <h3 style={{
+                  margin: 0,
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '18px',
+                  fontWeight: '500'
+                }}>Total Conclaves</h3>
+              </div>
+              <div style={{
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: 'white',
+                marginBottom: '8px',
+                lineHeight: '1.2'
+              }}>
+                {formatNumber(summary.total_conclaves)}
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  background: '#4ade80',
+                  borderRadius: '50%'
+                }} />
+                <span style={{
+                  fontSize: '14px',
+                  color: 'rgba(255, 255, 255, 0.8)'
+                }}>
+                  Industry-Academia meets
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <div className="summary-card-label">Total Companies Participated</div>
-            <div className="summary-card-value">{formatNumber(summary.total_companies)}</div>
+
+          {/* Total Companies Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            borderRadius: '20px',
+            padding: '28px',
+            boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            cursor: 'pointer',
+            ':hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 20px 40px rgba(240, 147, 251, 0.4)'
+            }
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-30px',
+              right: '-30px',
+              width: '150px',
+              height: '150px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{
+              position: 'absolute',
+              bottom: '-40px',
+              left: '-40px',
+              width: '180px',
+              height: '180px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '50%'
+            }} />
+            
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '16px'
+              }}>
+                <span style={{
+                  fontSize: '32px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  padding: '10px',
+                  borderRadius: '12px'
+                }}>🏢</span>
+                <h3 style={{
+                  margin: 0,
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '18px',
+                  fontWeight: '500'
+                }}>Companies Participated</h3>
+              </div>
+              <div style={{
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: 'white',
+                marginBottom: '8px',
+                lineHeight: '1.2'
+              }}>
+                {formatNumber(summary.total_companies)}
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  background: '#4ade80',
+                  borderRadius: '50%'
+                }} />
+                <span style={{
+                  fontSize: '14px',
+                  color: 'rgba(255, 255, 255, 0.8)'
+                }}>
+                  Industry partners
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Conclave Cards */}
         {loading ? (
-          <div className="loading-container">
+          <div className="loading-container" style={{ textAlign: 'center', padding: '40px' }}>
             <div className="loading-spinner" />
-            <p>Loading conclave information...</p>
+            <p style={{ color: '#666', marginTop: '10px' }}>Loading conclave information...</p>
           </div>
         ) : conclaves.length > 0 ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '2rem',
-            marginTop: '2rem'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
+            gap: '24px',
+            marginTop: '20px'
           }}>
             {conclaves.map((conclave) => (
               <div
                 key={conclave.conclave_id}
                 style={{
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid #444',
-                  borderRadius: '12px',
-                  padding: '2rem',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                  backgroundColor: '#fff',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  border: '1px solid #e9ecef',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.35)';
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 15px 30px rgba(79, 70, 229, 0.15)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 5px 20px rgba(0,0,0,0.05)';
                 }}
               >
+                {/* Year Header */}
                 <div style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  padding: '20px 24px',
+                  color: 'white',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '1rem'
+                  alignItems: 'center'
                 }}>
-                  <h2 style={{
-                    margin: 0,
-                    color: '#ffffff',
-                    fontSize: '1.5rem',
-                    fontWeight: 700
-                  }}>
-                    {conclave.year}
-                  </h2>
                   <div style={{
-                    backgroundColor: '#4f46e5',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '20px',
-                    fontSize: '0.85rem',
-                    fontWeight: 600
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
                   }}>
+                    <span style={{
+                      fontSize: '28px',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      padding: '8px',
+                      borderRadius: '12px'
+                    }}>🎪</span>
+                    <h2 style={{
+                      margin: 0,
+                      fontSize: '28px',
+                      fontWeight: 'bold'
+                    }}>
+                      {conclave.year}
+                    </h2>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    padding: '8px 16px',
+                    borderRadius: '30px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    backdropFilter: 'blur(5px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span>🏢</span>
                     {formatNumber(conclave.number_of_companies)} Companies
                   </div>
                 </div>
 
-                <h3 style={{
-                  margin: '0 0 1rem 0',
-                  color: '#9aa5ff',
-                  fontSize: '1.1rem',
-                  fontWeight: 600
-                }}>
-                  {conclave.theme}
-                </h3>
-
-                {conclave.focus_area && (
-                  <p style={{
-                    margin: '0 0 1rem 0',
-                    color: '#d1d5db',
-                    fontSize: '0.95rem',
-                    lineHeight: '1.6'
-                  }}>
-                    <strong style={{ color: '#9ca3af' }}>Focus Area:</strong> {conclave.focus_area}
-                  </p>
-                )}
-
-                {conclave.description && (
-                  <p style={{
-                    margin: '0 0 1rem 0',
-                    color: '#d1d5db',
-                    fontSize: '0.9rem',
-                    lineHeight: '1.6'
-                  }}>
-                    {conclave.description}
-                  </p>
-                )}
-
-                {conclave.sessions_held && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <strong style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Sessions:</strong>
-                    <p style={{
-                      margin: '0.25rem 0 0 0',
-                      color: '#d1d5db',
-                      fontSize: '0.9rem',
-                      lineHeight: '1.5'
-                    }}>
-                      {conclave.sessions_held}
-                    </p>
-                  </div>
-                )}
-
-                {conclave.key_speakers && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <strong style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Key Speakers:</strong>
-                    <p style={{
-                      margin: '0.25rem 0 0 0',
-                      color: '#d1d5db',
-                      fontSize: '0.9rem',
-                      lineHeight: '1.5'
-                    }}>
-                      {conclave.key_speakers}
-                    </p>
-                  </div>
-                )}
-
-                {(conclave.brochure_url || conclave.event_photos_url) && (
+                {/* Card Content */}
+                <div style={{ padding: '24px' }}>
+                  {/* Theme */}
                   <div style={{
-                    display: 'flex',
-                    gap: '1rem',
-                    marginTop: '1.5rem',
-                    paddingTop: '1rem',
-                    borderTop: '1px solid #444'
+                    backgroundColor: '#f0f4ff',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    marginBottom: '20px',
+                    border: '1px solid #e0e7ff'
                   }}>
-                    {conclave.brochure_url && (
-                      <a
-                        href={conclave.brochure_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: '#4f46e5',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          fontWeight: 500
-                        }}
-                      >
-                        📄 View Brochure
-                      </a>
-                    )}
-                    {conclave.event_photos_url && (
-                      <a
-                        href={conclave.event_photos_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: '#4f46e5',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          fontWeight: 500
-                        }}
-                      >
-                        📷 View Photos
-                      </a>
-                    )}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '8px'
+                    }}>
+                      <span style={{ fontSize: '20px' }}>🎯</span>
+                      <h3 style={{
+                        margin: 0,
+                        color: '#4f46e5',
+                        fontSize: '16px',
+                        fontWeight: '600'
+                      }}>
+                        Theme
+                      </h3>
+                    </div>
+                    <p style={{
+                      margin: 0,
+                      color: '#333',
+                      fontSize: '15px',
+                      lineHeight: '1.6',
+                      fontWeight: '500'
+                    }}>
+                      {conclave.theme}
+                    </p>
                   </div>
-                )}
+
+                  {/* Focus Area */}
+                  {conclave.focus_area && (
+                    <div style={{
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '10px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginBottom: '4px'
+                      }}>
+                        <span style={{ fontSize: '16px' }}>📍</span>
+                        <span style={{
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: '#666'
+                        }}>
+                          Focus Area
+                        </span>
+                      </div>
+                      <p style={{
+                        margin: 0,
+                        color: '#333',
+                        fontSize: '14px',
+                        lineHeight: '1.5'
+                      }}>
+                        {conclave.focus_area}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {conclave.description && (
+                    <p style={{
+                      margin: '0 0 16px 0',
+                      color: '#555',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '10px'
+                    }}>
+                      {conclave.description}
+                    </p>
+                  )}
+
+                  {/* Sessions */}
+                  {conclave.sessions_held && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '10px'
+                    }}>
+                      <span style={{ fontSize: '20px' }}>📅</span>
+                      <div>
+                        <span style={{
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: '#666',
+                          display: 'block',
+                          marginBottom: '4px'
+                        }}>
+                          Sessions
+                        </span>
+                        <span style={{
+                          color: '#333',
+                          fontSize: '14px',
+                          lineHeight: '1.5'
+                        }}>
+                          {conclave.sessions_held}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key Speakers */}
+                  {conclave.key_speakers && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '10px'
+                    }}>
+                      <span style={{ fontSize: '20px' }}>🎤</span>
+                      <div>
+                        <span style={{
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          color: '#666',
+                          display: 'block',
+                          marginBottom: '4px'
+                        }}>
+                          Key Speakers
+                        </span>
+                        <span style={{
+                          color: '#333',
+                          fontSize: '14px',
+                          lineHeight: '1.5'
+                        }}>
+                          {conclave.key_speakers}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {(conclave.brochure_url || conclave.event_photos_url) && (
+                    <div style={{
+                      display: 'flex',
+                      gap: '12px',
+                      marginTop: '20px',
+                      paddingTop: '20px',
+                      borderTop: '2px dashed #e9ecef'
+                    }}>
+                      {conclave.brochure_url && (
+                        <a
+                          href={conclave.brochure_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            flex: 1,
+                            padding: '12px',
+                            backgroundColor: '#f0f4ff',
+                            color: '#4f46e5',
+                            textDecoration: 'none',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s ease',
+                            border: '1px solid #e0e7ff'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#4f46e5';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f0f4ff';
+                            e.currentTarget.style.color = '#4f46e5';
+                          }}
+                        >
+                          <span>📄</span> View Brochure
+                        </a>
+                      )}
+                      {conclave.event_photos_url && (
+                        <a
+                          href={conclave.event_photos_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            flex: 1,
+                            padding: '12px',
+                            backgroundColor: '#f0f4ff',
+                            color: '#4f46e5',
+                            textDecoration: 'none',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s ease',
+                            border: '1px solid #e0e7ff'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#4f46e5';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f0f4ff';
+                            e.currentTarget.style.color = '#4f46e5';
+                          }}
+                        >
+                          <span>📷</span> View Photos
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="no-data">No conclave data available.</div>
+          <div className="no-data" style={{ 
+            textAlign: 'center', 
+            padding: '60px', 
+            backgroundColor: '#f8f9fa', 
+            borderRadius: '12px',
+            marginTop: '20px'
+          }}>
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎪</span>
+            <p style={{ color: '#666', fontSize: '16px' }}>No conclave data available.</p>
+          </div>
         )}
       </div>
 
@@ -265,4 +619,3 @@ function ConclaveSection({ user, isPublicView = false }) {
 }
 
 export default ConclaveSection;
-

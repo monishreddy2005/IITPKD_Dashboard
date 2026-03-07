@@ -250,71 +250,142 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           marginBottom: '20px' 
         }}>{error}</div>}
 
-        {/* Summary Cards */}
-        <div className="summary-cards" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '20px', 
-          marginBottom: '30px' 
+        {/* Modern Summary Cards - Larger Font Sizes */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '20px',
+          marginBottom: '30px'
         }}>
-          <div className="summary-card" style={{ 
-            padding: '20px', 
-            backgroundColor: '#6366f1', 
-            color: 'white', 
-            borderRadius: '10px', 
-            textAlign: 'center',
-            boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
+          {/* Total Externships Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-              Total Externships
-            </div>
-            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-              {formatNumber(summary.total)}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>💼</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Total Externships</span>
+              </div>
+              <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                {formatNumber(summary.total)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Total industry engagements</span>
+              </div>
             </div>
           </div>
-          <div className="summary-card" style={{ 
-            padding: '20px', 
-            backgroundColor: '#22c55e', 
-            color: 'white', 
-            borderRadius: '10px', 
-            textAlign: 'center',
-            boxShadow: '0 4px 6px rgba(34, 197, 94, 0.2)'
+
+          {/* Participating Departments Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 10px 20px rgba(34, 197, 94, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-              Participating Departments
-            </div>
-            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-              {formatNumber(participatingDepartments)}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>🏢</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Departments</span>
+              </div>
+              <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                {formatNumber(participatingDepartments)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Active departments</span>
+              </div>
             </div>
           </div>
-          <div className="summary-card" style={{ 
-            padding: '20px', 
-            backgroundColor: '#f97316', 
-            color: 'white', 
-            borderRadius: '10px', 
-            textAlign: 'center',
-            boxShadow: '0 4px 6px rgba(249, 115, 22, 0.2)'
+
+          {/* Timeline Coverage Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-              Timeline Coverage
-            </div>
-            <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-              {formatNumber(activeYears)}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📅</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Timeline Coverage</span>
+              </div>
+              <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                {formatNumber(activeYears)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Years of activity</span>
+              </div>
             </div>
           </div>
-          <div className="summary-card" style={{ 
-            padding: '20px', 
-            backgroundColor: '#a855f7', 
-            color: 'white', 
-            borderRadius: '10px', 
-            textAlign: 'center',
-            boxShadow: '0 4px 6px rgba(168, 85, 247, 0.2)'
+
+          {/* Most Common Type Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+            borderRadius: '16px',
+            padding: '24px',
+            boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-              Most Common Type
-            </div>
-            <div className="summary-card-value" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-              {topType}
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '100px',
+              height: '100px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📊</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Most Common Type</span>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                {topType}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Most frequent type</span>
+              </div>
             </div>
           </div>
         </div>
@@ -388,11 +459,10 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
               Select View Type:
             </label>
             <div style={{ 
-              display: 'flex', 
-              gap: '20px', 
-              flexWrap: 'wrap'
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '10px'
             }}>
-              {/* Chart Options */}
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -418,10 +488,11 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'yearly' ? 'bold' : 'normal' }}>
+                <span style={{ fontWeight: viewType === 'yearly' ? 'bold' : 'normal', fontSize: '13px' }}>
                   📊 Year-wise Externships
                 </span>
               </label>
+
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -447,12 +518,11 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'department' ? 'bold' : 'normal' }}>
+                <span style={{ fontWeight: viewType === 'department' ? 'bold' : 'normal', fontSize: '13px' }}>
                   🏢 Department-wise
                 </span>
               </label>
 
-              {/* Table Option */}
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -478,7 +548,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'externshipTable' ? 'bold' : 'normal' }}>
+                <span style={{ fontWeight: viewType === 'externshipTable' ? 'bold' : 'normal', fontSize: '13px' }}>
                   📋 Externship Directory
                 </span>
               </label>
@@ -487,18 +557,16 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
 
           <div className="filter-grid" style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '15px' 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '12px' 
           }}>
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Department
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
               <select
                 className="filter-select"
                 value={filters.department}
                 onChange={(e) => handleFilterChange('department', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px', width: '100%' }}
               >
                 <option value="All">All Departments</option>
                 {filterOptions.externship_departments.map((dept) => (
@@ -508,14 +576,12 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Externship Year
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Externship Year</label>
               <select
                 className="filter-select"
                 value={filters.externship_year}
                 onChange={(e) => handleFilterChange('externship_year', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px', width: '100%' }}
               >
                 <option value="All">All Years</option>
                 {filterOptions.externship_years.map((year) => (
@@ -527,17 +593,17 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
 
           {/* Active Filters Summary */}
           <div style={{ 
-            marginTop: '15px', 
-            padding: '10px', 
+            marginTop: '12px', 
+            padding: '8px', 
             backgroundColor: '#e9ecef', 
             borderRadius: '4px',
-            fontSize: '14px'
+            fontSize: '12px'
           }}>
             <strong>Active Filters:</strong>{' '}
-            {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
-            {filters.externship_year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.externship_year}</span>}
+            {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+            {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
             {filters.department === 'All' && filters.externship_year === 'All' && 
-              <span>No filters applied (showing all externships)</span>
+              <span>No filters applied</span>
             }
           </div>
         </div>
@@ -562,105 +628,45 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
               {/* Year-wise Externships Chart */}
               {viewType === 'yearly' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Year-wise Industry Externships
+                  <div className="chart-header" style={{ marginBottom: '15px' }}>
+                    <h2 style={{ margin: '0 0 5px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '22px' }}>📊</span> Year-wise Externships
                     </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Distribution of externship engagements by type across the selected timeframe.
+                    <p className="chart-description" style={{ color: '#666', margin: '0', fontSize: '13px' }}>
+                      Distribution by type over time
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={yearlyChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={yearlyChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="year" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Year', 
-                            position: 'insideBottom', 
-                            offset: -10,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Number of Externships', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
                         {externshipTypeKeys.map((type, index) => (
-                          <Bar
-                            key={type}
-                            dataKey={type}
-                            stackId="externships"
-                            name={type}
-                            fill={TYPE_COLORS[index % TYPE_COLORS.length]}
-                            radius={index === externshipTypeKeys.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
-                          />
+                          <Bar key={type} dataKey={type} stackId="a" fill={TYPE_COLORS[index % TYPE_COLORS.length]} radius={index === externshipTypeKeys.length - 1 ? [4,4,0,0] : [0,0,0,0]} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
 
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {yearlyChartData.reduce((sum, item) => sum + item.total, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Externships</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {yearlyChartData.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {yearlyChartData.length > 0 
-                            ? Math.max(...yearlyChartData.map(item => item.total)) 
-                            : 0}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Count</div>
-                      </div>
-                    </div>
-
-                    {/* Type Summary */}
+                    {/* Type Summary Cards */}
                     <div style={{ 
                       marginTop: '15px',
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                      gridTemplateColumns: `repeat(${Math.min(externshipTypeKeys.length, 3)}, 1fr)`,
                       gap: '10px'
                     }}>
                       {Object.entries(typeTotals).map(([type, total], index) => (
                         <div key={type} style={{
-                          padding: '10px',
+                          padding: '12px',
                           backgroundColor: '#f8f9fa',
-                          borderRadius: '6px',
+                          borderRadius: '8px',
                           border: `1px solid ${TYPE_COLORS[index % TYPE_COLORS.length]}`,
                           textAlign: 'center'
                         }}>
                           <div style={{ fontSize: '12px', color: '#666' }}>{type}</div>
-                          <div style={{ fontSize: '16px', fontWeight: 'bold', color: TYPE_COLORS[index % TYPE_COLORS.length] }}>
+                          <div style={{ fontSize: '18px', fontWeight: 'bold', color: TYPE_COLORS[index % TYPE_COLORS.length] }}>
                             {formatNumber(total)}
                           </div>
                         </div>
@@ -673,87 +679,24 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
               {/* Department-wise Participation Chart */}
               {viewType === 'department' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🏢</span> Department-wise Participation
+                  <div className="chart-header" style={{ marginBottom: '15px' }}>
+                    <h2 style={{ margin: '0 0 5px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '22px' }}>🏢</span> Department-wise Participation
                     </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Departments ranked by the number of externships completed with industry partners.
+                    <p className="chart-description" style={{ color: '#666', margin: '0', fontSize: '13px' }}>
+                      Externships by department
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={departmentChartData} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={departmentChartData} margin={{ top: 10, right: 20, left: 40, bottom: 50 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="department" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={80}
-                          interval={0}
-                          label={{ 
-                            value: 'Department', 
-                            position: 'insideBottom', 
-                            offset: -20,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Number of Externships', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="department" angle={-30} textAnchor="end" height={60} tick={{ fontSize: 10 }} interval={0} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                        <Bar 
-                          dataKey="total" 
-                          name="Externships"
-                          fill="#60a5fa" 
-                          radius={[6, 6, 0, 0]}
-                        />
+                        <Bar dataKey="total" fill="#60a5fa" radius={[4,4,0,0]} barSize={20} />
                       </BarChart>
                     </ResponsiveContainer>
-
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {departmentChartData.reduce((sum, item) => sum + item.total, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Externships</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {departmentChartData.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Departments</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {departmentChartData.length > 0 
-                            ? Math.max(...departmentChartData.map(item => item.total)) 
-                            : 0}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Top Department Count</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
@@ -761,105 +704,41 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
               {/* Externship Directory Table */}
               {viewType === 'externshipTable' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📋</span> Faculty–Industry Externship Roster
+                  <div className="chart-header" style={{ marginBottom: '15px' }}>
+                    <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>📋</span> Externship Directory
                     </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Detailed listing of faculty externships including industry partner, duration, and timeline.
+                    <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+                      {externshipList.length} records found
                     </p>
                   </div>
-                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                    <table className="grievance-table" style={{ 
-                      width: '100%', 
-                      borderCollapse: 'collapse',
-                      backgroundColor: '#fff',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      border: '1px solid #e0e0e0'
-                    }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f97316', color: 'white' }}>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Faculty</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Department</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Industry Partner</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Externship Type</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Duration</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Start Date</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>End Date</th>
+                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f97316', color: 'white' }}>
+                        <tr>
+                          <th style={{ padding: '10px' }}>Faculty</th>
+                          <th style={{ padding: '10px' }}>Dept</th>
+                          <th style={{ padding: '10px' }}>Partner</th>
+                          <th style={{ padding: '10px' }}>Type</th>
+                          <th style={{ padding: '10px' }}>Duration</th>
+                          <th style={{ padding: '10px' }}>Start</th>
+                          <th style={{ padding: '10px' }}>End</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {externshipList.length === 0 && (
-                          <tr>
-                            <td colSpan={7} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                              No externship records found for the selected filters.
-                            </td>
-                          </tr>
-                        )}
-                        {externshipList.map((record, index) => (
-                          <tr 
-                            key={record.externship_id}
-                            style={{ 
-                              backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                              borderBottom: '1px solid #e0e0e0'
-                            }}
-                          >
-                            <td style={{ padding: '12px', fontWeight: '500' }}>{record.faculty_name}</td>
-                            <td style={{ padding: '12px' }}>{record.department || '—'}</td>
-                            <td style={{ padding: '12px' }}>{record.industry_name || '—'}</td>
-                            <td style={{ padding: '12px' }}>
-                              {record.type && (
-                                <span style={{ 
-                                  backgroundColor: '#e0e7ff',
-                                  color: '#3730a3',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold'
-                                }}>
-                                  {record.type}
-                                </span>
-                              )}
-                            </td>
-                            <td style={{ padding: '12px' }}>{formatDuration(record.duration_days)}</td>
-                            <td style={{ padding: '12px' }}>{formatDate(record.startdate)}</td>
-                            <td style={{ padding: '12px' }}>{formatDate(record.enddate)}</td>
+                        {externshipList.map((e, i) => (
+                          <tr key={e.externship_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                            <td style={{ padding: '8px' }}>{e.faculty_name}</td>
+                            <td style={{ padding: '8px' }}>{e.department}</td>
+                            <td style={{ padding: '8px' }}>{e.industry_name}</td>
+                            <td style={{ padding: '8px' }}>{e.type}</td>
+                            <td style={{ padding: '8px' }}>{formatDuration(e.duration_days)}</td>
+                            <td style={{ padding: '8px' }}>{formatDate(e.startdate)}</td>
+                            <td style={{ padding: '8px' }}>{formatDate(e.enddate)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                  </div>
-
-                  {/* Table Statistics */}
-                  <div style={{ 
-                    marginTop: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: '15px'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                        {externshipList.length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Total Records</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                        {new Set(externshipList.map(e => e.department).filter(Boolean)).size}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Departments</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                        {new Set(externshipList.map(e => e.type).filter(Boolean)).size}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Externship Types</div>
-                    </div>
                   </div>
                 </div>
               )}

@@ -1,18 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend
-} from 'recharts';
-import {
   fetchNptelSummary,
   fetchNptelEnrollmentsOverTime,
   fetchNptelCourseCategories,
@@ -23,8 +10,6 @@ import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
-
-const COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'];
 
 function NptelSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -38,19 +23,10 @@ function NptelSection({ user, isPublicView = false }) {
     local_chapters: 0
   });
 
-  const [enrollmentsOverTime, setEnrollmentsOverTime] = useState([]);
-  const [courseCategories, setCourseCategories] = useState([]);
-  const [certificationRatio, setCertificationRatio] = useState({
-    total_enrollments: 0,
-    certified: 0,
-    not_certified: 0,
-    certification_rate: 0
-  });
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load summary data
+  // Load summary data only
   useEffect(() => {
     const loadSummary = async () => {
       if (!token) return;
@@ -65,48 +41,6 @@ function NptelSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
-
-  // Load enrollments over time
-  useEffect(() => {
-    const loadEnrollmentsOverTime = async () => {
-      if (!token) return;
-      try {
-        const result = await fetchNptelEnrollmentsOverTime(token);
-        setEnrollmentsOverTime(result.enrollments_over_time || []);
-      } catch (err) {
-        console.error('Error loading enrollments over time:', err);
-      }
-    };
-    loadEnrollmentsOverTime();
-  }, [token]);
-
-  // Load course categories
-  useEffect(() => {
-    const loadCourseCategories = async () => {
-      if (!token) return;
-      try {
-        const result = await fetchNptelCourseCategories(token);
-        setCourseCategories(result.categories || []);
-      } catch (err) {
-        console.error('Error loading course categories:', err);
-      }
-    };
-    loadCourseCategories();
-  }, [token]);
-
-  // Load certification ratio
-  useEffect(() => {
-    const loadCertificationRatio = async () => {
-      if (!token) return;
-      try {
-        const data = await fetchNptelCertificationRatio(token);
-        setCertificationRatio(data);
-      } catch (err) {
-        console.error('Error loading certification ratio:', err);
-      }
-    };
-    loadCertificationRatio();
   }, [token]);
 
   if (loading) {
@@ -135,162 +69,472 @@ function NptelSection({ user, isPublicView = false }) {
     );
   }
 
-  const certificationData = [
-    { name: 'Certified', value: certificationRatio.certified },
-    { name: 'Not Certified', value: certificationRatio.not_certified }
-  ];
-
   const content = (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        {!isPublicView && <h1>NPTEL – CCE (Centre for Continuing Education)</h1>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        {!isPublicView && <h1 style={{ margin: 0 }}>NPTEL – CCE (Centre for Continuing Education)</h1>}
 
         {!isPublicView && user && user.role_id === 3 && (
-          <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button
               className="upload-data-btn"
               onClick={() => { setActiveUploadTable('nptel_local_chapters'); setIsUploadModalOpen(true); }}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Local Chapters
+              <span>📚</span> Upload Local Chapters
             </button>
             <button
               className="upload-data-btn"
               onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Courses
+              <span>📖</span> Upload Courses
             </button>
             <button
               className="upload-data-btn"
               onClick={() => { setActiveUploadTable('nptel_enrollments'); setIsUploadModalOpen(true); }}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Enrollments
+              <span>📊</span> Upload Enrollments
             </button>
           </div>
         )}
       </div>
 
-      {/* Summary Tiles */}
-      <div className="summary-grid">
-        <div className="summary-card">
-          <h3>Total Courses Offered</h3>
-          <p className="summary-value">{formatNumber(summary.total_courses)}</p>
+      {/* Summary Cards - Modern Design */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '24px',
+        marginBottom: '40px'
+      }}>
+        {/* Total Courses Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer',
+          ':hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 20px 40px rgba(102, 126, 234, 0.4)'
+          }
+        }}>
+          {/* Decorative circles */}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>📚</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Total Courses Offered</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_courses)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Active NPTEL courses
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <h3>Total Enrollments</h3>
-          <p className="summary-value">{formatNumber(summary.total_enrollments)}</p>
+
+        {/* Total Enrollments Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer',
+          ':hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 20px 40px rgba(240, 147, 251, 0.4)'
+          }
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>👥</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Total Enrollments</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_enrollments)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Student registrations
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <h3>Certifications Completed</h3>
-          <p className="summary-value">{formatNumber(summary.certifications_completed)}</p>
+
+        {/* Certifications Completed Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(67, 233, 123, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer',
+          ':hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 20px 40px rgba(67, 233, 123, 0.4)'
+          }
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🎓</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Certifications Completed</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.certifications_completed)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Successful completions
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <h3>Local Chapters</h3>
-          <p className="summary-value">{formatNumber(summary.local_chapters)}</p>
+
+        {/* Local Chapters Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f97316 0%, #fbbf24 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(249, 115, 22, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer',
+          ':hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 20px 40px rgba(249, 115, 22, 0.4)'
+          }
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🏛️</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Local Chapters</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.local_chapters)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Active student chapters
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Enrollments Over Time */}
-      {enrollmentsOverTime.length > 0 && (
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Trend of student enrollments and certifications over the years.</p>
-          </div>
-          <div className="chart-container">
-            <h3 className="chart-heading">Enrollments Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={enrollmentsOverTime}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey="enrollment_year" stroke="#cbd5f5" />
-                <YAxis stroke="#cbd5f5" />
-                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                <Line type="monotone" dataKey="total_enrollments" stroke="#4f46e5" name="Total Enrollments" strokeWidth={3} />
-                <Line type="monotone" dataKey="certifications" stroke="#22c55e" name="Certifications" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Course Category Breakdown */}
-      {courseCategories.length > 0 && (
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Distribution of courses across different categories.</p>
-          </div>
-          <div className="chart-container">
-            <h3 className="chart-heading">Course Category Breakdown</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie
-                  data={courseCategories}
-                  dataKey="count"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={120}
-                  label
-                >
-                  {courseCategories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
+      {/* Additional Stats Section - Optional
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '20px',
+        marginTop: '20px'
+      }}>
+        <div style={{
+          backgroundColor: '#fff',
+          borderRadius: '16px',
+          padding: '20px',
+          boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+          border: '1px solid #e0e0e0'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px' }}>Quick Stats</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#666' }}>Average Courses per Chapter</span>
+            <span style={{ fontWeight: 'bold', color: '#667eea' }}>
+              {summary.local_chapters > 0 
+                ? (summary.total_courses / summary.local_chapters).toFixed(1) 
+                : '0'}
+            </span>
           </div>
         </div>
-      )}
-
-      {/* Certification Ratio */}
-      {certificationRatio.total_enrollments > 0 && (
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Ratio of certified vs. not certified enrollments.</p>
+        
+        <div style={{
+          backgroundColor: '#fff',
+          borderRadius: '16px',
+          padding: '20px',
+          boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+          border: '1px solid #e0e0e0'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px' }}>Certification Rate</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#666' }}>Certifications vs Enrollments</span>
+            <span style={{ fontWeight: 'bold', color: '#22c55e' }}>
+              {summary.total_enrollments > 0 
+                ? `${((summary.certifications_completed / summary.total_enrollments) * 100).toFixed(1)}%` 
+                : '0%'}
+            </span>
           </div>
-          <div style={{ marginBottom: '1rem' }}>
-            <p>
-              <strong>Certification Rate:</strong> {certificationRatio.certification_rate}%
-            </p>
-            <p>
-              <strong>Total Enrollments:</strong> {formatNumber(certificationRatio.total_enrollments)}
-            </p>
-            <p>
-              <strong>Certified:</strong> {formatNumber(certificationRatio.certified)}
-            </p>
-            <p>
-              <strong>Not Certified:</strong> {formatNumber(certificationRatio.not_certified)}
-            </p>
-          </div>
-
-          <div className="chart-container">
-            <h3 className="chart-heading">Certification Ratio</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={certificationData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label
-                >
-                  {certificationData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? '#22c55e' : '#f97316'} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+        </div> 
+      </div> */}
 
       <DataUploadModal
         isOpen={isUploadModalOpen}
