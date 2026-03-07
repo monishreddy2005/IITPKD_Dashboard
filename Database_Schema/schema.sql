@@ -86,12 +86,7 @@ BEGIN
     END IF;
 END $$;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'research_project_type') THEN
-        CREATE TYPE research_project_type AS ENUM ('Funded','Consultancy');
-    END IF;
-END $$;
+
 
 DO $$
 BEGIN
@@ -235,4 +230,51 @@ CREATE TABLE IF NOT EXISTS research_patents (
     inventor3_category VARCHAR(50),
     inventor4 VARCHAR(50),
     inventor4_category VARCHAR(50)
+);
+
+
+-- ======================
+-- ICSR SPONSERED PROJECT TABLE
+-- ======================
+CREATE TABLE IF NOT EXISTS icsr_sponsered_projects (
+    project_id INT PRIMARY KEY,
+    project_title varchar(300),
+
+    principal_investigator VARCHAR(150),
+    principal_investigator_department VARCHAR(150),
+
+    co_principal_investigator1 VARCHAR(150),
+    co_principal_investigator1_department VARCHAR(150),
+
+    co_principal_investigator2 VARCHAR(150),
+    co_principal_investigator2_department VARCHAR(150),
+
+    funding_agency VARCHAR(150),
+    client_organization VARCHAR(150),
+
+    amount_sanctioned NUMERIC(15,2),
+
+    start_date DATE,
+    end_date DATE,
+
+    status VARCHAR(20),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ======================
+-- ICSR CONSULTANCY PROJECT TABLE
+-- ======================
+CREATE TABLE icsr_consultancy_projects (
+    project_id INT PRIMARY KEY,
+    project_title VARCHAR(300),
+    principal_investigator VARCHAR(150) NOT NULL,
+    department VARCHAR(150) NOT NULL,
+    funding_agency VARCHAR(150),
+    client_organization VARCHAR(150),
+    amount_sanctioned NUMERIC(15,2),
+    start_date DATE,
+    end_date DATE,
+    status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
