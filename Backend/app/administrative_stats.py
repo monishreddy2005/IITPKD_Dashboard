@@ -120,6 +120,9 @@ def get_filter_options(current_user_id):
         """)
         filter_options['category_type'] = [row['designationcategory'] for row in cur.fetchall()]
         
+        # Employee Type (Faculty/Staff) - hardcoded since it's derived from designation
+        filter_options['employee_type'] = ['Faculty', 'Staff']
+        
         return jsonify(filter_options), 200
         
     except Exception as e:
@@ -128,6 +131,133 @@ def get_filter_options(current_user_id):
     finally:
         if conn:
             cur.close()
+            conn.close()
+
+
+@administrative_bp.route('/stats/employee-overview', methods=['GET'])
+@token_required
+def get_employee_overview(current_user_id):
+    """
+    Fetches employee overview - department-wise breakdown by gender.
+    This is a simplified single-chart view combining all employee data.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+        
+        # Get filter parameters
+        filters = {
+            'department': request.args.get('department', type=str),
+            'designation': request.args.get('designation', type=str),
+            'gender': request.args.get('gender', type=str),
+            'category': request.args.get('category', type=str),
+            'cadre': request.args.get('cadre', type=str),
+            'isactive': request.args.get('isactive', type=str)
+        }
+        
+        # Get employee_type separately
+        employee_type = request.args.get('employee_type', type=str)
+        
+        # Convert isactive string to boolean
+        if filters['isactive'] == 'true':
+            filters['isactive'] = True
+        elif filters['isactive'] == 'false':
+            filters['isactive'] = False
+        elif filters['isactive'] == '' or filters['isactive'] is None:
+            filters['isactive'] = None
+        
+        # Build WHERE clause
+        where_clause, params = build_filter_query(filters)
+        
+        # Default to active employees if not specified
+        if filters['isactive'] is None:
+            if where_clause:
+                where_clause += " AND e.isactive = %s"
+            else:
+                where_clause = "WHERE e.isactive = %s"
+            params.append(True)
+        
+        # Add employee type filter
+        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
+        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
+        
+        if employee_type == 'Faculty':
+            if where_clause:
+                where_clause += f" AND {faculty_condition}"
+            else:
+                where_clause = f"WHERE {faculty_condition}"
+        elif employee_type == 'Staff':
+            if where_clause:
+                where_clause += f" AND {staff_condition}"
+            else:
+                where_clause = f"WHERE {staff_condition}"
+        # If 'All' or None, don't add employee type filter
+        
+        # Query to get department-wise breakdown by gender
+        query = """
+            SELECT 
+                COALESCE(e.department, 'Unknown') as department,
+                e.gender,
+                COUNT(*) as count
+            FROM employee e
+            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
+            """ + where_clause + """
+            GROUP BY e.department, e.gender
+            ORDER BY e.department, e.gender;
+        """
+        
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(query, params)
+        results = cur.fetchall()
+        
+        # Organize data for stacked bar chart
+        department_data = {}
+        for row in results:
+            dept = row['department']
+            gender = row['gender']
+            count = row['count']
+            
+            if dept not in department_data:
+                department_data[dept] = {
+                    'Male': 0,
+                    'Female': 0,
+                    'Other': 0,
+                    'Transgender': 0
+                }
+            
+            # Map gender to appropriate key
+            if gender in ['Male', 'Female', 'Transgender']:
+                department_data[dept][gender] = count
+            else:
+                # Any other gender goes to 'Other'
+                department_data[dept]['Other'] += count
+        
+        # Convert to list format for chart
+        data = []
+        for dept, gender_counts in department_data.items():
+            entry = {'name': dept, **gender_counts}
+            data.append(entry)
+        
+        total = sum(sum(dept.values()) for dept in department_data.values())
+        
+        return jsonify({
+            'data': data,
+            'total': total,
+            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        print(f"Error fetching employee overview: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching employee overview: {str(e)}'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
             conn.close()
 
 
@@ -890,4 +1020,3 @@ def get_department_breakdown(current_user_id):
             cur.close()
         if conn:
             conn.close()
-

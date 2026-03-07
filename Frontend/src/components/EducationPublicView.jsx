@@ -1,36 +1,109 @@
+import { useState } from 'react';
+import './Page.css';
+import './EducationMinimal.css';
+
 import PlacementSection from './PlacementSection';
 import EducationAdministrativeSection from './EducationAdministrativeSection';
 import EducationAcademicSection from './EducationAcademicSection';
 
 function EducationPublicView({ user }) {
-    return (
-        <div className="page-container">
-            <div className="page-content">
-                <h1>Education — Public Dashboard</h1>
-                <p>
-                    Explore key statistics of IIT Palakkad&apos;s education ecosystem, including placement analytics, administrative data, and academic program insights.
-                </p>
+  const [activeSection, setActiveSection] = useState(null);
 
-                {/* ================= Placement Public View ================= */}
-                <section style={{ marginTop: '3rem' }}>
-                    <h2 className="section-title">Placements & Career Outcomes</h2>
-                    <PlacementSection user={user} isPublicView={true} />
-                </section>
+  const sections = [
+    {
+      id: 'placements',
+      title: 'Opportunity Horizon',
+      subtitle: '',
+      expandedTitle: 'Empowering careers through industry-leading placement opportunities.',
+      icon: '💼',
+      component: PlacementSection
+    },
+    {
+      id: 'administrative',
+      title: 'Elite Mentors',
+      subtitle: '',
+      expandedTitle: 'Mentorship that inspires Excellence through Experience.',
+      icon: '📋',
+      component: EducationAdministrativeSection
+    },
+    {
+      id: 'academic',
+      title: 'Knowledge Paths',
+      subtitle: '',
+      expandedTitle: 'Advancing academic excellence through innovative programs.',
+      icon: '🎓',
+      component: EducationAcademicSection
+    }
+  ];
 
-                {/* ================= Administrative Public View ================= */}
-                <section style={{ marginTop: '4rem' }}>
-                    <h2 className="section-title">Administrative Section</h2>
-                    <EducationAdministrativeSection user={user} isPublicView={true} />
-                </section>
+  const handleCardClick = (sectionId) => {
+    setActiveSection(activeSection === sectionId ? null : sectionId);
+  };
 
-                {/* ================= Academic Public View ================= */}
-                <section style={{ marginTop: '4rem' }}>
-                    <h2 className="section-title">Academic Section</h2>
-                    <EducationAcademicSection user={user} isPublicView={true} />
-                </section>
-            </div>
+  const handleBackClick = () => {
+    setActiveSection(null);
+  };
+
+  return (
+    <div className="page-container">
+      <div className="page-content">
+        {/* Page Header - visible in both views */}
+        <div className={`education-page-header ${activeSection ? 'header-minimized' : ''}`}>
         </div>
-    );
+
+        {/* Card Grid View */}
+        <div className={`education-sections-grid ${activeSection ? 'grid-hidden' : ''}`}>
+          {sections.map((section, index) => (
+            <div
+              key={section.id}
+              className="education-section-card"
+              onClick={() => handleCardClick(section.id)}
+              style={{ animationDelay: `${index * 0.08}s` }}
+            >
+              <div className="education-card-icon">{section.icon}</div>
+              <h3 className="education-card-title">{section.title}</h3>
+              <p className="education-card-subtitle">{section.subtitle}</p>
+              <div className="education-card-arrow">→</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Expanded Section View */}
+        {activeSection && (
+          <div className="education-expanded-view">
+            {sections.map((section) => {
+              if (section.id === activeSection) {
+                const SectionComponent = section.component;
+                return (
+                  <div key={section.id} className="education-section-wrapper">
+                    {/* White Card Container */}
+                    <div className="education-expanded-container">
+                      {/* Top Bar: Back Button + Icon + Title */}
+                      <div className="education-top-bar">
+                        <button className="education-back-button" onClick={handleBackClick}>
+                          <span className="education-back-arrow">←</span>
+                          <span>Back</span>
+                        </button>
+                        
+                        <div className="education-icon-header">{section.icon}</div>
+                        <p className="education-overview-text">{section.expandedTitle}</p>
+                      </div>
+                      
+                      {/* Section Content */}
+                      <div className="education-content-area">
+                        <SectionComponent user={user} isPublicView={true} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default EducationPublicView;

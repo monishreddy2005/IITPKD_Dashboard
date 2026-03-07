@@ -72,7 +72,18 @@ function ImageSlider({ images = [], autoSlideInterval = 4000 }) {
             onClick={goToPrevious}
             aria-label="Previous image"
           >
-            ‹
+          <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 6 L8 12 L14 18" />
+            </svg>
           </button>
         )}
 
@@ -99,7 +110,18 @@ function ImageSlider({ images = [], autoSlideInterval = 4000 }) {
             onClick={goToNext}
             aria-label="Next image"
           >
-            ›
+          <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M10 6 L16 12 L10 18" />
+            </svg>
           </button>
         )}
       </div>

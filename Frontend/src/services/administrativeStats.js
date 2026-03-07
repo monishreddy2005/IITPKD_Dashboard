@@ -14,11 +14,52 @@ export const fetchFilterOptions = async (token) => {
         'Authorization': `Bearer ${token}`
       }
     });
-    return response.data;
+    
+    // Ensure employee_type is always present
+    return {
+      ...response.data,
+      employee_type: response.data.employee_type || ['Faculty', 'Staff']
+    };
   } catch (error) {
     console.error('Error fetching filter options:', error);
     if (error.response) {
       throw new Error(error.response.data.message || 'Failed to fetch filter options');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
+ * Fetches employee overview - department-wise breakdown by gender.
+ * This is a simplified single-chart view combining all employee data.
+ * @param {Object} filters - Filter object with optional fields
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Employee overview data with total
+ */
+export const fetchEmployeeOverview = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+    
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '' && value !== 'All') {
+        params.append(key, value);
+      }
+    });
+    
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/employee-overview?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching employee overview:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch employee overview data');
     }
     throw new Error('Network error. Please check if the backend server is running.');
   }
@@ -248,4 +289,3 @@ export const fetchFacultyGenderLastFiveYears = async (token) => {
     throw new Error('Network error. Please check if the backend server is running.');
   }
 };
-

@@ -215,3 +215,24 @@ CREATE TABLE IF NOT EXISTS faculty_engagement (
     createddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     modifieddate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ======================
+-- RESEARCH PATENTS TABLE
+-- ======================
+
+CREATE TABLE IF NOT EXISTS research_patents (
+    patent_id SERIAL PRIMARY KEY,
+    patent_title VARCHAR(250) NOT NULL,
+    patent_status patent_status_type NOT NULL,
+    filing_date DATE,
+    grant_date DATE,
+    remarks TEXT,
+    inventor1 VARCHAR(50),
+    inventor1_category VARCHAR(50),
+    inventor2 VARCHAR(50),
+    inventor2_category VARCHAR(50),
+    inventor3 VARCHAR(50),
+    inventor3_category VARCHAR(50),
+    inventor4 VARCHAR(50),
+    inventor4_category VARCHAR(50)
+);
