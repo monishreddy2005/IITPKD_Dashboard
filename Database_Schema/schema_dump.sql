@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uuGgCTg1EmKKnUwZpAIpdym3ifjgzyaZhpsoiLPn2sVl1ksH6yTSy0Jg04GP0YC
+\restrict J7gyLgU0SMxMhAd1kQ5H8wrtriwBgIQGtsv0hdwnBb0SBDtK6agqMnx2GVIuulh
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -349,109 +349,33 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: academic_program_launch; Type: TABLE; Schema: public; Owner: postgres
+-- Name: courses_table; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.academic_program_launch (
-    program_code character varying(50) NOT NULL,
-    program_name character varying(150) NOT NULL,
-    program_type public.academic_program_type NOT NULL,
-    department character varying(100),
-    launch_year integer NOT NULL,
-    oelp_students integer DEFAULT 0,
-    CONSTRAINT academic_program_launch_oelp_students_check CHECK ((oelp_students >= 0))
+CREATE TABLE public.courses_table (
+    course_code character varying(50) NOT NULL,
+    course_name character varying(50),
+    credit_l_t_p_c character varying(50),
+    course_category character varying(20),
+    proposing_faculty_name character varying(50),
+    faculty_affiliation character varying(50),
+    target_programme character varying(20),
+    target_discipline character varying(50),
+    prerequisite character varying(100),
+    date_of_proposal date,
+    proposal_type character varying(20),
+    bac_number integer,
+    senate_number integer,
+    offering_status character varying(20),
+    course_proposal_pdf character varying(255),
+    CONSTRAINT courses_table_course_category_check CHECK (((course_category)::text = ANY ((ARRAY['CORE'::character varying, 'ELECTIVE'::character varying, 'MOOC'::character varying])::text[]))),
+    CONSTRAINT courses_table_offering_status_check CHECK (((offering_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying])::text[]))),
+    CONSTRAINT courses_table_proposal_type_check CHECK (((proposal_type)::text = ANY ((ARRAY['NEW'::character varying, 'REVISED'::character varying, 'MOOC'::character varying])::text[]))),
+    CONSTRAINT courses_table_target_programme_check CHECK (((target_programme)::text = ANY ((ARRAY['BTECH'::character varying, 'MTECH'::character varying, 'MSC'::character varying, 'PHD'::character varying])::text[])))
 );
 
 
-ALTER TABLE public.academic_program_launch OWNER TO postgres;
-
---
--- Name: additional_roles; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.additional_roles (
-    roleid integer NOT NULL,
-    historyid integer,
-    employeeid character varying(20),
-    roletype character varying(100) NOT NULL,
-    department character varying(200),
-    startdate date NOT NULL,
-    enddate date,
-    status public.role_status DEFAULT 'Active'::public.role_status,
-    remarks text,
-    createddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.additional_roles OWNER TO postgres;
-
---
--- Name: additional_roles_roleid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.additional_roles_roleid_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.additional_roles_roleid_seq OWNER TO postgres;
-
---
--- Name: additional_roles_roleid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.additional_roles_roleid_seq OWNED BY public.additional_roles.roleid;
-
-
---
--- Name: alumni; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.alumni (
-    rollno character varying(20) NOT NULL,
-    name character varying(100) NOT NULL,
-    alumniidno character varying(30),
-    currentdesignation character varying(100),
-    jobcountry character varying(100),
-    jobplace character varying(100),
-    yearofgraduation integer,
-    department character varying(100),
-    program character varying(20),
-    category character varying(20),
-    gender character varying(20),
-    homestate character varying(100),
-    jobstate character varying(100),
-    outcome public.alumni_outcome_type,
-    employer_or_institution character varying(150),
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.alumni OWNER TO postgres;
-
---
--- Name: course; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.course (
-    coursecode character varying(20) NOT NULL,
-    coursename character varying(150) NOT NULL,
-    offeredbydept character varying(100) NOT NULL,
-    offeredtoprogram public.program_type NOT NULL,
-    credit numeric(3,1),
-    coordinator character varying(100),
-    cocoordinator character varying(100),
-    currentstatus public.course_status DEFAULT 'Active'::public.course_status,
-    CONSTRAINT course_credit_check CHECK ((credit >= (0)::numeric))
-);
-
-
-ALTER TABLE public.course OWNER TO postgres;
+ALTER TABLE public.courses_table OWNER TO postgres;
 
 --
 -- Name: department; Type: TABLE; Schema: public; Owner: postgres
@@ -467,142 +391,6 @@ CREATE TABLE public.department (
 
 
 ALTER TABLE public.department OWNER TO postgres;
-
---
--- Name: designation; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.designation (
-    designationid integer NOT NULL,
-    designationname character varying(50) NOT NULL,
-    designationcadre character varying(50),
-    designationcategory character varying(50),
-    isactive boolean DEFAULT true,
-    createddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.designation OWNER TO postgres;
-
---
--- Name: designation_designationid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.designation_designationid_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.designation_designationid_seq OWNER TO postgres;
-
---
--- Name: designation_designationid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.designation_designationid_seq OWNED BY public.designation.designationid;
-
-
---
--- Name: employee; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.employee (
-    employeeid character varying(20) NOT NULL,
-    empname character varying(50) NOT NULL,
-    email character varying(100) NOT NULL,
-    phonenumber character varying(15),
-    bloodgroup character varying(5),
-    dateofbirth date,
-    gender public.emp_gender NOT NULL,
-    department character varying(100),
-    currentdesignationid integer,
-    isactive boolean DEFAULT true,
-    category character varying(10),
-    pwd_exs boolean,
-    state character varying(20),
-    createddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.employee OWNER TO postgres;
-
---
--- Name: employee_employeeid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.employee_employeeid_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.employee_employeeid_seq OWNER TO postgres;
-
---
--- Name: employee_employeeid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.employee_employeeid_seq OWNED BY public.employee.employeeid;
-
-
---
--- Name: employment_history; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.employment_history (
-    historyid integer NOT NULL,
-    employeeid character varying(20),
-    designationid integer,
-    designation character varying(50) NOT NULL,
-    dateofjoining date NOT NULL,
-    dateofrelieving date,
-    appointmentmode character varying(100),
-    natureofappointment public.nature_type NOT NULL,
-    isonlien public.lien_type DEFAULT 'NA'::public.lien_type,
-    lienstartdate date,
-    lienenddate date,
-    lienduration character varying(50),
-    status public.emp_status DEFAULT 'Active'::public.emp_status,
-    remarks text,
-    createddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT employment_history_check CHECK (((dateofrelieving IS NULL) OR (dateofrelieving >= dateofjoining))),
-    CONSTRAINT employment_history_check1 CHECK (((lienenddate IS NULL) OR (lienenddate >= lienstartdate)))
-);
-
-
-ALTER TABLE public.employment_history OWNER TO postgres;
-
---
--- Name: employment_history_historyid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.employment_history_historyid_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.employment_history_historyid_seq OWNER TO postgres;
-
---
--- Name: employment_history_historyid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.employment_history_historyid_seq OWNED BY public.employment_history.historyid;
-
 
 --
 -- Name: ewd_yearwise; Type: TABLE; Schema: public; Owner: postgres
@@ -789,17 +577,17 @@ ALTER TABLE public.igrs_yearwise OWNER TO postgres;
 
 CREATE TABLE public.industry_conclave (
     conclave_id integer NOT NULL,
-    year integer NOT NULL,
-    theme character varying(300) NOT NULL,
+    start_date date,
+    end_date date,
+    theme text,
     focus_area text,
-    number_of_companies integer DEFAULT 0 NOT NULL,
-    sessions_held text,
+    number_of_com integer,
+    sessions_held integer,
     key_speakers text,
     event_photos_url text,
-    brochure_url character varying(500),
+    brochure_url text,
     description text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT industry_conclave_number_of_companies_check CHECK ((number_of_companies >= 0))
+    created_at timestamp without time zone
 );
 
 
@@ -825,44 +613,6 @@ ALTER SEQUENCE public.industry_conclave_conclave_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.industry_conclave_conclave_id_seq OWNED BY public.industry_conclave.conclave_id;
-
-
---
--- Name: industry_courses; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.industry_courses (
-    course_id integer NOT NULL,
-    course_title character varying(200) NOT NULL,
-    department character varying(100) NOT NULL,
-    industry_partner character varying(150),
-    year_offered integer NOT NULL,
-    is_active boolean DEFAULT true
-);
-
-
-ALTER TABLE public.industry_courses OWNER TO postgres;
-
---
--- Name: industry_courses_course_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.industry_courses_course_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.industry_courses_course_id_seq OWNER TO postgres;
-
---
--- Name: industry_courses_course_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.industry_courses_course_id_seq OWNED BY public.industry_courses.course_id;
 
 
 --
@@ -1033,124 +783,6 @@ ALTER SEQUENCE public.nirf_ranking_ranking_id_seq OWNED BY public.nirf_ranking.r
 
 
 --
--- Name: nptel_courses; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.nptel_courses (
-    course_id integer NOT NULL,
-    course_code character varying(50) NOT NULL,
-    course_title character varying(250) NOT NULL,
-    course_category character varying(100),
-    offering_semester character varying(20),
-    offering_year integer NOT NULL,
-    local_chapter_id integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.nptel_courses OWNER TO postgres;
-
---
--- Name: nptel_courses_course_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.nptel_courses_course_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.nptel_courses_course_id_seq OWNER TO postgres;
-
---
--- Name: nptel_courses_course_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.nptel_courses_course_id_seq OWNED BY public.nptel_courses.course_id;
-
-
---
--- Name: nptel_enrollments; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.nptel_enrollments (
-    enrollment_id integer NOT NULL,
-    course_id integer NOT NULL,
-    student_name character varying(150),
-    enrollment_semester character varying(20),
-    enrollment_year integer NOT NULL,
-    certification_earned boolean DEFAULT false,
-    certification_date date,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.nptel_enrollments OWNER TO postgres;
-
---
--- Name: nptel_enrollments_enrollment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.nptel_enrollments_enrollment_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.nptel_enrollments_enrollment_id_seq OWNER TO postgres;
-
---
--- Name: nptel_enrollments_enrollment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.nptel_enrollments_enrollment_id_seq OWNED BY public.nptel_enrollments.enrollment_id;
-
-
---
--- Name: nptel_local_chapters; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.nptel_local_chapters (
-    chapter_id integer NOT NULL,
-    chapter_name character varying(200) NOT NULL,
-    faculty_coordinator character varying(150) NOT NULL,
-    is_active boolean DEFAULT true,
-    established_year integer,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.nptel_local_chapters OWNER TO postgres;
-
---
--- Name: nptel_local_chapters_chapter_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.nptel_local_chapters_chapter_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.nptel_local_chapters_chapter_id_seq OWNER TO postgres;
-
---
--- Name: nptel_local_chapters_chapter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.nptel_local_chapters_chapter_id_seq OWNED BY public.nptel_local_chapters.chapter_id;
-
-
---
 -- Name: open_house; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1198,23 +830,69 @@ ALTER SEQUENCE public.open_house_event_id_seq OWNED BY public.open_house.event_i
 
 
 --
--- Name: outreach_program_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: outreach; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.outreach_program_table (
+CREATE TABLE public.outreach (
     id integer NOT NULL,
+    academic_year character varying(9),
+    created_by character varying(100),
+    created_at timestamp with time zone DEFAULT now(),
     program_name character varying(255) NOT NULL,
-    type character varying(100),
-    association character varying(255),
-    start_end date,
-    date date,
-    targetted_audi character varying(150),
-    no_of_attendees integer,
-    remarks text
+    program_type character varying(100),
+    engagement_type character varying(50),
+    association text,
+    start_date date,
+    end_date date,
+    targeted_audience text,
+    num_attendees integer,
+    num_schools integer,
+    num_colleges integer,
+    geographic_reach text,
+    remarks text,
+    sq_stipend_provided boolean,
+    sq_travel_allowance boolean,
+    sq_num_lab_sessions integer,
+    sq_districts_covered text,
+    pmc_target_class character varying(20),
+    pmc_mathematician_led boolean,
+    pmc_num_sessions integer,
+    pbd_lecture_topic text,
+    pbd_speaker_name character varying(255),
+    pbd_speaker_affiliation text,
+    iv_visiting_institution character varying(255),
+    iv_visiting_institution_type character varying(50),
+    iv_num_groups integer,
+    nss_activity_type character varying(100),
+    nss_volunteer_count integer,
+    nss_community_reached text,
+    extra_data jsonb
 );
 
 
-ALTER TABLE public.outreach_program_table OWNER TO postgres;
+ALTER TABLE public.outreach OWNER TO postgres;
+
+--
+-- Name: outreach_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.outreach_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.outreach_id_seq OWNER TO postgres;
+
+--
+-- Name: outreach_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.outreach_id_seq OWNED BY public.outreach.id;
+
 
 --
 -- Name: placement_companies; Type: TABLE; Schema: public; Owner: postgres
@@ -1447,48 +1125,6 @@ ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
-
-
---
--- Name: startups; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.startups (
-    startup_id integer NOT NULL,
-    startup_name character varying(200) NOT NULL,
-    founder_name character varying(200) NOT NULL,
-    innovation_focus_area text,
-    year_of_incubation integer NOT NULL,
-    status public.startup_status_type DEFAULT 'Active'::public.startup_status_type NOT NULL,
-    sector character varying(100),
-    is_from_iitpkd boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
-ALTER TABLE public.startups OWNER TO postgres;
-
---
--- Name: startups_startup_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.startups_startup_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.startups_startup_id_seq OWNER TO postgres;
-
---
--- Name: startups_startup_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.startups_startup_id_seq OWNED BY public.startups.startup_id;
 
 
 --
@@ -1744,27 +1380,6 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: additional_roles roleid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.additional_roles ALTER COLUMN roleid SET DEFAULT nextval('public.additional_roles_roleid_seq'::regclass);
-
-
---
--- Name: designation designationid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.designation ALTER COLUMN designationid SET DEFAULT nextval('public.designation_designationid_seq'::regclass);
-
-
---
--- Name: employment_history historyid; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employment_history ALTER COLUMN historyid SET DEFAULT nextval('public.employment_history_historyid_seq'::regclass);
-
-
---
 -- Name: externship_info externid; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1776,13 +1391,6 @@ ALTER TABLE ONLY public.externship_info ALTER COLUMN externid SET DEFAULT nextva
 --
 
 ALTER TABLE ONLY public.industry_conclave ALTER COLUMN conclave_id SET DEFAULT nextval('public.industry_conclave_conclave_id_seq'::regclass);
-
-
---
--- Name: industry_courses course_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.industry_courses ALTER COLUMN course_id SET DEFAULT nextval('public.industry_courses_course_id_seq'::regclass);
 
 
 --
@@ -1800,31 +1408,17 @@ ALTER TABLE ONLY public.nirf_ranking ALTER COLUMN ranking_id SET DEFAULT nextval
 
 
 --
--- Name: nptel_courses course_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_courses ALTER COLUMN course_id SET DEFAULT nextval('public.nptel_courses_course_id_seq'::regclass);
-
-
---
--- Name: nptel_enrollments enrollment_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_enrollments ALTER COLUMN enrollment_id SET DEFAULT nextval('public.nptel_enrollments_enrollment_id_seq'::regclass);
-
-
---
--- Name: nptel_local_chapters chapter_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_local_chapters ALTER COLUMN chapter_id SET DEFAULT nextval('public.nptel_local_chapters_chapter_id_seq'::regclass);
-
-
---
 -- Name: open_house event_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.open_house ALTER COLUMN event_id SET DEFAULT nextval('public.open_house_event_id_seq'::regclass);
+
+
+--
+-- Name: outreach id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.outreach ALTER COLUMN id SET DEFAULT nextval('public.outreach_id_seq'::regclass);
 
 
 --
@@ -1863,13 +1457,6 @@ ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_
 
 
 --
--- Name: startups startup_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.startups ALTER COLUMN startup_id SET DEFAULT nextval('public.startups_startup_id_seq'::regclass);
-
-
---
 -- Name: uba_events event_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1891,43 +1478,11 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- Name: academic_program_launch academic_program_launch_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: courses_table courses_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.academic_program_launch
-    ADD CONSTRAINT academic_program_launch_pkey PRIMARY KEY (program_code);
-
-
---
--- Name: additional_roles additional_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.additional_roles
-    ADD CONSTRAINT additional_roles_pkey PRIMARY KEY (roleid);
-
-
---
--- Name: alumni alumni_alumniidno_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.alumni
-    ADD CONSTRAINT alumni_alumniidno_key UNIQUE (alumniidno);
-
-
---
--- Name: alumni alumni_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.alumni
-    ADD CONSTRAINT alumni_pkey PRIMARY KEY (rollno);
-
-
---
--- Name: course course_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.course
-    ADD CONSTRAINT course_pkey PRIMARY KEY (coursecode);
+ALTER TABLE ONLY public.courses_table
+    ADD CONSTRAINT courses_table_pkey PRIMARY KEY (course_code);
 
 
 --
@@ -1936,54 +1491,6 @@ ALTER TABLE ONLY public.course
 
 ALTER TABLE ONLY public.department
     ADD CONSTRAINT department_pkey PRIMARY KEY (deptcode);
-
-
---
--- Name: designation designation_designationname_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.designation
-    ADD CONSTRAINT designation_designationname_key UNIQUE (designationname);
-
-
---
--- Name: designation designation_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.designation
-    ADD CONSTRAINT designation_pkey PRIMARY KEY (designationid);
-
-
---
--- Name: employee employee_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employee
-    ADD CONSTRAINT employee_email_key UNIQUE (email);
-
-
---
--- Name: employee employee_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employee
-    ADD CONSTRAINT employee_pkey PRIMARY KEY (employeeid);
-
-
---
--- Name: employment_history employment_history_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employment_history
-    ADD CONSTRAINT employment_history_pkey PRIMARY KEY (historyid);
-
-
---
--- Name: employment_history employment_history_unique_record; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employment_history
-    ADD CONSTRAINT employment_history_unique_record UNIQUE (employeeid, designationid, dateofjoining);
 
 
 --
@@ -2059,22 +1566,6 @@ ALTER TABLE ONLY public.industry_conclave
 
 
 --
--- Name: industry_conclave industry_conclave_year_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.industry_conclave
-    ADD CONSTRAINT industry_conclave_year_key UNIQUE (year);
-
-
---
--- Name: industry_courses industry_courses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.industry_courses
-    ADD CONSTRAINT industry_courses_pkey PRIMARY KEY (course_id);
-
-
---
 -- Name: industry_events industry_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2147,46 +1638,6 @@ ALTER TABLE ONLY public.nirf_ranking
 
 
 --
--- Name: nptel_courses nptel_courses_course_code_offering_year_offering_semester_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_courses
-    ADD CONSTRAINT nptel_courses_course_code_offering_year_offering_semester_key UNIQUE (course_code, offering_year, offering_semester);
-
-
---
--- Name: nptel_courses nptel_courses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_courses
-    ADD CONSTRAINT nptel_courses_pkey PRIMARY KEY (course_id);
-
-
---
--- Name: nptel_enrollments nptel_enrollments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_enrollments
-    ADD CONSTRAINT nptel_enrollments_pkey PRIMARY KEY (enrollment_id);
-
-
---
--- Name: nptel_local_chapters nptel_local_chapters_chapter_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_local_chapters
-    ADD CONSTRAINT nptel_local_chapters_chapter_name_key UNIQUE (chapter_name);
-
-
---
--- Name: nptel_local_chapters nptel_local_chapters_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_local_chapters
-    ADD CONSTRAINT nptel_local_chapters_pkey PRIMARY KEY (chapter_id);
-
-
---
 -- Name: open_house open_house_event_year_event_date_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2203,11 +1654,11 @@ ALTER TABLE ONLY public.open_house
 
 
 --
--- Name: outreach_program_table outreach_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: outreach outreach_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.outreach_program_table
-    ADD CONSTRAINT outreach_program_table_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.outreach
+    ADD CONSTRAINT outreach_pkey PRIMARY KEY (id);
 
 
 --
@@ -2275,22 +1726,6 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: startups startups_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.startups
-    ADD CONSTRAINT startups_pkey PRIMARY KEY (startup_id);
-
-
---
--- Name: startups startups_startup_name_year_of_incubation_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.startups
-    ADD CONSTRAINT startups_startup_name_year_of_incubation_key UNIQUE (startup_name, year_of_incubation);
-
-
---
 -- Name: techin_program_table techin_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2355,13 +1790,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: idx_industry_conclave_year; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_industry_conclave_year ON public.industry_conclave USING btree (year);
-
-
---
 -- Name: idx_innovation_projects_sector; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -2376,41 +1804,6 @@ CREATE INDEX idx_innovation_projects_year ON public.innovation_projects USING bt
 
 
 --
--- Name: idx_nptel_courses_category; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_nptel_courses_category ON public.nptel_courses USING btree (course_category);
-
-
---
--- Name: idx_nptel_courses_year; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_nptel_courses_year ON public.nptel_courses USING btree (offering_year);
-
-
---
--- Name: idx_nptel_enrollments_certification; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_nptel_enrollments_certification ON public.nptel_enrollments USING btree (certification_earned);
-
-
---
--- Name: idx_nptel_enrollments_course; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_nptel_enrollments_course ON public.nptel_enrollments USING btree (course_id);
-
-
---
--- Name: idx_nptel_enrollments_year; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_nptel_enrollments_year ON public.nptel_enrollments USING btree (enrollment_year);
-
-
---
 -- Name: idx_open_house_date; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -2422,34 +1815,6 @@ CREATE INDEX idx_open_house_date ON public.open_house USING btree (event_date);
 --
 
 CREATE INDEX idx_open_house_year ON public.open_house USING btree (event_year);
-
-
---
--- Name: idx_startups_iitpkd; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_startups_iitpkd ON public.startups USING btree (is_from_iitpkd);
-
-
---
--- Name: idx_startups_sector; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_startups_sector ON public.startups USING btree (sector);
-
-
---
--- Name: idx_startups_status; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_startups_status ON public.startups USING btree (status);
-
-
---
--- Name: idx_startups_year; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_startups_year ON public.startups USING btree (year_of_incubation);
 
 
 --
@@ -2474,75 +1839,11 @@ CREATE INDEX idx_uba_projects_status ON public.uba_projects USING btree (project
 
 
 --
--- Name: additional_roles additional_roles_employeeid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.additional_roles
-    ADD CONSTRAINT additional_roles_employeeid_fkey FOREIGN KEY (employeeid) REFERENCES public.employee(employeeid) ON DELETE CASCADE;
-
-
---
--- Name: additional_roles additional_roles_historyid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.additional_roles
-    ADD CONSTRAINT additional_roles_historyid_fkey FOREIGN KEY (historyid) REFERENCES public.employment_history(historyid) ON DELETE CASCADE;
-
-
---
--- Name: employee employee_currentdesignationid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employee
-    ADD CONSTRAINT employee_currentdesignationid_fkey FOREIGN KEY (currentdesignationid) REFERENCES public.designation(designationid);
-
-
---
--- Name: employment_history employment_history_designationid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employment_history
-    ADD CONSTRAINT employment_history_designationid_fkey FOREIGN KEY (designationid) REFERENCES public.designation(designationid) ON DELETE SET NULL;
-
-
---
--- Name: employment_history employment_history_employeeid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.employment_history
-    ADD CONSTRAINT employment_history_employeeid_fkey FOREIGN KEY (employeeid) REFERENCES public.employee(employeeid) ON DELETE CASCADE;
-
-
---
--- Name: externship_info externship_info_employeeid_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.externship_info
-    ADD CONSTRAINT externship_info_employeeid_fkey FOREIGN KEY (employeeid) REFERENCES public.employee(employeeid) ON DELETE CASCADE;
-
-
---
 -- Name: users fk_role; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE SET DEFAULT;
-
-
---
--- Name: nptel_courses nptel_courses_local_chapter_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_courses
-    ADD CONSTRAINT nptel_courses_local_chapter_id_fkey FOREIGN KEY (local_chapter_id) REFERENCES public.nptel_local_chapters(chapter_id);
-
-
---
--- Name: nptel_enrollments nptel_enrollments_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.nptel_enrollments
-    ADD CONSTRAINT nptel_enrollments_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.nptel_courses(course_id);
 
 
 --
@@ -2557,5 +1858,5 @@ ALTER TABLE ONLY public.uba_events
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uuGgCTg1EmKKnUwZpAIpdym3ifjgzyaZhpsoiLPn2sVl1ksH6yTSy0Jg04GP0YC
+\unrestrict J7gyLgU0SMxMhAd1kQ5H8wrtriwBgIQGtsv0hdwnBb0SBDtK6agqMnx2GVIuulh
 
