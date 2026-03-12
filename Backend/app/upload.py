@@ -13,48 +13,48 @@ from .auth import token_required
 # We also map the table name to its unique key(s) for the ON CONFLICT (upsert) clause.
 UPDATABLE_TABLES = {
     # Note: Table names should match PostgreSQL schema (lowercase)
-    # But we'll handle case-insensitive matching
-    'student': ['rollno'],
-    'course': ['coursecode'],
+    # --- Core tables ---
     'department': ['deptcode'],
-    'alumni': ['rollno'],
-    'alumini': ['rollno'],  # Alternative spelling
-    # For tables with SERIAL IDs, we use a different business/natural key
-    # that is expected to be in the CSV.
-    'designation': ['designationname'],
-    'employee': ['email'],
-    # ✅ CORRECT
-    'employment_history': ['employeeid', 'designationid', 'dateofjoining'],  # Uses SERIAL ID
-    'additional_roles': ['roleid'],  # Uses SERIAL ID
-    'externship_info': ['externid'],  # Uses SERIAL ID
+    'alumni': ['sl_no'],
+    'employees': ['id'],
+    'courses_table': ['course_code'],
+    'student_table': ['roll_no_current'],  # No formal PK, use roll_no_current as conflict key
+    # --- Grievance / Welfare ---
+    'externship_info': ['externid'],
     'igrs_yearwise': ['grievance_year'],
     'icc_yearwise': ['complaints_year'],
     'ewd_yearwise': ['ewd_year'],
     'faculty_engagement': ['engagement_code'],
+    # --- Placement ---
     'placement_summary': ['placement_year', 'program', 'gender'],
     'placement_companies': ['company_id'],
     'placement_packages': ['placement_year', 'program'],
-    'industry_courses': ['course_id'],
-    'academic_program_launch': ['program_code'],
-    'research_projects': ['project_id'],
+    # --- Research ---
+    'icsr_sponsered_projects': ['project_id'],
+    'icsr_consultancy_projects': ['project_id'],
+    'icsr_csr': ['csr_id'],
     'research_mous': ['mou_id'],
     'research_patents': ['patent_id'],
     'research_publications': ['publication_id'],
-    'startups': ['startup_name', 'year_of_incubation'],  # Composite unique key
-    'innovation_projects': ['project_title', 'year_started'],  # Composite unique key
-    'industry_events': ['event_title', 'event_date'],  # Composite unique key
-    'industry_conclave': ['year'],  # One conclave per year
-    'open_house': ['event_year', 'event_date'],  # Composite unique key
-    'nptel_local_chapters': ['chapter_name'],  # Single unique key
-    'nptel_courses': ['course_code', 'offering_year', 'offering_semester'],  # Composite unique key
-    'nptel_enrollments': ['enrollment_id'],  # Uses SERIAL ID
-    'uba_projects': ['project_id'],  # Uses SERIAL ID
-    'uba_events': ['event_id'],  # Uses SERIAL ID
+    # --- Innovation ---
+    'innovation_projects': ['project_title', 'year_started'],
+    'iptif_startup_table': ['id'],
+    'iptif_program_table': ['id'],
+    'iptif_projects_table': ['project_id'],
+    'iptif_facilities_table': ['facility_id'],
+    'techin_startup_table': ['id'],
+    'techin_program_table': ['id'],
+    'techin_skill_development_program': ['id'],
+    # --- Industry Connect ---
+    'industry_events': ['project_id'],
+    'industry_conclave': ['conclave_id'],
+    # --- Outreach ---
+    'open_house': ['event_year', 'event_date'],
+    'uba_projects': ['project_id'],
+    'uba_events': ['event_id'],
+    'outreach': ['id'],
+    # --- Rankings ---
     'nirf_ranking': ['year'],
-    # 'users' and 'roles' are intentionally left out here for security.
-    # You can add them if you need to, but be very careful.
-    # 'roles': ['name'],
-    # 'users': ['email'],
 }
 
 # Create a new Blueprint for our upload logic
@@ -137,6 +137,86 @@ def upload_csv(current_user_id):
         csv_headers = reader.fieldnames
         if not csv_headers:
              return jsonify({'message': 'CSV file is empty or headers are missing.'}), 400
+
+        # --- PRE-PROCESSING for 'employees' ---
+        # The CSV may have 'group' as a header, but the DB column is 'group_name'
+        # (because 'group' is a SQL reserved word). Rename the header.
+        # Also auto-generate the 'id' column from concat(empid, designation, doj).
+        if table_name == 'employees' and csv_headers:
+            rows = list(reader)
+            if not rows:
+                return jsonify({'message': 'CSV file is empty.'}), 400
+
+            # Build new headers: rename 'group'→'group_name', drop 'id' if present, then prepend 'id'
+            new_headers = []
+            for h in csv_headers:
+                if h.lower() == 'id':
+                    continue  # we will regenerate it
+                elif h.lower() == 'group':
+                    new_headers.append('group_name')
+                else:
+                    new_headers.append(h)
+            # Ensure 'id' is the first column
+            new_headers = ['id'] + new_headers
+
+            processed_rows = []
+            # Date columns that may need normalisation (DD/MM/YY → YYYY-MM-DD)
+            date_columns = {'dob', 'initial_doj', 'doj', 'dor', 'notificationdate'}
+
+            def _normalise_date(val):
+                """Convert DD/MM/YY or DD/MM/YYYY to YYYY-MM-DD. Pass through YYYY-MM-DD as-is."""
+                if not val or not val.strip():
+                    return val
+                val = val.strip()
+                # Already ISO format
+                if len(val) == 10 and val[4] == '-':
+                    return val
+                parts = val.replace('-', '/').split('/')
+                if len(parts) == 3:
+                    day, month, year = parts
+                    if len(year) == 2:
+                        year_int = int(year)
+                        year = str(2000 + year_int) if year_int <= 30 else str(1900 + year_int)
+                    return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                return val  # can't parse, return as-is
+
+            for row in rows:
+                new_row = {}
+                for k, v in row.items():
+                    if k.lower() == 'id':
+                        continue  # skip original id
+                    new_key = 'group_name' if k.lower() == 'group' else k
+                    # Normalise date columns
+                    if new_key.lower() in date_columns:
+                        v = _normalise_date(v)
+                    new_row[new_key] = v
+
+                # Auto-generate id = concat(empid, designation, doj)
+                # Find values case-insensitively
+                empid_val = ''
+                desig_val = ''
+                doj_val = ''
+                for k, v in new_row.items():
+                    kl = k.lower()
+                    if kl == 'empid':
+                        empid_val = (v or '').strip()
+                    elif kl == 'designation':
+                        desig_val = (v or '').strip()
+                    elif kl == 'doj':
+                        doj_val = (v or '').strip()
+
+                new_row['id'] = f"{empid_val}{desig_val}{doj_val}"
+                processed_rows.append(new_row)
+
+            # Rebuild the CSV stream
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=new_headers)
+            writer.writeheader()
+            writer.writerows(processed_rows)
+            output.seek(0)
+            csv_file_text = output
+            reader = csv.DictReader(csv_file_text)
+            csv_headers = reader.fieldnames
 
         # --- PRE-PROCESSING for 'uba_events' ---
         # The CSV template has 'project_title', but the DB needs 'project_id'.
@@ -397,11 +477,11 @@ def upload_csv(current_user_id):
             # Examples: DEFAULT CURRENT_TIMESTAMP, DEFAULT 0, DEFAULT 'value', etc.
             if (column_default or is_nullable == 'YES') and not is_serial:
                 optional_columns.append(column_name)
-                continue  # Skip from required columns, but allow in CSV if present
+                # Still include in db_columns - these are valid upload targets, just not required
             
             db_columns.append(column_name)
             
-            if is_nullable == 'NO':
+            if is_nullable == 'NO' and not column_default:
                 not_null_columns.add(column_name.lower())
         
         if not db_columns:
@@ -433,17 +513,17 @@ def upload_csv(current_user_id):
         all_db_columns = [row['column_name'] for row in db_columns_rows]
         all_db_columns_lower = [c.lower() for c in all_db_columns]
         
-        # Check if CSV has all required columns (db_columns must be in CSV)
-        missing_in_csv = [db_columns[i] for i, col in enumerate(db_columns_lower) if col not in csv_headers_lower]
+        # Check if CSV has all REQUIRED columns (NOT NULL without defaults)
+        missing_in_csv = [col for col in not_null_columns if col not in csv_headers_lower]
         if missing_in_csv:
             return jsonify({
                 'message': 'Column mismatch: CSV is missing required columns.',
                 'details': {
                     'missing_in_csv': missing_in_csv,
-                    'expected_columns': db_columns,
+                    'required_columns': list(not_null_columns),
                     'received_columns': csv_headers,
                     'optional_columns': optional_columns,
-                    'note': 'SERIAL columns (like employeeid) are auto-generated and should be excluded from CSV, or will be ignored if present. Columns with DEFAULT values (like created_at) are optional.'
+                    'note': 'SERIAL columns (like employeeid) are auto-generated and should be excluded from CSV. Columns with DEFAULT values or that are nullable are optional.'
                 }
             }), 400
         
@@ -476,9 +556,9 @@ def upload_csv(current_user_id):
         # This is handled in the data preparation step below
         
         # Map CSV headers to DB column names (handle case differences)
-        # Include both required columns (db_columns) and optional columns if present in CSV
+        # db_columns already includes optional columns, so use it directly
         csv_to_db_map = {}
-        all_uploadable_columns = db_columns + optional_columns  # Include optional columns for mapping
+        all_uploadable_columns = db_columns  # Already includes optional columns
         for csv_header in csv_headers:
             # Skip SERIAL columns (they'll be ignored)
             if csv_header.lower() in [c.lower() for c in serial_columns]:
@@ -507,12 +587,9 @@ def upload_csv(current_user_id):
             else:
                 conflict_keys_db.append(key)  # Fallback if not found
         
-        # Determine which columns to actually insert (required + optional if present in CSV)
-        # Optional columns that are in CSV should be included
-        columns_to_insert = db_columns.copy()
-        for opt_col in optional_columns:
-            if opt_col.lower() in csv_headers_lower:
-                columns_to_insert.append(opt_col)
+        # Determine which columns to actually insert
+        # Only include db_columns that are present in the CSV
+        columns_to_insert = [col for col in db_columns if col.lower() in csv_headers_lower]
         
         # Update columns are all columns that are not conflict keys
         update_cols = [col for col in columns_to_insert if col not in conflict_keys_db]

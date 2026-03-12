@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict J7gyLgU0SMxMhAd1kQ5H8wrtriwBgIQGtsv0hdwnBb0SBDtK6agqMnx2GVIuulh
+\restrict FiYlhsh03lNQTQVmjuBfb1tHLEFbiGUaQyurCWiPLCNFwDBx69rYeZIcM0TLyeY
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -349,6 +349,27 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: alumni; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.alumni (
+    sl_no integer NOT NULL,
+    roll_number character varying(50),
+    year_of_admission integer,
+    year_of_graduation integer,
+    course_type character varying(100),
+    course_name character varying(150),
+    department character varying(150),
+    current_job text,
+    country_of_settlement character varying(100),
+    place_of_settlement_state character varying(150),
+    alumni_contribution text
+);
+
+
+ALTER TABLE public.alumni OWNER TO postgres;
+
+--
 -- Name: courses_table; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -391,6 +412,47 @@ CREATE TABLE public.department (
 
 
 ALTER TABLE public.department OWNER TO postgres;
+
+--
+-- Name: employees; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.employees (
+    id character varying(150) NOT NULL,
+    empid character varying(50),
+    empname character varying(150),
+    designation character varying(100),
+    phonenumber character varying(20),
+    bloodgroup character varying(10),
+    dob date,
+    initial_doj date,
+    doj date,
+    dor date,
+    gender character varying(10),
+    email character varying(150),
+    personalmail character varying(150),
+    marital_status character varying(20),
+    address text,
+    paylevel character varying(20),
+    group_name character varying(50),
+    ltchometown character varying(150),
+    employmentnature character varying(100),
+    appointmentmode character varying(100),
+    basicpay numeric(10,2),
+    department character varying(150),
+    emp_type character varying(50),
+    pwd character varying(255),
+    notificationnumber character varying(100),
+    notificationdate date,
+    empstatus character varying(50),
+    prior_industry_exp_in_months integer,
+    prior_research_exp_in_months integer,
+    prior_teaching_exp_in_months integer,
+    total_teaching_exp_in_months integer
+);
+
+
+ALTER TABLE public.employees OWNER TO postgres;
 
 --
 -- Name: ewd_yearwise; Type: TABLE; Schema: public; Owner: postgres
@@ -1478,6 +1540,14 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
+-- Name: alumni alumni_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alumni
+    ADD CONSTRAINT alumni_pkey PRIMARY KEY (sl_no);
+
+
+--
 -- Name: courses_table courses_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1491,6 +1561,14 @@ ALTER TABLE ONLY public.courses_table
 
 ALTER TABLE ONLY public.department
     ADD CONSTRAINT department_pkey PRIMARY KEY (deptcode);
+
+
+--
+-- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT employees_pkey PRIMARY KEY (id);
 
 
 --
@@ -1858,5 +1936,5 @@ ALTER TABLE ONLY public.uba_events
 -- PostgreSQL database dump complete
 --
 
-\unrestrict J7gyLgU0SMxMhAd1kQ5H8wrtriwBgIQGtsv0hdwnBb0SBDtK6agqMnx2GVIuulh
+\unrestrict FiYlhsh03lNQTQVmjuBfb1tHLEFbiGUaQyurCWiPLCNFwDBx69rYeZIcM0TLyeY
 

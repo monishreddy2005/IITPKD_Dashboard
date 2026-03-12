@@ -43,17 +43,13 @@ function IarSection({ user, isPublicView = false }) {
   const [filterOptions, setFilterOptions] = useState({
     years: [],
     departments: [],
-    genders: [],
-    programs: [],
-    categories: []
+    course_types: []
   });
 
   const [filters, setFilters] = useState({
     year: 'All',
     department: 'All',
-    gender: 'All',
-    program: 'All',
-    category: 'All'
+    course_type: 'All'
   });
 
   const [summary, setSummary] = useState({
@@ -90,9 +86,7 @@ function IarSection({ user, isPublicView = false }) {
         setFilterOptions({
           years: Array.isArray(options?.years) ? options.years : [],
           departments: Array.isArray(options?.departments) ? options.departments : [],
-          genders: Array.isArray(options?.genders) ? options.genders : [],
-          programs: Array.isArray(options?.programs) ? options.programs : [],
-          categories: Array.isArray(options?.categories) ? options.categories : []
+          course_types: Array.isArray(options?.course_types) ? options.course_types : [],
         });
       } catch (err) {
         console.error('Failed to load filter options:', err);
@@ -143,8 +137,8 @@ function IarSection({ user, isPublicView = false }) {
       <div className={isPublicView ? "" : "page-content"}>
         {!isPublicView && <h1>International and Alumni Relations</h1>}
         <p>
-          Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
-          year, department, program, gender, and category.
+          Explore global alumni reach, outcome trends, and settlement insights with comprehensive filtering by
+          year, department, and course type.
         </p>
 
         {isPublicView ? null : user && user.role_id === 3 && (
@@ -197,9 +191,7 @@ function IarSection({ user, isPublicView = false }) {
                       setFilters({
                         year: 'All',
                         department: 'All',
-                        gender: 'All',
-                        program: 'All',
-                        category: 'All'
+                        course_type: 'All'
                       })
                     }
                   >
@@ -209,7 +201,7 @@ function IarSection({ user, isPublicView = false }) {
 
                 <div className="filter-grid">
                   <div className="filter-group">
-                    <label htmlFor="yearFilter">Year of Admission</label>
+                    <label htmlFor="yearFilter">Year of Graduation</label>
                     <select
                       id="yearFilter"
                       className="filter-select"
@@ -243,51 +235,17 @@ function IarSection({ user, isPublicView = false }) {
                   </div>
 
                   <div className="filter-group">
-                    <label htmlFor="programFilter">Program</label>
+                    <label htmlFor="courseTypeFilter">Course Type</label>
                     <select
-                      id="programFilter"
+                      id="courseTypeFilter"
                       className="filter-select"
-                      value={filters.program}
-                      onChange={(e) => handleFilterChange('program', e.target.value)}
+                      value={filters.course_type}
+                      onChange={(e) => handleFilterChange('course_type', e.target.value)}
                     >
                       <option value="All">All</option>
-                      {filterOptions.programs?.map((program) => (
-                        <option key={program} value={program}>
-                          {program}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="genderFilter">Gender</label>
-                    <select
-                      id="genderFilter"
-                      className="filter-select"
-                      value={filters.gender}
-                      onChange={(e) => handleFilterChange('gender', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.genders?.map((gender) => (
-                        <option key={gender} value={gender}>
-                          {gender}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="categoryFilter">Category</label>
-                    <select
-                      id="categoryFilter"
-                      className="filter-select"
-                      value={filters.category}
-                      onChange={(e) => handleFilterChange('category', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.categories?.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
+                      {filterOptions.course_types?.map((ct) => (
+                        <option key={ct} value={ct}>
+                          {ct}
                         </option>
                       ))}
                     </select>
@@ -376,7 +334,7 @@ function IarSection({ user, isPublicView = false }) {
                   <div className="chart-header">
                     <div>
                       <p className="chart-description">
-                        Alumni counts mapped to Indian states based on their registered home state.
+                        Alumni counts mapped to their place of settlement (state/region).
                       </p>
                     </div>
                   </div>

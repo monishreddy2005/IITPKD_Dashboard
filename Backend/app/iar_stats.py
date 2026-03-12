@@ -6,16 +6,27 @@ from .db import get_db_connection
 iar_bp = Blueprint('iar', __name__)
 
 
+# ---------------------------------------------------------------------------
+# New alumni table columns:
+#   sl_no (PK), roll_number, year_of_admission, year_of_graduation,
+#   course_type, course_name, department, current_job,
+#   country_of_settlement, place_of_settlement_state, alumni_contribution
+#
+# Removed columns (no longer available):
+#   name, alumniidno, gender, category, outcome, homestate, jobstate,
+#   jobplace, employer_or_institution, updated_at
+# ---------------------------------------------------------------------------
+
+
 def build_filter_query(filters):
+    """Build a WHERE clause from the filter dict."""
     conditions = []
     params = []
 
     mapping = {
-        'year': 'a.yearofgraduation',
+        'year': 'a.year_of_graduation',
         'department': 'a.department',
-        'gender': 'a.gender',
-        'program': 'a.program',
-        'category': 'a.category'
+        'course_type': 'a.course_type',
     }
 
     for key, column in mapping.items():
@@ -31,7 +42,9 @@ def build_filter_query(filters):
     return where_clause, params
 
 
-def apply_filters_and_fetch(where_clause, params, order_clause='ORDER BY a.yearofgraduation ASC'):
+def apply_filters_and_fetch(where_clause, params,
+                            order_clause='ORDER BY a.year_of_graduation ASC'):
+    """Run a SELECT on the alumni table with the given filters."""
     conn = None
     cur = None
     try:
@@ -42,22 +55,17 @@ def apply_filters_and_fetch(where_clause, params, order_clause='ORDER BY a.yearo
         cur = conn.cursor()
         query = f"""
             SELECT
-                a.rollno,
-                a.name,
-                a.alumniidno,
-                a.currentdesignation,
-                a.jobcountry,
-                a.jobplace,
-                a.yearofgraduation,
-                a.program,
+                a.sl_no,
+                a.roll_number,
+                a.year_of_admission,
+                a.year_of_graduation,
+                a.course_type,
+                a.course_name,
                 a.department,
-                a.homestate,
-                a.jobstate,
-                a.category,
-                a.gender,
-                a.outcome,
-                a.employer_or_institution,
-                a.updated_at
+                a.current_job,
+                a.country_of_settlement,
+                a.place_of_settlement_state,
+                a.alumni_contribution
             FROM alumni a
             {where_clause}
             {order_clause}
@@ -76,14 +84,17 @@ def apply_filters_and_fetch(where_clause, params, order_clause='ORDER BY a.yearo
 
 
 def classify_outcome(row):
-    outcome = row.get('outcome')
-    if outcome in ('HigherStudies', 'Corporate', 'Entrepreneurship', 'Other'):
-        return outcome
-
-    designation = row.get('currentdesignation') or ''
-    lower = designation.lower()
-    keywords = ('research', 'phd', 'ms', 'msc', 'fellow', 'scholar', 'professor', 'lecturer', 'postdoc')
-    if any(keyword in lower for keyword in keywords):
+    """
+    Attempt to classify an alumnus's outcome from the `current_job` field.
+    If the job title hints at academia/research → HigherStudies, else Corporate.
+    """
+    job = (row.get('current_job') or '').lower()
+    academic_keywords = (
+        'research', 'phd', 'ms ', 'msc', 'fellow', 'scholar',
+        'professor', 'lecturer', 'postdoc', 'university', 'institute',
+        'college', 'academia', 'doctoral',
+    )
+    if any(kw in job for kw in academic_keywords):
         return 'HigherStudies'
     return 'Corporate'
 
@@ -101,19 +112,21 @@ def get_filter_options(current_user_id):
         cur = conn.cursor()
         cur.execute("""
             SELECT
-                ARRAY(SELECT DISTINCT yearofgraduation FROM alumni WHERE yearofgraduation IS NOT NULL ORDER BY yearofgraduation DESC) AS years,
-                ARRAY(SELECT DISTINCT department FROM alumni WHERE department IS NOT NULL AND department != '' ORDER BY department) AS departments,
-                ARRAY(SELECT DISTINCT gender FROM alumni WHERE gender IS NOT NULL ORDER BY gender) AS genders,
-                ARRAY(SELECT DISTINCT program FROM alumni WHERE program IS NOT NULL ORDER BY program) AS programs,
-                ARRAY(SELECT DISTINCT category FROM alumni WHERE category IS NOT NULL ORDER BY category) AS categories
+                ARRAY(SELECT DISTINCT year_of_graduation FROM alumni
+                      WHERE year_of_graduation IS NOT NULL
+                      ORDER BY year_of_graduation DESC) AS years,
+                ARRAY(SELECT DISTINCT department FROM alumni
+                      WHERE department IS NOT NULL AND department != ''
+                      ORDER BY department) AS departments,
+                ARRAY(SELECT DISTINCT course_type FROM alumni
+                      WHERE course_type IS NOT NULL
+                      ORDER BY course_type) AS course_types
         """)
         row = cur.fetchone()
         return jsonify({
-            'years': row['years'] if row and row['years'] else [],
-            'departments': row['departments'] if row and row['departments'] else [],
-            'genders': row['genders'] if row and row['genders'] else [],
-            'programs': row['programs'] if row and row['programs'] else [],
-            'categories': row['categories'] if row and row['categories'] else []
+            'years': row['years'] if row and row.get('years') else [],
+            'departments': row['departments'] if row and row.get('departments') else [],
+            'course_types': row['course_types'] if row and row.get('course_types') else [],
         }), 200
     except Exception as exc:
         print(f"IAR filter options error: {exc}")
@@ -131,9 +144,7 @@ def get_summary(current_user_id):
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
-        'gender': request.args.get('gender'),
-        'program': request.args.get('program'),
-        'category': request.args.get('category')
+        'course_type': request.args.get('course_type'),
     }
 
     where_clause, params = build_filter_query(filters)
@@ -142,30 +153,24 @@ def get_summary(current_user_id):
         return jsonify({'message': error}), 500
 
     total_alumni = len(rows)
-    higher_studies = sum(1 for row in rows if classify_outcome(row) == 'HigherStudies')
-    corporate = sum(1 for row in rows if classify_outcome(row) == 'Corporate')
+    higher_studies = sum(1 for r in rows if classify_outcome(r) == 'HigherStudies')
+    corporate = total_alumni - higher_studies
 
     by_year = {}
     for row in rows:
-        year = row['yearofgraduation']
+        year = row.get('year_of_graduation')
         if year is None:
             continue
         if year not in by_year:
             by_year[year] = {'total': 0, 'higher': 0, 'corporate': 0}
         by_year[year]['total'] += 1
-        outcome = classify_outcome(row)
-        if outcome == 'HigherStudies':
+        if classify_outcome(row) == 'HigherStudies':
             by_year[year]['higher'] += 1
-        elif outcome == 'Corporate':
+        else:
             by_year[year]['corporate'] += 1
 
     trend = [
-        {
-            'year': year,
-            'total': counts['total'],
-            'higher': counts['higher'],
-            'corporate': counts['corporate']
-        }
+        {'year': year, **counts}
         for year, counts in sorted(by_year.items())
     ]
 
@@ -174,7 +179,7 @@ def get_summary(current_user_id):
             'total_alumni': total_alumni,
             'higher_studies': higher_studies,
             'corporate': corporate,
-            'trend': trend
+            'trend': trend,
         }
     }), 200
 
@@ -185,9 +190,7 @@ def get_state_distribution(current_user_id):
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
-        'gender': request.args.get('gender'),
-        'program': request.args.get('program'),
-        'category': request.args.get('category')
+        'course_type': request.args.get('course_type'),
     }
 
     where_clause, params = build_filter_query(filters)
@@ -197,10 +200,13 @@ def get_state_distribution(current_user_id):
 
     distribution = {}
     for row in rows:
-        state = row['homestate'] or 'Unknown'
+        state = row.get('place_of_settlement_state') or 'Unknown'
         distribution[state] = distribution.get(state, 0) + 1
 
-    formatted = [{'state': state, 'count': count} for state, count in sorted(distribution.items(), key=lambda x: x[0])]
+    formatted = [
+        {'state': s, 'count': c}
+        for s, c in sorted(distribution.items())
+    ]
     return jsonify({'data': formatted}), 200
 
 
@@ -210,9 +216,7 @@ def get_country_distribution(current_user_id):
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
-        'gender': request.args.get('gender'),
-        'program': request.args.get('program'),
-        'category': request.args.get('category')
+        'course_type': request.args.get('course_type'),
     }
 
     where_clause, params = build_filter_query(filters)
@@ -222,25 +226,24 @@ def get_country_distribution(current_user_id):
 
     distribution = {}
     for row in rows:
-        country = row['jobcountry'] or 'Unknown'
+        country = row.get('country_of_settlement') or 'Unknown'
         distribution[country] = distribution.get(country, 0) + 1
 
-    formatted = [{'country': country, 'count': count} for country, count in sorted(distribution.items(), key=lambda x: (-x[1], x[0]))]
+    formatted = [
+        {'country': c, 'count': n}
+        for c, n in sorted(distribution.items(), key=lambda x: (-x[1], x[0]))
+    ]
     return jsonify({'data': formatted}), 200
 
 
 @iar_bp.route('/outcome-breakdown', methods=['GET'])
 @token_required
 def get_outcome_breakdown(current_user_id):
-    """
-    Returns per-department counts for higher studies vs corporate.
-    """
+    """Per-department counts for higher studies vs corporate (inferred from current_job)."""
     filters = {
         'year': request.args.get('year'),
         'department': request.args.get('department'),
-        'gender': request.args.get('gender'),
-        'program': request.args.get('program'),
-        'category': request.args.get('category')
+        'course_type': request.args.get('course_type'),
     }
 
     where_clause, params = build_filter_query(filters)
@@ -250,16 +253,14 @@ def get_outcome_breakdown(current_user_id):
 
     breakdown = {}
     for row in rows:
-        dept = row['department'] or 'Unknown'
+        dept = row.get('department') or 'Unknown'
         if dept not in breakdown:
             breakdown[dept] = {'department': dept, 'higher': 0, 'corporate': 0, 'total': 0}
         breakdown[dept]['total'] += 1
-        outcome = classify_outcome(row)
-        if outcome == 'HigherStudies':
+        if classify_outcome(row) == 'HigherStudies':
             breakdown[dept]['higher'] += 1
-        elif outcome == 'Corporate':
+        else:
             breakdown[dept]['corporate'] += 1
 
     formatted = sorted(breakdown.values(), key=lambda x: x['department'])
     return jsonify({'data': formatted}), 200
-

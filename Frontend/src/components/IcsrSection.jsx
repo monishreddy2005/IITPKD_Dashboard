@@ -34,7 +34,7 @@ function IcsrSection({ user, isPublicView = false }) {
 
   const [summary, setSummary] = useState({
     total_events: 0,
-    departments_involved: 0
+    total_funding: 0
   });
 
   const [yearlyDistribution, setYearlyDistribution] = useState([]);
@@ -42,7 +42,6 @@ function IcsrSection({ user, isPublicView = false }) {
   const [eventsList, setEventsList] = useState([]);
   const [filterOptions, setFilterOptions] = useState({
     event_types: [],
-    departments: [],
     years: []
   });
 
@@ -51,7 +50,6 @@ function IcsrSection({ user, isPublicView = false }) {
 
   const [filters, setFilters] = useState({
     event_type: 'All',
-    department: 'All',
     year: 'All',
     search: ''
   });
@@ -166,7 +164,6 @@ function IcsrSection({ user, isPublicView = false }) {
   const handleClearFilters = () => {
     setFilters({
       event_type: 'All',
-      department: 'All',
       year: 'All',
       search: ''
     });
@@ -177,8 +174,7 @@ function IcsrSection({ user, isPublicView = false }) {
   const yearlyChartData = useMemo(() => {
     return yearlyDistribution.map(row => ({
       year: row.year,
-      events: row.event_count || 0,
-      departments: row.departments_count || 0
+      events: row.event_count || 0
     }));
   }, [yearlyDistribution]);
 
@@ -260,10 +256,10 @@ function IcsrSection({ user, isPublicView = false }) {
             boxShadow: '0 4px 6px rgba(34, 197, 94, 0.2)'
           }}>
             <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-              Departments Involved
+              Total Funding (₹)
             </div>
             <div className="summary-card-value" style={{ fontSize: '32px', fontWeight: 'bold' }}>
-              {formatNumber(summary.departments_involved)}
+              {formatNumber(summary.total_funding)}
             </div>
           </div>
         </div>
@@ -454,22 +450,7 @@ function IcsrSection({ user, isPublicView = false }) {
                 </select>
               </div>
 
-              <div className="filter-group">
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                  Department
-                </label>
-                <select
-                  className="filter-select"
-                  value={filters.department}
-                  onChange={(e) => handleFilterChange('department', e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                >
-                  <option value="All">All Departments</option>
-                  {filterOptions.departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-              </div>
+
 
               <div className="filter-group">
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
@@ -494,7 +475,7 @@ function IcsrSection({ user, isPublicView = false }) {
                 </label>
                 <input
                   type="text"
-                  placeholder="Search by event title, industry partner, or description..."
+                  placeholder="Search by event name, host, or audience..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                   className="filter-select"
@@ -513,10 +494,9 @@ function IcsrSection({ user, isPublicView = false }) {
             }}>
               <strong>Active Filters:</strong>{' '}
               {filters.event_type !== 'All' && <span style={{ marginRight: '10px' }}>📌 Type: {filters.event_type}</span>}
-              {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
               {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
               {filters.search && <span style={{ marginRight: '10px' }}>🔍 Search: "{filters.search}"</span>}
-              {filters.event_type === 'All' && filters.department === 'All' && filters.year === 'All' && !filters.search &&
+              {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
                 <span>No filters applied (showing all events)</span>
               }
             </div>
@@ -586,12 +566,6 @@ function IcsrSection({ user, isPublicView = false }) {
                               fill="#4f46e5"
                               radius={[4, 4, 0, 0]}
                             />
-                            <Bar
-                              dataKey="departments"
-                              name="Departments"
-                              fill="#22c55e"
-                              radius={[4, 4, 0, 0]}
-                            />
                           </BarChart>
                         </ResponsiveContainer>
 
@@ -611,12 +585,6 @@ function IcsrSection({ user, isPublicView = false }) {
                               {yearlyChartData.reduce((sum, item) => sum + item.events, 0)}
                             </div>
                             <div style={{ color: '#666', fontSize: '14px' }}>Total Events</div>
-                          </div>
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                              {yearlyChartData.reduce((sum, item) => sum + item.departments, 0)}
-                            </div>
-                            <div style={{ color: '#666', fontSize: '14px' }}>Total Department Involvements</div>
                           </div>
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
@@ -802,24 +770,24 @@ function IcsrSection({ user, isPublicView = false }) {
                       }}>
                         <thead>
                           <tr style={{ backgroundColor: '#f97316', color: 'white' }}>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Event Title</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Event Name</th>
                             <th style={{ padding: '12px', textAlign: 'left' }}>Type</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Industry Partner</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Hosted By</th>
                             <th style={{ padding: '12px', textAlign: 'left' }}>Date</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Duration (hrs)</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Department</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Target Audience</th>
+                            <th style={{ padding: '12px', textAlign: 'left' }}>Amount (₹)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {eventsList.map((event, index) => (
                             <tr
-                              key={event.event_id}
+                              key={event.project_id}
                               style={{
                                 backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
                                 borderBottom: '1px solid #e0e0e0'
                               }}
                             >
-                              <td style={{ padding: '12px', fontWeight: '500' }}>{event.event_title}</td>
+                              <td style={{ padding: '12px', fontWeight: '500' }}>{event.event_name}</td>
                               <td style={{ padding: '12px' }}>
                                 <span style={{
                                   backgroundColor: '#e0e7ff',
@@ -833,10 +801,10 @@ function IcsrSection({ user, isPublicView = false }) {
                                   {event.event_type}
                                 </span>
                               </td>
-                              <td style={{ padding: '12px' }}>{event.industry_partner || '—'}</td>
-                              <td style={{ padding: '12px' }}>{event.event_date ? new Date(event.event_date).toLocaleDateString() : '—'}</td>
-                              <td style={{ padding: '12px' }}>{event.duration_hours ? `${event.duration_hours}` : '—'}</td>
-                              <td style={{ padding: '12px' }}>{event.department || '—'}</td>
+                              <td style={{ padding: '12px' }}>{event.hosted_by || '—'}</td>
+                              <td style={{ padding: '12px' }}>{event.date_of_event ? new Date(event.date_of_event).toLocaleDateString() : '—'}</td>
+                              <td style={{ padding: '12px' }}>{event.target_audience || '—'}</td>
+                              <td style={{ padding: '12px' }}>{event.amount ? formatNumber(event.amount) : '—'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -868,9 +836,9 @@ function IcsrSection({ user, isPublicView = false }) {
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {new Set(eventsList.map(e => e.department).filter(Boolean)).size}
+                          {new Set(eventsList.map(e => e.hosted_by).filter(Boolean)).size}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Departments</div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Hosts</div>
                       </div>
                     </div>
 

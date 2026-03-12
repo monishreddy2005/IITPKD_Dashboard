@@ -127,7 +127,6 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
   const [filters, setFilters] = useState({
     department: 'All',
     project_year: 'All',
-    project_type: 'All',
     status: 'All',
     mou_year: 'All',
     patent_year: 'All',
@@ -266,7 +265,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     if (!projectTrend.length) return [];
     return projectTrend.map((row) => ({
       year: row.year,
-      projects: Number(row.total) || 0
+      funded: Number(row.funded) || 0,
+      consultancy: Number(row.consultancy) || 0
     }));
   }, [projectTrend]);
 
@@ -274,7 +274,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     if (!consultancyTrend.length) return [];
     return consultancyTrend.map((row) => ({
       year: row.year,
-      revenue: Number(row.revenue) || 0
+      funded_revenue: Number(row.funded_revenue) || 0,
+      consultancy_revenue: Number(row.consultancy_revenue) || 0
     }));
   }, [consultancyTrend]);
 
@@ -318,7 +319,6 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     setFilters({
       department: 'All',
       project_year: 'All',
-      project_type: 'All',
       status: 'All',
       mou_year: 'All',
       patent_year: 'All',
@@ -729,22 +729,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Project Type
-              </label>
-              <select
-                className="filter-select"
-                value={filters.project_type}
-                onChange={(e) => handleFilterChange('project_type', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-              >
-                <option value="All">All Types</option>
-                {filterOptions.project_types.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
+
 
             <div className="filter-group">
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
@@ -826,12 +811,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             <strong>Active Filters:</strong>{' '}
             {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
             {filters.project_year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Project Year: {filters.project_year}</span>}
-            {filters.project_type !== 'All' && <span style={{ marginRight: '10px' }}>📋 Type: {filters.project_type}</span>}
             {filters.status !== 'All' && <span style={{ marginRight: '10px' }}>⚡ Status: {filters.status}</span>}
             {filters.mou_year !== 'All' && <span style={{ marginRight: '10px' }}>🤝 MoU Year: {filters.mou_year}</span>}
             {filters.patent_year !== 'All' && <span style={{ marginRight: '10px' }}>📝 Patent Year: {filters.patent_year}</span>}
             {filters.patent_status !== 'All' && <span style={{ marginRight: '10px' }}>📌 Patent Status: {filters.patent_status}</span>}
-            {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && 
+            {filters.department === 'All' && filters.project_year === 'All' && 
              filters.status === 'All' && filters.mou_year === 'All' && filters.patent_year === 'All' && 
              filters.patent_status === 'All' && 
               <span>No filters applied (showing all data)</span>
@@ -861,10 +845,10 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Externally Funded Project Trend
+                      <span style={{ fontSize: '24px' }}>📊</span> Projects Count Trend — Sponsored vs Consultancy
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Annual count of externally funded projects with the selected filters.
+                      Annual count comparison of externally funded (sponsored) and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
@@ -897,11 +881,20 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                         <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                         <Line 
                           type="monotone" 
-                          dataKey="projects" 
-                          name="Funded Projects"
+                          dataKey="funded" 
+                          name="Sponsored Projects"
                           stroke="#6366f1" 
-                          strokeWidth={3} 
+                          strokeWidth={3}
                           dot={{ r: 6, fill: '#6366f1' }}
+                          activeDot={{ r: 8 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="consultancy" 
+                          name="Consultancy Projects"
+                          stroke="#22c55e" 
+                          strokeWidth={3}
+                          dot={{ r: 6, fill: '#22c55e' }}
                           activeDot={{ r: 8 }}
                         />
                       </LineChart>
@@ -920,23 +913,27 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.reduce((sum, item) => sum + item.projects, 0)}
+                          {projectTrendChartData.reduce((sum, item) => sum + item.funded, 0)}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Funded Projects</div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Sponsored Projects</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.length}
+                          {projectTrendChartData.reduce((sum, item) => sum + item.consultancy, 0)}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Consultancy Projects</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#333', fontWeight: 'bold', fontSize: '24px' }}>
+                          {projectTrendChartData.reduce((sum, item) => sum + item.funded + item.consultancy, 0)}
+                        </div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Total Projects</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.length > 0 
-                            ? Math.max(...projectTrendChartData.map(item => item.projects)) 
-                            : 0}
+                          {projectTrendChartData.length}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Count</div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
                       </div>
                     </div>
                   </div>
@@ -948,10 +945,10 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>💰</span> Consultancy Revenue Trend
+                      <span style={{ fontSize: '24px' }}>💰</span> Revenue Trend — Sponsored vs Consultancy
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Year-wise sanctioned consultancy revenue (₹), showcasing industry engagement momentum.
+                      Year-wise sanctioned revenue comparison (₹) from sponsored and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
@@ -984,10 +981,19 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                         <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                         <Line 
                           type="monotone" 
-                          dataKey="revenue" 
+                          dataKey="funded_revenue" 
+                          name="Sponsored Revenue"
+                          stroke="#6366f1" 
+                          strokeWidth={3}
+                          dot={{ r: 6, fill: '#6366f1' }}
+                          activeDot={{ r: 8 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="consultancy_revenue" 
                           name="Consultancy Revenue"
                           stroke="#22c55e" 
-                          strokeWidth={3} 
+                          strokeWidth={3}
                           dot={{ r: 6, fill: '#22c55e' }}
                           activeDot={{ r: 8 }}
                         />
@@ -1006,24 +1012,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       gap: '15px'
                     }}>
                       <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                          {formatCurrency(consultancyTrendChartData.reduce((sum, item) => sum + item.funded_revenue, 0))}
+                        </div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Sponsored Revenue</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {formatCurrency(consultancyTrendChartData.reduce((sum, item) => sum + item.revenue, 0))}
+                          {formatCurrency(consultancyTrendChartData.reduce((sum, item) => sum + item.consultancy_revenue, 0))}
+                        </div>
+                        <div style={{ color: '#666', fontSize: '14px' }}>Consultancy Revenue</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#333', fontWeight: 'bold', fontSize: '24px' }}>
+                          {formatCurrency(consultancyTrendChartData.reduce((sum, item) => sum + item.funded_revenue + item.consultancy_revenue, 0))}
                         </div>
                         <div style={{ color: '#666', fontSize: '14px' }}>Total Revenue</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                           {consultancyTrendChartData.length}
                         </div>
                         <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {consultancyTrendChartData.length > 0 
-                            ? formatCurrency(Math.max(...consultancyTrendChartData.map(item => item.revenue)))
-                            : '₹0'}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Revenue</div>
                       </div>
                     </div>
                   </div>

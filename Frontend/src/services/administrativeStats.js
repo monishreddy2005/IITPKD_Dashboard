@@ -15,11 +15,7 @@ export const fetchFilterOptions = async (token) => {
       }
     });
     
-    // Ensure employee_type is always present
-    return {
-      ...response.data,
-      employee_type: response.data.employee_type || ['Faculty', 'Staff']
-    };
+    return response.data;
   } catch (error) {
     console.error('Error fetching filter options:', error);
     if (error.response) {
@@ -77,7 +73,7 @@ export const fetchFacultyByDepartmentDesignation = async (filters, employeeType,
     const params = new URLSearchParams();
     
     if (employeeType && employeeType !== 'All') {
-      params.append('employee_type', employeeType);
+      params.append('emp_type', employeeType);
     }
     
     Object.keys(filters).forEach(key => {
@@ -117,7 +113,7 @@ export const fetchStaffCount = async (filters, employeeType, token) => {
     const params = new URLSearchParams();
     
     if (employeeType && employeeType !== 'All') {
-      params.append('employee_type', employeeType);
+      params.append('emp_type', employeeType);
     }
     
     Object.keys(filters).forEach(key => {
@@ -157,7 +153,7 @@ export const fetchGenderDistribution = async (filters, employeeType, token) => {
     const params = new URLSearchParams();
     
     if (employeeType && employeeType !== 'All') {
-      params.append('employee_type', employeeType);
+      params.append('emp_type', employeeType);
     }
     
     Object.keys(filters).forEach(key => {
@@ -197,7 +193,7 @@ export const fetchCategoryDistribution = async (filters, employeeType, token) =>
     const params = new URLSearchParams();
     
     if (employeeType && employeeType !== 'All') {
-      params.append('employee_type', employeeType);
+      params.append('emp_type', employeeType);
     }
     
     Object.keys(filters).forEach(key => {
@@ -237,7 +233,7 @@ export const fetchDepartmentBreakdown = async (filters, employeeType, token) => 
     const params = new URLSearchParams();
     
     if (employeeType && employeeType !== 'All') {
-      params.append('employee_type', employeeType);
+      params.append('emp_type', employeeType);
     }
     
     Object.keys(filters).forEach(key => {
