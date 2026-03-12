@@ -3,12 +3,8 @@ Blueprint providing analytics for the Industry Connect module:
 - ICSR Section: Industry Interaction Events
 - Industry-Academia Conclave Coordinator
 """
-from collections import defaultdict
-from typing import Any, Dict, List, Optional
-
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
-from psycopg2.errors import UndefinedTable
 
 from .auth import token_required
 from .db import get_db_connection
@@ -51,7 +47,10 @@ def _data_available() -> bool:
     if not conn:
         return False
     try:
-        return _table_exists(conn, INDUSTRY_EVENTS_TABLE) and _table_exists(conn, INDUSTRY_CONCLAVE_TABLE)
+        return (
+            _table_exists(conn, INDUSTRY_EVENTS_TABLE)
+            and _table_exists(conn, INDUSTRY_CONCLAVE_TABLE)
+        )
     finally:
         conn.close()
 
@@ -71,26 +70,22 @@ def get_icsr_summary(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
+
         # Total number of industry events
         cur.execute(f"SELECT COUNT(*) as total FROM {INDUSTRY_EVENTS_TABLE};")
         total_events = cur.fetchone()['total'] or 0
-        
-        # Number of departments involved
-        cur.execute(f"""
-            SELECT COUNT(DISTINCT department) as total 
-            FROM {INDUSTRY_EVENTS_TABLE} 
-            WHERE department IS NOT NULL AND department != '';
-        """)
-        departments_count = cur.fetchone()['total'] or 0
-        
+
+        # Total funding amount
+        cur.execute(f"SELECT COALESCE(SUM(amount), 0) as total_amount FROM {INDUSTRY_EVENTS_TABLE};")
+        total_amount = float(cur.fetchone()['total_amount'] or 0)
+
         return jsonify({
             'total_events': total_events,
-            'departments_involved': departments_count
+            'total_funding': total_amount
         }), 200
-        
+
     except Exception as e:
         print(f"ICSR summary error: {e}")
         return jsonify({'message': 'Failed to fetch ICSR summary statistics.'}), 500
@@ -114,31 +109,27 @@ def get_icsr_yearly_distribution(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        # Get year-wise event counts
+
+        # Use the 'year' column directly (falls back to date_of_event if year is NULL)
         cur.execute(f"""
-            SELECT 
-                EXTRACT(YEAR FROM event_date)::INT as year,
-                COUNT(*) as event_count,
-                COUNT(DISTINCT department) as departments_count
+            SELECT
+                COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) as year,
+                COUNT(*) as event_count
             FROM {INDUSTRY_EVENTS_TABLE}
-            GROUP BY EXTRACT(YEAR FROM event_date)
+            GROUP BY COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT)
             ORDER BY year ASC;
         """)
         yearly_data = cur.fetchall()
-        
-        result = []
-        for row in yearly_data:
-            result.append({
-                'year': row['year'],
-                'event_count': row['event_count'] or 0,
-                'departments_count': row['departments_count'] or 0
-            })
-        
+
+        result = [
+            {'year': row['year'], 'event_count': row['event_count'] or 0}
+            for row in yearly_data
+        ]
+
         return jsonify({'data': result}), 200
-        
+
     except Exception as e:
         print(f"ICSR yearly distribution error: {e}")
         return jsonify({'message': 'Failed to fetch yearly distribution.'}), 500
@@ -162,29 +153,24 @@ def get_icsr_event_types(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        # Get event type distribution
+
         cur.execute(f"""
-            SELECT 
-                event_type,
-                COUNT(*) as count
+            SELECT event_type, COUNT(*) as count
             FROM {INDUSTRY_EVENTS_TABLE}
             GROUP BY event_type
             ORDER BY count DESC;
         """)
         type_data = cur.fetchall()
-        
-        result = []
-        for row in type_data:
-            result.append({
-                'event_type': row['event_type'],
-                'count': row['count'] or 0
-            })
-        
+
+        result = [
+            {'event_type': row['event_type'], 'count': row['count'] or 0}
+            for row in type_data
+        ]
+
         return jsonify({'data': result}), 200
-        
+
     except Exception as e:
         print(f"ICSR event types error: {e}")
         return jsonify({'message': 'Failed to fetch event types distribution.'}), 500
@@ -204,11 +190,10 @@ def get_icsr_events(current_user_id):
 
     filters = {
         'event_type': request.args.get('event_type'),
-        'department': request.args.get('department'),
         'year': request.args.get('year'),
         'search': request.args.get('search', '').strip()
     }
-    
+
     # Pagination
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page', default=50, type=int)
@@ -221,71 +206,69 @@ def get_icsr_events(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
+
         # Build WHERE clause
         conditions = []
         params = []
-        
+
         if filters['event_type'] and filters['event_type'] != 'All':
             conditions.append("event_type = %s")
             params.append(filters['event_type'])
-        
-        if filters['department'] and filters['department'] != 'All':
-            conditions.append("department = %s")
-            params.append(filters['department'])
-        
+
         if filters['year']:
-            conditions.append("EXTRACT(YEAR FROM event_date) = %s")
+            conditions.append("COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) = %s")
             params.append(int(filters['year']))
-        
+
         if filters['search']:
             conditions.append(
-                "(event_title ILIKE %s OR industry_partner ILIKE %s OR description ILIKE %s)"
+                "(event_name ILIKE %s OR hosted_by ILIKE %s OR target_audience ILIKE %s)"
             )
             search_pattern = f"%{filters['search']}%"
             params.extend([search_pattern, search_pattern, search_pattern])
-        
+
         where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
-        
+
         # Get total count
         count_query = f"SELECT COUNT(*) as total FROM {INDUSTRY_EVENTS_TABLE} {where_clause};"
         cur.execute(count_query, params)
         total = cur.fetchone()['total'] or 0
-        
+
         # Get events
         query = f"""
-            SELECT 
-                event_id,
-                event_title,
+            SELECT
+                project_id,
+                event_name,
                 event_type,
-                industry_partner,
-                event_date,
-                duration_hours,
-                department,
-                description
+                date_of_event,
+                target_audience,
+                hosted_by,
+                funding_by,
+                amount,
+                year
             FROM {INDUSTRY_EVENTS_TABLE}
             {where_clause}
-            ORDER BY event_date DESC, event_title ASC
+            ORDER BY date_of_event DESC NULLS LAST, event_name ASC
             LIMIT %s OFFSET %s;
         """
         cur.execute(query, params + [per_page, offset])
         events = cur.fetchall()
-        
+
         result = []
         for row in events:
             result.append({
-                'event_id': row['event_id'],
-                'event_title': row['event_title'],
+                'project_id': row['project_id'],
+                'event_name': row['event_name'],
                 'event_type': row['event_type'],
-                'industry_partner': row['industry_partner'],
-                'event_date': row['event_date'].isoformat() if row['event_date'] else None,
-                'duration_hours': float(row['duration_hours']) if row['duration_hours'] else None,
-                'department': row['department'],
-                'description': row['description']
+                'date_of_event': row['date_of_event'].isoformat() if row['date_of_event'] else None,
+                'target_audience': row['target_audience'],
+                'hosted_by': row['hosted_by'],
+                'funding_by': row['funding_by'],
+                'amount': float(row['amount']) if row['amount'] else None,
+                'year': row['year']
             })
-        
+
         return jsonify({
             'data': result,
             'pagination': {
@@ -295,7 +278,7 @@ def get_icsr_events(current_user_id):
                 'total_pages': (total + per_page - 1) // per_page
             }
         }), 200
-        
+
     except Exception as e:
         print(f"ICSR events list error: {e}")
         return jsonify({'message': 'Failed to fetch events list.'}), 500
@@ -319,36 +302,27 @@ def get_icsr_filter_options(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
+
         # Get distinct event types
-        cur.execute(f"SELECT DISTINCT event_type FROM {INDUSTRY_EVENTS_TABLE} ORDER BY event_type;")
-        event_types = [row['event_type'] for row in cur.fetchall() if row['event_type']]
-        
-        # Get distinct departments
+        cur.execute(f"SELECT DISTINCT event_type FROM {INDUSTRY_EVENTS_TABLE} WHERE event_type IS NOT NULL ORDER BY event_type;")
+        event_types = [row['event_type'] for row in cur.fetchall()]
+
+        # Get distinct years (from 'year' column or date_of_event)
         cur.execute(f"""
-            SELECT DISTINCT department 
-            FROM {INDUSTRY_EVENTS_TABLE} 
-            WHERE department IS NOT NULL AND department != ''
-            ORDER BY department;
-        """)
-        departments = [row['department'] for row in cur.fetchall() if row['department']]
-        
-        # Get distinct years
-        cur.execute(f"""
-            SELECT DISTINCT EXTRACT(YEAR FROM event_date)::INT as year
+            SELECT DISTINCT COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) as year
             FROM {INDUSTRY_EVENTS_TABLE}
+            WHERE COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) IS NOT NULL
             ORDER BY year DESC;
         """)
-        years = [row['year'] for row in cur.fetchall() if row['year']]
-        
+        years = [row['year'] for row in cur.fetchall()]
+
         return jsonify({
             'event_types': event_types,
-            'departments': departments,
             'years': years
         }), 200
-        
+
     except Exception as e:
         print(f"ICSR filter options error: {e}")
         return jsonify({'message': 'Failed to fetch filter options.'}), 500
@@ -374,22 +348,22 @@ def get_conclave_summary(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
+
         # Total number of conclaves
         cur.execute(f"SELECT COUNT(*) as total FROM {INDUSTRY_CONCLAVE_TABLE};")
         total_conclaves = cur.fetchone()['total'] or 0
-        
+
         # Total companies across all conclaves
-        cur.execute(f"SELECT SUM(number_of_companies) as total FROM {INDUSTRY_CONCLAVE_TABLE};")
+        cur.execute(f"SELECT COALESCE(SUM(number_of_com), 0) as total FROM {INDUSTRY_CONCLAVE_TABLE};")
         total_companies = cur.fetchone()['total'] or 0
-        
+
         return jsonify({
             'total_conclaves': total_conclaves,
-            'total_companies': total_companies or 0
+            'total_companies': int(total_companies)
         }), 200
-        
+
     except Exception as e:
         print(f"Conclave summary error: {e}")
         return jsonify({'message': 'Failed to fetch conclave summary.'}), 500
@@ -413,44 +387,47 @@ def get_conclave_list(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        # Get all conclaves ordered by year (most recent first)
+
+        # Get all conclaves ordered by start_date (most recent first)
         cur.execute(f"""
-            SELECT 
+            SELECT
                 conclave_id,
-                year,
+                start_date,
+                end_date,
                 theme,
                 focus_area,
-                number_of_companies,
+                number_of_com,
                 sessions_held,
                 key_speakers,
                 event_photos_url,
                 brochure_url,
                 description
             FROM {INDUSTRY_CONCLAVE_TABLE}
-            ORDER BY year DESC;
+            ORDER BY start_date DESC NULLS LAST;
         """)
         conclaves = cur.fetchall()
-        
+
         result = []
         for row in conclaves:
             result.append({
                 'conclave_id': row['conclave_id'],
-                'year': row['year'],
+                'start_date': row['start_date'].isoformat() if row['start_date'] else None,
+                'end_date': row['end_date'].isoformat() if row['end_date'] else None,
+                'year': row['start_date'].year if row['start_date'] else None,
                 'theme': row['theme'],
                 'focus_area': row['focus_area'],
-                'number_of_companies': row['number_of_companies'] or 0,
+                'number_of_companies': row['number_of_com'] or 0,
                 'sessions_held': row['sessions_held'],
                 'key_speakers': row['key_speakers'],
                 'event_photos_url': row['event_photos_url'],
                 'brochure_url': row['brochure_url'],
                 'description': row['description']
             })
-        
+
         return jsonify({'data': result}), 200
-        
+
     except Exception as e:
         print(f"Conclave list error: {e}")
         return jsonify({'message': 'Failed to fetch conclave list.'}), 500
@@ -459,4 +436,3 @@ def get_conclave_list(current_user_id):
             cur.close()
         if conn:
             conn.close()
-

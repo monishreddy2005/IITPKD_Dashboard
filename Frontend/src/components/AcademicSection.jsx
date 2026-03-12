@@ -405,7 +405,7 @@ function AcademicSection({ user, isPublicView = false }) {
 
         </div>
 
-        <DataUploadModal isOpen={isUploadModalOpen} onClose={()=>setIsUploadModalOpen(false)} tableName="student" token={token} />
+        <DataUploadModal isOpen={isUploadModalOpen} onClose={()=>setIsUploadModalOpen(false)} tableName="student_table" token={token} />
       </div>
     </div>
   );

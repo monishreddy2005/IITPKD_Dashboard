@@ -6,131 +6,135 @@ from datetime import date
 
 administrative_bp = Blueprint('administrative', __name__)
 
-def build_filter_query(filters, use_aliases=True):
+
+# ---------------------------------------------------------------------------
+# Helper: build dynamic WHERE clause from filter dict
+# ---------------------------------------------------------------------------
+
+def build_filter_query(filters):
     """
     Builds a WHERE clause dynamically based on provided filters.
+    All queries now target the flat ``employees`` table (no JOINs).
     Returns a tuple: (where_clause_string, parameter_list)
     """
     conditions = []
     params = []
-    
-    # Map filter names to database column names
-    if use_aliases:
-        filter_mapping = {
-            'department': 'e.department',
-            'designation': 'd.designationname',
-            'gender': 'e.gender',
-            'category': 'e.category',
-            'cadre': 'd.designationcadre',
-            'category_type': 'd.designationcategory',
-            'isactive': 'e.isactive'
-        }
-    else:
-        filter_mapping = {
-            'department': 'department',
-            'designation': 'designationname',
-            'gender': 'gender',
-            'category': 'category',
-            'cadre': 'designationcadre',
-            'category_type': 'designationcategory',
-            'isactive': 'isactive'
-        }
-    
+
+    filter_mapping = {
+        'department': 'department',
+        'designation': 'designation',
+        'gender': 'gender',
+        'emp_type': 'emp_type',
+        'empstatus': 'empstatus',
+        'group_name': 'group_name',
+    }
+
     for filter_name, value in filters.items():
         if value is None or value == '' or value == 'All':
             continue
-        
+
         column_name = filter_mapping.get(filter_name)
         if not column_name:
             continue
-        
-        # Handle boolean filters
-        if filter_name == 'isactive':
-            if isinstance(value, bool):
-                conditions.append(f"{column_name} = %s")
-                params.append(value)
-            elif value == 'true':
-                conditions.append(f"{column_name} = %s")
-                params.append(True)
-            elif value == 'false':
-                conditions.append(f"{column_name} = %s")
-                params.append(False)
-        else:
-            conditions.append(f"{column_name} = %s")
-            params.append(value)
-    
+
+        conditions.append(f"{column_name} = %s")
+        params.append(value)
+
     where_clause = ""
     if conditions:
         where_clause = "WHERE " + " AND ".join(conditions)
-    
+
     return where_clause, params
+
+
+def _append_active_default(where_clause, params, empstatus_value):
+    """If the caller hasn't explicitly set empstatus, default to Active."""
+    if empstatus_value is not None and empstatus_value != '' and empstatus_value != 'All':
+        return where_clause, params          # already filtered
+    if where_clause:
+        where_clause += " AND empstatus = %s"
+    else:
+        where_clause = "WHERE empstatus = %s"
+    params.append('Active')
+    return where_clause, params
+
+
+def _append_emp_type(where_clause, params, employee_type):
+    """Append emp_type condition (Teaching / Non Teaching) if given."""
+    if employee_type and employee_type != 'All':
+        if where_clause:
+            where_clause += " AND emp_type = %s"
+        else:
+            where_clause = "WHERE emp_type = %s"
+        params.append(employee_type)
+    return where_clause, params
+
+
+def _read_common_filters():
+    """Read filter query‑params shared by most endpoints."""
+    return {
+        'department': request.args.get('department', type=str),
+        'designation': request.args.get('designation', type=str),
+        'gender': request.args.get('gender', type=str),
+        'emp_type': request.args.get('emp_type', type=str),
+        'empstatus': request.args.get('empstatus', type=str),
+        'group_name': request.args.get('group_name', type=str),
+    }
+
+
+# ======================================================================== #
+#  ENDPOINTS                                                                #
+# ======================================================================== #
+
 
 @administrative_bp.route('/stats/filter-options', methods=['GET'])
 @token_required
 def get_filter_options(current_user_id):
-    """Fetches distinct values for each filter field."""
+    """Fetches distinct values for each filter field from the employees table."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        
-        # Get distinct values for each field
+
         filter_options = {}
-        
+
         # Department
-        cur.execute("SELECT DISTINCT department FROM employee WHERE department IS NOT NULL ORDER BY department;")
+        cur.execute("SELECT DISTINCT department FROM employees WHERE department IS NOT NULL ORDER BY department;")
         filter_options['department'] = [row['department'] for row in cur.fetchall()]
-        
+
         # Designation
-        cur.execute("""
-            SELECT DISTINCT d.designationname 
-            FROM designation d
-            JOIN employee e ON d.designationid = e.currentdesignationid
-            WHERE d.designationname IS NOT NULL
-            ORDER BY d.designationname;
-        """)
-        filter_options['designation'] = [row['designationname'] for row in cur.fetchall()]
-        
+        cur.execute("SELECT DISTINCT designation FROM employees WHERE designation IS NOT NULL ORDER BY designation;")
+        filter_options['designation'] = [row['designation'] for row in cur.fetchall()]
+
         # Gender
-        cur.execute("SELECT DISTINCT gender FROM employee ORDER BY gender;")
+        cur.execute("SELECT DISTINCT gender FROM employees WHERE gender IS NOT NULL ORDER BY gender;")
         filter_options['gender'] = [row['gender'] for row in cur.fetchall()]
-        
-        # Category
-        cur.execute("SELECT DISTINCT category FROM employee WHERE category IS NOT NULL ORDER BY category;")
-        filter_options['category'] = [row['category'] for row in cur.fetchall()]
-        
-        # Cadre (Faculty/Staff distinction)
-        cur.execute("""
-            SELECT DISTINCT designationcadre 
-            FROM designation 
-            WHERE designationcadre IS NOT NULL
-            ORDER BY designationcadre;
-        """)
-        filter_options['cadre'] = [row['designationcadre'] for row in cur.fetchall()]
-        
-        # Category Type
-        cur.execute("""
-            SELECT DISTINCT designationcategory 
-            FROM designation 
-            WHERE designationcategory IS NOT NULL
-            ORDER BY designationcategory;
-        """)
-        filter_options['category_type'] = [row['designationcategory'] for row in cur.fetchall()]
-        
-        # Employee Type (Faculty/Staff) - hardcoded since it's derived from designation
-        filter_options['employee_type'] = ['Faculty', 'Staff']
-        
+
+        # Employee Type (Teaching / Non Teaching)
+        cur.execute("SELECT DISTINCT emp_type FROM employees WHERE emp_type IS NOT NULL ORDER BY emp_type;")
+        filter_options['emp_type'] = [row['emp_type'] for row in cur.fetchall()]
+
+        # Employee Status
+        cur.execute("SELECT DISTINCT empstatus FROM employees WHERE empstatus IS NOT NULL ORDER BY empstatus;")
+        filter_options['empstatus'] = [row['empstatus'] for row in cur.fetchall()]
+
+        # Group Name
+        cur.execute("SELECT DISTINCT group_name FROM employees WHERE group_name IS NOT NULL ORDER BY group_name;")
+        filter_options['group_name'] = [row['group_name'] for row in cur.fetchall()]
+
         return jsonify(filter_options), 200
-        
+
     except Exception as e:
         print(f"Error fetching filter options: {e}")
         return jsonify({'message': 'An error occurred while fetching filter options.'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
+        if conn:
             conn.close()
 
 
@@ -138,8 +142,8 @@ def get_filter_options(current_user_id):
 @token_required
 def get_employee_overview(current_user_id):
     """
-    Fetches employee overview - department-wise breakdown by gender.
-    This is a simplified single-chart view combining all employee data.
+    Department-wise breakdown by gender.
+    Returns data suitable for a stacked bar chart.
     """
     conn = None
     cur = None
@@ -147,113 +151,57 @@ def get_employee_overview(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        filters = {
-            'department': request.args.get('department', type=str),
-            'designation': request.args.get('designation', type=str),
-            'gender': request.args.get('gender', type=str),
-            'category': request.args.get('category', type=str),
-            'cadre': request.args.get('cadre', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Get employee_type separately
-        employee_type = request.args.get('employee_type', type=str)
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        employee_type = filters.pop('emp_type', None)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        # If 'All' or None, don't add employee type filter
-        
-        # Query to get department-wise breakdown by gender
-        query = """
-            SELECT 
-                COALESCE(e.department, 'Unknown') as department,
-                e.gender,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY e.department, e.gender
-            ORDER BY e.department, e.gender;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        where_clause, params = _append_emp_type(where_clause, params, employee_type)
+
+        query = f"""
+            SELECT
+                COALESCE(department, 'Unknown') AS department,
+                gender,
+                COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY department, gender
+            ORDER BY department, gender;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data for stacked bar chart
+
+        # Organise into {dept: {Male: n, Female: n, ...}}
         department_data = {}
         for row in results:
             dept = row['department']
-            gender = row['gender']
+            gender = row['gender'] or 'Unknown'
             count = row['count']
-            
+
             if dept not in department_data:
-                department_data[dept] = {
-                    'Male': 0,
-                    'Female': 0,
-                    'Other': 0,
-                    'Transgender': 0
-                }
-            
-            # Map gender to appropriate key
-            if gender in ['Male', 'Female', 'Transgender']:
+                department_data[dept] = {'Male': 0, 'Female': 0, 'Other': 0, 'Transgender': 0}
+
+            if gender in ('Male', 'Female', 'Transgender'):
                 department_data[dept][gender] = count
             else:
-                # Any other gender goes to 'Other'
                 department_data[dept]['Other'] += count
-        
-        # Convert to list format for chart
-        data = []
-        for dept, gender_counts in department_data.items():
-            entry = {'name': dept, **gender_counts}
-            data.append(entry)
-        
-        total = sum(sum(dept.values()) for dept in department_data.values())
-        
+
+        data = [{'name': dept, **counts} for dept, counts in department_data.items()]
+        total = sum(sum(d.values()) for d in department_data.values())
+
         return jsonify({
             'data': data,
             'total': total,
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching employee overview: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching employee overview: {str(e)}'}), 500
+        print(f"Error fetching employee overview: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching employee overview: {e}'}), 500
     finally:
         if cur:
             cur.close()
@@ -265,8 +213,8 @@ def get_employee_overview(current_user_id):
 @token_required
 def get_faculty_gender_last_five_years(current_user_id):
     """
-    Returns faculty gender distribution for the last five calendar years (stacked by year).
-    A faculty member is counted for a year if their employment_history overlaps that year.
+    Faculty (Teaching) gender distribution for the last five calendar years.
+    An employee is counted for a year if their doj <= year-end AND (dor IS NULL OR dor >= year-start).
     """
     conn = None
     cur = None
@@ -279,81 +227,47 @@ def get_faculty_gender_last_five_years(current_user_id):
 
         current_year = date.today().year
         genders = ['Male', 'Female', 'Other', 'Transgender']
-        
-        # Generate year labels
+
         year_labels = []
         for i in range(5, 0, -1):
             yr = current_year - i
             label = f"{yr}-{str((yr + 1) % 100).zfill(2)}"
             year_labels.append((yr, label))
-        
-        # Query for faculty employment by year and gender
+
         rows = []
         for year_start, label in year_labels:
             for gender in genders:
                 cur.execute(
                     """
-                    SELECT COUNT(DISTINCT e.employeeid) AS count
-                    FROM employment_history h
-                    JOIN employee e ON e.employeeid = h.employeeid
-                    LEFT JOIN designation d ON COALESCE(h.designationid, e.currentdesignationid) = d.designationid
-                    WHERE h.dateofjoining <= make_date(%s, 12, 31)
-                      AND (h.dateofrelieving IS NULL OR h.dateofrelieving >= make_date(%s, 1, 1))
-                      AND e.gender = %s
-                      AND (
-                          COALESCE(h.designation, d.designationname, '') ILIKE '%%Professor%%'
-                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Assistant%%'
-                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Associate%%'
-                          OR COALESCE(h.designation, d.designationname, '') ILIKE '%%Faculty%%'
-                      );
+                    SELECT COUNT(*) AS count
+                    FROM employees
+                    WHERE doj <= make_date(%s, 12, 31)
+                      AND (dor IS NULL OR dor >= make_date(%s, 1, 1))
+                      AND gender = %s
+                      AND emp_type = 'Teaching';
                     """,
                     (year_start, year_start, gender)
                 )
                 result = cur.fetchone()
-                count = result['count'] if result and result.get('count') is not None else 0
+                count = int(result['count']) if result and result.get('count') else 0
                 rows.append({
-                    'year_start': year_start,
                     'label': label,
                     'gender': gender,
                     'count': count
                 })
 
-        # Normalize into per-year dictionary
+        # Build per-year dict
         year_map = {}
-        
-        # Process rows - should have 20 rows (5 years * 4 genders)
         for row in rows:
-            try:
-                label = row.get('label', '')
-                gender = row.get('gender', 'Unknown')
-                count = row.get('count', 0)
-                
-                if not label:
-                    continue
-                    
-                if gender not in genders:
-                    gender = 'Other'
-                    
-                try:
-                    count = int(count) if count else 0
-                except (ValueError, TypeError):
-                    count = 0
-                
-                if label not in year_map:
-                    year_map[label] = {g: 0 for g in genders}
-                if gender in genders:
-                    year_map[label][gender] = count
-            except Exception as e:
-                import traceback
-                print(f"Error processing row: {e}")
-                print(f"Row data: {row}")
-                print(f"Traceback: {traceback.format_exc()}")
-                continue
+            label = row['label']
+            gender = row['gender']
+            count = row['count']
+            if label not in year_map:
+                year_map[label] = {g: 0 for g in genders}
+            if gender in genders:
+                year_map[label][gender] = count
 
-        # Build labels list in correct order
         labels = [label for _, label in year_labels]
-        
-        # Ensure all years are in year_map (should already be there, but just in case)
         for _, label in year_labels:
             if label not in year_map:
                 year_map[label] = {g: 0 for g in genders}
@@ -369,652 +283,379 @@ def get_faculty_gender_last_five_years(current_user_id):
 
     except Exception as e:
         import traceback
-        error_msg = str(e)
-        traceback_str = traceback.format_exc()
-        print(f"Error fetching faculty gender last five years: {error_msg}")
-        print(f"Traceback: {traceback_str}")
-        return jsonify({'message': f'Failed to fetch faculty gender distribution: {error_msg}'}), 500
+        print(f"Error fetching faculty gender last five years: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'Failed to fetch faculty gender distribution: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
 
+
 @administrative_bp.route('/stats/faculty-by-department-designation', methods=['GET'])
 @token_required
 def get_faculty_by_department_designation(current_user_id):
-    """Fetches faculty count by department and designation."""
+    """Department × designation breakdown."""
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
-        filters = {
-            'department': request.args.get('department', type=str),
-            'designation': request.args.get('designation', type=str),
-            'gender': request.args.get('gender', type=str),
-            'category': request.args.get('category', type=str),
-            'cadre': request.args.get('cadre', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        employee_type = filters.pop('emp_type', None)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        # If 'All' or None, don't add employee type filter
-        
-        query = """
-            SELECT 
-                COALESCE(e.department, 'Unknown') as department,
-                COALESCE(d.designationname, 'Unknown') as designation,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY e.department, d.designationname
-            ORDER BY e.department, d.designationname;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        where_clause, params = _append_emp_type(where_clause, params, employee_type)
+
+        query = f"""
+            SELECT
+                COALESCE(department, 'Unknown') AS department,
+                COALESCE(designation, 'Unknown') AS designation,
+                COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY department, designation
+            ORDER BY department, designation;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data for stacked bar chart
+
         department_data = {}
         for row in results:
             dept = row['department']
-            designation = row['designation']
+            desig = row['designation']
             count = row['count']
-            
             if dept not in department_data:
                 department_data[dept] = {}
-            
-            department_data[dept][designation] = count
-        
-        # Convert to list format for chart
+            department_data[dept][desig] = count
+
         data = []
         for dept, designations in department_data.items():
             entry = {'name': dept}
             for desig, count in designations.items():
                 entry[desig] = count
             data.append(entry)
-        
-        total = sum(sum(designations.values()) for designations in department_data.values())
-        
+
+        total = sum(sum(d.values()) for d in department_data.values())
+
         return jsonify({
             'data': data,
             'total': total,
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching faculty by department: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching faculty data: {str(e)}'}), 500
+        print(f"Error fetching faculty by department: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching faculty data: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
 
 @administrative_bp.route('/stats/staff-count', methods=['GET'])
 @token_required
 def get_staff_count(current_user_id):
-    """Fetches staff count (technical and administrative)."""
+    """
+    Staff count grouped by emp_type (Teaching / Non Teaching).
+    """
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
-        filters = {
-            'department': request.args.get('department', type=str),
-            'gender': request.args.get('gender', type=str),
-            'category': request.args.get('category', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        # Don't pop emp_type here — we want to allow filtering
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        # If 'All' or None, don't add employee type filter (show all)
-        
-        query = """
-            SELECT 
-                CASE 
-                    WHEN d.designationcategory ILIKE '%%Technical%%' OR d.designationname ILIKE '%%Technical%%' THEN 'Technical'
-                    WHEN d.designationcategory ILIKE '%%Administrative%%' OR d.designationname ILIKE '%%Administrative%%' THEN 'Administrative'
-                    WHEN d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' 
-                        AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' 
-                        AND d.designationname NOT ILIKE '%%Associate%%' THEN 'Administrative'
-                    ELSE 'Other'
-                END as staff_type,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY staff_type
-            ORDER BY staff_type;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+
+        query = f"""
+            SELECT
+                COALESCE(emp_type, 'Unknown') AS emp_type,
+                COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY emp_type
+            ORDER BY emp_type;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data
-        staff_data = {
-            'Technical': 0,
-            'Administrative': 0,
-            'Other': 0
-        }
-        
+
+        staff_data = {}
         for row in results:
-            staff_type = row['staff_type']
-            count = row['count']
-            if staff_type in staff_data:
-                staff_data[staff_type] = count
-        
+            staff_data[row['emp_type']] = row['count']
+
         total = sum(staff_data.values())
-        
+
         return jsonify({
             'data': staff_data,
             'total': total,
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching staff count: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching staff data: {str(e)}'}), 500
+        print(f"Error fetching staff count: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching staff data: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
 
 @administrative_bp.route('/stats/gender-distribution', methods=['GET'])
 @token_required
 def get_gender_distribution(current_user_id):
-    """Fetches gender-wise distribution for faculty and staff."""
+    """Gender-wise distribution with optional emp_type filtering."""
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
-        filters = {
-            'department': request.args.get('department', type=str),
-            'category': request.args.get('category', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        employee_type = filters.pop('emp_type', None)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        
-        # Query to get gender distribution
-        query = """
-            SELECT 
-                e.gender,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY e.gender
-            ORDER BY e.gender;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        where_clause, params = _append_emp_type(where_clause, params, employee_type)
+
+        query = f"""
+            SELECT gender, COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY gender
+            ORDER BY gender;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Initialize gender counts - include all possible gender values
-        gender_data = {
-            'Male': 0,
-            'Female': 0,
-            'Other': 0,
-            'Transgender': 0
-        }
-        
-        # Populate gender counts from results - handle any gender value
+
+        gender_data = {'Male': 0, 'Female': 0, 'Other': 0, 'Transgender': 0}
         for row in results:
-            gender = row['gender']
-            if gender in gender_data:
-                gender_data[gender] = row['count']
+            g = row['gender']
+            if g in gender_data:
+                gender_data[g] = row['count']
             else:
-                # If a new gender value appears, add it dynamically
-                gender_data[gender] = row['count']
-        
+                gender_data[g] = row['count']
+
         total = sum(gender_data.values())
-        
+
         return jsonify({
             'data': gender_data,
             'total': total,
             'employee_type': employee_type or 'All',
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching gender distribution: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching gender distribution: {str(e)}'}), 500
+        print(f"Error fetching gender distribution: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching gender distribution: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
 
 @administrative_bp.route('/stats/category-distribution', methods=['GET'])
 @token_required
 def get_category_distribution(current_user_id):
-    """Fetches category-wise distribution for faculty and staff."""
+    """
+    Group-wise distribution (group_name: A, B, C …).
+    Replaces the old category distribution (the category column no longer exists).
+    """
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
-        filters = {
-            'department': request.args.get('department', type=str),
-            'gender': request.args.get('gender', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        employee_type = filters.pop('emp_type', None)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        
-        # Query to get category distribution
-        query = """
-            SELECT 
-                COALESCE(e.category, 'Not Specified') as category,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY e.category
-            ORDER BY e.category;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        where_clause, params = _append_emp_type(where_clause, params, employee_type)
+
+        query = f"""
+            SELECT
+                COALESCE(group_name, 'Not Specified') AS group_name,
+                COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY group_name
+            ORDER BY group_name;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data
-        category_data = {}
+
+        group_data = {}
         for row in results:
-            category = row['category']
-            count = row['count']
-            category_data[category] = count
-        
-        total = sum(category_data.values())
-        
+            group_data[row['group_name']] = row['count']
+
+        total = sum(group_data.values())
+
         return jsonify({
-            'data': category_data,
+            'data': group_data,
             'total': total,
             'employee_type': employee_type or 'All',
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching category distribution: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching category distribution: {str(e)}'}), 500
+        print(f"Error fetching group distribution: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching group distribution: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
 
 @administrative_bp.route('/stats/data-summary', methods=['GET'])
 @token_required
 def get_data_summary(current_user_id):
-    """Diagnostic endpoint to check what data exists in the database."""
+    """Diagnostic endpoint — quick stats from the employees table."""
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        
         summary = {}
-        
+
         # Total employees
-        cur.execute("SELECT COUNT(*) as total FROM employee;")
+        cur.execute("SELECT COUNT(*) AS total FROM employees;")
         summary['total_employees'] = cur.fetchone()['total']
-        
-        # Active vs Inactive
-        cur.execute("SELECT isactive, COUNT(*) as count FROM employee GROUP BY isactive;")
-        summary['active_status'] = {row['isactive']: row['count'] for row in cur.fetchall()}
-        
-        # Employees with designations
-        cur.execute("""
-            SELECT COUNT(*) as count 
-            FROM employee e 
-            WHERE e.currentdesignationid IS NOT NULL;
-        """)
-        summary['employees_with_designation'] = cur.fetchone()['count']
-        
-        # Employees without designations
-        cur.execute("""
-            SELECT COUNT(*) as count 
-            FROM employee e 
-            WHERE e.currentdesignationid IS NULL;
-        """)
-        summary['employees_without_designation'] = cur.fetchone()['count']
-        
+
+        # Active vs Relieved
+        cur.execute("SELECT empstatus, COUNT(*) AS count FROM employees GROUP BY empstatus;")
+        summary['status_distribution'] = {row['empstatus'] or 'Unknown': row['count'] for row in cur.fetchall()}
+
         # Gender distribution
-        cur.execute("SELECT gender, COUNT(*) as count FROM employee GROUP BY gender ORDER BY gender;")
-        summary['gender_distribution'] = {row['gender']: row['count'] for row in cur.fetchall()}
-        
-        # Department distribution
+        cur.execute("SELECT gender, COUNT(*) AS count FROM employees GROUP BY gender ORDER BY gender;")
+        summary['gender_distribution'] = {row['gender'] or 'Unknown': row['count'] for row in cur.fetchall()}
+
+        # Employee type distribution
+        cur.execute("SELECT emp_type, COUNT(*) AS count FROM employees GROUP BY emp_type;")
+        summary['employee_type_distribution'] = {row['emp_type'] or 'Unknown': row['count'] for row in cur.fetchall()}
+
+        # Top departments
         cur.execute("""
-            SELECT COALESCE(department, 'Unknown') as dept, COUNT(*) as count 
-            FROM employee 
-            GROUP BY department 
-            ORDER BY count DESC 
+            SELECT COALESCE(department, 'Unknown') AS dept, COUNT(*) AS count
+            FROM employees
+            GROUP BY department
+            ORDER BY count DESC
             LIMIT 10;
         """)
         summary['top_departments'] = {row['dept']: row['count'] for row in cur.fetchall()}
-        
-        # Faculty vs Staff (based on designation patterns)
-        cur.execute("""
-            SELECT 
-                CASE 
-                    WHEN d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' 
-                        OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' 
-                        OR d.designationname ILIKE '%%Associate%%' THEN 'Faculty'
-                    WHEN d.designationcadre IS NULL THEN 'No Designation'
-                    ELSE 'Staff'
-                END as emp_type,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            GROUP BY emp_type;
-        """)
-        summary['employee_type_distribution'] = {row['emp_type']: row['count'] for row in cur.fetchall()}
-        
+
         # Sample designations
-        cur.execute("""
-            SELECT designationname, designationcadre, designationcategory 
-            FROM designation 
-            LIMIT 10;
-        """)
-        summary['sample_designations'] = [dict(row) for row in cur.fetchall()]
-        
+        cur.execute("SELECT DISTINCT designation FROM employees WHERE designation IS NOT NULL LIMIT 10;")
+        summary['sample_designations'] = [row['designation'] for row in cur.fetchall()]
+
         return jsonify(summary), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching data summary: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred: {str(e)}'}), 500
+        print(f"Error fetching data summary: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred: {e}'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
 
+
 @administrative_bp.route('/stats/department-breakdown', methods=['GET'])
 @token_required
 def get_department_breakdown(current_user_id):
-    """Fetches department-wise breakdown with gender and employee type."""
+    """Department-wise breakdown with gender and employee type."""
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters
-        employee_type = request.args.get('employee_type', type=str)  # 'Faculty' or 'Staff' or 'All'
-        filters = {
-            'category': request.args.get('category', type=str),
-            'isactive': request.args.get('isactive', type=str)
-        }
-        
-        # Convert isactive string to boolean
-        if filters['isactive'] == 'true':
-            filters['isactive'] = True
-        elif filters['isactive'] == 'false':
-            filters['isactive'] = False
-        elif filters['isactive'] == '' or filters['isactive'] is None:
-            filters['isactive'] = None
-        
-        # Build WHERE clause
+
+        filters = _read_common_filters()
+        employee_type = filters.pop('emp_type', None)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Default to active employees if not specified
-        if filters['isactive'] is None:
-            if where_clause:
-                where_clause += " AND e.isactive = %s"
-            else:
-                where_clause = "WHERE e.isactive = %s"
-            params.append(True)
-        
-        # Add employee type filter
-        faculty_condition = "(d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' OR d.designationname ILIKE '%%Associate%%')"
-        staff_condition = "(d.designationcadre NOT ILIKE '%%Faculty%%' AND d.designationcategory NOT ILIKE '%%Faculty%%' AND d.designationname NOT ILIKE '%%Professor%%' AND d.designationname NOT ILIKE '%%Assistant%%' AND d.designationname NOT ILIKE '%%Associate%%' OR d.designationcadre IS NULL)"
-        
-        if employee_type == 'Faculty':
-            if where_clause:
-                where_clause += f" AND {faculty_condition}"
-            else:
-                where_clause = f"WHERE {faculty_condition}"
-        elif employee_type == 'Staff':
-            if where_clause:
-                where_clause += f" AND {staff_condition}"
-            else:
-                where_clause = f"WHERE {staff_condition}"
-        # If 'All' or None, don't add employee type filter (show all)
-        
-        # Query to get department breakdown with gender and employee type
-        query = """
-            SELECT 
-                COALESCE(e.department, 'Unknown') as department,
-                e.gender,
-                CASE 
-                    WHEN d.designationcadre ILIKE '%%Faculty%%' OR d.designationcategory ILIKE '%%Faculty%%' 
-                        OR d.designationname ILIKE '%%Professor%%' OR d.designationname ILIKE '%%Assistant%%' 
-                        OR d.designationname ILIKE '%%Associate%%' THEN 'Faculty'
-                    ELSE 'Staff'
-                END as employee_type,
-                COUNT(*) as count
-            FROM employee e
-            LEFT JOIN designation d ON e.currentdesignationid = d.designationid
-            """ + where_clause + """
-            GROUP BY e.department, e.gender, employee_type
-            ORDER BY e.department, e.gender, employee_type;
+        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        where_clause, params = _append_emp_type(where_clause, params, employee_type)
+
+        query = f"""
+            SELECT
+                COALESCE(department, 'Unknown') AS department,
+                gender,
+                COALESCE(emp_type, 'Unknown') AS employee_type,
+                COUNT(*) AS count
+            FROM employees
+            {where_clause}
+            GROUP BY department, gender, emp_type
+            ORDER BY department, gender, emp_type;
         """
-        
+
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data for stacked bar chart
+
         department_data = {}
         for row in results:
             dept = row['department']
-            gender = row['gender']
+            gender = row['gender'] or 'Unknown'
             emp_type = row['employee_type']
             count = row['count']
-            
+
             if dept not in department_data:
                 department_data[dept] = {
-                    'Faculty_Male': 0,
-                    'Faculty_Female': 0,
-                    'Faculty_Other': 0,
-                    'Faculty_Transgender': 0,
-                    'Staff_Male': 0,
-                    'Staff_Female': 0,
-                    'Staff_Other': 0,
-                    'Staff_Transgender': 0
+                    'Teaching_Male': 0, 'Teaching_Female': 0,
+                    'Teaching_Other': 0, 'Teaching_Transgender': 0,
+                    'Non Teaching_Male': 0, 'Non Teaching_Female': 0,
+                    'Non Teaching_Other': 0, 'Non Teaching_Transgender': 0,
                 }
-            
+
             key = f"{emp_type}_{gender}"
-            # Initialize the key if it doesn't exist (for any new gender values)
             if key not in department_data[dept]:
                 department_data[dept][key] = 0
             department_data[dept][key] = count
-        
-        # Convert to list format for chart
-        data = []
-        for dept, counts in department_data.items():
-            entry = {'name': dept, **counts}
-            data.append(entry)
-        
-        total = sum(sum(dept.values()) for dept in department_data.values())
-        
+
+        data = [{'name': dept, **counts} for dept, counts in department_data.items()]
+        total = sum(sum(d.values()) for d in department_data.values())
+
         return jsonify({
             'data': data,
             'total': total,
-            'filters_applied': {k: v for k, v in filters.items() if v is not None and v != '' and v != 'All'}
+            'filters_applied': {k: v for k, v in filters.items() if v and v != 'All'}
         }), 200
-        
+
     except Exception as e:
         import traceback
-        print(f"Error fetching department breakdown: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'message': f'An error occurred while fetching department breakdown: {str(e)}'}), 500
+        print(f"Error fetching department breakdown: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching department breakdown: {e}'}), 500
     finally:
         if cur:
             cur.close()

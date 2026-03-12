@@ -1,11 +1,11 @@
-event_title,event_type,industry_partner,event_date,duration_hours,department,description
-AI in Healthcare Symposium,Conference,Google Health,2023-11-15,8.0,CSE,Symposium on latest AI trends in medical diagnostics.
-Future of EV Mobility,Panel Discussion,Tesla India,2023-10-10,3.5,EE,Discussion on challenges and opportunities in EV adoption.
-Cybersecurity Workshop,Workshop,Palo Alto Networks,2023-09-05,6.0,CSE,Hands-on workshop on network security.
-Sustainable Construction Tech,Seminar,L&T Construction,2023-08-20,2.0,CE,Seminar on green building materials.
-Data Science Hackathon,Hackathon,Kaggle,2023-07-15,24.0,DS,24-hour hackathon solving real-world data problems.
-Robotics Process Automation,Training Program,UiPath,2023-06-10,16.0,ME,Certification training on RPA tools.
-5G Network Architecture,Industrial Talk,Ericsson,2023-05-25,1.5,EE,Talk by industry expert on 5G deployment.
-Biotech Innovations,Networking Event,Biocon,2023-04-12,4.0,BSBE,Networking session for biotech startups and students.
-Quantum Computing Basics,Seminar,IBM Quantum,2023-03-18,2.0,PH,Introductory lecture on quantum bits and gates.
-Smart Manufacturing Visit,Industry Visit,Siemens Factory,2023-02-28,5.0,ME,Field trip to Siemens smart factory in Bangalore.
+project_id,event_name,date_of_event,event_type,target_audience,hosted_by,funding_by,amount,year
+101,AI Symposium 2023,2023-10-15,Conference,Faculty & Students,CSE Dept,ICSR,50000,2023
+102,Startup Pitch Day,2023-11-20,Competition,Students,Entrepreneurship Cell,Ministry of Commerce,250000,2023
+103,Cloud Infrastructure Workshop,2023-09-12,Workshop,Research Scholars,IT Dept,AWS,15000,2023
+104,Hackathon 2024,2024-01-25,Hackathon,Undergraduates,IEEE Student Branch,Google,100000,2024
+105,Guest Lecture on ML,2024-02-10,Lecture,All Students,ECE Dept,Alumni Fund,5000,2024
+106,Industry Visit - Manufacturing Hub,2024-03-05,Industrial Visit,Mechanical Students,Mechanical Dept,University Fund,20000,2024
+107,Robotics Championship,2024-04-12,Tournament,Inter-college Students,Robotics Club,Nvidia,75000,2024
+108,Blockchain Seminar,2024-05-30,Seminar,Faculty,MBA Dept,CII,10000,2024
+109,Design Thinking Workshop,2024-08-15,Workshop,Graduates,Design Dept,TATA Motors,35000,2024
+110,Quantum Computing Forum,2024-11-22,Forum,Research Scholars,Physics Dept,IBM,60000,2024

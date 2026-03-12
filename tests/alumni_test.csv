@@ -1,11 +1,51 @@
-rollno,alumniidno,name,yearofgraduation,department,program,category,gender,homestate,jobstate,outcome,employer_or_institution
-101901001,ALM001,Amit Kumar,2019,CSE,B.Tech,General,Male,Kerala,Karnataka,Corporate,Infosys
-112001002,ALM002,Priya Singh,2020,EE,M.Tech,OBC,Female,Tamil Nadu,Maharashtra,HigherStudies,IIT Bombay
-122101003,ALM003,Rahul Verma,2021,ME,PhD,SC,Male,Delhi,USA,HigherStudies,Stanford University
-132201004,ALM004,Sita Reddi,2022,PH,M.Sc,EWS,Female,Karnataka,Karnataka,Corporate,TCS
-142301005,ALM005,Vikram Joshi,2023,CH,MS,General,Male,Maharashtra,Germany,HigherStudies,TU Munich
-152401006,ALM006,Anjali Menon,2024,CE,B.Tech,ST,Female,Kerala,Kerala,Entrepreneurship,Self Employed
-162501007,ALM007,Rohan Das,2025,DS,PhD,OBC,Male,West Bengal,Karnataka,Corporate,Amazon
-171801008,ALM008,Kavya Nair,2018,CSE,B.Tech,General,Female,Kerala,USA,Corporate,Google
-181901009,ALM009,Arjun Rao,2019,EE,M.Tech,General,Male,Andhra Pradesh,Telangana,Other,Civil Services
-192001010,ALM010,Meera Krishnan,2020,ME,B.Tech,OBC,Female,Tamil Nadu,UK,HigherStudies,Imperial College London
+sl_no,roll_number,year_of_admission,year_of_graduation,course_type,course_name,department,current_job,country_of_settlement,place_of_settlement_state,alumni_contribution
+1,AL2015001,2015,2019,Undergraduate,B.Tech,Computer Science,Senior Software Engineer,USA,California,Guest lecture on Distributed Systems
+2,AL2016042,2016,2020,Undergraduate,B.E.,Mechanical Engineering,Project Manager,Germany,Bavaria,Donated $5000 to Lab Fund
+3,AL2014089,2014,2016,Postgraduate,M.Sc,Physics,Research Scientist,Canada,Ontario,Mentoring 3 final year students
+4,AL2017112,2017,2021,Undergraduate,B.Tech,Electronics,VLSI Design Lead,India,Karnataka,None
+5,AL2012005,2012,2017,Doctorate,PhD,Biotechnology,Postdoctoral Fellow,United Kingdom,London,Keynote speaker at Annual Symposium
+6,AL2018033,2018,2022,Undergraduate,B.A.,Economics,Data Analyst,Singapore,Singapore Central,Career guidance workshop
+7,AL2015077,2015,2019,Undergraduate,B.Tech,Civil Engineering,Structural Engineer,Australia,New South Wales,Endowed a scholarship for needy students
+8,AL2016012,2016,2018,Postgraduate,MBA,Management,Marketing Director,UAE,Dubai,Industry partnership lead
+9,AL2013099,2013,2017,Undergraduate,B.Tech,Chemical Engineering,Process Engineer,USA,Texas,Annual donor
+10,AL2019150,2019,2023,Undergraduate,B.Sc,Mathematics,Junior Quant Analyst,India,Maharashtra,Library book donation
+11,AL2010021,2010,2014,Undergraduate,B.Tech,Information Technology,CTO at Startup,USA,Washington,Angel investment for campus incubator
+12,AL2011045,2011,2013,Postgraduate,M.Tech,Structural Engineering,Lead Architect,France,Ile-de-France,Recruited 5 interns
+13,AL2014066,2014,2018,Undergraduate,B.E.,Electrical Engineering,Renewable Energy Specialist,Denmark,Hovedstaden,Solar panel installation grant
+14,AL2015092,2015,2019,Undergraduate,B.Tech,Computer Science,Cybersecurity Analyst,Japan,Tokyo,Online workshop on InfoSec
+15,AL2017003,2017,2021,Undergraduate,B.Sc,Chemistry,Quality Control Head,India,Gujarat,Donated lab equipment
+16,AL2016081,2016,2020,Undergraduate,B.Tech,Aeronautical Engineering,Flight Systems Engineer,USA,Florida,None
+17,AL2012102,2012,2016,Doctorate,PhD,Environmental Science,Climate Policy Advisor,Switzerland,Zurich,Published joint research with faculty
+18,AL2018055,2018,2022,Undergraduate,B.Com,Commerce,Tax Consultant,India,Delhi,Career counseling sessions
+19,AL2014019,2014,2018,Undergraduate,B.Tech,Mechanical Engineering,Automotive Designer,Italy,Lombardy,Designed prototype for college racing team
+20,AL2015022,2015,2017,Postgraduate,M.A.,English Literature,Editor-in-Chief,United Kingdom,Scotland,Creative writing workshop
+21,AL2011088,2011,2015,Undergraduate,B.Tech,Information Technology,Data Scientist,USA,New York,Silver Jubilee Fund contributor
+22,AL2013041,2013,2015,Postgraduate,M.Sc,Statistics,Biostatistician,Canada,Quebec,None
+23,AL2016029,2016,2020,Undergraduate,B.E.,Electronics,Hardware Engineer,South Korea,Gyeonggi-do,Donated logic analyzer kits
+24,AL2017056,2017,2021,Undergraduate,B.Tech,Computer Science,Backend Developer,Netherlands,North Holland,Mentoring open source project
+25,AL2010015,2010,2016,Doctorate,PhD,History,Museum Curator,India,West Bengal,Archive restoration project
+26,AL2015034,2015,2019,Undergraduate,B.Tech,Civil Engineering,Urban Planner,Australia,Victoria,None
+27,AL2014072,2014,2016,Postgraduate,M.Tech,Machine Learning,AI Researcher,USA,Massachusetts,Scholarship for AI students
+28,AL2018091,2018,2022,Undergraduate,B.E.,Production Engineering,Operations Head,India,Tamil Nadu,Placement assistance
+29,AL2012067,2012,2016,Undergraduate,B.Tech,Information Technology,Cloud Architect,Ireland,Leinster,Infrastructure support
+30,AL2016050,2016,2020,Undergraduate,B.Sc,Physics,Telescope Operator,Chile,Coquimbo,None
+31,AL2013011,2013,2017,Undergraduate,B.Tech,Electronics,Communication Engineer,Sweden,Stockholm,Tech talk speaker
+32,AL2015118,2015,2019,Undergraduate,B.Com,Commerce,Investment Banker,USA,Illinois,Financial literacy program
+33,AL2011033,2011,2013,Postgraduate,MBA,Finance,Wealth Manager,Singapore,Singapore East,Endowment fund donor
+34,AL2017044,2017,2021,Undergraduate,B.Tech,Mechanical Engineering,Robotics Engineer,Japan,Osaka,Robotics kit donation
+35,AL2014028,2014,2018,Undergraduate,B.Sc,Biology,Genetic Counselor,Canada,British Columbia,None
+36,AL2016095,2016,2020,Undergraduate,B.Tech,Computer Science,Full Stack Developer,India,Telangana,Open source seminar
+37,AL2012084,2012,2014,Postgraduate,M.Sc,Geography,GIS Specialist,New Zealand,Wellington,Mapping project lead
+38,AL2018012,2018,2022,Undergraduate,B.A.,Sociology,Social Worker,Norway,Oslo,Community outreach funding
+39,AL2015061,2015,2019,Undergraduate,B.Tech,Electronics,Product Designer,USA,Washington,None
+40,AL2010100,2010,2015,Doctorate,PhD,Mathematics,Professor,India,Karnataka,Organized math Olympiad
+41,AL2014047,2014,2018,Undergraduate,B.Tech,Civil Engineering,Site Engineer,Saudi Arabia,Riyadh,Industrial visit coordinator
+42,AL2016022,2016,2020,Undergraduate,B.E.,Chemical Engineering,Safety Consultant,Germany,Hesse,Safety manual donation
+43,AL2013059,2013,2015,Postgraduate,M.Tech,Embedded Systems,Firmware Lead,USA,Arizona,None
+44,AL2017088,2017,2021,Undergraduate,B.Tech,Information Technology,Mobile App Dev,India,Kerala,App development workshop
+45,AL2011002,2011,2015,Undergraduate,B.Sc,Statistics,Actuary,United Kingdom,England,Regular monthly donor
+46,AL2015049,2015,2019,Undergraduate,B.Tech,Mechanical Engineering,HVAC Designer,UAE,Abu Dhabi,None
+47,AL2018025,2018,2020,Postgraduate,MBA,HR,Talent Acquisition,India,Maharashtra,Soft skills training
+48,AL2014036,2014,2018,Undergraduate,B.Tech,Computer Science,Game Developer,Canada,Montreal,Game Jam sponsorship
+49,AL2016073,2016,2020,Undergraduate,B.Sc,Chemistry,Pharmacist,Switzerland,Basel,None
+50,AL2012011,2012,2016,Undergraduate,B.Tech,Electrical Engineering,Grid Manager,USA,Oregon,Power systems seminar

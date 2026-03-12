@@ -18,9 +18,6 @@ from .db import get_db_connection
 outreach_extension_bp = Blueprint('outreach_extension', __name__)
 
 OPEN_HOUSE_TABLE = 'open_house'
-NPTEL_COURSES_TABLE = 'nptel_courses'
-NPTEL_ENROLLMENTS_TABLE = 'nptel_enrollments'
-NPTEL_CHAPTERS_TABLE = 'nptel_local_chapters'
 UBA_PROJECTS_TABLE = 'uba_projects'
 UBA_EVENTS_TABLE = 'uba_events'
 
@@ -58,9 +55,6 @@ def _data_available() -> bool:
     try:
         return (
             _table_exists(conn, OPEN_HOUSE_TABLE) and
-            _table_exists(conn, NPTEL_COURSES_TABLE) and
-            _table_exists(conn, NPTEL_ENROLLMENTS_TABLE) and
-            _table_exists(conn, NPTEL_CHAPTERS_TABLE) and
             _table_exists(conn, UBA_PROJECTS_TABLE) and
             _table_exists(conn, UBA_EVENTS_TABLE)
         )
@@ -276,176 +270,29 @@ def get_open_house_timeline(current_user_id):
 @outreach_extension_bp.route('/nptel/summary', methods=['GET'])
 @token_required
 def get_nptel_summary(current_user_id):
-    """Get summary statistics for NPTEL."""
-    if not _data_available():
-        return jsonify({'message': 'Outreach extension tables are missing.'}), 500
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        # Total Courses Offered
-        cur.execute(f"SELECT COUNT(DISTINCT course_id) as total FROM {NPTEL_COURSES_TABLE};")
-        total_courses = cur.fetchone()['total'] or 0
-        
-        # Total Enrollments
-        cur.execute(f"SELECT COUNT(*) as total FROM {NPTEL_ENROLLMENTS_TABLE};")
-        total_enrollments = cur.fetchone()['total'] or 0
-        
-        # Certifications Completed
-        cur.execute(f"SELECT COUNT(*) as total FROM {NPTEL_ENROLLMENTS_TABLE} WHERE certification_earned = TRUE;")
-        certifications = cur.fetchone()['total'] or 0
-        
-        # Number of Local Chapters
-        cur.execute(f"SELECT COUNT(*) as total FROM {NPTEL_CHAPTERS_TABLE} WHERE is_active = TRUE;")
-        local_chapters = cur.fetchone()['total'] or 0
-        
-        return jsonify({
-            'total_courses': total_courses,
-            'total_enrollments': total_enrollments,
-            'certifications_completed': certifications,
-            'local_chapters': local_chapters
-        }), 200
-        
-    except Exception as e:
-        print(f"NPTEL summary error: {e}")
-        return jsonify({'message': 'Failed to fetch NPTEL summary statistics.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """NPTEL tables have been removed from the schema."""
+    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
 
 
 @outreach_extension_bp.route('/nptel/enrollments-over-time', methods=['GET'])
 @token_required
 def get_nptel_enrollments_over_time(current_user_id):
-    """Get enrollments over time (year-wise)."""
-    if not _data_available():
-        return jsonify({'message': 'Outreach extension tables are missing.'}), 500
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        cur.execute(f"""
-            SELECT 
-                enrollment_year,
-                COUNT(*) as total_enrollments,
-                COUNT(CASE WHEN certification_earned = TRUE THEN 1 END) as certifications
-            FROM {NPTEL_ENROLLMENTS_TABLE}
-            GROUP BY enrollment_year
-            ORDER BY enrollment_year ASC;
-        """)
-        data = cur.fetchall()
-        
-        return jsonify({
-            'enrollments_over_time': [dict(row) for row in data]
-        }), 200
-        
-    except Exception as e:
-        print(f"NPTEL enrollments over time error: {e}")
-        return jsonify({'message': 'Failed to fetch NPTEL enrollments over time.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """NPTEL tables have been removed from the schema."""
+    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
 
 
 @outreach_extension_bp.route('/nptel/course-categories', methods=['GET'])
 @token_required
 def get_nptel_course_categories(current_user_id):
-    """Get course category breakdown."""
-    if not _data_available():
-        return jsonify({'message': 'Outreach extension tables are missing.'}), 500
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        cur.execute(f"""
-            SELECT 
-                COALESCE(course_category, 'Uncategorized') as category,
-                COUNT(*) as count
-            FROM {NPTEL_COURSES_TABLE}
-            GROUP BY course_category
-            ORDER BY count DESC;
-        """)
-        data = cur.fetchall()
-        
-        return jsonify({
-            'categories': [dict(row) for row in data]
-        }), 200
-        
-    except Exception as e:
-        print(f"NPTEL course categories error: {e}")
-        return jsonify({'message': 'Failed to fetch NPTEL course categories.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """NPTEL tables have been removed from the schema."""
+    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
 
 
 @outreach_extension_bp.route('/nptel/certification-ratio', methods=['GET'])
 @token_required
 def get_nptel_certification_ratio(current_user_id):
-    """Get certification ratio (certified vs enrolled)."""
-    if not _data_available():
-        return jsonify({'message': 'Outreach extension tables are missing.'}), 500
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        cur.execute(f"""
-            SELECT 
-                COUNT(*) as total_enrollments,
-                COUNT(CASE WHEN certification_earned = TRUE THEN 1 END) as certified
-            FROM {NPTEL_ENROLLMENTS_TABLE};
-        """)
-        result = cur.fetchone()
-        
-        total = result['total_enrollments'] or 0
-        certified = result['certified'] or 0
-        ratio = (certified / total * 100) if total > 0 else 0
-        
-        return jsonify({
-            'total_enrollments': total,
-            'certified': certified,
-            'not_certified': total - certified,
-            'certification_rate': round(ratio, 2)
-        }), 200
-        
-    except Exception as e:
-        print(f"NPTEL certification ratio error: {e}")
-        return jsonify({'message': 'Failed to fetch NPTEL certification ratio.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """NPTEL tables have been removed from the schema."""
+    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
 
 
 # ========== UBA Endpoints ==========

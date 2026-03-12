@@ -121,20 +121,15 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     // Template Data for various tables
     const getTemplateData = (table) => {
         switch (table) {
-            case 'student':
+            case 'student_table':
                 return {
-                    headers: ['rollno', 'name', 'program', 'yearofadmission', 'batch', 'branch', 'department', 'pwd', 'state', 'category', 'gender', 'status'],
-                    sample: ['123456', 'John Doe', 'BTech', '2023', 'Jan', 'CSE', 'Computer Science', 'FALSE', 'Kerala', 'Gen', 'Male', 'Ongoing']
+                    headers: ['roll_no_admission', 'roll_no_current', 'name_of_student', 'programme_current', 'admission_year', 'admission_batch', 'stream_current', 'department_current', 'gender', 'original_category', 'state', 'pwd_status', 'student_status'],
+                    sample: ['123456', '123456', 'John Doe', 'BTech', '2023', '2023', 'CSE', 'Computer Science', 'Male', 'Gen', 'Kerala', 'No', 'Active']
                 };
-            case 'employee':
+            case 'employees':
                 return {
-                    headers: ['empname', 'email', 'phonenumber', 'bloodgroup', 'dateofbirth', 'gender', 'department', 'currentdesignationid', 'isactive', 'category', 'pwd_exs', 'state'],
-                    sample: ['Jane Smith', 'jane@example.com', '9876543210', 'O+', '1990-01-01', 'Female', 'Computer Science', '1', 'TRUE', 'Gen', 'FALSE', 'Kerala']
-                };
-            case 'employment_history':
-                return {
-                    headers: ['employeeid', 'designationid', 'designation', 'dateofjoining', 'dateofrelieving', 'appointmentmode', 'natureofappointment', 'isonlien', 'lienstartdate', 'lienenddate', 'lienduration', 'status', 'remarks'],
-                    sample: ['1', '2', 'Assistant Professor', '2020-01-15', '', 'Direct', 'Regular', 'No', '', '', '', 'Active', 'Initial appointment']
+                    headers: ['empId', 'empName', 'designation', 'phoneNumber', 'bloodGroup', 'dob', 'initial_doj', 'doj', 'dor', 'gender', 'email', 'personalmail', 'marital_status', 'address', 'payLevel', 'group', 'ltcHometown', 'employmentNature', 'appointmentMode', 'basicPay', 'department', 'emp_type', 'pwd', 'notificationNumber', 'notificationDate', 'empStatus'],
+                    sample: ['IITPKD1001', 'Jane Smith', 'Assistant Professor', '9876543210', 'O+', '1990-01-01', '2020-01-01', '2020-06-01', '2060-01-31', 'Female', 'jane@iitpkd.ac.in', 'jane@gmail.com', 'Married', 'Address', '10', 'A', 'Hometown', 'Regular', 'Direct Recruitment', '75000', 'Computer Science', 'Teaching', 'No', 'IITPKD/R/F/01/2020', '2020-01-01', 'Active']
                 };
             case 'igrs_yearwise':
                 return {
@@ -153,13 +148,23 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 };
             case 'alumni':
                 return {
-                    headers: ['rollno', 'name', 'alumniidno', 'currentdesignation', 'jobcountry', 'jobplace', 'yearofgraduation', 'department', 'program', 'category', 'gender', 'homestate', 'jobstate', 'outcome', 'employer_or_institution'],
-                    sample: ['112233', 'Alice Bob', 'AL123', 'Software Engineer', 'India', 'Bangalore', '2022', 'CSE', 'BTech', 'Gen', 'Female', 'Kerala', 'Karnataka', 'Corporate', 'Google']
+                    headers: ['sl_no', 'roll_number', 'year_of_admission', 'year_of_graduation', 'course_type', 'course_name', 'department', 'current_job', 'country_of_settlement', 'place_of_settlement_state', 'alumni_contribution'],
+                    sample: ['1', 'L2015001', '2015', '2019', 'Undergraduate', 'B.Tech', 'Computer Science', 'Software Engineer', 'India', 'Kerala', 'Guest lecture']
                 };
-            case 'research_projects':
+            case 'icsr_sponsered_projects':
                 return {
-                    headers: ['project_title', 'principal_investigator', 'department', 'project_type', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
-                    sample: ['AI Project', 'Dr. Smith', 'CSE', 'Funded', 'DST', '', '5000000', '2023-01-01', '2025-01-01', 'Ongoing']
+                    headers: ['project_id', 'project_title', 'principal_investigator', 'principal_investigator_department', 'co_principal_investigator1', 'co_principal_investigator1_department', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
+                    sample: ['1', 'AI Project', 'Dr. Smith', 'CSE', 'Dr. Jones', 'ECE', 'DST', '', '5000000', '2023-01-01', '2025-01-01', 'Ongoing']
+                };
+            case 'icsr_consultancy_projects':
+                return {
+                    headers: ['project_id', 'project_title', 'principal_investigator', 'department', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
+                    sample: ['1', 'Consulting Work', 'Dr. Lee', 'ME', '', 'Tata Motors', '1000000', '2023-06-01', '2024-06-01', 'Completed']
+                };
+            case 'icsr_csr':
+                return {
+                    headers: ['csr_id', 'csr_organisation', 'year', 'type_of_company', 'type_of_support', 'amount_given'],
+                    sample: ['1', 'Infosys Foundation', '2023', 'IT', 'Financial', '500000']
                 };
             case 'research_mous':
                 return {
@@ -181,15 +186,10 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                     headers: ['publication_title', 'journal_name', 'department', 'faculty_name', 'publication_year', 'publication_type'],
                     sample: ['Deep Learning', 'IEEE Transactions', 'CSE', 'Dr. Smith', '2023', 'Journal']
                 };
-            case 'industry_courses':
+            case 'courses_table':
                 return {
-                    headers: ['year_offered', 'course_title', 'department', 'industry_partner', 'is_active'],
-                    sample: ['2023', 'Cloud Computing', 'CSE', 'Google', 'TRUE']
-                };
-            case 'academic_program_launch':
-                return {
-                    headers: ['launch_year', 'program_code', 'program_name', 'program_type', 'department', 'oelp_students'],
-                    sample: ['2023', 'DS_MTECH', 'Data Science', 'MTech', 'CSE', '50']
+                    headers: ['course_code', 'course_name', 'credit_l_t_p_c', 'course_category', 'proposing_faculty_name', 'faculty_affiliation', 'target_programme', 'target_discipline', 'prerequisite', 'date_of_proposal', 'proposal_type', 'offering_status'],
+                    sample: ['CS2001', 'Data Structures', '3-0-0-3', 'CORE', 'Dr. Smith', 'CSE', 'BTECH', 'Computer Science', 'None', '2023-01-15', 'NEW', 'ACTIVE']
                 };
             case 'placement_summary':
                 return {
@@ -201,36 +201,62 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                     headers: ['placement_year', 'company_name', 'sector', 'offers', 'hires', 'is_top_recruiter'],
                     sample: ['2023', 'Microsoft', 'IT', '10', '8', 'TRUE']
                 };
-            case 'startups':
+            case 'placement_packages':
                 return {
-                    headers: ['startup_name', 'founder_name', 'innovation_focus_area', 'year_of_incubation', 'status', 'sector', 'is_from_iitpkd'],
-                    sample: ['InnovateAI', 'Jane Doe', 'AI/ML', '2022', 'Active', 'DeepTech', 'TRUE']
+                    headers: ['placement_year', 'program', 'highest_package', 'lowest_package', 'average_package'],
+                    sample: ['2023', 'BTech', '3500000', '6000000', '1500000']
+                };
+            case 'iptif_startup_table':
+                return {
+                    headers: ['id', 'startup_name', 'domain', 'startup_origin', 'incubated_date', 'status', 'revenue', 'number_of_jobs', 'remarks'],
+                    sample: ['1', 'InnovateAI', 'AI/ML', 'IIT PKD', '2022-06-01', 'Active', '500000', '5', 'Growing startup']
+                };
+            case 'techin_startup_table':
+                return {
+                    headers: ['id', 'startup_name', 'domain', 'startup_origin', 'incubated_date', 'status', 'revenue', 'number_of_jobs', 'remarks'],
+                    sample: ['1', 'TechVenture', 'IoT', 'External', '2023-01-15', 'Active', '250000', '3', '']
+                };
+            case 'iptif_program_table':
+                return {
+                    headers: ['id', 'program_name', 'type', 'association', 'start_end', 'date', 'targetted_audi', 'no_of_attendees', 'remarks'],
+                    sample: ['1', 'Innovation Bootcamp', 'Workshop', 'IPTIF', '2023-03-15', '2023-03-15', 'Students', '100', '']
+                };
+            case 'techin_program_table':
+                return {
+                    headers: ['id', 'program_name', 'type', 'association', 'start_end', 'event_date', 'targetted_audience', 'no_of_attendess', 'remarks'],
+                    sample: ['1', 'TechIn Workshop', 'Seminar', 'TechIn', '2023-05-20', '2023-05-20', 'Faculty', '50', '']
+                };
+            case 'techin_skill_development_program':
+                return {
+                    headers: ['id', 'program_name', 'category', 'association', 'start_end', 'event_date', 'targetted_audience', 'no_of_attendess', 'remarks'],
+                    sample: ['1', 'Python Skill Dev', 'Programming', 'TechIn', '2023-06-10', '2023-06-10', 'Students', '75', '']
+                };
+            case 'iptif_projects_table':
+                return {
+                    headers: ['project_id', 'project_name', 'scheme', 'status', 'start_date'],
+                    sample: ['1', 'Solar Panel R&D', 'IPTIF', 'Active', '2023-01-01']
+                };
+            case 'iptif_facilities_table':
+                return {
+                    headers: ['facility_id', 'facility_name', 'facility_type', 'revenue_made', 'availability_status', 'financial_year'],
+                    sample: ['1', '3D Printing Lab', 'Lab', '100000', 'Available', '2023']
+                };
+            case 'outreach':
+                return {
+                    headers: ['program_name', 'program_type', 'engagement_type', 'association', 'start_date', 'end_date', 'targeted_audience', 'num_attendees', 'remarks'],
+                    sample: ['Science Olympiad', 'Competition', 'School Outreach', 'IIT PKD', '2023-09-01', '2023-09-02', 'School Students', '200', '']
                 };
             case 'industry_conclave':
                 return {
-                    headers: ['year', 'theme', 'focus_area', 'number_of_companies', 'description', 'sessions_held', 'key_speakers', 'brochure_url', 'event_photos_url'],
-                    sample: ['2023', 'Industry 4.0', 'Automation', '50', 'Annual Conclave', '5', 'Mr. X, Ms. Y', '', '']
+                    headers: ['start_date', 'end_date', 'theme', 'focus_area', 'number_of_com', 'sessions_held', 'key_speakers', 'description', 'brochure_url', 'event_photos_url'],
+                    sample: ['2023-10-01', '2023-10-03', 'Industry 4.0', 'Automation', '50', '5', 'Mr. X, Ms. Y', 'Annual Conclave', '', '']
                 };
             case 'open_house':
                 return {
                     headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'num_departments', 'total_visitors', 'key_highlights', 'photos_url', 'poster_url', 'brochure_url'],
                     sample: ['2023', '2023-10-15', 'Science Day', 'School Students', '"CSE, ECE, ME"', '3', '500', 'Robot Demo', 'https://example.com/photos', 'https://example.com/poster.pdf', 'https://example.com/brochure.pdf']
                 };
-            case 'nptel_local_chapters':
-                return {
-                    headers: ['chapter_name', 'faculty_coordinator', 'is_active', 'established_year'],
-                    sample: ['IIT Palakkad Chapter', 'Dr. Smith', 'TRUE', '2019']
-                };
-            case 'nptel_courses':
-                return {
-                    headers: ['course_code', 'course_title', 'course_category', 'offering_semester', 'offering_year'],
-                    sample: ['NPTEL123', 'Data Structures', 'Engineering', 'Spring', '2023']
-                };
-            case 'nptel_enrollments':
-                return {
-                    headers: ['enrollment_year', 'course_code', 'student_name', 'enrollment_semester', 'certification_earned', 'certification_date'],
-                    sample: ['2023', 'NPTEL123', 'John Doe', 'Spring', 'TRUE', '2023-05-20']
-                };
+
             case 'uba_projects':
                 return {
                     headers: ['project_title', 'coordinator_name', 'project_status', 'start_date', 'end_date', 'intervention_description', 'collaboration_partners'],
@@ -244,8 +270,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
             case 'industry_events':
                 return {
-                    headers: ['event_title', 'event_type', 'industry_partner', 'event_date', 'duration_hours', 'department', 'description'],
-                    sample: ['AI Symposium', 'Conference', 'Google', '2023-10-15', '8', 'CSE', 'Annual AI catchup']
+                    headers: ['project_id', 'event_name', 'date_of_event', 'event_type', 'target_audience', 'hosted_by', 'funding_by', 'amount', 'year'],
+                    sample: ['1', 'AI Symposium', '2023-10-15', 'Conference', 'Faculty & Students', 'CSE Dept', 'ICSR', '50000', '2023']
                 };
             case 'nirf_ranking':
                 return {
