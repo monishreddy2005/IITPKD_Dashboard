@@ -27,6 +27,8 @@ import ResearchIcsrSection from './components/ResearchIcsrSection';
 import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
 import ResearchLibrarySection from './components/ResearchLibrarySection';
 import InnovationSection from './components/InnovationSection';
+import IptifSection from './components/IptifSection';
+import TechinSection from './components/TechinSection';
 import IcsrSection from './components/IcsrSection';
 import ConclaveSection from './components/ConclaveSection';
 import OpenHouseSection from './components/OpenHouseSection';
@@ -121,7 +123,9 @@ function App() {
           <Route path="education/administrative-section" element={<EducationAdministrativeSection user={user} />} />
           <Route path="education/academic-section" element={<EducationAcademicSection user={user} />} />
           <Route path="industry-connect" element={<IndustryConnect user={user} />} />
-          <Route path="innovation-entrepreneurship" element={<InnovationSection user={user} />} />
+          <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship user={user} />} />
+          <Route path="innovation-entrepreneurship/iptif" element={<IptifSection user={user} />} />
+          <Route path="innovation-entrepreneurship/techin" element={<TechinSection user={user} />} />
           <Route path="industry-connect/icsr" element={<IcsrSection user={user} />} />
           <Route path="industry-connect/conclave" element={<ConclaveSection user={user} />} />
           <Route path="outreach-extension" element={<OutreachExtension user={user} />} />

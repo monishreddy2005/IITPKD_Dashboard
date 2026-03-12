@@ -7,25 +7,25 @@ import './PeopleCampus.css';
 
 const OUTREACH_EXTENSION_SECTIONS = [
   {
-    code: 'S',
-    title: 'Social Engagements',
-    description: 'Community outreach: Open House, workshops, and public lectures',
-    route: '/outreach-extension/social-engagements',
-    allowedRoles: [3] // Super admin and another role
+    code: '🏛️',
+    title: 'Open House',
+    description: 'Community Engagement Events',
+    route: '/outreach-extension/open-house',
+    allowedRoles: [3]
   },
   {
-    code: 'S',
-    title: 'Students Engagement',
-    description: 'Student-led outreach: Workshops and community projects',
-    route: '/outreach-extension/students-engagement', // Changed to hyphenated format for consistency
-    allowedRoles: [3] // Only super admin
+    code: '📚',
+    title: 'NPTEL - CCE',
+    description: 'Centre for Continuing Education',
+    route: '/outreach-extension/nptel',
+    allowedRoles: [3]
   },
   {
-    code: 'R',
-    title: 'Research Engagements',
-    description: 'Research impact: Publications, patents, and industry collaborations',
+    code: '🌾',
+    title: 'Unnat Bharat Abhiyan',
+    description: 'Rural Development Initiative',
     route: '/outreach-extension/uba',
-    allowedRoles: [3] // Only super admin
+    allowedRoles: [3]
   }
 ];
 
