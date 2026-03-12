@@ -265,7 +265,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     if (!projectTrend.length) return [];
     return projectTrend.map((row) => ({
       year: row.year,
-      projects: Number(row.total) || 0
+      funded: Number(row.funded) || 0,
+      consultancy: Number(row.consultancy) || 0
     }));
   }, [projectTrend]);
 
@@ -273,7 +274,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     if (!consultancyTrend.length) return [];
     return consultancyTrend.map((row) => ({
       year: row.year,
-      revenue: Number(row.revenue) || 0
+      funded_revenue: Number(row.funded_revenue) || 0,
+      consultancy_revenue: Number(row.consultancy_revenue) || 0
     }));
   }, [consultancyTrend]);
 
@@ -1023,22 +1025,37 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Funded Projects Trend
+                      <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Annual count of externally funded projects.
+                      Annual count of sponsored and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
                     <ResponsiveContainer width="100%" height={350}>
-                      <LineChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                      <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
                         <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="plainline" wrapperStyle={{ fontSize: '12px' }} />
-                        <Line type="monotone" dataKey="projects" stroke="#4f46e5" strokeWidth={2.5} dot={{ r: 4 }} />
-                      </LineChart>
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Bar 
+                          dataKey="funded" 
+                          name="Sponsored Projects" 
+                          stackId="a" 
+                          fill="#6366f1" 
+                          radius={[0, 0, 4, 4]} 
+                          barSize={40}
+                        />
+                        <Bar 
+                          dataKey="consultancy" 
+                          name="Consultancy Projects" 
+                          stackId="a" 
+                          fill="#22c55e" 
+                          radius={[4, 4, 0, 0]} 
+                          barSize={40}
+                        />
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
@@ -1049,10 +1066,10 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>💰</span> Consultancy Revenue Trend
+                      <span style={{ fontSize: '24px' }}>💰</span> Revenue Trend — Sponsored vs Consultancy
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Year-wise sanctioned consultancy revenue.
+                      Year-wise sanctioned revenue comparison (₹) from sponsored and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
@@ -1062,8 +1079,25 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                         <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
                         <YAxis stroke="#666" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v/100000).toFixed(1)}L`} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="plainline" wrapperStyle={{ fontSize: '12px' }} />
-                        <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 4 }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
+                        <Line 
+                          type="monotone" 
+                          dataKey="funded_revenue" 
+                          name="Sponsored Revenue"
+                          stroke="#6366f1" 
+                          strokeWidth={3}
+                          dot={{ r: 6, fill: '#6366f1' }}
+                          activeDot={{ r: 8 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="consultancy_revenue" 
+                          name="Consultancy Revenue"
+                          stroke="#22c55e" 
+                          strokeWidth={3}
+                          dot={{ r: 6, fill: '#22c55e' }}
+                          activeDot={{ r: 8 }}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>

@@ -34,7 +34,7 @@ function IcsrSection({ user, isPublicView = false }) {
 
   const [summary, setSummary] = useState({
     total_events: 0,
-    departments_involved: 0
+    total_funding: 0
   });
 
   const [yearlyDistribution, setYearlyDistribution] = useState([]);
@@ -123,7 +123,11 @@ function IcsrSection({ user, isPublicView = false }) {
     if (!token) return;
     try {
       const options = await fetchIcsrFilterOptions(token);
-      setFilterOptions(options);
+      setFilterOptions({
+        event_types: options?.event_types || [],
+        departments: options?.departments || [],
+        years: options?.years || []
+      });
     } catch (err) {
       console.error('Error loading filter options:', err);
     }
@@ -176,8 +180,7 @@ function IcsrSection({ user, isPublicView = false }) {
   const yearlyChartData = useMemo(() => {
     return yearlyDistribution.map(row => ({
       year: row.year,
-      events: row.event_count || 0,
-      departments: row.departments_count || 0
+      events: row.event_count || 0
     }));
   }, [yearlyDistribution]);
 
@@ -364,7 +367,7 @@ function IcsrSection({ user, isPublicView = false }) {
                   color: 'rgba(255, 255, 255, 0.9)',
                   fontSize: '18px',
                   fontWeight: '500'
-                }}>Departments Involved</h3>
+                }}>Total Funding Generated</h3>
               </div>
               <div style={{
                 fontSize: '48px',
@@ -373,7 +376,7 @@ function IcsrSection({ user, isPublicView = false }) {
                 marginBottom: '8px',
                 lineHeight: '1.2'
               }}>
-                {formatNumber(summary.departments_involved)}
+                ₹{formatNumber(summary.total_funding)}
               </div>
               <div style={{
                 display: 'flex',
@@ -391,7 +394,7 @@ function IcsrSection({ user, isPublicView = false }) {
                   fontSize: '14px',
                   color: 'rgba(255, 255, 255, 0.8)'
                 }}>
-                  Participating departments
+                  Amount sanctioned from events
                 </span>
               </div>
             </div>
@@ -585,22 +588,7 @@ function IcsrSection({ user, isPublicView = false }) {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Department
-              </label>
-              <select
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-              >
-                <option value="All">All Departments</option>
-                {filterOptions.departments.map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
+
 
             <div className="filter-group">
               <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
@@ -644,10 +632,9 @@ function IcsrSection({ user, isPublicView = false }) {
           }}>
             <strong>Active Filters:</strong>{' '}
             {filters.event_type !== 'All' && <span style={{ marginRight: '10px' }}>📌 Type: {filters.event_type}</span>}
-            {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
             {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
             {filters.search && <span style={{ marginRight: '10px' }}>🔍 Search: "{filters.search}"</span>}
-            {filters.event_type === 'All' && filters.department === 'All' && filters.year === 'All' && !filters.search &&
+            {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
               <span>No filters applied (showing all events)</span>
             }
           </div>
@@ -717,12 +704,6 @@ function IcsrSection({ user, isPublicView = false }) {
                             fill="#667eea"
                             radius={[4, 4, 0, 0]}
                           />
-                          <Bar
-                            dataKey="departments"
-                            name="Departments"
-                            fill="#22c55e"
-                            radius={[4, 4, 0, 0]}
-                          />
                         </BarChart>
                       </ResponsiveContainer>
 
@@ -745,9 +726,9 @@ function IcsrSection({ user, isPublicView = false }) {
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                            {yearlyChartData.reduce((sum, item) => sum + item.departments, 0)}
+                            {yearlyChartData.length > 0 ? Math.max(...yearlyChartData.map(item => item.events)) : 0}
                           </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Dept Involvements</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Peak Events in Year</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>

@@ -9,14 +9,17 @@ import {
   Tooltip,
   Legend,
   BarChart,
-  Bar
+  Bar,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 import {
   fetchFilterOptions,
   fetchSummary,
-  fetchIndustryCourseTrend,
-  fetchIndustryCourses,
+  fetchCategoryBreakdown,
+  fetchCourses,
   fetchProgramLaunchStats,
   fetchProgramList
 } from '../services/academicModuleStats';
@@ -100,8 +103,8 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
         const [summaryResp, trendResp, courseResp, programStatsResp, programListResp] = await Promise.all([
           fetchSummary(filters, token),
-          fetchIndustryCourseTrend(filters, token),
-          fetchIndustryCourses(filters, token),
+          fetchCategoryBreakdown(filters, token),
+          fetchCourses(filters, '', 1, 1000, token), // Assuming no search and getting max 1000 results
           fetchProgramLaunchStats(filters, token),
           fetchProgramList(filters, token)
         ]);
@@ -126,8 +129,8 @@ function EducationAcademicSection({ user, isPublicView = false }) {
   const courseTrendChartData = useMemo(() => {
     if (!courseTrend.length) return [];
     return courseTrend.map((row) => ({
-      year: row.year,
-      course_count: row.course_count || 0
+      name: row.category,
+      value: row.course_count || 0
     }));
   }, [courseTrend]);
 
@@ -413,7 +416,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     <>
                       <button
                         className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('industry_courses'); setIsUploadModalOpen(true); }}
+                        onClick={() => { setActiveUploadTable('courses_table'); setIsUploadModalOpen(true); }}
                         style={{ 
                           padding: '8px 16px', 
                           backgroundColor: '#28a745', 
@@ -425,21 +428,6 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                         }}
                       >
                         Upload Courses
-                      </button>
-                      <button
-                        className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('academic_program_launch'); setIsUploadModalOpen(true); }}
-                        style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#28a745', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        Upload Programs
                       </button>
                     </>
                   )}
@@ -691,62 +679,47 @@ function EducationAcademicSection({ user, isPublicView = false }) {
               borderRadius: '10px', 
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
             }}>
-              {/* Course Trend Chart */}
+              {/* Course Category Breakdown Chart */}
               {viewType === 'courseTrend' && (
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📈</span> Industry-linked Courses · Yearly Trend
+                      <span style={{ fontSize: '24px' }}>📊</span> Course Categories Breakdown
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Track how many courses were offered with industry collaboration across academic years.
+                      Distribution of courses across different categories.
                     </p>
                   </div>
 
                   {!courseTrendChartData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No industry course data available for the selected filters.</p>
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No course data available for the selected filters.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
                       <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={courseTrendChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="year" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Year', 
-                              position: 'insideBottom', 
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
+                        <PieChart>
+                          <Pie
+                            data={courseTrendChartData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={80}
+                            outerRadius={140}
+                            paddingAngle={5}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                          >
+                            {courseTrendChartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={PROGRAM_COLORS[index % PROGRAM_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip 
+                            formatter={(value) => [value, 'Courses']}
+                            contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                           />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Number of Courses', 
-                              angle: -90, 
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                            allowDecimals={false}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                          <Line 
-                            type="monotone" 
-                            dataKey="course_count" 
-                            name="Industry Courses" 
-                            stroke="#6366f1" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#6366f1' }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
+                          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        </PieChart>
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
@@ -762,7 +735,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                       }}>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseTrendChartData.reduce((sum, item) => sum + item.course_count, 0)}
+                            {courseTrendChartData.reduce((sum, item) => sum + item.value, 0)}
                           </div>
                           <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
                         </div>
@@ -770,15 +743,15 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                           <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
                             {courseTrendChartData.length}
                           </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                             {courseTrendChartData.length > 0 
-                              ? Math.max(...courseTrendChartData.map(item => item.course_count)) 
-                              : 0}
+                              ? courseTrendChartData.reduce((prev, current) => (prev.value > current.value) ? prev : current).name
+                              : 'N/A'}
                           </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Peak Year</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Top Category</div>
                         </div>
                       </div>
                     </div>
