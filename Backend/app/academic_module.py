@@ -89,15 +89,15 @@ def get_filter_options(current_user_id):
         cur.execute(f"""
             SELECT
                 ARRAY(SELECT DISTINCT course_category FROM {COURSES_TABLE}
-                      WHERE course_category IS NOT NULL ORDER BY course_category) AS categories,
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND course_category IS NOT NULL ORDER BY course_category) AS categories,
                 ARRAY(SELECT DISTINCT target_programme FROM {COURSES_TABLE}
-                      WHERE target_programme IS NOT NULL ORDER BY target_programme) AS programmes,
-                ARRAY(SELECT DISTINCT offering_status FROM {COURSES_TABLE}
-                      WHERE offering_status IS NOT NULL ORDER BY offering_status) AS statuses,
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND target_programme IS NOT NULL ORDER BY target_programme) AS programmes,
+                ARRAY(SELECT DISTINCT industry_course_status_currentay FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND industry_course_status_currentay IS NOT NULL ORDER BY industry_course_status_currentay) AS statuses,
                 ARRAY(SELECT DISTINCT proposal_type FROM {COURSES_TABLE}
-                      WHERE proposal_type IS NOT NULL ORDER BY proposal_type) AS proposal_types,
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND proposal_type IS NOT NULL ORDER BY proposal_type) AS proposal_types,
                 ARRAY(SELECT DISTINCT target_discipline FROM {COURSES_TABLE}
-                      WHERE target_discipline IS NOT NULL ORDER BY target_discipline) AS disciplines
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND target_discipline IS NOT NULL ORDER BY target_discipline) AS disciplines
         """)
         row = cur.fetchone() or {}
         return jsonify({
@@ -146,9 +146,16 @@ def get_summary(current_user_id):
             {
                 'category': 'course_category',
                 'programme': 'target_programme',
-                'status': 'offering_status',
+                'status': 'industry_course_status_currentay',
             }
         )
+        # Global filter for industry courses (captures 'YES', 'TRUE', or 'T')
+        industry_filter = "UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')"
+        if where_clause:
+            where_clause += f" AND {industry_filter}"
+        else:
+            where_clause = f"WHERE {industry_filter}"
+
         cur.execute(
             f"""
             SELECT
@@ -156,8 +163,8 @@ def get_summary(current_user_id):
                 COUNT(DISTINCT course_category) AS distinct_categories,
                 COUNT(DISTINCT target_programme) AS distinct_programmes,
                 COUNT(DISTINCT target_discipline) AS distinct_disciplines,
-                COUNT(CASE WHEN offering_status = 'ACTIVE' THEN 1 END) AS active_courses,
-                COUNT(CASE WHEN offering_status = 'INACTIVE' THEN 1 END) AS inactive_courses
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 1 END) AS active_courses,
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) = 'INACTIVE' THEN 1 END) AS inactive_courses
             FROM {COURSES_TABLE}
             {where_clause}
             """,
@@ -208,6 +215,7 @@ def get_category_breakdown(current_user_id):
                 COALESCE(course_category, 'Uncategorized') AS category,
                 COUNT(*) AS count
             FROM {COURSES_TABLE}
+            WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
             GROUP BY course_category
             ORDER BY count DESC;
         """)
@@ -251,6 +259,7 @@ def get_programme_breakdown(current_user_id):
                 COALESCE(target_programme, 'Unspecified') AS programme,
                 COUNT(*) AS count
             FROM {COURSES_TABLE}
+            WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
             GROUP BY target_programme
             ORDER BY count DESC;
         """)
@@ -304,10 +313,16 @@ def get_courses(current_user_id):
             {
                 'category': 'course_category',
                 'programme': 'target_programme',
-                'status': 'offering_status',
+                'status': 'industry_course_status_currentay',
                 'proposal_type': 'proposal_type',
             }
         )
+        # Global filter for industry courses (captures 'YES', 'TRUE', or 'T')
+        industry_filter = "UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')"
+        if where_clause:
+            where_clause += f" AND {industry_filter}"
+        else:
+            where_clause = f"WHERE {industry_filter}"
 
         # Add search
         if search:
@@ -336,10 +351,13 @@ def get_courses(current_user_id):
                 faculty_affiliation,
                 target_programme,
                 target_discipline,
-                prerequisite,
-                date_of_proposal,
-                proposal_type,
-                offering_status
+                industry_partner,
+                industry_coordinator_name,
+                CASE 
+                    WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 'Active'
+                    ELSE 'Inactive'
+                END AS status,
+                proposal_type
             FROM {COURSES_TABLE}
             {where_clause}
             ORDER BY course_code ASC

@@ -55,6 +55,30 @@ def _data_available() -> bool:
         conn.close()
 
 
+def _build_events_where_clause(filters: dict) -> tuple[str, list]:
+    """Build WHERE clause and params for industry_events filtering."""
+    conditions = []
+    params = []
+
+    if filters.get('event_type') and filters.get('event_type') != 'All':
+        conditions.append("event_type = %s")
+        params.append(filters['event_type'])
+
+    if filters.get('year') and filters.get('year') != 'All':
+        conditions.append("COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) = %s")
+        params.append(int(filters['year']))
+
+    if filters.get('search'):
+        conditions.append(
+            "(event_name ILIKE %s OR hosted_by ILIKE %s OR target_audience ILIKE %s)"
+        )
+        search_pattern = f"%{filters['search']}%"
+        params.extend([search_pattern, search_pattern, search_pattern])
+
+    where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+    return where_clause, params
+
+
 # ========== ICSR Section Endpoints ==========
 
 @industry_connect_bp.route('/icsr/summary', methods=['GET'])
@@ -73,12 +97,19 @@ def get_icsr_summary(current_user_id):
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
+        filters = {
+            'event_type': request.args.get('event_type'),
+            'year': request.args.get('year'),
+            'search': request.args.get('search', '').strip()
+        }
+        where_clause, params = _build_events_where_clause(filters)
+
         # Total number of industry events
-        cur.execute(f"SELECT COUNT(*) as total FROM {INDUSTRY_EVENTS_TABLE};")
+        cur.execute(f"SELECT COUNT(*) as total FROM {INDUSTRY_EVENTS_TABLE} {where_clause};", params)
         total_events = cur.fetchone()['total'] or 0
 
         # Total funding amount
-        cur.execute(f"SELECT COALESCE(SUM(amount), 0) as total_amount FROM {INDUSTRY_EVENTS_TABLE};")
+        cur.execute(f"SELECT COALESCE(SUM(amount), 0) as total_amount FROM {INDUSTRY_EVENTS_TABLE} {where_clause};", params)
         total_amount = float(cur.fetchone()['total_amount'] or 0)
 
         return jsonify({
@@ -112,15 +143,23 @@ def get_icsr_yearly_distribution(current_user_id):
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
+        filters = {
+            'event_type': request.args.get('event_type'),
+            'year': request.args.get('year'),
+            'search': request.args.get('search', '').strip()
+        }
+        where_clause, params = _build_events_where_clause(filters)
+
         # Use the 'year' column directly (falls back to date_of_event if year is NULL)
         cur.execute(f"""
             SELECT
                 COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) as year,
                 COUNT(*) as event_count
             FROM {INDUSTRY_EVENTS_TABLE}
+            {where_clause}
             GROUP BY COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT)
             ORDER BY year ASC;
-        """)
+        """, params)
         yearly_data = cur.fetchall()
 
         result = [
@@ -156,12 +195,20 @@ def get_icsr_event_types(current_user_id):
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
+        filters = {
+            'event_type': request.args.get('event_type'),
+            'year': request.args.get('year'),
+            'search': request.args.get('search', '').strip()
+        }
+        where_clause, params = _build_events_where_clause(filters)
+
         cur.execute(f"""
             SELECT event_type, COUNT(*) as count
             FROM {INDUSTRY_EVENTS_TABLE}
+            {where_clause}
             GROUP BY event_type
             ORDER BY count DESC;
-        """)
+        """, params)
         type_data = cur.fetchall()
 
         result = [
@@ -210,25 +257,7 @@ def get_icsr_events(current_user_id):
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
         # Build WHERE clause
-        conditions = []
-        params = []
-
-        if filters['event_type'] and filters['event_type'] != 'All':
-            conditions.append("event_type = %s")
-            params.append(filters['event_type'])
-
-        if filters['year']:
-            conditions.append("COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) = %s")
-            params.append(int(filters['year']))
-
-        if filters['search']:
-            conditions.append(
-                "(event_name ILIKE %s OR hosted_by ILIKE %s OR target_audience ILIKE %s)"
-            )
-            search_pattern = f"%{filters['search']}%"
-            params.extend([search_pattern, search_pattern, search_pattern])
-
-        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+        where_clause, params = _build_events_where_clause(filters)
 
         # Get total count
         count_query = f"SELECT COUNT(*) as total FROM {INDUSTRY_EVENTS_TABLE} {where_clause};"

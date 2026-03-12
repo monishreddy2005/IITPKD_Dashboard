@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict qSTlT9DhSjCLPdGluZrlfLwRR9bp5rg1egTgRLWdfi3jpyj4BOhTTgUelAmAOlA
+\restrict gMfYiwXOc174hsH6TLhZDrVzRUqww8AkcyrD2o72DWekAlGv6o80u9ttzLWbfee
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -387,10 +387,13 @@ CREATE TABLE public.courses_table (
     proposal_type character varying(20),
     bac_number integer,
     senate_number integer,
-    offering_status character varying(20),
     course_proposal_pdf character varying(255),
+    is_industry_course character varying(10),
+    industry_partner character varying(100),
+    industry_coordinator_name character varying(200),
+    industry_course_status_currentay character varying(100),
+    course_status_history text,
     CONSTRAINT courses_table_course_category_check CHECK (((course_category)::text = ANY ((ARRAY['CORE'::character varying, 'ELECTIVE'::character varying, 'MOOC'::character varying])::text[]))),
-    CONSTRAINT courses_table_offering_status_check CHECK (((offering_status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying])::text[]))),
     CONSTRAINT courses_table_proposal_type_check CHECK (((proposal_type)::text = ANY ((ARRAY['NEW'::character varying, 'REVISED'::character varying, 'MOOC'::character varying])::text[]))),
     CONSTRAINT courses_table_target_programme_check CHECK (((target_programme)::text = ANY ((ARRAY['BTECH'::character varying, 'MTECH'::character varying, 'MSC'::character varying, 'PHD'::character varying])::text[])))
 );
@@ -1944,5 +1947,5 @@ ALTER TABLE ONLY public.uba_events
 -- PostgreSQL database dump complete
 --
 
-\unrestrict qSTlT9DhSjCLPdGluZrlfLwRR9bp5rg1egTgRLWdfi3jpyj4BOhTTgUelAmAOlA
+\unrestrict gMfYiwXOc174hsH6TLhZDrVzRUqww8AkcyrD2o72DWekAlGv6o80u9ttzLWbfee
 

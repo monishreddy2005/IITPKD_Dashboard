@@ -74,34 +74,34 @@ function IcsrSection({ user, isPublicView = false }) {
     if (!token) return;
     try {
       setLoading(true);
-      const data = await fetchIcsrSummary(token);
+      const data = await fetchIcsrSummary(filters, token);
       setSummary(data);
     } catch (err) {
       setError(err.message || 'Failed to load summary data');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, filters]);
 
   const loadYearlyDistribution = useCallback(async () => {
     if (!token) return;
     try {
-      const result = await fetchIcsrYearlyDistribution(token);
+      const result = await fetchIcsrYearlyDistribution(filters, token);
       setYearlyDistribution(result.data || []);
     } catch (err) {
       console.error('Error loading yearly distribution:', err);
     }
-  }, [token]);
+  }, [token, filters]);
 
   const loadEventTypes = useCallback(async () => {
     if (!token) return;
     try {
-      const result = await fetchIcsrEventTypes(token);
+      const result = await fetchIcsrEventTypes(filters, token);
       setEventTypes(result.data || []);
     } catch (err) {
       console.error('Error loading event types:', err);
     }
-  }, [token]);
+  }, [token, filters]);
 
   const loadEvents = useCallback(async () => {
     if (!token) return;
@@ -141,13 +141,17 @@ function IcsrSection({ user, isPublicView = false }) {
     loadFilterOptions();
   };
 
-  // Initial Data Load
+  // Initial Data Load (Filter options only once, summary/charts on filters)
   useEffect(() => {
     loadFilterOptions();
+  }, [loadFilterOptions]);
+
+  // Load summary and chart data when filters change
+  useEffect(() => {
     loadSummary();
     loadYearlyDistribution();
     loadEventTypes();
-  }, [loadFilterOptions, loadSummary, loadYearlyDistribution, loadEventTypes]);
+  }, [loadSummary, loadYearlyDistribution, loadEventTypes, filters]);
 
   // Load events when filters/pagination change
   useEffect(() => {
