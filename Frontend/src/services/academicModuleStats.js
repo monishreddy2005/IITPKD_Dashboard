@@ -88,3 +88,39 @@ export const fetchCourses = async (filters, search = '', page = 1, perPage = 20,
     handleError(error, 'Failed to fetch course list');
   }
 };
+
+export const fetchIndustryCourseTrend = async (filters, token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/industry-course-trend${buildQuery(filters)}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch industry course trend');
+  }
+};
+
+export const fetchIndustryCourses = async (filters, token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/industry-courses${buildQuery(filters)}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch industry course list');
+  }
+};
+
+export const fetchProgramLaunchStats = async (filters, token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/program-launch-stats${buildQuery(filters)}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch program launch statistics');
+  }
+};
+
+export const fetchProgramList = async (filters, token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/program-list${buildQuery(filters)}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch program list');
+  }
+};
