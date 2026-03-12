@@ -121,10 +121,10 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     // Template Data for various tables
     const getTemplateData = (table) => {
         switch (table) {
-            case 'student':
+            case 'student_table':
                 return {
-                    headers: ['rollno', 'name', 'program', 'yearofadmission', 'batch', 'branch', 'department', 'pwd', 'state', 'category', 'gender', 'status'],
-                    sample: ['123456', 'John Doe', 'BTech', '2023', 'Jan', 'CSE', 'Computer Science', 'FALSE', 'Kerala', 'Gen', 'Male', 'Ongoing']
+                    headers: ['roll_no_admission', 'roll_no_current', 'name_of_student', 'programme_current', 'admission_year', 'admission_batch', 'stream_current', 'department_current', 'gender', 'original_category', 'state', 'pwd_status', 'student_status'],
+                    sample: ['123456', '123456', 'John Doe', 'BTech', '2023', '2023', 'CSE', 'Computer Science', 'Male', 'Gen', 'Kerala', 'No', 'Active']
                 };
             case 'employees':
                 return {
@@ -200,6 +200,11 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 return {
                     headers: ['placement_year', 'company_name', 'sector', 'offers', 'hires', 'is_top_recruiter'],
                     sample: ['2023', 'Microsoft', 'IT', '10', '8', 'TRUE']
+                };
+            case 'placement_packages':
+                return {
+                    headers: ['placement_year', 'program', 'highest_package', 'lowest_package', 'average_package'],
+                    sample: ['2023', 'BTech', '3500000', '6000000', '1500000']
                 };
             case 'iptif_startup_table':
                 return {

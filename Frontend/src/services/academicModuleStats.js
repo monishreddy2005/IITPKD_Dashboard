@@ -48,38 +48,43 @@ export const fetchSummary = async (filters, token) => {
   }
 };
 
-export const fetchIndustryCourseTrend = async (filters, token) => {
+export const fetchCategoryBreakdown = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/industry-course-trend${buildQuery(filters)}`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/category-breakdown${buildQuery(filters)}`, authHeaders(token));
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch industry course trend');
+    handleError(error, 'Failed to fetch category breakdown');
   }
 };
 
-export const fetchIndustryCourses = async (filters, token) => {
+export const fetchProgrammeBreakdown = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/industry-courses${buildQuery(filters)}`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/programme-breakdown${buildQuery(filters)}`, authHeaders(token));
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch industry course list');
+    handleError(error, 'Failed to fetch programme breakdown');
   }
 };
 
-export const fetchProgramLaunchStats = async (filters, token) => {
+export const fetchCourses = async (filters, search = '', page = 1, perPage = 20, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/program-launch-stats${buildQuery(filters)}`, authHeaders(token));
-    return response.data;
-  } catch (error) {
-    handleError(error, 'Failed to fetch program launch statistics');
-  }
-};
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'All') {
+        queryParams.append(key, value);
+      }
+    });
 
-export const fetchProgramList = async (filters, token) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/program-list${buildQuery(filters)}`, authHeaders(token));
+    if (search) queryParams.append('search', search);
+    queryParams.append('page', page);
+    queryParams.append('per_page', perPage);
+
+    const qs = queryParams.toString();
+    const url = `${API_BASE_URL}/courses${qs ? `?${qs}` : ''}`;
+
+    const response = await axios.get(url, authHeaders(token));
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch program list');
+    handleError(error, 'Failed to fetch course list');
   }
 };

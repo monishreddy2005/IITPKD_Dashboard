@@ -460,6 +460,21 @@ function PlacementSection({ user, isPublicView = false }) {
                       >
                         Upload Recruiters
                       </button>
+                      <button
+                        className="upload-data-btn"
+                        onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}
+                        style={{ 
+                          padding: '8px 16px', 
+                          backgroundColor: '#28a745', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        Upload Packages
+                      </button>
                     </>
                   )}
                 </div>

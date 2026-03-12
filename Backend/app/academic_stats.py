@@ -4,18 +4,22 @@ from .auth import token_required
 
 academic_bp = Blueprint('academic', __name__)
 
+# New table name (was 'student')
+STUDENT_TABLE = 'student_table'
+
+
 def get_latest_year():
-    """Returns the maximum yearofadmission from the student table."""
+    """Returns the maximum admission_year from the student_table."""
     conn = None
     try:
         conn = get_db_connection()
         if conn is None:
             return None
-        
+
         cur = conn.cursor()
-        cur.execute("SELECT MAX(yearofadmission) as latest_year FROM student;")
+        cur.execute(f"SELECT MAX(admission_year) as latest_year FROM {STUDENT_TABLE};")
         result = cur.fetchone()
-        
+
         if result and result['latest_year']:
             return result['latest_year']
         return None
@@ -27,6 +31,7 @@ def get_latest_year():
             cur.close()
             conn.close()
 
+
 def build_filter_query(filters):
     """
     Builds a WHERE clause dynamically based on provided filters.
@@ -34,48 +39,49 @@ def build_filter_query(filters):
     """
     conditions = []
     params = []
-    
-    # Map filter names to database column names
+
+    # Map frontend filter names to new database column names
     filter_mapping = {
-        'yearofadmission': 'yearofadmission',
-        'program': 'program',
-        'batch': 'batch',
-        'branch': 'branch',
-        'department': 'department',
-        'category': 'category',
+        'yearofadmission': 'admission_year',
+        'program': 'programme_current',
+        'batch': 'admission_batch',
+        'branch': 'stream_current',
+        'department': 'department_current',
+        'category': 'original_category',
         'gender': 'gender',
         'state': 'state',
-        'pwd': 'pwd'
+        'pwd': 'pwd_status'
     }
-    
+
     for filter_name, value in filters.items():
         if value is None or value == '' or value == 'All':
             continue
-        
+
         column_name = filter_mapping.get(filter_name)
         if not column_name:
             continue
-        
-        # Handle boolean PWD filter
+
+        # Handle PWD filter — pwd_status is a varchar ('Yes'/'No') not a boolean
         if filter_name == 'pwd':
             if isinstance(value, bool):
                 conditions.append(f"{column_name} = %s")
-                params.append(value)
+                params.append('Yes' if value else 'No')
             elif value == 'true':
                 conditions.append(f"{column_name} = %s")
-                params.append(True)
+                params.append('Yes')
             elif value == 'false':
                 conditions.append(f"{column_name} = %s")
-                params.append(False)
+                params.append('No')
         else:
             conditions.append(f"{column_name} = %s")
             params.append(value)
-    
+
     where_clause = ""
     if conditions:
         where_clause = "WHERE " + " AND ".join(conditions)
-    
+
     return where_clause, params
+
 
 @academic_bp.route('/stats/filter-options', methods=['GET'])
 @token_required
@@ -86,46 +92,45 @@ def get_filter_options(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
+
         cur = conn.cursor()
-        
-        # Get distinct values for each field
+
         filter_options = {}
-        
-        # Year of Admission
-        cur.execute("SELECT DISTINCT yearofadmission FROM student ORDER BY yearofadmission DESC;")
-        filter_options['yearofadmission'] = [row['yearofadmission'] for row in cur.fetchall()]
-        
-        # Program
-        cur.execute("SELECT DISTINCT program FROM student ORDER BY program;")
-        filter_options['program'] = [row['program'] for row in cur.fetchall()]
-        
-        # Batch
-        cur.execute("SELECT DISTINCT batch FROM student ORDER BY batch;")
-        filter_options['batch'] = [row['batch'] for row in cur.fetchall()]
-        
-        # Branch
-        cur.execute("SELECT DISTINCT branch FROM student WHERE branch IS NOT NULL ORDER BY branch;")
-        filter_options['branch'] = [row['branch'] for row in cur.fetchall()]
-        
-        # Department
-        cur.execute("SELECT DISTINCT department FROM student WHERE department IS NOT NULL ORDER BY department;")
-        filter_options['department'] = [row['department'] for row in cur.fetchall()]
-        
-        # Category
-        cur.execute("SELECT DISTINCT category FROM student WHERE category IS NOT NULL ORDER BY category;")
-        filter_options['category'] = [row['category'] for row in cur.fetchall()]
-        
+
+        # Year of Admission (admission_year)
+        cur.execute(f"SELECT DISTINCT admission_year FROM {STUDENT_TABLE} WHERE admission_year IS NOT NULL ORDER BY admission_year DESC;")
+        filter_options['yearofadmission'] = [row['admission_year'] for row in cur.fetchall()]
+
+        # Program (programme_current)
+        cur.execute(f"SELECT DISTINCT programme_current FROM {STUDENT_TABLE} WHERE programme_current IS NOT NULL ORDER BY programme_current;")
+        filter_options['program'] = [row['programme_current'] for row in cur.fetchall()]
+
+        # Batch (admission_batch)
+        cur.execute(f"SELECT DISTINCT admission_batch FROM {STUDENT_TABLE} WHERE admission_batch IS NOT NULL ORDER BY admission_batch;")
+        filter_options['batch'] = [row['admission_batch'] for row in cur.fetchall()]
+
+        # Branch (stream_current)
+        cur.execute(f"SELECT DISTINCT stream_current FROM {STUDENT_TABLE} WHERE stream_current IS NOT NULL ORDER BY stream_current;")
+        filter_options['branch'] = [row['stream_current'] for row in cur.fetchall()]
+
+        # Department (department_current)
+        cur.execute(f"SELECT DISTINCT department_current FROM {STUDENT_TABLE} WHERE department_current IS NOT NULL ORDER BY department_current;")
+        filter_options['department'] = [row['department_current'] for row in cur.fetchall()]
+
+        # Category (original_category)
+        cur.execute(f"SELECT DISTINCT original_category FROM {STUDENT_TABLE} WHERE original_category IS NOT NULL ORDER BY original_category;")
+        filter_options['category'] = [row['original_category'] for row in cur.fetchall()]
+
         # State
-        cur.execute("SELECT DISTINCT state FROM student WHERE state IS NOT NULL ORDER BY state;")
+        cur.execute(f"SELECT DISTINCT state FROM {STUDENT_TABLE} WHERE state IS NOT NULL ORDER BY state;")
         filter_options['state'] = [row['state'] for row in cur.fetchall()]
-        
+
         # Get latest year
         latest_year = get_latest_year()
         filter_options['latest_year'] = latest_year
-        
+
         return jsonify(filter_options), 200
-        
+
     except Exception as e:
         print(f"Error fetching filter options: {e}")
         return jsonify({'message': 'An error occurred while fetching filter options.'}), 500
@@ -133,6 +138,7 @@ def get_filter_options(current_user_id):
         if conn:
             cur.close()
             conn.close()
+
 
 @academic_bp.route('/stats/gender-distribution-filtered', methods=['GET'])
 @token_required
@@ -143,10 +149,9 @@ def get_gender_distribution_filtered(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters from query string
+
         yearofadmission_param = request.args.get('yearofadmission', type=str)
-        
+
         filters = {
             'yearofadmission': None,
             'program': request.args.get('program', type=str),
@@ -154,10 +159,9 @@ def get_gender_distribution_filtered(current_user_id):
             'branch': request.args.get('branch', type=str),
             'department': request.args.get('department', type=str),
             'category': request.args.get('category', type=str),
-            'pwd': request.args.get('pwd', type=str)  # Will be "true", "false", or None
+            'pwd': request.args.get('pwd', type=str)
         }
-        
-        # Handle yearofadmission: check if it's 'All' first, otherwise try to parse as int
+
         if yearofadmission_param == 'All':
             filters['yearofadmission'] = 'All'
         elif yearofadmission_param:
@@ -165,7 +169,7 @@ def get_gender_distribution_filtered(current_user_id):
                 filters['yearofadmission'] = int(yearofadmission_param)
             except (ValueError, TypeError):
                 filters['yearofadmission'] = None
-        
+
         # Convert PWD string to boolean if provided
         if filters['pwd'] == 'true':
             filters['pwd'] = True
@@ -173,57 +177,50 @@ def get_gender_distribution_filtered(current_user_id):
             filters['pwd'] = False
         elif filters['pwd'] == '' or filters['pwd'] is None:
             filters['pwd'] = None
-        
-        # If yearofadmission is not provided and not 'All', use latest year
+
         if filters['yearofadmission'] is None:
             latest_year = get_latest_year()
             if latest_year:
                 filters['yearofadmission'] = latest_year
-        
-        # Build WHERE clause dynamically
+
         where_clause, params = build_filter_query(filters)
-        
-        # Build the query
+
         query = f"""
             SELECT gender, COUNT(*) as count
-            FROM student
+            FROM {STUDENT_TABLE}
             {where_clause}
             GROUP BY gender
             ORDER BY gender;
         """
-        
+
         cur = conn.cursor()
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Initialize gender counts
+
         gender_data = {
             'Male': 0,
             'Female': 0,
             'Transgender': 0
         }
-        
-        # Populate gender counts from results
+
         for row in results:
             gender = row['gender']
             if gender in gender_data:
                 gender_data[gender] = row['count']
-        
-        # Calculate total
+
         total = sum(gender_data.values())
-        
-        # Build filters_applied dict (only include non-null filters)
+
         filters_applied = {
-            k: v for k, v in filters.items() 
+            k: v for k, v in filters.items()
             if v is not None and v != '' and v != 'All'
         }
-        
+
         return jsonify({
             'data': gender_data,
             'total': total,
             'filters_applied': filters_applied
         }), 200
-        
+
     except Exception as e:
         print(f"Error fetching gender distribution: {e}")
         return jsonify({'message': 'An error occurred while fetching gender distribution.'}), 500
@@ -231,6 +228,7 @@ def get_gender_distribution_filtered(current_user_id):
         if conn:
             cur.close()
             conn.close()
+
 
 @academic_bp.route('/stats/student-strength', methods=['GET'])
 @token_required
@@ -241,17 +239,15 @@ def get_student_strength(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters from query string (gender filter removed)
+
         yearofadmission_param = request.args.get('yearofadmission', type=str)
-        
+
         filters = {
             'yearofadmission': None,
             'category': request.args.get('category', type=str),
             'state': request.args.get('state', type=str)
         }
-        
-        # Handle yearofadmission: check if it's 'All' first, otherwise try to parse as int
+
         if yearofadmission_param == 'All':
             filters['yearofadmission'] = 'All'
         elif yearofadmission_param:
@@ -259,42 +255,38 @@ def get_student_strength(current_user_id):
                 filters['yearofadmission'] = int(yearofadmission_param)
             except (ValueError, TypeError):
                 filters['yearofadmission'] = None
-        
-        # If yearofadmission is not provided and not 'All', use latest year
+
         if filters['yearofadmission'] is None:
             latest_year = get_latest_year()
             if latest_year:
                 filters['yearofadmission'] = latest_year
             else:
                 return jsonify({'message': 'No admission year data available.'}), 400
-        
-        # Validate that yearofadmission is provided (but 'All' is valid)
+
         if filters['yearofadmission'] is None:
             return jsonify({'message': 'yearofadmission is required.'}), 400
-        
-        # Build WHERE clause dynamically (AND logic between category and state)
+
         where_clause, params = build_filter_query(filters)
-        
-        # Build the query - group by program and gender to get breakdown
+
+        # Use programme_current but alias as 'name' for frontend compatibility
         query = f"""
-            SELECT program as name, gender, COUNT(*) as count
-            FROM student
+            SELECT programme_current as name, gender, COUNT(*) as count
+            FROM {STUDENT_TABLE}
             {where_clause}
-            GROUP BY program, gender
-            ORDER BY program, gender;
+            GROUP BY programme_current, gender
+            ORDER BY programme_current, gender;
         """
-        
+
         cur = conn.cursor()
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Organize data by program with gender breakdown
+
         program_data = {}
         for row in results:
             program = row['name']
             gender = row['gender']
             count = row['count']
-            
+
             if program not in program_data:
                 program_data[program] = {
                     'name': program,
@@ -302,28 +294,24 @@ def get_student_strength(current_user_id):
                     'Female': 0,
                     'Transgender': 0
                 }
-            
+
             if gender in program_data[program]:
                 program_data[program][gender] = count
-        
-        # Convert to list format
+
         data = list(program_data.values())
-        
-        # Calculate total
         total = sum(row['Male'] + row['Female'] + row['Transgender'] for row in data)
-        
-        # Build filters_applied dict (only include non-null filters)
+
         filters_applied = {
-            k: v for k, v in filters.items() 
+            k: v for k, v in filters.items()
             if v is not None and v != '' and v != 'All'
         }
-        
+
         return jsonify({
             'data': data,
             'total': total,
             'filters_applied': filters_applied
         }), 200
-        
+
     except Exception as e:
         print(f"Error fetching student strength: {e}")
         return jsonify({'message': 'An error occurred while fetching student strength.'}), 500
@@ -331,6 +319,7 @@ def get_student_strength(current_user_id):
         if conn:
             cur.close()
             conn.close()
+
 
 @academic_bp.route('/stats/gender-trends', methods=['GET'])
 @token_required
@@ -341,8 +330,7 @@ def get_gender_trends(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-        
-        # Get filter parameters (excluding yearofadmission since we group by it)
+
         filters = {
             'program': request.args.get('program', type=str),
             'batch': request.args.get('batch', type=str),
@@ -351,50 +339,48 @@ def get_gender_trends(current_user_id):
             'category': request.args.get('category', type=str),
             'pwd': request.args.get('pwd', type=str)
         }
-        
-        # Normalize PWD
+
         if filters['pwd'] == 'true':
             filters['pwd'] = True
         elif filters['pwd'] == 'false':
             filters['pwd'] = False
         elif filters['pwd'] == '' or filters['pwd'] is None:
             filters['pwd'] = None
-            
+
         where_clause, params = build_filter_query(filters)
-        
-        # Query: Group by Year and Gender
+
+        # Use admission_year but alias as 'yearofadmission' for frontend compatibility
         query = f"""
-            SELECT yearofadmission, gender, COUNT(*) as count
-            FROM student
+            SELECT admission_year as yearofadmission, gender, COUNT(*) as count
+            FROM {STUDENT_TABLE}
             {where_clause}
-            GROUP BY yearofadmission, gender
-            ORDER BY yearofadmission;
+            GROUP BY admission_year, gender
+            ORDER BY admission_year;
         """
-        
+
         cur = conn.cursor()
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Process results into: { year: { Male: X, Female: Y, ... } }
+
         year_data = {}
         for row in results:
             year = row['yearofadmission']
-            if year is None: continue
-            
+            if year is None:
+                continue
+
             gender = row['gender']
             count = row['count']
-            
+
             if year not in year_data:
                 year_data[year] = {'year': year, 'Male': 0, 'Female': 0, 'Transgender': 0}
-            
+
             if gender in year_data[year]:
                 year_data[year][gender] = count
-                
-        # Convert to list and sort by year
+
         data = sorted(list(year_data.values()), key=lambda x: x['year'])
-        
+
         return jsonify({'data': data}), 200
-        
+
     except Exception as e:
         print(f"Error fetching gender trends: {e}")
         return jsonify({'message': 'An error occurred while fetching gender trends.'}), 500
@@ -402,6 +388,7 @@ def get_gender_trends(current_user_id):
         if conn:
             cur.close()
             conn.close()
+
 
 @academic_bp.route('/stats/program-trends', methods=['GET'])
 @token_required
@@ -412,46 +399,44 @@ def get_program_trends(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-            
-        # Get filter parameters
+
         filters = {
             'category': request.args.get('category', type=str),
             'state': request.args.get('state', type=str)
         }
-        
+
         where_clause, params = build_filter_query(filters)
-        
-        # Query: Group by Year and Program
+
+        # Use admission_year and programme_current with aliases for frontend compatibility
         query = f"""
-            SELECT yearofadmission, program, COUNT(*) as count
-            FROM student
+            SELECT admission_year as yearofadmission, programme_current as program, COUNT(*) as count
+            FROM {STUDENT_TABLE}
             {where_clause}
-            GROUP BY yearofadmission, program
-            ORDER BY yearofadmission;
+            GROUP BY admission_year, programme_current
+            ORDER BY admission_year;
         """
-        
+
         cur = conn.cursor()
         cur.execute(query, params)
         results = cur.fetchall()
-        
-        # Process results into: { year: { year: 2023, B.Tech: 10, M.Tech: 5... } }
+
         year_data = {}
         all_programs = set()
-        
+
         for row in results:
             year = row['yearofadmission']
-            if year is None: continue
-            
+            if year is None:
+                continue
+
             program = row['program']
             count = row['count']
             all_programs.add(program)
-            
+
             if year not in year_data:
                 year_data[year] = {'year': year}
-            
+
             year_data[year][program] = count
-            
-        # Ensure all programs exist in each year object (fill with 0)
+
         final_data = []
         for year in sorted(year_data.keys()):
             entry = year_data[year]
@@ -459,9 +444,9 @@ def get_program_trends(current_user_id):
                 if prog not in entry:
                     entry[prog] = 0
             final_data.append(entry)
-            
+
         return jsonify({'data': final_data, 'programs': list(all_programs)}), 200
-        
+
     except Exception as e:
         print(f"Error fetching program trends: {e}")
         return jsonify({'message': 'An error occurred while fetching program trends.'}), 500

@@ -18,7 +18,7 @@ UPDATABLE_TABLES = {
     'alumni': ['sl_no'],
     'employees': ['id'],
     'courses_table': ['course_code'],
-    'student_table': ['roll_no_current'],  # No formal PK, use roll_no_current as conflict key
+    'student_table': ['roll_no_admission'],
     # --- Grievance / Welfare ---
     'externship_info': ['externid'],
     'igrs_yearwise': ['grievance_year'],

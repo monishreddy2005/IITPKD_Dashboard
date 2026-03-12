@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict FiYlhsh03lNQTQVmjuBfb1tHLEFbiGUaQyurCWiPLCNFwDBx69rYeZIcM0TLyeY
+\restrict qSTlT9DhSjCLPdGluZrlfLwRR9bp5rg1egTgRLWdfi3jpyj4BOhTTgUelAmAOlA
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -1194,7 +1194,7 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 --
 
 CREATE TABLE public.student_table (
-    roll_no_admission integer,
+    roll_no_admission integer NOT NULL,
     roll_no_current integer,
     name_of_student character varying(100),
     programme_admission character varying(50),
@@ -1804,6 +1804,14 @@ ALTER TABLE ONLY public.roles
 
 
 --
+-- Name: student_table student_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.student_table
+    ADD CONSTRAINT student_table_pkey PRIMARY KEY (roll_no_admission);
+
+
+--
 -- Name: techin_program_table techin_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1936,5 +1944,5 @@ ALTER TABLE ONLY public.uba_events
 -- PostgreSQL database dump complete
 --
 
-\unrestrict FiYlhsh03lNQTQVmjuBfb1tHLEFbiGUaQyurCWiPLCNFwDBx69rYeZIcM0TLyeY
+\unrestrict qSTlT9DhSjCLPdGluZrlfLwRR9bp5rg1egTgRLWdfi3jpyj4BOhTTgUelAmAOlA
 
