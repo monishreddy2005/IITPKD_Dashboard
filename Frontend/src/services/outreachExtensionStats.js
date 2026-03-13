@@ -60,30 +60,21 @@ export const fetchNptelSummary = async (token) => {
   }
 };
 
-export const fetchNptelEnrollmentsOverTime = async (token) => {
+export const fetchNptelTrend = async (token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/nptel/enrollments-over-time`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/nptel/trend`, authHeaders(token));
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch NPTEL enrollments over time');
+    handleError(error, 'Failed to fetch NPTEL trend');
   }
 };
 
-export const fetchNptelCourseCategories = async (token) => {
+export const fetchNptelList = async (token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/nptel/course-categories`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/nptel/list`, authHeaders(token));
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch NPTEL course categories');
-  }
-};
-
-export const fetchNptelCertificationRatio = async (token) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/nptel/certification-ratio`, authHeaders(token));
-    return response.data;
-  } catch (error) {
-    handleError(error, 'Failed to fetch NPTEL certification ratio');
+    handleError(error, 'Failed to fetch NPTEL list');
   }
 };
 

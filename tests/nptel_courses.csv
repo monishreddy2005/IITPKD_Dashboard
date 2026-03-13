@@ -1,0 +1,9 @@
+employee_id,faculty_name,department,course_name,enrollments,offering_year
+EMP001,Dr. Rajesh Kumar,Computer Science,Data Structures,150,2021-01-15
+EMP002,Dr. Sneha Verma,Electrical Engineering,Circuit Analysis,120,2021-07-20
+EMP003,Prof. Amit Singh,Mechanical Engineering,Thermodynamics,90,2022-02-10
+EMP001,Dr. Rajesh Kumar,Computer Science,Algorithms,200,2022-08-05
+EMP004,Dr. Priya Sharma,Civil Engineering,Fluid Mechanics,110,2023-01-25
+EMP002,Dr. Sneha Verma,Electrical Engineering,Control Systems,130,2023-07-15
+EMP005,Prof. Vikram Patel,Physics,Quantum Mechanics,80,2024-02-01
+EMP003,Prof. Amit Singh,Mechanical Engineering,Heat Transfer,100,2024-08-10

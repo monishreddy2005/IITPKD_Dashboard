@@ -1,21 +1,21 @@
-project_id,event_title,event_type,event_date,location,description,photos_url,brochure_url,created_at
-3356,Proj 40,Smp81,2024-11-03,Smp36,Smp56,http://ex.co/8,http://ex.co/3,2020-11-01
-3357,Proj 78,Smp49,2024-10-08,Smp59,Smp52,http://ex.co/6,http://ex.co/3,2021-07-10
-3358,Proj 71,Smp90,2021-12-22,Smp2,Smp46,http://ex.co/8,http://ex.co/7,2024-08-01
-3359,Proj 65,Smp44,2022-06-01,Smp38,Smp5,http://ex.co/3,http://ex.co/1,2023-04-10
-3360,Proj 95,Smp99,2022-07-29,Smp20,Smp26,http://ex.co/3,http://ex.co/2,2022-03-30
-3361,Proj 37,Smp36,2020-12-28,Smp50,Smp36,http://ex.co/6,http://ex.co/2,2020-05-27
-3362,Proj 84,Smp73,2021-09-29,Smp69,Smp11,http://ex.co/7,http://ex.co/2,2024-10-02
-3363,Proj 99,Smp51,2022-07-21,Smp45,Smp6,http://ex.co/3,http://ex.co/3,2023-09-16
-3364,Proj 86,Smp83,2024-10-17,Smp16,Smp80,http://ex.co/8,http://ex.co/1,2024-04-11
-3365,Proj 52,Smp53,2023-02-20,Smp69,Smp56,http://ex.co/6,http://ex.co/1,2024-06-24
-3366,Proj 75,Smp99,2020-07-01,Smp90,Smp3,http://ex.co/3,http://ex.co/6,2020-03-28
-3367,Proj 52,Smp70,2022-09-12,Smp79,Smp43,http://ex.co/6,http://ex.co/3,2021-01-12
-3368,Proj 23,Smp32,2023-01-03,Smp84,Smp54,http://ex.co/2,http://ex.co/7,2020-04-26
-3369,Proj 92,Smp56,2023-12-13,Smp57,Smp13,http://ex.co/5,http://ex.co/2,2023-12-16
-3370,Proj 48,Smp100,2022-02-04,Smp21,Smp38,http://ex.co/2,http://ex.co/6,2020-07-02
-3371,Proj 86,Smp86,2024-03-19,Smp100,Smp68,http://ex.co/2,http://ex.co/4,2022-10-06
-3372,Proj 69,Smp29,2020-09-04,Smp65,Smp28,http://ex.co/4,http://ex.co/1,2024-06-10
-3373,Proj 20,Smp68,2021-10-05,Smp39,Smp4,http://ex.co/2,http://ex.co/9,2021-08-17
-3374,Proj 47,Smp59,2020-08-20,Smp28,Smp7,http://ex.co/3,http://ex.co/3,2020-11-19
-3375,Proj 83,Smp35,2020-09-19,Smp91,Smp15,http://ex.co/8,http://ex.co/2,2023-01-23
+project_title,event_title,event_type,event_date,location,description,photos_url,brochure_url,created_at
+Proj 57,Proj 57 kick off,Smp81,2024-11-03,Smp36,Smp56,http://ex.co/8,http://ex.co/3,2020-11-01
+Proj 54,Proj 54 review,Smp49,2024-10-08,Smp59,Smp52,http://ex.co/6,http://ex.co/3,2021-07-10
+Proj 44,Proj 44 meeting,Smp90,2021-12-22,Smp2,Smp46,http://ex.co/8,http://ex.co/7,2024-08-01
+Proj 78,Proj 78 meetup,Smp44,2022-06-01,Smp38,Smp5,http://ex.co/3,http://ex.co/1,2023-04-10
+Proj 62,Proj 62 session,Smp99,2022-07-29,Smp20,Smp26,http://ex.co/3,http://ex.co/2,2022-03-30
+Proj 79,Proj 79 seminar,Smp36,2020-12-28,Smp50,Smp36,http://ex.co/6,http://ex.co/2,2020-05-27
+Proj 95,Proj 95 summit,Smp73,2021-09-29,Smp69,Smp11,http://ex.co/7,http://ex.co/2,2024-10-02
+Proj 84,Proj 84 talk,Smp51,2022-07-21,Smp45,Smp6,http://ex.co/3,http://ex.co/3,2023-09-16
+Proj 89,Proj 89 demo,Smp83,2024-10-17,Smp16,Smp80,http://ex.co/8,http://ex.co/1,2024-04-11
+Proj 41,Proj 41 intro,Smp53,2023-02-20,Smp69,Smp56,http://ex.co/6,http://ex.co/1,2024-06-24
+Proj 18,Proj 18 closure,Smp99,2020-07-01,Smp90,Smp3,http://ex.co/3,http://ex.co/6,2020-03-28
+Proj 30,Proj 30 launch,Smp70,2022-09-12,Smp79,Smp43,http://ex.co/6,http://ex.co/3,2021-01-12
+Proj 85,Proj 85 pitch,Smp32,2023-01-03,Smp84,Smp54,http://ex.co/2,http://ex.co/7,2020-04-26
+Proj 24,Proj 24 qna,Smp56,2023-12-13,Smp57,Smp13,http://ex.co/5,http://ex.co/2,2023-12-16
+Proj 94,Proj 94 presentation,Smp100,2022-02-04,Smp21,Smp38,http://ex.co/2,http://ex.co/6,2020-07-02
+Proj 57,Proj 57 second meeting,Smp86,2024-03-19,Smp100,Smp68,http://ex.co/2,http://ex.co/4,2022-10-06
+Proj 54,Proj 54 check in,Smp29,2020-09-04,Smp65,Smp28,http://ex.co/4,http://ex.co/1,2024-06-10
+Proj 44,Proj 44 site visit,Smp68,2021-10-05,Smp39,Smp4,http://ex.co/2,http://ex.co/9,2021-08-17
+Proj 78,Proj 78 update,Smp59,2020-08-20,Smp28,Smp7,http://ex.co/3,http://ex.co/3,2020-11-19
+Proj 62,Proj 62 end of year,Smp35,2020-09-19,Smp91,Smp15,http://ex.co/8,http://ex.co/2,2023-01-23

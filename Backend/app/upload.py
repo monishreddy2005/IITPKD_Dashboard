@@ -53,6 +53,7 @@ UPDATABLE_TABLES = {
     'uba_projects': ['project_id'],
     'uba_events': ['event_id'],
     'outreach': ['id'],
+    'nptel_courses': ['id'],
     # --- Rankings ---
     'nirf_ranking': ['year'],
 }

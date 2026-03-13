@@ -270,29 +270,94 @@ def get_open_house_timeline(current_user_id):
 @outreach_extension_bp.route('/nptel/summary', methods=['GET'])
 @token_required
 def get_nptel_summary(current_user_id):
-    """NPTEL tables have been removed from the schema."""
-    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        
+        cur.execute("SELECT COUNT(id) as total_courses, COALESCE(SUM(enrollments), 0) as total_enrollments FROM nptel_courses;")
+        res = cur.fetchone()
+        
+        return jsonify({
+            'total_courses': res['total_courses'] or 0,
+            'total_enrollments': res['total_enrollments'] or 0
+        }), 200
+    except Exception as e:
+        print(f"NPTEL summary error: {e}")
+        return jsonify({'message': 'Failed to fetch NPTEL summary.'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
 
-
-@outreach_extension_bp.route('/nptel/enrollments-over-time', methods=['GET'])
+@outreach_extension_bp.route('/nptel/trend', methods=['GET'])
 @token_required
-def get_nptel_enrollments_over_time(current_user_id):
-    """NPTEL tables have been removed from the schema."""
-    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
+def get_nptel_trend(current_user_id):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        
+        cur.execute("""
+            SELECT 
+                EXTRACT(YEAR FROM offering_year)::INT as year, 
+                COUNT(id) as courses, 
+                COALESCE(SUM(enrollments), 0) as enrollments 
+            FROM nptel_courses 
+            WHERE offering_year IS NOT NULL
+            GROUP BY EXTRACT(YEAR FROM offering_year)
+            ORDER BY year ASC;
+        """)
+        trend = cur.fetchall()
+        
+        return jsonify({
+            'trend': [dict(t) for t in trend]
+        }), 200
+    except Exception as e:
+        print(f"NPTEL trend error: {e}")
+        return jsonify({'message': 'Failed to fetch NPTEL trend.'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
 
-
-@outreach_extension_bp.route('/nptel/course-categories', methods=['GET'])
+@outreach_extension_bp.route('/nptel/list', methods=['GET'])
 @token_required
-def get_nptel_course_categories(current_user_id):
-    """NPTEL tables have been removed from the schema."""
-    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
-
-
-@outreach_extension_bp.route('/nptel/certification-ratio', methods=['GET'])
-@token_required
-def get_nptel_certification_ratio(current_user_id):
-    """NPTEL tables have been removed from the schema."""
-    return jsonify({'message': 'NPTEL module is no longer available. The underlying tables have been removed.'}), 404
+def get_nptel_list(current_user_id):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        
+        cur.execute("""
+            SELECT 
+                id,
+                course_name,
+                department,
+                faculty_name,
+                enrollments,
+                EXTRACT(YEAR FROM offering_year)::INT as offering_year
+            FROM nptel_courses
+            ORDER BY offering_year DESC NULLS LAST, course_name ASC;
+        """)
+        courses = cur.fetchall()
+        
+        return jsonify({
+            'courses': [dict(c) for c in courses]
+        }), 200
+    except Exception as e:
+        print(f"NPTEL list error: {e}")
+        return jsonify({'message': 'Failed to fetch NPTEL list.'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
 
 
 # ========== UBA Endpoints ==========
