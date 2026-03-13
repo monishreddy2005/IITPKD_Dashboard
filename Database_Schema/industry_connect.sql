@@ -28,11 +28,26 @@ END $$;
 -- TABLE: industry_events
 -- ======================
 
-CREATE TABLE IF NOT EXISTS industry_events (
-    event_id SERIAL PRIMARY KEY,
-    event_title VARCHAR(250) NOT NULL,
-    event_type event_type NOT NULL,
-    event_date DATE NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (event_title, event_date)
+CREATE TABLE industry_events (
+    project_id INT PRIMARY KEY,
+    event_name VARCHAR(200) NOT NULL,
+    date_of_event DATE,
+    event_type VARCHAR(100),
+    target_audience VARCHAR(150),
+    hosted_by VARCHAR(150),
+    funding_by VARCHAR(100),
+    amount NUMERIC(12,2),
+    year INT
+);
+
+-- ======================
+-- TABLE: icsr_csr
+-- ======================
+CREATE TABLE icsr_csr (
+    csr_id INT PRIMARY KEY,
+    csr_organisation VARCHAR(200) NOT NULL,
+    year INT,
+    type_of_company VARCHAR(100),
+    type_of_support VARCHAR(100),
+    amount_given NUMERIC(15,2)
 );
