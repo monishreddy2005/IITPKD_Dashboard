@@ -616,7 +616,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <>
                   <button
                     className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('research_projects'); setIsUploadModalOpen(true); }}
+                    onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
                     style={{ 
                       padding: '8px 16px', 
                       backgroundColor: '#28a745', 
@@ -627,7 +627,22 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       fontSize: '14px'
                     }}
                   >
-                    Upload Projects
+                    Upload Consultancy Projects
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
+                    style={{ 
+                      padding: '8px 16px', 
+                      backgroundColor: '#28a745', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Upload Sponsored Projects
                   </button>
                   <button
                     className="upload-data-btn"

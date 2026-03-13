@@ -17,6 +17,7 @@ import {
   fetchIptifFacilities,
   fetchIptifFilterOptions
 } from '../services/iptifStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './PeopleCampus.css';
 
@@ -24,6 +25,8 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 
 function IptifSection({ user }) {
   const token = localStorage.getItem('authToken');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
 
   // View type selection with radio buttons
   const [viewType, setViewType] = useState('projects'); // projects, programs, startups, facilities
@@ -191,12 +194,46 @@ function IptifSection({ user }) {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>Trends & Analysis</h3>
-            <button
-              onClick={handleClearFilters}
-              style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              Clear Current Filters
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleClearFilters}
+                style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Clear Current Filters
+              </button>
+              {user && user.role_id === 3 && (
+                <>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('iptif_projects_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Projects
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('iptif_program_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Programs
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('iptif_startup_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Startups
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('iptif_facilities_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Facilities
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '25px' }}>
@@ -463,6 +500,13 @@ function IptifSection({ user }) {
         </div>
 
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
     </div>
   );
 }

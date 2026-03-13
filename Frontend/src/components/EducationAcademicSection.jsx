@@ -857,9 +857,9 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                                   borderBottom: '1px solid #e0e0e0'
                                 }}
                               >
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{course.course_title}</td>
-                                <td style={{ padding: '12px' }}>{course.category}</td>
-                                <td style={{ padding: '12px' }}>{course.programme}</td>
+                                <td style={{ padding: '12px', fontWeight: '500' }}>{course.course_name}</td>
+                                <td style={{ padding: '12px' }}>{course.course_category}</td>
+                                <td style={{ padding: '12px' }}>{course.target_programme}</td>
                                 <td style={{ padding: '12px' }}>{course.industry_partner || '—'}</td>
                                 <td style={{ padding: '12px' }}>{course.industry_coordinator_name || '—'}</td>
                                 <td style={{ padding: '12px' }}>

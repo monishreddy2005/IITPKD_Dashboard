@@ -16,6 +16,7 @@ import {
   fetchTechinStartups,
   fetchTechinFilterOptions
 } from '../services/techinStats';
+import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './PeopleCampus.css';
 
@@ -23,6 +24,8 @@ const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0
 
 function TechinSection({ user }) {
   const token = localStorage.getItem('authToken');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [activeUploadTable, setActiveUploadTable] = useState('');
 
   // View type selection with radio buttons
   const [viewType, setViewType] = useState('programs'); // programs, skillDev, startups
@@ -227,12 +230,39 @@ function TechinSection({ user }) {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ margin: 0 }}>Trends & Analysis</h3>
-            <button
-              onClick={handleClearFilters}
-              style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-            >
-              Clear Current Filters
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleClearFilters}
+                style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Clear Current Filters
+              </button>
+              {user && user.role_id === 3 && (
+                <>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('techin_program_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Programs
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('techin_skill_development_program'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Skill Dev
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('techin_startup_table'); setIsUploadModalOpen(true); }}
+                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+                  >
+                    Upload Startups
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '25px' }}>
@@ -459,6 +489,13 @@ function TechinSection({ user }) {
         </div>
 
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
     </div>
   );
 }
