@@ -1,14 +1,5 @@
-"""
-Blueprint providing analytics for the Academic module.
-Uses `courses_table` (which replaced `industry_courses` and `academic_program_launch`).
-"""
-from __future__ import annotations
-
-from collections import defaultdict
-from typing import Any, Dict, List, Tuple
-
+"""Analytics for the Academic module (courses_table)."""
 from flask import Blueprint, jsonify, request
-from psycopg2.errors import UndefinedTable
 
 from .auth import token_required
 from .db import get_db_connection
@@ -18,46 +9,36 @@ academic_module_bp = Blueprint('academic_module', __name__)
 COURSES_TABLE = 'courses_table'
 
 
-def build_where_clause(filters: Dict[str, Any], mapping: Dict[str, str]) -> Tuple[str, List[Any]]:
-    conditions: List[str] = []
-    params: List[Any] = []
-
+def build_where_clause(filters, mapping):
+    """Builds a parameterised WHERE clause from a dict of active filters."""
+    conditions, params = [], []
     for key, column in mapping.items():
         value = filters.get(key)
         if value in (None, '', 'All'):
             continue
         conditions.append(f"{column} = %s")
         params.append(value)
-
-    clause = ''
-    if conditions:
-        clause = 'WHERE ' + ' AND '.join(conditions)
+    clause = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
     return clause, params
 
 
 def table_exists(table_name: str) -> bool:
+    """Returns True if the given table exists in the public schema."""
     conn = None
-    cur = None
     try:
         conn = get_db_connection()
-        if conn is None:
+        if not conn:
             return False
         cur = conn.cursor()
         cur.execute(
-            """
-            SELECT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                  AND table_name = %s
-            ) AS exists_flag;
-            """,
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = %s) AS exists_flag;",
             (table_name,)
         )
         row = cur.fetchone()
         return bool(row and row.get('exists_flag'))
     except Exception as exc:
-        print(f"Academic module table check failed ({table_name}): {exc}")
+        print(f"Table check failed ({table_name}): {exc}")
         return False
     finally:
         if cur:

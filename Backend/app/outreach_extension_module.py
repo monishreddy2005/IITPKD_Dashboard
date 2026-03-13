@@ -1,15 +1,6 @@
-"""
-Blueprint providing analytics for the Outreach and Extension module:
-- Open House – Faculty Coordinator
-- NPTEL – CCE
-- UBA (Unnat Bharat Abhiyan) – Faculty Coordinator
-"""
-from collections import defaultdict
-from typing import Any, Dict, List, Optional
-
+"""Analytics for the Outreach & Extension module: Open House, NPTEL, and UBA."""
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
-from psycopg2.errors import UndefinedTable
 
 from .auth import token_required
 from .db import get_db_connection
@@ -23,24 +14,16 @@ UBA_EVENTS_TABLE = 'uba_events'
 
 
 def _table_exists(conn, table_name: str) -> bool:
-    """Check if a table exists in the database."""
+    """Returns True if the given table exists in the public schema."""
     cur = conn.cursor()
     try:
         cur.execute(
-            """
-            SELECT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                  AND LOWER(table_name) = LOWER(%s)
-            )
-            """,
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND LOWER(table_name) = LOWER(%s));",
             (table_name,),
         )
         result = cur.fetchone()
-        if isinstance(result, dict):
-            return bool(result.get('exists', False))
-        return bool(result[0] if result else False)
+        return bool(result.get('exists', False) if isinstance(result, dict) else (result[0] if result else False))
     except Exception:
         return False
     finally:
@@ -62,7 +45,6 @@ def _data_available() -> bool:
         conn.close()
 
 
-# ========== Open House Endpoints ==========
 
 @outreach_extension_bp.route('/open-house/summary', methods=['GET'])
 @token_required
@@ -265,7 +247,6 @@ def get_open_house_timeline(current_user_id):
             conn.close()
 
 
-# ========== NPTEL Endpoints ==========
 
 @outreach_extension_bp.route('/nptel/summary', methods=['GET'])
 @token_required
@@ -360,7 +341,6 @@ def get_nptel_list(current_user_id):
         if conn: conn.close()
 
 
-# ========== UBA Endpoints ==========
 
 @outreach_extension_bp.route('/uba/summary', methods=['GET'])
 @token_required

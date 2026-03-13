@@ -1,102 +1,62 @@
+"""Flask application factory."""
 import os
+import secrets
 from flask import Flask
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Initialize extensions
 cors = CORS()
 bcrypt = Bcrypt()
 
-def create_app():
-    """The application factory."""
-    app = Flask(__name__)
-    
-    secret_key = os.environ.get('JWT_SECRET_KEY')
-    data_base_url = os.environ.get('DATABASE_URL')
-    if not secret_key:
-        print("⚠️ WARNING: JWT_SECRET_KEY not found in environment variables!")
-        # Generate a temporary key for development
-        import secrets
-        secret_key = secrets.token_hex(32)
-        print(f"⚠️ Using temporary secret key: {secret_key}")
 
-    # Load config
+def create_app():
+    app = Flask(__name__)
+
+    secret_key = os.environ.get('JWT_SECRET_KEY')
+    if not secret_key:
+        print("⚠️  WARNING: JWT_SECRET_KEY not set — using a temporary key for this session.")
+        secret_key = secrets.token_hex(32)
+
     app.config['SECRET_KEY'] = secret_key
-    app.config['DATABASE_URL'] = data_base_url
-    
-    # Initialize extensions with the app
-    # Configure CORS to explicitly allow Authorization header for file uploads
+    app.config['DATABASE_URL'] = os.environ.get('DATABASE_URL')
+
     cors.init_app(app, resources={
         r"/*": {
             "origins": "*",
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"]
+            "allow_headers": ["Content-Type", "Authorization"],
         }
     })
     bcrypt.init_app(app)
-    
-    # --- Import and Register Blueprints ---
-    
-    # Import your blueprint files
-    from . import auth
-    from . import dashboard
-    from . import upload
-    from . import academic_stats
-    from . import administrative_stats
-    from . import grievance_stats
-    from . import ewd_stats
-    from . import iar_stats
-    from . import education_stats
-    from . import placement_stats
-    from . import academic_module
-    from . import research_module
-    from . import innovation_module
-    from . import industry_connect_module
-    from . import outreach_extension_module
-    from . import nirf_stats
 
-    # Register the blueprints
-    # All routes from auth.py will be prefixed with /auth
-    app.register_blueprint(auth.auth_bp, url_prefix='/auth') 
-    
-    # All routes from dashboard.py will be prefixed with /api
-    app.register_blueprint(dashboard.dashboard_bp, url_prefix='/api')
-    
-    # Register NIRF stats blueprint
-    app.register_blueprint(nirf_stats.nirf_bp, url_prefix='/api/nirf')
-    
-    # Register the upload blueprint
-    app.register_blueprint(upload.upload_bp, url_prefix='/api')
-    
-    # Register the academic stats blueprint
-    app.register_blueprint(academic_stats.academic_bp, url_prefix='/api/academic')
-    
-    # Register the administrative stats blueprint
-    app.register_blueprint(administrative_stats.administrative_bp, url_prefix='/api/administrative')
+    from . import (
+        auth, dashboard, upload,
+        academic_stats, administrative_stats, grievance_stats,
+        ewd_stats, iar_stats, education_stats, placement_stats,
+        academic_module, research_module, innovation_module,
+        industry_connect_module, outreach_extension_module, nirf_stats,
+    )
 
-    # Register the grievance stats blueprint
-    app.register_blueprint(grievance_stats.grievance_bp, url_prefix='/api/grievance')
-
-    # Register the EWD stats blueprint
-    app.register_blueprint(ewd_stats.ewd_bp, url_prefix='/api/ewd')
-
-    # Register International & Alumni Relations blueprint
-    app.register_blueprint(iar_stats.iar_bp, url_prefix='/api/iar')
-
-    # Register Education blueprint
-    app.register_blueprint(education_stats.education_bp, url_prefix='/api/education')
-    app.register_blueprint(placement_stats.placement_bp, url_prefix='/api/placement')
-    app.register_blueprint(academic_module.academic_module_bp, url_prefix='/api/academic-module')
-    app.register_blueprint(research_module.research_bp, url_prefix='/api/research-module')
-    app.register_blueprint(innovation_module.innovation_bp, url_prefix='/api/innovation')
+    app.register_blueprint(auth.auth_bp,                              url_prefix='/auth')
+    app.register_blueprint(dashboard.dashboard_bp,                    url_prefix='/api')
+    app.register_blueprint(upload.upload_bp,                          url_prefix='/api')
+    app.register_blueprint(nirf_stats.nirf_bp,                        url_prefix='/api/nirf')
+    app.register_blueprint(academic_stats.academic_bp,                 url_prefix='/api/academic')
+    app.register_blueprint(administrative_stats.administrative_bp,     url_prefix='/api/administrative')
+    app.register_blueprint(grievance_stats.grievance_bp,               url_prefix='/api/grievance')
+    app.register_blueprint(ewd_stats.ewd_bp,                           url_prefix='/api/ewd')
+    app.register_blueprint(iar_stats.iar_bp,                           url_prefix='/api/iar')
+    app.register_blueprint(education_stats.education_bp,               url_prefix='/api/education')
+    app.register_blueprint(placement_stats.placement_bp,               url_prefix='/api/placement')
+    app.register_blueprint(academic_module.academic_module_bp,         url_prefix='/api/academic-module')
+    app.register_blueprint(research_module.research_bp,                url_prefix='/api/research-module')
+    app.register_blueprint(innovation_module.innovation_bp,            url_prefix='/api/innovation')
     app.register_blueprint(industry_connect_module.industry_connect_bp, url_prefix='/api/industry-connect')
     app.register_blueprint(outreach_extension_module.outreach_extension_bp, url_prefix='/api/outreach-extension')
-    
-    # A simple test route
+
     @app.route('/health')
     def health_check():
         return "Server is running!"
