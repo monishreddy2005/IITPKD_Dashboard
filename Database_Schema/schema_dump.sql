@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict gMfYiwXOc174hsH6TLhZDrVzRUqww8AkcyrD2o72DWekAlGv6o80u9ttzLWbfee
+\restrict IhAi19f4afjh0UV17Jo3a6xHPBOkBVXjP4m8ePQwj8ECJ0CF2vD2Im5fgvWfT6J
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -848,6 +848,45 @@ ALTER SEQUENCE public.nirf_ranking_ranking_id_seq OWNED BY public.nirf_ranking.r
 
 
 --
+-- Name: nptel_courses; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.nptel_courses (
+    id integer NOT NULL,
+    employee_id character varying(50),
+    faculty_name character varying(255),
+    department character varying(255),
+    course_name character varying(255),
+    enrollments integer,
+    offering_year date
+);
+
+
+ALTER TABLE public.nptel_courses OWNER TO postgres;
+
+--
+-- Name: nptel_courses_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.nptel_courses_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.nptel_courses_id_seq OWNER TO postgres;
+
+--
+-- Name: nptel_courses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.nptel_courses_id_seq OWNED BY public.nptel_courses.id;
+
+
+--
 -- Name: open_house; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1473,6 +1512,13 @@ ALTER TABLE ONLY public.nirf_ranking ALTER COLUMN ranking_id SET DEFAULT nextval
 
 
 --
+-- Name: nptel_courses id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.nptel_courses ALTER COLUMN id SET DEFAULT nextval('public.nptel_courses_id_seq'::regclass);
+
+
+--
 -- Name: open_house event_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1719,6 +1765,14 @@ ALTER TABLE ONLY public.nirf_ranking
 
 
 --
+-- Name: nptel_courses nptel_courses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.nptel_courses
+    ADD CONSTRAINT nptel_courses_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: open_house open_house_event_year_event_date_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1947,5 +2001,5 @@ ALTER TABLE ONLY public.uba_events
 -- PostgreSQL database dump complete
 --
 
-\unrestrict gMfYiwXOc174hsH6TLhZDrVzRUqww8AkcyrD2o72DWekAlGv6o80u9ttzLWbfee
+\unrestrict IhAi19f4afjh0UV17Jo3a6xHPBOkBVXjP4m8ePQwj8ECJ0CF2vD2Im5fgvWfT6J
 
