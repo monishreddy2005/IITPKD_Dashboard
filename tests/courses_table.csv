@@ -1,0 +1,16 @@
+course_code,course_name,credit_l_t_p_c,course_category,proposing_faculty_name,faculty_affiliation,target_programme,target_discipline,prerequisite,date_of_proposal,proposal_type,bac_number,senate_number,course_proposal_pdf,is_industry_course,industry_partner,industry_coordinator_name,industry_course_status_currentay,course_status_history
+C7386,Jane Doe,Smp12,ELECTIVE,Jane Doe,Smp93,MSC,Smp98,Smp97,2022-12-01,NEW,61,69,Smp63,Smp58,Smp60,Jane Doe,Smp90,Smp72
+C7387,John Doe,Smp91,ELECTIVE,John Doe,Smp24,MTECH,Smp77,Smp55,2024-09-03,MOOC,93,5,Smp30,Smp22,Smp17,Jane Smith,Smp46,Smp27
+C7388,Jane Doe,Smp52,ELECTIVE,Alice Smith,Smp23,BTECH,Smp91,Smp54,2023-01-31,REVISED,75,28,Smp82,Smp26,Smp94,Jane Davis,Smp40,Smp86
+C7389,John Davis,Smp41,ELECTIVE,Alice Doe,Smp80,PHD,Smp23,Smp37,2020-02-03,NEW,31,30,Smp23,Smp8,Smp71,John Doe,Smp57,Smp98
+C7390,John Doe,Smp82,MOOC,Jane Davis,Smp62,PHD,Smp97,Smp34,2020-02-05,MOOC,20,37,Smp15,Smp17,Smp8,Jane Doe,Smp19,Smp16
+C7391,Jane Smith,Smp24,CORE,John Smith,Smp11,MSC,Smp51,Smp82,2023-04-10,MOOC,61,23,Smp67,Smp42,Smp71,John Davis,Smp16,Smp88
+C7392,John Doe,Smp17,ELECTIVE,Alice Davis,Smp83,MSC,Smp88,Smp68,2022-02-28,MOOC,73,55,Smp11,Smp27,Smp48,John Doe,Smp52,Smp95
+C7393,Alice Doe,Smp45,MOOC,John Smith,Smp35,MSC,Smp44,Smp23,2022-05-07,REVISED,24,18,Smp22,Smp53,Smp86,Alice Smith,Smp45,Smp82
+C7394,John Doe,Smp56,CORE,John Davis,Smp83,BTECH,Smp88,Smp70,2021-12-24,MOOC,71,99,Smp47,Smp63,Smp69,John Doe,Smp66,Smp83
+C7395,Jane Davis,Smp87,CORE,Jane Davis,Smp70,MSC,Smp90,Smp62,2022-04-20,REVISED,36,77,Smp54,Smp71,Smp49,John Davis,Smp69,Smp94
+C7396,Jane Doe,Smp6,ELECTIVE,John Smith,Smp40,PHD,Smp12,Smp59,2020-05-12,MOOC,36,88,Smp62,Smp30,Smp28,John Smith,Smp66,Smp77
+C7397,Alice Davis,Smp55,MOOC,John Doe,Smp59,PHD,Smp57,Smp32,2023-04-14,MOOC,33,72,Smp35,Smp25,Smp9,Jane Smith,Smp29,Smp14
+C7398,Jane Davis,Smp41,CORE,Jane Doe,Smp38,BTECH,Smp15,Smp44,2021-02-16,REVISED,5,61,Smp7,Smp95,Smp55,Alice Smith,Smp20,Smp97
+C7399,John Davis,Smp94,CORE,Alice Smith,Smp81,PHD,Smp88,Smp29,2021-10-03,MOOC,46,84,Smp19,Smp14,Smp95,John Davis,Smp22,Smp48
+C7400,Jane Davis,Smp48,MOOC,Alice Doe,Smp1,BTECH,Smp53,Smp44,2021-08-13,REVISED,6,75,Smp94,Smp89,Smp80,Alice Smith,Smp100,Smp29

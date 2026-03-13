@@ -121,164 +121,176 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     // Template Data for various tables
     const getTemplateData = (table) => {
         switch (table) {
-            case 'student_table':
-                return {
-                    headers: ['roll_no_admission', 'roll_no_current', 'name_of_student', 'programme_current', 'admission_year', 'admission_batch', 'stream_current', 'department_current', 'gender', 'original_category', 'state', 'pwd_status', 'student_status'],
-                    sample: ['123456', '123456', 'John Doe', 'BTech', '2023', '2023', 'CSE', 'Computer Science', 'Male', 'Gen', 'Kerala', 'No', 'Active']
-                };
-            case 'employees':
-                return {
-                    headers: ['empId', 'empName', 'designation', 'phoneNumber', 'bloodGroup', 'dob', 'initial_doj', 'doj', 'dor', 'gender', 'email', 'personalmail', 'marital_status', 'address', 'payLevel', 'group', 'ltcHometown', 'employmentNature', 'appointmentMode', 'basicPay', 'department', 'emp_type', 'pwd', 'notificationNumber', 'notificationDate', 'empStatus'],
-                    sample: ['IITPKD1001', 'Jane Smith', 'Assistant Professor', '9876543210', 'O+', '1990-01-01', '2020-01-01', '2020-06-01', '2060-01-31', 'Female', 'jane@iitpkd.ac.in', 'jane@gmail.com', 'Married', 'Address', '10', 'A', 'Hometown', 'Regular', 'Direct Recruitment', '75000', 'Computer Science', 'Teaching', 'No', 'IITPKD/R/F/01/2020', '2020-01-01', 'Active']
-                };
-            case 'igrs_yearwise':
-                return {
-                    headers: ['grievance_year', 'total_grievances_filed', 'grievances_resolved', 'grievances_pending'],
-                    sample: ['2023', '10', '8', '2']
-                };
-            case 'icc_yearwise':
-                return {
-                    headers: ['complaints_year', 'total_complaints', 'complaints_resolved', 'complaints_pending'],
-                    sample: ['2023', '5', '4', '1']
-                };
-            case 'ewd_yearwise':
-                return {
-                    headers: ['ewd_year', 'annual_electricity_consumption', 'per_capita_electricity_consumption', 'per_capita_water_consumption', 'per_capita_recycled_water', 'green_coverage'],
-                    sample: ['2023', '50000', '120.5', '45.2', '10.5', '35.5']
-                };
             case 'alumni':
                 return {
-                    headers: ['sl_no', 'roll_number', 'year_of_admission', 'year_of_graduation', 'course_type', 'course_name', 'department', 'current_job', 'country_of_settlement', 'place_of_settlement_state', 'alumni_contribution'],
-                    sample: ['1', 'L2015001', '2015', '2019', 'Undergraduate', 'B.Tech', 'Computer Science', 'Software Engineer', 'India', 'Kerala', 'Guest lecture']
-                };
-            case 'icsr_sponsered_projects':
-                return {
-                    headers: ['project_id', 'project_title', 'principal_investigator', 'principal_investigator_department', 'co_principal_investigator1', 'co_principal_investigator1_department', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
-                    sample: ['1', 'AI Project', 'Dr. Smith', 'CSE', 'Dr. Jones', 'ECE', 'DST', '', '5000000', '2023-01-01', '2025-01-01', 'Ongoing']
-                };
-            case 'icsr_consultancy_projects':
-                return {
-                    headers: ['project_id', 'project_title', 'principal_investigator', 'department', 'funding_agency', 'client_organization', 'amount_sanctioned', 'start_date', 'end_date', 'status'],
-                    sample: ['1', 'Consulting Work', 'Dr. Lee', 'ME', '', 'Tata Motors', '1000000', '2023-06-01', '2024-06-01', 'Completed']
-                };
-            case 'icsr_csr':
-                return {
-                    headers: ['csr_id', 'csr_organisation', 'year', 'type_of_company', 'type_of_support', 'amount_given'],
-                    sample: ['1', 'Infosys Foundation', '2023', 'IT', 'Financial', '500000']
-                };
-            case 'research_mous':
-                return {
-                    headers: ['partner_name', 'collaboration_nature', 'date_signed', 'validity_end', 'remarks'],
-                    sample: ['Tech Corp', 'Joint Research', '2023-05-15', '2026-05-15', 'Active collaboration']
-                };
-            case 'research_patents':
-                return {
-                    headers: ['patent_title', 'inventors', 'patent_status', 'filing_date', 'grant_date', 'remarks'],
-                    sample: ['New Algorithm', 'Dr. Smith, John Doe', 'Filed', '2023-08-20', '', 'Pending review']
-                };
-            case 'externship_info':
-                return {
-                    headers: ['empname', 'department', 'industry_name', 'startdate', 'enddate', 'type', 'remarks'],
-                    sample: ['Prof. Jones', 'EE', 'Power Grid Corp', '2023-06-01', '2023-07-31', 'Summer Externship', 'Completed']
-                };
-            case 'research_publications':
-                return {
-                    headers: ['publication_title', 'journal_name', 'department', 'faculty_name', 'publication_year', 'publication_type'],
-                    sample: ['Deep Learning', 'IEEE Transactions', 'CSE', 'Dr. Smith', '2023', 'Journal']
+                    headers: ["sl_no", "roll_number", "year_of_admission", "year_of_graduation", "course_type", "course_name", "department", "current_job", "country_of_settlement", "place_of_settlement_state", "alumni_contribution"],
+                    sample: ["1", "Sample roll_number", "1", "1", "Sample course_type", "Sample course_name", "Sample department", "Sample current_job", "Sample country_of_settlement", "Sample place_of_settlement_state", "Sample alumni_contribution"]
                 };
             case 'courses_table':
                 return {
-                    headers: ['course_code', 'course_name', 'credit_l_t_p_c', 'course_category', 'proposing_faculty_name', 'faculty_affiliation', 'target_programme', 'target_discipline', 'prerequisite', 'date_of_proposal', 'proposal_type', 'offering_status'],
-                    sample: ['CS2001', 'Data Structures', '3-0-0-3', 'CORE', 'Dr. Smith', 'CSE', 'BTECH', 'Computer Science', 'None', '2023-01-15', 'NEW', 'ACTIVE']
+                    headers: ["course_code", "course_name", "credit_l_t_p_c", "course_category", "proposing_faculty_name", "faculty_affiliation", "target_programme", "target_discipline", "prerequisite", "date_of_proposal", "proposal_type", "bac_number", "senate_number", "course_proposal_pdf", "is_industry_course", "industry_partner", "industry_coordinator_name", "industry_course_status_currentay", "course_status_history"],
+                    sample: ["Sample course_code", "Sample course_name", "Sample credit_l_t_p_c", "Sample course_category", "Sample proposing_faculty_name", "Sample faculty_affiliation", "Sample target_programme", "Sample target_discipline", "Sample prerequisite", "2023-01-01", "Sample proposal_type", "1", "1", "Sample course_proposal_pdf", "Sample is_industry_course", "Sample industry_partner", "Sample industry_coordinator_name", "Sample industry_course_status_currentay", "Sample course_status_history"]
                 };
-            case 'placement_summary':
+            case 'employees':
                 return {
-                    headers: ['placement_year', 'program', 'gender', 'registered', 'placed'],
-                    sample: ['2023', 'UG', 'Male', '120', '110']
+                    headers: ["id", "empid", "empname", "designation", "phonenumber", "bloodgroup", "dob", "initial_doj", "doj", "dor", "gender", "email", "personalmail", "marital_status", "address", "paylevel", "group_name", "ltchometown", "employmentnature", "appointmentmode", "basicpay", "department", "emp_type", "pwd", "notificationnumber", "notificationdate", "empstatus", "prior_industry_exp_in_months", "prior_research_exp_in_months", "prior_teaching_exp_in_months", "total_teaching_exp_in_months"],
+                    sample: ["Sample id", "Sample empid", "Sample empname", "Sample designation", "Sample phonenumber", "Sample bloodgroup", "2023-01-01", "2023-01-01", "2023-01-01", "2023-01-01", "Sample gender", "Sample email", "Sample personalmail", "Sample marital_status", "Sample address", "Sample paylevel", "Sample group_name", "Sample ltchometown", "Sample employmentnature", "Sample appointmentmode", "100.5", "Sample department", "Sample emp_type", "Sample pwd", "Sample notificationnumber", "2023-01-01", "Sample empstatus", "1", "1", "1", "1"]
                 };
-            case 'placement_companies':
+            case 'ewd_yearwise':
                 return {
-                    headers: ['placement_year', 'company_name', 'sector', 'offers', 'hires', 'is_top_recruiter'],
-                    sample: ['2023', 'Microsoft', 'IT', '10', '8', 'TRUE']
+                    headers: ["ewd_year", "annual_electricity_consumption", "per_capita_electricity_consumption", "per_capita_water_consumption", "per_capita_recycled_water", "green_coverage"],
+                    sample: ["1", "1", "100.5", "100.5", "100.5", "100.5"]
                 };
-            case 'placement_packages':
+            case 'externship_info':
                 return {
-                    headers: ['placement_year', 'program', 'highest_package', 'lowest_package', 'average_package'],
-                    sample: ['2023', 'BTech', '3500000', '6000000', '1500000']
+                    headers: ["employeeid", "empname", "department", "industry_name", "startdate", "enddate", "type", "remarks", "createddate", "modifieddate"],
+                    sample: ["Sample employeeid", "Sample empname", "Sample department", "Sample industry_name", "2023-01-01", "2023-01-01", "Sample type", "Sample remarks", "2023-01-01", "2023-01-01"]
                 };
-            case 'iptif_startup_table':
+            case 'faculty_engagement':
                 return {
-                    headers: ['id', 'startup_name', 'domain', 'startup_origin', 'incubated_date', 'status', 'revenue', 'number_of_jobs', 'remarks'],
-                    sample: ['1', 'InnovateAI', 'AI/ML', 'IIT PKD', '2022-06-01', 'Active', '500000', '5', 'Growing startup']
+                    headers: ["engagement_code", "faculty_name", "engagement_type", "department", "startdate", "enddate", "duration_months", "year", "remarks", "created_at"],
+                    sample: ["Sample engagement_code", "Sample faculty_name", "Sample engagement_type", "Sample department", "2023-01-01", "2023-01-01", "1", "1", "Sample remarks", "2023-01-01"]
                 };
-            case 'techin_startup_table':
+            case 'icc_yearwise':
                 return {
-                    headers: ['id', 'startup_name', 'domain', 'startup_origin', 'incubated_date', 'status', 'revenue', 'number_of_jobs', 'remarks'],
-                    sample: ['1', 'TechVenture', 'IoT', 'External', '2023-01-15', 'Active', '250000', '3', '']
+                    headers: ["complaints_year", "total_complaints", "complaints_resolved", "complaints_pending"],
+                    sample: ["1", "1", "1", "1"]
                 };
-            case 'iptif_program_table':
+            case 'igrs_yearwise':
                 return {
-                    headers: ['id', 'program_name', 'type', 'association', 'start_end', 'date', 'targetted_audi', 'no_of_attendees', 'remarks'],
-                    sample: ['1', 'Innovation Bootcamp', 'Workshop', 'IPTIF', '2023-03-15', '2023-03-15', 'Students', '100', '']
-                };
-            case 'techin_program_table':
-                return {
-                    headers: ['id', 'program_name', 'type', 'association', 'start_end', 'event_date', 'targetted_audience', 'no_of_attendess', 'remarks'],
-                    sample: ['1', 'TechIn Workshop', 'Seminar', 'TechIn', '2023-05-20', '2023-05-20', 'Faculty', '50', '']
-                };
-            case 'techin_skill_development_program':
-                return {
-                    headers: ['id', 'program_name', 'category', 'association', 'start_end', 'event_date', 'targetted_audience', 'no_of_attendess', 'remarks'],
-                    sample: ['1', 'Python Skill Dev', 'Programming', 'TechIn', '2023-06-10', '2023-06-10', 'Students', '75', '']
-                };
-            case 'iptif_projects_table':
-                return {
-                    headers: ['project_id', 'project_name', 'scheme', 'status', 'start_date'],
-                    sample: ['1', 'Solar Panel R&D', 'IPTIF', 'Active', '2023-01-01']
-                };
-            case 'iptif_facilities_table':
-                return {
-                    headers: ['facility_id', 'facility_name', 'facility_type', 'revenue_made', 'availability_status', 'financial_year'],
-                    sample: ['1', '3D Printing Lab', 'Lab', '100000', 'Available', '2023']
-                };
-            case 'outreach':
-                return {
-                    headers: ['program_name', 'program_type', 'engagement_type', 'association', 'start_date', 'end_date', 'targeted_audience', 'num_attendees', 'remarks'],
-                    sample: ['Science Olympiad', 'Competition', 'School Outreach', 'IIT PKD', '2023-09-01', '2023-09-02', 'School Students', '200', '']
+                    headers: ["grievance_year", "total_grievances_filed", "grievances_resolved", "grievances_pending"],
+                    sample: ["1", "1", "1", "1"]
                 };
             case 'industry_conclave':
                 return {
-                    headers: ['start_date', 'end_date', 'theme', 'focus_area', 'number_of_com', 'sessions_held', 'key_speakers', 'description', 'brochure_url', 'event_photos_url'],
-                    sample: ['2023-10-01', '2023-10-03', 'Industry 4.0', 'Automation', '50', '5', 'Mr. X, Ms. Y', 'Annual Conclave', '', '']
-                };
-            case 'open_house':
-                return {
-                    headers: ['event_year', 'event_date', 'theme', 'target_audience', 'departments_participated', 'num_departments', 'total_visitors', 'key_highlights', 'photos_url', 'poster_url', 'brochure_url'],
-                    sample: ['2023', '2023-10-15', 'Science Day', 'School Students', '"CSE, ECE, ME"', '3', '500', 'Robot Demo', 'https://example.com/photos', 'https://example.com/poster.pdf', 'https://example.com/brochure.pdf']
-                };
-
-            case 'uba_projects':
-                return {
-                    headers: ['project_title', 'coordinator_name', 'project_status', 'start_date', 'end_date', 'intervention_description', 'collaboration_partners'],
-                    sample: ['Water Conservation', 'Dr. Green', 'Ongoing', '2023-01-01', '', 'Village pond restoration', 'Panchayat']
-                };
-            case 'uba_events':
-                return {
-                    headers: ['project_title', 'event_title', 'event_type', 'event_date', 'location', 'description', 'photos_url', 'brochure_url'],
-                    sample: ['Water Conservation', 'Awareness Camp', 'Workshop', '2023-03-22', 'Village Hall', 'Community meeting', '', '']
-                };
-
-            case 'industry_events':
-                return {
-                    headers: ['project_id', 'event_name', 'date_of_event', 'event_type', 'target_audience', 'hosted_by', 'funding_by', 'amount', 'year'],
-                    sample: ['1', 'AI Symposium', '2023-10-15', 'Conference', 'Faculty & Students', 'CSE Dept', 'ICSR', '50000', '2023']
+                    headers: ["start_date", "end_date", "theme", "focus_area", "number_of_com", "sessions_held", "key_speakers", "event_photos_url", "brochure_url", "description", "created_at"],
+                    sample: ["2023-01-01", "2023-01-01", "Sample theme", "Sample focus_area", "1", "1", "Sample key_speakers", "Sample event_photos_url", "Sample brochure_url", "Sample description", "2023-01-01"]
                 };
             case 'nirf_ranking':
                 return {
-                    headers: ['year', 'tlr_score', 'rpc_score', 'go_score', 'oi_score', 'pr_score'],
-                    sample: ['2023', '75.50', '80.20', '65.00', '70.10', '60.50']
+                    headers: ["year", "tlr_score", "rpc_score", "go_score", "oi_score", "pr_score"],
+                    sample: ["1", "100.5", "100.5", "100.5", "100.5", "100.5"]
                 };
-
+            case 'open_house':
+                return {
+                    headers: ["event_year", "event_date", "theme", "target_audience", "departments_participated", "num_departments", "total_visitors", "key_highlights", "photos_url", "poster_url", "brochure_url", "created_at"],
+                    sample: ["1", "2023-01-01", "Sample theme", "Sample target_audience", "Sample departments_participated", "1", "1", "Sample key_highlights", "Sample photos_url", "Sample poster_url", "Sample brochure_url", "2023-01-01"]
+                };
+            case 'placement_companies':
+                return {
+                    headers: ["placement_year", "company_name", "sector", "offers", "hires", "is_top_recruiter", "created_at"],
+                    sample: ["1", "Sample company_name", "Sample sector", "1", "1", "TRUE", "2023-01-01"]
+                };
+            case 'placement_packages':
+                return {
+                    headers: ["placement_year", "program", "highest_package", "lowest_package", "average_package"],
+                    sample: ["1", "Sample program", "100.5", "100.5", "100.5"]
+                };
+            case 'placement_summary':
+                return {
+                    headers: ["placement_year", "program", "gender", "registered", "placed"],
+                    sample: ["1", "Sample program", "Sample gender", "1", "1"]
+                };
+            case 'research_mous':
+                return {
+                    headers: ["partner_name", "collaboration_nature", "date_signed", "validity_end", "remarks"],
+                    sample: ["Sample partner_name", "Sample collaboration_nature", "2023-01-01", "2023-01-01", "Sample remarks"]
+                };
+            case 'research_patents':
+                return {
+                    headers: ["patent_title", "patent_status", "filing_date", "grant_date", "remarks", "inventor1", "inventor1_category", "inventor2", "inventor2_category", "inventor3", "inventor3_category", "inventor4", "inventor4_category"],
+                    sample: ["Sample patent_title", "Sample patent_status", "2023-01-01", "2023-01-01", "Sample remarks", "Sample inventor1", "Sample inventor1_category", "Sample inventor2", "Sample inventor2_category", "Sample inventor3", "Sample inventor3_category", "Sample inventor4", "Sample inventor4_category"]
+                };
+            case 'research_publications':
+                return {
+                    headers: ["publication_title", "journal_name", "department", "faculty_name", "publication_year", "publication_type", "created_at"],
+                    sample: ["Sample publication_title", "Sample journal_name", "Sample department", "Sample faculty_name", "1", "Sample publication_type", "2023-01-01"]
+                };
+            case 'student_table':
+                return {
+                    headers: ["roll_no_admission", "roll_no_current", "name_of_student", "programme_admission", "programme_current", "admission_year", "admission_cycle", "admission_batch", "date_of_joining", "date_of_validity", "department_admission", "department_current", "stream_admission", "stream_current", "current_semester", "gender", "original_category", "admission_category", "hosteller_day_scholar", "date_of_birth", "residential_address", "nationality", "state", "pwd_status", "disability_type", "blood_group", "apaar_id", "qualifying_exam", "qualifying_exam_score", "student_contact_no", "institute_email", "personal_email", "parent_name", "parent_contact_no", "parent_email", "faculty_advisor", "institute_scholarship", "nsp_scholarship_recipient", "preparatory", "branch_change", "branch_change_remarks", "slowpaced", "upgraded", "date_of_upgradation", "idc_current", "number_of_total_idcs", "idc_history", "break_type", "break_from_date", "break_to_date", "break_history", "student_status", "student_status_date", "student_status_remarks", "fellowship_status_admission", "fellowship_status_current", "dc_chairperson", "dc_members", "thesis_submission_date", "viva_voice_date"],
+                    sample: ["1", "1", "Sample name_of_student", "Sample programme_admission", "Sample programme_current", "1", "Sample admission_cycle", "1", "2023-01-01", "2023-01-01", "Sample department_admission", "Sample department_current", "Sample stream_admission", "Sample stream_current", "1", "Sample gender", "Sample original_category", "Sample admission_category", "Sample hosteller_day_scholar", "2023-01-01", "Sample residential_address", "Sample nationality", "Sample state", "Sample pwd_status", "Sample disability_type", "Sample blood_group", "Sample apaar_id", "Sample qualifying_exam", "1", "1", "Sample institute_email", "Sample personal_email", "Sample parent_name", "1", "Sample parent_email", "Sample faculty_advisor", "Sample institute_scholarship", "Sample nsp_scholarship_recipient", "Sample preparatory", "Sample branch_change", "Sample branch_change_remarks", "Sample slowpaced", "Sample upgraded", "2023-01-01", "Sample idc_current", "1", "Sample idc_history", "Sample break_type", "2023-01-01", "2023-01-01", "Sample break_history", "Sample student_status", "2023-01-01", "Sample student_status_remarks", "Sample fellowship_status_admission", "Sample fellowship_status_current", "Sample dc_chairperson", "Sample dc_members", "2023-01-01", "2023-01-01"]
+                };
+            case 'uba_events':
+                return {
+                    headers: ["project_id", "event_title", "event_type", "event_date", "location", "description", "photos_url", "brochure_url", "created_at"],
+                    sample: ["1", "Sample event_title", "Sample event_type", "2023-01-01", "Sample location", "Sample description", "Sample photos_url", "Sample brochure_url", "2023-01-01"]
+                };
+            case 'uba_projects':
+                return {
+                    headers: ["project_title", "coordinator_name", "intervention_description", "project_status", "start_date", "end_date", "collaboration_partners", "created_at"],
+                    sample: ["Sample project_title", "Sample coordinator_name", "Sample intervention_description", "Sample project_status", "2023-01-01", "2023-01-01", "Sample collaboration_partners", "2023-01-01"]
+                };
+            case 'icsr_sponsered_projects':
+                return {
+                    headers: ["project_id", "project_title", "principal_investigator", "principal_investigator_department", "co_principal_investigator1", "co_principal_investigator1_department", "co_principal_investigator2", "co_principal_investigator2_department", "funding_agency", "client_organization", "amount_sanctioned", "start_date", "end_date", "status", "created_at"],
+                    sample: ["1", "Sample project_title", "Sample principal_investigator", "Sample principal_investigator_department", "Sample co_principal_investigator1", "Sample co_principal_investigator1_department", "Sample co_principal_investigator2", "Sample co_principal_investigator2_department", "Sample funding_agency", "Sample client_organization", "100.5", "2023-01-01", "2023-01-01", "Sample status", "2023-01-01"]
+                };
+            case 'icsr_consultancy_projects':
+                return {
+                    headers: ["project_id", "project_title", "principal_investigator", "department", "funding_agency", "client_organization", "amount_sanctioned", "start_date", "end_date", "status", "created_at"],
+                    sample: ["1", "Sample project_title", "Sample principal_investigator", "Sample department", "Sample funding_agency", "Sample client_organization", "100.5", "2023-01-01", "2023-01-01", "Sample status", "2023-01-01"]
+                };
+            case 'icsr_csr':
+                return {
+                    headers: ["csr_id", "csr_organisation", "year", "type_of_company", "type_of_support", "amount_given"],
+                    sample: ["1", "Sample csr_organisation", "1", "Sample type_of_company", "Sample type_of_support", "100.5"]
+                };
+            case 'innovation_projects':
+                return {
+                    headers: ["project_title", "project_type", "sector", "year_started", "status", "description", "created_at"],
+                    sample: ["Sample project_title", "Sample project_type", "Sample sector", "1", "Sample status", "Sample description", "2023-01-01"]
+                };
+            case 'iptif_startup_table':
+                return {
+                    headers: ["id", "startup_name", "domain", "startup_origin", "incubated_date", "status", "revenue", "number_of_jobs", "remarks"],
+                    sample: ["1", "Sample startup_name", "Sample domain", "Sample startup_origin", "2023-01-01", "Sample status", "100.5", "1", "Sample remarks"]
+                };
+            case 'iptif_program_table':
+                return {
+                    headers: ["id", "program_name", "type", "association", "start_end", "date", "targetted_audi", "no_of_attendees", "remarks"],
+                    sample: ["1", "Sample program_name", "Sample type", "Sample association", "2023-01-01", "2023-01-01", "Sample targetted_audi", "1", "Sample remarks"]
+                };
+            case 'iptif_projects_table':
+                return {
+                    headers: ["project_id", "project_name", "scheme", "status", "start_date"],
+                    sample: ["1", "Sample project_name", "Sample scheme", "Sample status", "2023-01-01"]
+                };
+            case 'iptif_facilities_table':
+                return {
+                    headers: ["facility_id", "facility_name", "facility_type", "revenue_made", "availability_status", "financial_year"],
+                    sample: ["1", "Sample facility_name", "Sample facility_type", "100.5", "Sample availability_status", "1"]
+                };
+            case 'techin_startup_table':
+                return {
+                    headers: ["id", "startup_name", "domain", "startup_origin", "incubated_date", "status", "revenue", "number_of_jobs", "remarks"],
+                    sample: ["1", "Sample startup_name", "Sample domain", "Sample startup_origin", "2023-01-01", "Sample status", "100.5", "1", "Sample remarks"]
+                };
+            case 'techin_program_table':
+                return {
+                    headers: ["id", "program_name", "type", "association", "start_end", "event_date", "targetted_audience", "no_of_attendess", "remarks"],
+                    sample: ["1", "Sample program_name", "Sample type", "Sample association", "2023-01-01", "2023-01-01", "Sample targetted_audience", "1", "Sample remarks"]
+                };
+            case 'techin_skill_development_program':
+                return {
+                    headers: ["id", "program_name", "category", "association", "start_end", "event_date", "targetted_audience", "no_of_attendess", "remarks"],
+                    sample: ["1", "Sample program_name", "Sample category", "Sample association", "2023-01-01", "2023-01-01", "Sample targetted_audience", "1", "Sample remarks"]
+                };
+            case 'industry_events':
+                return {
+                    headers: ["project_id", "event_name", "date_of_event", "event_type", "target_audience", "hosted_by", "funding_by", "amount", "year"],
+                    sample: ["1", "Sample event_name", "2023-01-01", "Sample event_type", "Sample target_audience", "Sample hosted_by", "Sample funding_by", "100.5", "1"]
+                };
+            case 'outreach':
+                return {
+                    headers: ["academic_year", "created_by", "created_at", "program_name", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "sq_stipend_provided", "sq_travel_allowance", "sq_num_lab_sessions", "sq_districts_covered", "pmc_target_class", "pmc_mathematician_led", "pmc_num_sessions", "pbd_lecture_topic", "pbd_speaker_name", "pbd_speaker_affiliation", "iv_visiting_institution", "iv_visiting_institution_type", "iv_num_groups", "nss_activity_type", "nss_volunteer_count", "nss_community_reached", "extra_data"],
+                    sample: ["Sample academic_year", "Sample created_by", "2023-01-01", "Sample program_name", "Sample program_type", "Sample engagement_type", "Sample association", "2023-01-01", "2023-01-01", "Sample targeted_audience", "1", "1", "1", "Sample geographic_reach", "Sample remarks", "TRUE", "TRUE", "1", "Sample sq_districts_covered", "Sample pmc_target_class", "TRUE", "1", "Sample pbd_lecture_topic", "Sample pbd_speaker_name", "Sample pbd_speaker_affiliation", "Sample iv_visiting_institution", "Sample iv_visiting_institution_type", "1", "Sample nss_activity_type", "1", "Sample nss_community_reached", "Sample extra_data"]
+                };
+            case 'department':
+                return {
+                    headers: ["deptcode", "deptname", "coursesoffered", "faculty", "courselist"],
+                    sample: ["Sample deptcode", "Sample deptname", "Sample coursesoffered", "Sample faculty", "Sample courselist"]
+                };
             default:
                 return { headers: [], sample: [] };
         }

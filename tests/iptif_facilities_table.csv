@@ -1,0 +1,19 @@
+facility_id,facility_name,facility_type,revenue_made,availability_status,financial_year
+4487,John Doe,Smp11,998.89,Smp72,2024
+4488,John Smith,Smp90,787.37,Smp18,2022
+4489,Alice Smith,Smp79,820.11,Smp11,2020
+4490,Alice Doe,Smp40,245.8,Smp63,2019
+4491,Jane Davis,Smp75,911.96,Smp31,2018
+4492,John Doe,Smp56,657.89,Smp33,2018
+4493,John Smith,Smp80,145.57,Smp90,2024
+4494,Jane Davis,Smp30,224.23,Smp85,2020
+4495,Jane Davis,Smp65,769.05,Smp55,2023
+4496,John Davis,Smp54,183.26,Smp35,2021
+4497,Alice Smith,Smp77,485.56,Smp10,2024
+4498,John Smith,Smp23,576.0,Smp64,2020
+4499,Jane Davis,Smp63,120.64,Smp25,2024
+4500,John Doe,Smp89,202.74,Smp37,2018
+4501,John Doe,Smp49,122.03,Smp86,2020
+4502,John Davis,Smp1,35.77,Smp100,2019
+4503,Alice Doe,Smp25,419.41,Smp85,2022
+4504,John Doe,Smp70,218.42,Smp69,2024
