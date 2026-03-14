@@ -429,6 +429,59 @@ def get_uba_projects(current_user_id):
             conn.close()
 
 
+@outreach_extension_bp.route('/outreach/list', methods=['GET'])
+@token_required
+def get_outreach_list(current_user_id):
+    """Get list of records from the outreach table, optionally filtered by program_name."""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+
+        if not _table_exists(conn, 'outreach'):
+            return jsonify({'records': []}), 200
+
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        program_filter = request.args.get('program_name', '', type=str).strip()
+        where_clause = ''
+        params = []
+        if program_filter:
+            where_clause = 'WHERE program_name ILIKE %s'
+            params.append(f'%{program_filter}%')
+
+        cur.execute(f"""
+            SELECT
+                id, academic_year, program_name, program_type, engagement_type,
+                association, start_date, end_date, targeted_audience,
+                num_attendees, num_schools, num_colleges, geographic_reach,
+                remarks, created_by, created_at,
+                sq_stipend_provided, sq_travel_allowance, sq_num_lab_sessions, sq_districts_covered,
+                pmc_target_class, pmc_mathematician_led, pmc_num_sessions,
+                pbd_lecture_topic, pbd_speaker_name, pbd_speaker_affiliation,
+                iv_visiting_institution, iv_visiting_institution_type, iv_num_groups,
+                nss_activity_type, nss_volunteer_count, nss_community_reached,
+                extra_data
+            FROM outreach
+            {where_clause}
+            ORDER BY academic_year DESC, id ASC;
+        """, params)
+
+        records = cur.fetchall()
+        return jsonify({'records': [dict(r) for r in records]}), 200
+
+    except Exception as e:
+        print(f"Outreach list error: {e}")
+        return jsonify({'message': 'Failed to fetch outreach records.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
 @outreach_extension_bp.route('/uba/events/<int:project_id>', methods=['GET'])
 @token_required
 def get_uba_project_events(current_user_id, project_id):

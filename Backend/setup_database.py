@@ -56,7 +56,6 @@ def main():
     cmd = [
         'psql',
         '--single-transaction',
-        '--no-owner',
         '--file', str(DUMP_FILE.resolve()),
         db_url,
     ]
