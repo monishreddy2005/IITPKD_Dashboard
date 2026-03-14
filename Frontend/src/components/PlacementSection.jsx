@@ -59,6 +59,13 @@ const formatPercentage = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
+/**
+ * Interactive dashboard component for Placement & Career Outcomes.
+ * Connects to the backend placement APIs to display charts and tables.
+ * @param {Object} props
+ * @param {Object} props.user - The logged-in user object.
+ * @param {boolean} props.isPublicView - Controls upload permissions.
+ */
 function PlacementSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -245,7 +252,6 @@ function PlacementSection({ user, isPublicView = false }) {
     });
   };
 
-  // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (

@@ -31,23 +31,25 @@ const SECTOR_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
+/**
+ * Dashboard component for Innovation & Entrepreneurship.
+ * Renders the admin view or delegates to InnovationPublicView.
+ * @param {Object} props
+ * @param {Object} props.user - The logged-in user object.
+ * @param {boolean} props.isPublicView - Forces the public view.
+ */
 function InnovationSection({ user, isPublicView }) {
-  // If called from InnovationPublicView with isPublicView=true, render the actual content
   if (isPublicView) {
     return <InnovationSectionContent user={user} isPublicView={true} />;
   }
 
   const [showPublicView, setShowPublicView] = useState(false);
-  
-  // Get role_id safely
   const roleId = user?.role_id;
 
-  // If public user → always show public view
   if (roleId === 1) {
     return <InnovationPublicView user={user} />;
   }
 
-  // If non-public user explicitly chooses public view
   if (showPublicView) {
     return (
       <div className="page-container">
@@ -73,12 +75,11 @@ function InnovationSection({ user, isPublicView }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <div>
             <h1>Innovation & Entrepreneurship</h1>
-            <p style={{ color: '#666', marginBottom: '0' }}>
+            <p style={{ color: '#666', margin: 0 }}>
               Track incubatees, startups, and innovation projects at TECHIN and IPTIF.
             </p>
           </div>
 
-          {/* Public view button for non-public users */}
           <div>
             <button
               className="upload-data-btn"
@@ -95,15 +96,14 @@ function InnovationSection({ user, isPublicView }) {
   );
 }
 
-// Separate component for the actual content
+/**
+ * Inner content component for InnovationSection. Handles data fetching and chart rendering.
+ */
 function InnovationSectionContent({ user, isPublicView }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
-
-  // View type selection with radio buttons
   const [viewType, setViewType] = useState('yearlyGrowth');
 
-  // Get role_id safely
   const roleId = user?.role_id;
   const allowedRoles = [3, 8]; // Super Admin and Innovation
   const isSuperAdmin = roleId === 3;
@@ -157,7 +157,6 @@ function InnovationSectionContent({ user, isPublicView }) {
     loadFilterOptions();
   }, [token]);
 
-  // Load summary data
   useEffect(() => {
     if (!token) return;
     const loadSummary = async () => {
@@ -174,7 +173,6 @@ function InnovationSectionContent({ user, isPublicView }) {
     loadSummary();
   }, [token]);
 
-  // Load yearly growth
   useEffect(() => {
     if (!token) return;
     const loadYearlyGrowth = async () => {
@@ -188,7 +186,6 @@ function InnovationSectionContent({ user, isPublicView }) {
     loadYearlyGrowth();
   }, [token]);
 
-  // Load sector distribution
   useEffect(() => {
     if (!token) return;
     const loadSectorDistribution = async () => {
@@ -202,7 +199,6 @@ function InnovationSectionContent({ user, isPublicView }) {
     loadSectorDistribution();
   }, [token]);
 
-  // Load startups list
   useEffect(() => {
     if (!token) return;
     const loadStartups = async () => {

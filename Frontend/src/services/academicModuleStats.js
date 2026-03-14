@@ -30,6 +30,11 @@ const handleError = (error, defaultMessage) => {
   throw new Error(defaultMessage);
 };
 
+/**
+ * Retrieves the available filter options (e.g. departments, programs).
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} The filter options.
+ */
 export const fetchFilterOptions = async (token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/filter-options`, authHeaders(token));
@@ -39,6 +44,12 @@ export const fetchFilterOptions = async (token) => {
   }
 };
 
+/**
+ * Retrieves top-level academic summary statistics.
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} The summary stats.
+ */
 export const fetchSummary = async (filters, token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/summary${buildQuery(filters)}`, authHeaders(token));
@@ -48,6 +59,12 @@ export const fetchSummary = async (filters, token) => {
   }
 };
 
+/**
+ * Retrieves student counts aggregated by category (Gen, OBC, SC/ST, etc.).
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} Category breakdown.
+ */
 export const fetchCategoryBreakdown = async (filters, token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/category-breakdown${buildQuery(filters)}`, authHeaders(token));
@@ -57,6 +74,12 @@ export const fetchCategoryBreakdown = async (filters, token) => {
   }
 };
 
+/**
+ * Retrieves student counts aggregated by programme (BTech, MTech, PhD, etc.).
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} Programme breakdown.
+ */
 export const fetchProgrammeBreakdown = async (filters, token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/programme-breakdown${buildQuery(filters)}`, authHeaders(token));
@@ -66,6 +89,15 @@ export const fetchProgrammeBreakdown = async (filters, token) => {
   }
 };
 
+/**
+ * Retrieves a paginated list of courses.
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} search - Text search query.
+ * @param {number} page - Result page.
+ * @param {number} perPage - Items per page.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} Paginated courses.
+ */
 export const fetchCourses = async (filters, search = '', page = 1, perPage = 20, token) => {
   try {
     const queryParams = new URLSearchParams();

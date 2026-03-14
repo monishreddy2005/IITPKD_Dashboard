@@ -39,26 +39,25 @@ const tableOptions = [
 ];
 
 /**
- * This component receives the auth `token` and a `onLogout` function as props.
+ * A form for administrators to upload CSV files and bulk-update database tables.
+ * @param {Object} props
+ * @param {string} props.token - The user's auth token.
+ * @param {Function} props.onLogout - Callback to log the user out.
  */
 function UploadForm({ token, onLogout }) {
   const [selectedTable, setSelectedTable] = useState(tableOptions[0]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
-  
-  // New state for the CSV preview data
-  const [previewData, setPreviewData] = useState(null); // { header: [], rows: [] }
+  const [previewData, setPreviewData] = useState(null);
 
   /**
-   * Parses the first few lines of a CSV text for preview.
-   * @param {string} csvText - The raw text content of the CSV file.
+   * Parses the first 5 lines of a CSV text buffer into a preview table.
+   * @param {string} csvText - The raw CSV string.
    */
   const parseCSVPreview = (csvText) => {
     try {
       const lines = csvText.trim().split('\n');
-      
-      // Get header (first line)
       const header = lines[0].split(',');
       
       // Get rows (next 5 lines, or fewer if the file is short)
@@ -74,42 +73,25 @@ function UploadForm({ token, onLogout }) {
     }
   };
 
-  /**
-   * Handles the file input change event.
-   */
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
-    setMessage(''); // Clear previous messages
+    setMessage('');
     
     if (file) {
-      // --- New CSV Preview Logic ---
       const reader = new FileReader();
-      
-      // This event fires when the file is read
-      reader.onload = (e) => {
-        const text = e.target.result;
-        parseCSVPreview(text);
-      };
-      
-      // Read the file as plain text
+      reader.onload = (e) => parseCSVPreview(e.target.result);
       reader.readAsText(file);
     } else {
-      setPreviewData(null); // Clear preview if no file is selected
+      setPreviewData(null);
     }
   };
 
-  /**
-   * Handles the table selection change event.
-   */
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
     setMessage('');
   };
 
-  /**
-   * Handles the form submission.
-   */
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -125,8 +107,6 @@ function UploadForm({ token, onLogout }) {
     formData.append('table_name', selectedTable);
     formData.append('csv_file', selectedFile);
 
-    console.log("--- DEBUG: Sending token ---", token ? `${token.substring(0, 20)}...` : 'NULL')
-    
     // Validate token before making request
     if (!token) {
       setMessage('Error: No authentication token found. Please log in again.');
@@ -140,14 +120,11 @@ function UploadForm({ token, onLogout }) {
         formData,
         {
           headers: {
-            // DO NOT manually set Content-Type for FormData - axios will set it automatically with the correct boundary
-            // If you set it manually, axios cannot add the boundary parameter which is required for multipart/form-data
             'Authorization': `Bearer ${token}`
           },
         }
       );
 
-      // Success
       setMessage(`Success: ${response.data.message}`);
       setSelectedFile(null);
       setPreviewData(null); // Clear preview
@@ -180,7 +157,6 @@ function UploadForm({ token, onLogout }) {
 
   return (
     <div className="card">
-      {/* Header with Logout Button */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Update Database from CSV</h2>
         <button onClick={onLogout} style={{ height: 'fit-content' }}>

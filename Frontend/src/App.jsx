@@ -45,8 +45,7 @@ function App() {
   // State to hold user info (optional, but good for UI)
   const [user, setUser] = useState(null);
 
-  // This `useEffect` hook runs once when the app loads
-  // It checks if a token is already saved in localStorage
+  // Rehydrate auth state on initial load
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -59,10 +58,6 @@ function App() {
     }
   }, []);
 
-  /**
-   * Callback function passed to the Login component.
-   * Saves the token and user to state and localStorage.
-   */
   const handleLoginSuccess = (receivedToken, receivedUser) => {
     setToken(receivedToken);
     setUser(receivedUser);
@@ -70,9 +65,6 @@ function App() {
     localStorage.setItem('authUser', JSON.stringify(receivedUser));
   };
 
-  /**
-   * Clears the token and user from state and localStorage.
-   */
   const handleLogout = () => {
     setToken(null);
     setUser(null);
@@ -89,15 +81,12 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
-        {/* Public Route - Login */}
         <Route
           path="/login"
           element={
             token ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
           }
         />
-
-        {/* Protected Routes - Dashboard */}
         <Route
           path="/"
           element={

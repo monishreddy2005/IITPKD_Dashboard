@@ -27,7 +27,12 @@ const buildQuery = (filters = {}) => {
   return query ? `?${query}` : '';
 };
 
-// ICSR Section APIs
+/**
+ * Retrieves the summary statistics for ICSR.
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} token - The user's auth token.
+ * @returns {Promise<Object>} ICSR summary data.
+ */
 export const fetchIcsrSummary = async (filters, token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/icsr/summary${buildQuery(filters)}`, authHeaders(token));

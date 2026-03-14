@@ -107,6 +107,12 @@ const buildPatentBreakdown = (source = {}) => ({
   Published: Number(source?.Published) || 0
 });
 
+/**
+ * Dashboard component for Research & Development (ICSR) metrics.
+ * Connects to the backend research API.
+ * @param {Object} props
+ * @param {Object} props.user - Logged in user details
+ */
 function ResearchIcsrSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');

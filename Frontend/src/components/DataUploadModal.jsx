@@ -3,21 +3,22 @@ import axios from 'axios';
 import './DataUploadModal.css';
 
 /**
- * Reusable Modal for uploading CSV data to a specific table.
+ * Reusable modal for bulk-uploading CSV data to a specific database table.
  * 
- * @param {boolean} isOpen - Whether the modal is visible.
- * @param {function} onClose - Function to close the modal.
- * @param {string} tableName - The backend table name to update (e.g., 'student').
- * @param {string} token - Auth token.
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Visibilitiy toggle.
+ * @param {function} props.onClose - Callback to close the modal.
+ * @param {string} props.tableName - The backend database table to update.
+ * @param {string} props.token - JWT Auth token.
+ * @param {function} props.onUploadSuccess - Callback to refresh parent component data.
  */
 function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewData, setPreviewData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+    const [message, setMessage] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
-    // Reset state when modal opens
     useEffect(() => {
         if (isOpen) {
             setSelectedFile(null);
