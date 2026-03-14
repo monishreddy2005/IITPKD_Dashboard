@@ -26,6 +26,13 @@ const OUTREACH_EXTENSION_SECTIONS = [
     description: 'Rural Development Initiative',
     route: '/outreach-extension/uba',
     allowedRoles: [3]
+  },
+  {
+    code: '🌐',
+    title: 'Outreach Programs',
+    description: 'Science Quest, Math Circle, Pale Blue Dot, Institute Visits & NSS',
+    route: '/outreach-extension/outreach',
+    allowedRoles: [3]
   }
 ];
 

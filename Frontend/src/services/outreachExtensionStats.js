@@ -106,3 +106,18 @@ export const fetchUbaProjectEvents = async (token, projectId) => {
   }
 };
 
+// Outreach programs endpoint
+export const fetchOutreachList = async (token, programName = '') => {
+  try {
+    const params = {};
+    if (programName) params.program_name = programName;
+    const response = await axios.get(`${API_BASE_URL}/outreach/list`, {
+      ...authHeaders(token),
+      params,
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch outreach records');
+  }
+};
+
