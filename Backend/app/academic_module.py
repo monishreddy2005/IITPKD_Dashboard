@@ -1,60 +1,44 @@
-from __future__ import annotations
-
-from collections import defaultdict
-from typing import Any, Dict, List, Sequence, Tuple
-
+"""Analytics for the Academic module (courses_table)."""
 from flask import Blueprint, jsonify, request
-from psycopg2.errors import UndefinedTable
 
 from .auth import token_required
 from .db import get_db_connection
 
 academic_module_bp = Blueprint('academic_module', __name__)
 
-INDUSTRY_TABLE = 'industry_courses'
-PROGRAM_TABLE = 'academic_program_launch'
+COURSES_TABLE = 'courses_table'
 
 
-def build_where_clause(filters: Dict[str, Any], mapping: Dict[str, str]) -> Tuple[str, List[Any]]:
-    conditions: List[str] = []
-    params: List[Any] = []
-
+def build_where_clause(filters, mapping):
+    """Builds a parameterised WHERE clause from a dict of active filters."""
+    conditions, params = [], []
     for key, column in mapping.items():
         value = filters.get(key)
         if value in (None, '', 'All'):
             continue
         conditions.append(f"{column} = %s")
         params.append(value)
-
-    clause = ''
-    if conditions:
-        clause = 'WHERE ' + ' AND '.join(conditions)
+    clause = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
     return clause, params
 
 
 def table_exists(table_name: str) -> bool:
+    """Returns True if the given table exists in the public schema."""
     conn = None
-    cur = None
     try:
         conn = get_db_connection()
-        if conn is None:
+        if not conn:
             return False
         cur = conn.cursor()
         cur.execute(
-            """
-            SELECT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                  AND table_name = %s
-            ) AS exists_flag;
-            """,
+            "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = %s) AS exists_flag;",
             (table_name,)
         )
         row = cur.fetchone()
         return bool(row and row.get('exists_flag'))
     except Exception as exc:
-        print(f"Academic module table check failed ({table_name}): {exc}")
+        print(f"Table check failed ({table_name}): {exc}")
         return False
     finally:
         if cur:
@@ -64,18 +48,16 @@ def table_exists(table_name: str) -> bool:
 
 
 def module_tables_available() -> bool:
-    return table_exists(INDUSTRY_TABLE) and table_exists(PROGRAM_TABLE)
+    return table_exists(COURSES_TABLE)
 
+
+# ===================== Filter Options =====================
 
 @academic_module_bp.route('/filter-options', methods=['GET'])
 @token_required
 def get_filter_options(current_user_id):
     if not module_tables_available():
-        return jsonify({
-            'message': (
-                "Academic module tables are missing. Please apply the latest schema migrations before accessing this dashboard."
-            )
-        }), 500
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
 
     conn = None
     cur = None
@@ -84,21 +66,27 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
-        cur.execute(
-            """
+
+        cur.execute(f"""
             SELECT
-                ARRAY(SELECT DISTINCT department FROM industry_courses ORDER BY department) AS departments,
-                ARRAY(SELECT DISTINCT year_offered FROM industry_courses ORDER BY year_offered DESC) AS course_years,
-                ARRAY(SELECT DISTINCT program_type FROM academic_program_launch ORDER BY program_type) AS program_types,
-                ARRAY(SELECT DISTINCT launch_year FROM academic_program_launch ORDER BY launch_year DESC) AS program_years
-            """
-        )
+                ARRAY(SELECT DISTINCT course_category FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND course_category IS NOT NULL ORDER BY course_category) AS categories,
+                ARRAY(SELECT DISTINCT target_programme FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND target_programme IS NOT NULL ORDER BY target_programme) AS programmes,
+                ARRAY(SELECT DISTINCT industry_course_status_currentay FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND industry_course_status_currentay IS NOT NULL ORDER BY industry_course_status_currentay) AS statuses,
+                ARRAY(SELECT DISTINCT proposal_type FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND proposal_type IS NOT NULL ORDER BY proposal_type) AS proposal_types,
+                ARRAY(SELECT DISTINCT target_discipline FROM {COURSES_TABLE}
+                      WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T') AND target_discipline IS NOT NULL ORDER BY target_discipline) AS disciplines
+        """)
         row = cur.fetchone() or {}
         return jsonify({
-            'departments': row.get('departments') or [],
-            'course_years': row.get('course_years') or [],
-            'program_types': row.get('program_types') or [],
-            'program_years': row.get('program_years') or []
+            'categories': row.get('categories') or [],
+            'programmes': row.get('programmes') or [],
+            'statuses': row.get('statuses') or [],
+            'proposal_types': row.get('proposal_types') or [],
+            'disciplines': row.get('disciplines') or []
         }), 200
     except UndefinedTable:
         return jsonify({'message': 'Academic module tables are missing.'}), 500
@@ -112,6 +100,8 @@ def get_filter_options(current_user_id):
             conn.close()
 
 
+# ===================== Summary =====================
+
 @academic_module_bp.route('/summary', methods=['GET'])
 @token_required
 def get_summary(current_user_id):
@@ -119,10 +109,9 @@ def get_summary(current_user_id):
         return jsonify({'message': 'Academic module tables are missing.'}), 500
 
     filters = {
-        'department': request.args.get('department'),
-        'course_year': request.args.get('course_year'),
-        'program_type': request.args.get('program_type'),
-        'program_year': request.args.get('program_year')
+        'category': request.args.get('category'),
+        'programme': request.args.get('programme'),
+        'status': request.args.get('status'),
     }
 
     conn = None
@@ -133,43 +122,44 @@ def get_summary(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
 
-        course_where, course_params = build_where_clause(
-            {'department': filters['department'], 'course_year': filters['course_year']},
-            {'department': 'department', 'course_year': 'year_offered'}
+        where_clause, params = build_where_clause(
+            filters,
+            {
+                'category': 'course_category',
+                'programme': 'target_programme',
+                'status': 'industry_course_status_currentay',
+            }
         )
-        cur.execute(
-            f"""
-            SELECT COUNT(*) AS total_courses,
-                   COUNT(DISTINCT department) AS distinct_departments
-            FROM {INDUSTRY_TABLE}
-            {course_where}
-            """,
-            course_params
-        )
-        course_row = cur.fetchone() or {'total_courses': 0, 'distinct_departments': 0}
+        # Global filter for industry courses (captures 'YES', 'TRUE', or 'T')
+        industry_filter = "UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')"
+        if where_clause:
+            where_clause += f" AND {industry_filter}"
+        else:
+            where_clause = f"WHERE {industry_filter}"
 
-        program_where, program_params = build_where_clause(
-            {'program_type': filters['program_type'], 'program_year': filters['program_year']},
-            {'program_type': 'program_type', 'program_year': 'launch_year'}
-        )
         cur.execute(
             f"""
-            SELECT COUNT(*) AS total_programs,
-                   COUNT(DISTINCT program_type) AS distinct_program_types,
-                   COALESCE(SUM(oelp_students), 0) AS total_oelp
-            FROM {PROGRAM_TABLE}
-            {program_where}
+            SELECT
+                COUNT(*) AS total_courses,
+                COUNT(DISTINCT course_category) AS distinct_categories,
+                COUNT(DISTINCT target_programme) AS distinct_programmes,
+                COUNT(DISTINCT target_discipline) AS distinct_disciplines,
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 1 END) AS active_courses,
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) = 'INACTIVE' THEN 1 END) AS inactive_courses
+            FROM {COURSES_TABLE}
+            {where_clause}
             """,
-            program_params
+            params
         )
-        program_row = cur.fetchone() or {'total_programs': 0, 'distinct_program_types': 0, 'total_oelp': 0}
+        row = cur.fetchone() or {}
 
         summary = {
-            'total_courses': int(course_row.get('total_courses') or 0),
-            'distinct_departments': int(course_row.get('distinct_departments') or 0),
-            'total_programs': int(program_row.get('total_programs') or 0),
-            'distinct_program_types': int(program_row.get('distinct_program_types') or 0),
-            'total_oelp_students': int(program_row.get('total_oelp') or 0)
+            'total_courses': int(row.get('total_courses') or 0),
+            'distinct_categories': int(row.get('distinct_categories') or 0),
+            'distinct_programmes': int(row.get('distinct_programmes') or 0),
+            'distinct_disciplines': int(row.get('distinct_disciplines') or 0),
+            'active_courses': int(row.get('active_courses') or 0),
+            'inactive_courses': int(row.get('inactive_courses') or 0),
         }
         return jsonify({'data': summary}), 200
     except UndefinedTable:
@@ -184,15 +174,14 @@ def get_summary(current_user_id):
             conn.close()
 
 
-@academic_module_bp.route('/industry-course-trend', methods=['GET'])
+# ===================== Category Breakdown =====================
+
+@academic_module_bp.route('/category-breakdown', methods=['GET'])
 @token_required
-def get_industry_course_trend(current_user_id):
+def get_category_breakdown(current_user_id):
+    """Course count by category (CORE, ELECTIVE, MOOC)."""
     if not module_tables_available():
         return jsonify({'message': 'Academic module tables are missing.'}), 500
-
-    filters = {
-        'department': request.args.get('department')
-    }
 
     conn = None
     cur = None
@@ -202,210 +191,210 @@ def get_industry_course_trend(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
 
-        where_clause, params = build_where_clause(filters, {'department': 'department'})
-        cur.execute(
-            f"""
-            SELECT year_offered AS year, COUNT(*) AS course_count
-            FROM {INDUSTRY_TABLE}
-            {where_clause}
-            GROUP BY year_offered
-            ORDER BY year_offered
-            """,
-            params
-        )
+        cur.execute(f"""
+            SELECT
+                COALESCE(course_category, 'Uncategorized') AS category,
+                COUNT(*) AS count
+            FROM {COURSES_TABLE}
+            WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
+            GROUP BY course_category
+            ORDER BY count DESC;
+        """)
         rows = cur.fetchall() or []
         data = [
-            {
-                'year': row.get('year'),
-                'course_count': int(row.get('course_count') or 0)
-            }
+            {'category': row.get('category'), 'count': int(row.get('count') or 0)}
             for row in rows
         ]
         return jsonify({'data': data}), 200
     except UndefinedTable:
         return jsonify({'message': 'Academic module tables are missing.'}), 500
     except Exception as exc:
-        print(f"Industry course trend error: {exc}")
-        return jsonify({'message': 'Failed to fetch industry course trend.'}), 500
+        print(f"Category breakdown error: {exc}")
+        return jsonify({'message': 'Failed to fetch category breakdown.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
             conn.close()
+
+
+# ===================== Programme Breakdown =====================
+
+@academic_module_bp.route('/programme-breakdown', methods=['GET'])
+@token_required
+def get_programme_breakdown(current_user_id):
+    """Course count by target programme (BTECH, MTECH, MSC, PHD)."""
+    if not module_tables_available():
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor()
+
+        cur.execute(f"""
+            SELECT
+                COALESCE(target_programme, 'Unspecified') AS programme,
+                COUNT(*) AS count
+            FROM {COURSES_TABLE}
+            WHERE UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
+            GROUP BY target_programme
+            ORDER BY count DESC;
+        """)
+        rows = cur.fetchall() or []
+        data = [
+            {'programme': row.get('programme'), 'count': int(row.get('count') or 0)}
+            for row in rows
+        ]
+        return jsonify({'data': data}), 200
+    except UndefinedTable:
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
+    except Exception as exc:
+        print(f"Programme breakdown error: {exc}")
+        return jsonify({'message': 'Failed to fetch programme breakdown.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# ===================== Course List =====================
+
+@academic_module_bp.route('/courses', methods=['GET'])
+@token_required
+def get_courses(current_user_id):
+    """Paginated, filterable course list."""
+    if not module_tables_available():
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
+
+    filters = {
+        'category': request.args.get('category'),
+        'programme': request.args.get('programme'),
+        'status': request.args.get('status'),
+        'proposal_type': request.args.get('proposal_type'),
+    }
+    search = request.args.get('search', '', type=str).strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor()
+
+        where_clause, params = build_where_clause(
+            filters,
+            {
+                'category': 'course_category',
+                'programme': 'target_programme',
+                'status': 'industry_course_status_currentay',
+                'proposal_type': 'proposal_type',
+            }
+        )
+        # Global filter for industry courses (captures 'YES', 'TRUE', or 'T')
+        industry_filter = "UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')"
+        if where_clause:
+            where_clause += f" AND {industry_filter}"
+        else:
+            where_clause = f"WHERE {industry_filter}"
+
+        # Add search
+        if search:
+            search_cond = "(course_code ILIKE %s OR course_name ILIKE %s OR proposing_faculty_name ILIKE %s)"
+            pattern = f'%{search}%'
+            if where_clause:
+                where_clause += f" AND {search_cond}"
+            else:
+                where_clause = f"WHERE {search_cond}"
+            params.extend([pattern, pattern, pattern])
+
+        # Total count
+        cur.execute(f"SELECT COUNT(*) AS total FROM {COURSES_TABLE} {where_clause}", params)
+        total = (cur.fetchone() or {}).get('total', 0)
+
+        # Paginated data
+        offset = (page - 1) * per_page
+        cur.execute(
+            f"""
+            SELECT
+                course_code,
+                course_name,
+                credit_l_t_p_c,
+                course_category,
+                proposing_faculty_name,
+                faculty_affiliation,
+                target_programme,
+                target_discipline,
+                industry_partner,
+                industry_coordinator_name,
+                CASE 
+                    WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 'Active'
+                    ELSE 'Inactive'
+                END AS status,
+                proposal_type
+            FROM {COURSES_TABLE}
+            {where_clause}
+            ORDER BY course_code ASC
+            LIMIT %s OFFSET %s
+            """,
+            params + [per_page, offset]
+        )
+        rows = cur.fetchall() or []
+        courses = [dict(row) for row in rows]
+
+        return jsonify({
+            'data': courses,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'total_pages': (total + per_page - 1) // per_page if total > 0 else 0
+            }
+        }), 200
+    except UndefinedTable:
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
+    except Exception as exc:
+        print(f"Course list error: {exc}")
+        return jsonify({'message': 'Failed to fetch course list.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# ===================== Legacy endpoint stubs =====================
+
+@academic_module_bp.route('/industry-course-trend', methods=['GET'])
+@token_required
+def get_industry_course_trend(current_user_id):
+    """Legacy endpoint — industry_courses table has been removed."""
+    return jsonify({'message': 'industry_courses table has been removed. Use /courses and /category-breakdown instead.'}), 404
 
 
 @academic_module_bp.route('/industry-courses', methods=['GET'])
 @token_required
 def get_industry_courses(current_user_id):
-    if not module_tables_available():
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-
-    filters = {
-        'department': request.args.get('department'),
-        'course_year': request.args.get('course_year')
-    }
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        cur = conn.cursor()
-
-        where_clause, params = build_where_clause(
-            filters,
-            {'department': 'department', 'course_year': 'year_offered'}
-        )
-        cur.execute(
-            f"""
-            SELECT course_id, course_title, department, industry_partner, year_offered, is_active
-            FROM {INDUSTRY_TABLE}
-            {where_clause}
-            ORDER BY year_offered DESC, course_title ASC
-            """,
-            params
-        )
-        rows = cur.fetchall() or []
-        data = [
-            {
-                'course_id': row.get('course_id'),
-                'course_title': row.get('course_title'),
-                'department': row.get('department'),
-                'industry_partner': row.get('industry_partner'),
-                'year_offered': row.get('year_offered'),
-                'is_active': bool(row.get('is_active'))
-            }
-            for row in rows
-        ]
-        return jsonify({'data': data}), 200
-    except UndefinedTable:
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-    except Exception as exc:
-        print(f"Industry course list error: {exc}")
-        return jsonify({'message': 'Failed to fetch industry course list.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """Legacy endpoint — industry_courses table has been removed."""
+    return jsonify({'message': 'industry_courses table has been removed. Use /courses instead.'}), 404
 
 
 @academic_module_bp.route('/program-launch-stats', methods=['GET'])
 @token_required
 def get_program_launch_stats(current_user_id):
-    if not module_tables_available():
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-
-    filters = {
-        'program_type': request.args.get('program_type'),
-        'program_year': request.args.get('program_year')
-    }
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        cur = conn.cursor()
-
-        where_clause, params = build_where_clause(
-            filters,
-            {'program_type': 'program_type', 'program_year': 'launch_year'}
-        )
-        cur.execute(
-            f"""
-            SELECT launch_year, program_type, COUNT(*) AS total_programs
-            FROM {PROGRAM_TABLE}
-            {where_clause}
-            GROUP BY launch_year, program_type
-            ORDER BY launch_year
-            """,
-            params
-        )
-        rows = cur.fetchall() or []
-        aggregated: Dict[int, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        for row in rows:
-            year = row.get('launch_year')
-            program_type = row.get('program_type')
-            total = int(row.get('total_programs') or 0)
-            aggregated[year][program_type] += total
-            aggregated[year]['total'] += total
-
-        data = []
-        for year in sorted(aggregated.keys()):
-            entry = {'year': year, 'total': aggregated[year]['total']}
-            for p_type, count in aggregated[year].items():
-                if p_type == 'total':
-                    continue
-                entry[p_type] = count
-            data.append(entry)
-        return jsonify({'data': data}), 200
-    except UndefinedTable:
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-    except Exception as exc:
-        print(f"Program launch stats error: {exc}")
-        return jsonify({'message': 'Failed to fetch program launch statistics.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """Legacy endpoint — academic_program_launch table has been removed."""
+    return jsonify({'message': 'academic_program_launch table has been removed. Use /programme-breakdown instead.'}), 404
 
 
 @academic_module_bp.route('/program-list', methods=['GET'])
 @token_required
 def get_program_list(current_user_id):
-    if not module_tables_available():
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-
-    filters = {
-        'program_type': request.args.get('program_type'),
-        'program_year': request.args.get('program_year')
-    }
-
-    conn = None
-    cur = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            return jsonify({'message': 'Database connection failed.'}), 500
-        cur = conn.cursor()
-
-        where_clause, params = build_where_clause(
-            filters,
-            {'program_type': 'program_type', 'program_year': 'launch_year'}
-        )
-        cur.execute(
-            f"""
-            SELECT program_code, program_name, program_type, department, launch_year, oelp_students
-            FROM {PROGRAM_TABLE}
-            {where_clause}
-            ORDER BY launch_year DESC, program_name ASC
-            """,
-            params
-        )
-        rows = cur.fetchall() or []
-        data = [
-            {
-                'program_code': row.get('program_code'),
-                'program_name': row.get('program_name'),
-                'program_type': row.get('program_type'),
-                'department': row.get('department'),
-                'launch_year': row.get('launch_year'),
-                'oelp_students': int(row.get('oelp_students') or 0)
-            }
-            for row in rows
-        ]
-        return jsonify({'data': data}), 200
-    except UndefinedTable:
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
-    except Exception as exc:
-        print(f"Program list error: {exc}")
-        return jsonify({'message': 'Failed to fetch academic program list.'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+    """Legacy endpoint — academic_program_launch table has been removed."""
+    return jsonify({'message': 'academic_program_launch table has been removed. Use /courses instead.'}), 404

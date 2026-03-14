@@ -2,8 +2,8 @@ import { useState } from 'react';
 import './Page.css';
 import './OutreachMinimal.css';
 
-import OpenHouseSection from './OpenHouseSection';
-import NptelSection from './NptelSection';
+import SocialEngagementsSection from './SocialEngagements';
+import StudentsEngagementSection from './StudentsEngagement';
 import UbaSection from './UbaSection';
 
 function OutreachPublicView({ user }) {
@@ -11,27 +11,27 @@ function OutreachPublicView({ user }) {
 
   const sections = [
     {
-      id: 'open-house',
-      title: 'Open House',
-      subtitle: 'Community Engagement Events',
-      expandedTitle: 'Engaging with the community through interactive Open House events',
-      icon: '🏛️',
-      component: OpenHouseSection
+      id: 'social-engagements',
+      title: 'Social Engagements',
+      subtitle: 'Community outreach: Open House, workshops, and public lectures',
+      expandedTitle: 'Engaging with the community through workshops and public lectures',
+      icon: 'S',
+      component: SocialEngagementsSection
     },
     {
-      id: 'nptel',
-      title: 'NPTEL - CCE',
-      subtitle: 'Centre for Continuing Education',
-      expandedTitle: 'Empowering learners through NPTEL online courses and certifications',
-      icon: '📚',
-      component: NptelSection
+      id: 'students-engagement',
+      title: 'Students Engagement',
+      subtitle: 'Student-led outreach: Workshops and community projects',
+      expandedTitle: 'Empowering learners through student-led community projects',
+      icon: 'S',
+      component: StudentsEngagementSection
     },
     {
-      id: 'uba',
-      title: 'Unnat Bharat Abhiyan',
-      subtitle: 'Rural Development Initiative',
-      expandedTitle: 'Transforming rural India through knowledge and innovation',
-      icon: '🌾',
+      id: 'research-engagements',
+      title: 'Research Engagements',
+      subtitle: 'Research impact: Publications, patents, and industry collaborations',
+      expandedTitle: 'Driving innovation through publications, patents, and industry collaborations',
+      icon: 'R',
       component: UbaSection
     }
   ];

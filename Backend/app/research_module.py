@@ -60,13 +60,19 @@ def _build_project_filters(
     department: Optional[str],
     project_year: Optional[str],
     status: Optional[str],
-    project_type: Optional[str],
+    dept_column: str = 'department',
 ) -> Tuple[str, List[Any]]:
+    """Build WHERE clause for icsr_sponsered_projects or icsr_consultancy_projects.
+
+    Args:
+        dept_column: Column name for department. Use 'principal_investigator_department'
+                     for icsr_sponsered_projects and 'department' for icsr_consultancy_projects.
+    """
     conditions: List[str] = []
     params: List[Any] = []
 
     if department and department != 'All':
-        conditions.append("department = %s")
+        conditions.append(f"{dept_column} = %s")
         params.append(department)
 
     if project_year and project_year != 'All':
@@ -82,10 +88,6 @@ def _build_project_filters(
     if status and status != 'All':
         conditions.append("status = %s")
         params.append(status)
-
-    if project_type and project_type != 'All':
-        conditions.append("project_type = %s")
-        params.append(project_type)
 
     clause = ""
     if conditions:
@@ -185,33 +187,40 @@ def get_filter_options(current_user_id):
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-        if _table_exists(conn, 'research_projects'):
-            cur.execute(
-                "SELECT DISTINCT department FROM research_projects WHERE department IS NOT NULL ORDER BY department"
-            )
-            filters['project_departments'] = [row['department'] for row in cur.fetchall()]
+        # Collect project departments from both icsr tables
+        depts = set()
+        years = set()
+        statuses = set()
 
+        if _table_exists(conn, 'icsr_sponsered_projects'):
             cur.execute(
-                """
-                SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year
-                FROM research_projects
-                WHERE start_date IS NOT NULL OR end_date IS NOT NULL
-                ORDER BY year DESC
-                """
+                "SELECT DISTINCT principal_investigator_department AS dept FROM icsr_sponsered_projects WHERE principal_investigator_department IS NOT NULL"
             )
-            filters['project_years'] = [int(row['year']) for row in cur.fetchall() if row['year'] is not None]
-
+            depts.update(row['dept'] for row in cur.fetchall())
             cur.execute(
-                "SELECT DISTINCT status FROM research_projects ORDER BY status"
+                "SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_sponsered_projects WHERE start_date IS NOT NULL OR end_date IS NOT NULL"
             )
-            filters['project_statuses'] = [row['status'] for row in cur.fetchall()]
+            years.update(int(row['year']) for row in cur.fetchall() if row['year'] is not None)
+            cur.execute("SELECT DISTINCT status FROM icsr_sponsered_projects WHERE status IS NOT NULL")
+            statuses.update(row['status'] for row in cur.fetchall())
 
+        if _table_exists(conn, 'icsr_consultancy_projects'):
             cur.execute(
-                "SELECT DISTINCT project_type FROM research_projects ORDER BY project_type"
+                "SELECT DISTINCT department AS dept FROM icsr_consultancy_projects WHERE department IS NOT NULL"
             )
-            filters['project_types'] = [row['project_type'] for row in cur.fetchall()]
+            depts.update(row['dept'] for row in cur.fetchall())
+            cur.execute(
+                "SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_consultancy_projects WHERE start_date IS NOT NULL OR end_date IS NOT NULL"
+            )
+            years.update(int(row['year']) for row in cur.fetchall() if row['year'] is not None)
+            cur.execute("SELECT DISTINCT status FROM icsr_consultancy_projects WHERE status IS NOT NULL")
+            statuses.update(row['status'] for row in cur.fetchall())
 
-            filters['externship_departments'] = filters['project_departments']
+        filters['project_departments'] = sorted(depts)
+        filters['project_years'] = sorted(years, reverse=True)
+        filters['project_statuses'] = sorted(statuses)
+        filters['project_types'] = ['Funded', 'Consultancy']  # Fixed list — each table is a type
+        filters['externship_departments'] = filters['project_departments']
 
         if _table_exists(conn, 'research_mous'):
             cur.execute(
@@ -297,27 +306,32 @@ def get_summary(current_user_id):
         consultancy_revenue = 0.0
         total_projects = 0
 
-        if _table_exists(conn, 'research_projects'):
-            where_clause, params = _build_project_filters(department, project_year, status, project_type)
+        # Count funded (sponsored) projects
+        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Funded'):
+            where_clause, params = _build_project_filters(
+                department, project_year, status, dept_column='principal_investigator_department'
+            )
+            cur.execute(
+                f"SELECT COUNT(*) AS total, COALESCE(SUM(amount_sanctioned), 0) AS amount FROM icsr_sponsered_projects {where_clause}",
+                params,
+            )
+            row = cur.fetchone()
+            funded_total = int(row['total'])
+            total_projects += funded_total
 
-            query = f"""
-                SELECT project_type,
-                       COUNT(*) AS total,
-                       COALESCE(SUM(amount_sanctioned), 0) AS amount
-                FROM research_projects
-                {where_clause}
-                GROUP BY project_type
-            """
-            cur.execute(query, params)
-            for row in cur.fetchall():
-                total = int(row['total'])
-                amount = _decimal_to_float(row['amount'])
-                total_projects += total
-                if row['project_type'] == 'Funded':
-                    funded_total = total
-                elif row['project_type'] == 'Consultancy':
-                    consultancy_total = total
-                    consultancy_revenue = amount
+        # Count consultancy projects
+        if _table_exists(conn, 'icsr_consultancy_projects') and project_type in (None, '', 'All', 'Consultancy'):
+            where_clause, params = _build_project_filters(
+                department, project_year, status, dept_column='department'
+            )
+            cur.execute(
+                f"SELECT COUNT(*) AS total, COALESCE(SUM(amount_sanctioned), 0) AS amount FROM icsr_consultancy_projects {where_clause}",
+                params,
+            )
+            row = cur.fetchone()
+            consultancy_total = int(row['total'])
+            consultancy_revenue = _decimal_to_float(row['amount'])
+            total_projects += consultancy_total
 
         total_mous = 0
         if _table_exists(conn, 'research_mous'):
@@ -371,6 +385,7 @@ def get_summary(current_user_id):
 @research_bp.route('/projects/trend', methods=['GET'])
 @token_required
 def funded_project_trend(current_user_id):
+    """Return yearly project counts from both sponsored and consultancy tables."""
     conn = None
     cur = None
     try:
@@ -379,37 +394,47 @@ def funded_project_trend(current_user_id):
         status = request.args.get('status')
 
         conn = get_db_connection()
-        if not _table_exists(conn, 'research_projects'):
-            return jsonify({'message': 'research_projects table is missing. Please apply the latest schema.'}), 400
-
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        where_clause, params = _build_project_filters(department, project_year, status, None)
 
-        if where_clause:
-            where_clause += " AND project_type = 'Funded'"
-        else:
-            where_clause = "WHERE project_type = 'Funded'"
+        yearly: Dict[int, Dict[str, int]] = defaultdict(lambda: {'funded': 0, 'consultancy': 0})
 
-        query = f"""
-            SELECT
-                EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year,
-                COUNT(*) AS total
-            FROM research_projects
-            {where_clause}
-            GROUP BY year
-            ORDER BY year
-        """
-        cur.execute(query, params)
+        # Sponsored (funded) projects
+        if _table_exists(conn, 'icsr_sponsered_projects'):
+            wc, p = _build_project_filters(department, project_year, status, dept_column='principal_investigator_department')
+            if wc:
+                wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
+            else:
+                wc = "WHERE COALESCE(start_date, end_date) IS NOT NULL"
+            cur.execute(
+                f"SELECT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year, COUNT(*) AS total FROM icsr_sponsered_projects {wc} GROUP BY year",
+                p,
+            )
+            for row in cur.fetchall():
+                if row['year'] is not None:
+                    yearly[int(row['year'])]['funded'] = int(row['total'])
+
+        # Consultancy projects
+        if _table_exists(conn, 'icsr_consultancy_projects'):
+            wc, p = _build_project_filters(department, project_year, status, dept_column='department')
+            if wc:
+                wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
+            else:
+                wc = "WHERE COALESCE(start_date, end_date) IS NOT NULL"
+            cur.execute(
+                f"SELECT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year, COUNT(*) AS total FROM icsr_consultancy_projects {wc} GROUP BY year",
+                p,
+            )
+            for row in cur.fetchall():
+                if row['year'] is not None:
+                    yearly[int(row['year'])]['consultancy'] = int(row['total'])
+
         data = [
-            {
-                'year': int(row['year']),
-                'total': int(row['total']),
-            }
-            for row in cur.fetchall()
+            {'year': y, 'funded': yearly[y]['funded'], 'consultancy': yearly[y]['consultancy']}
+            for y in sorted(yearly.keys())
         ]
         return jsonify({'data': data}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch funded project trend: {exc}'}), 500
+        return jsonify({'message': f'Failed to fetch project trend: {exc}'}), 500
     finally:
         if cur:
             cur.close()
@@ -429,44 +454,75 @@ def project_list(current_user_id):
         project_type = request.args.get('project_type')
 
         conn = get_db_connection()
-        if not _table_exists(conn, 'research_projects'):
-            return jsonify({'data': []})
-
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        where_clause, params = _build_project_filters(department, project_year, status, project_type)
-
-        query = f"""
-            SELECT project_id,
-                   project_title,
-                   principal_investigator,
-                   department,
-                   project_type,
-                   funding_agency,
-                   client_organization,
-                   amount_sanctioned,
-                   start_date,
-                   end_date,
-                   status
-            FROM research_projects
-            {where_clause}
-            ORDER BY COALESCE(start_date, end_date) DESC NULLS LAST, project_title
-        """
-        cur.execute(query, params)
         rows = []
-        for row in cur.fetchall():
-            rows.append({
-                'project_id': row['project_id'],
-                'project_title': row['project_title'],
-                'principal_investigator': row['principal_investigator'],
-                'department': row['department'],
-                'project_type': row['project_type'],
-                'funding_agency': row['funding_agency'],
-                'client_organization': row['client_organization'],
-                'amount_sanctioned': _decimal_to_float(row['amount_sanctioned']),
-                'start_date': _serialize_date(row['start_date']),
-                'end_date': _serialize_date(row['end_date']),
-                'status': row['status'],
-            })
+
+        # Fetch funded (sponsored) projects
+        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Funded'):
+            where_clause, params = _build_project_filters(
+                department, project_year, status, dept_column='principal_investigator_department'
+            )
+            cur.execute(
+                f"""
+                SELECT project_id, project_title, principal_investigator,
+                       principal_investigator_department AS department,
+                       'Funded' AS project_type,
+                       funding_agency, client_organization,
+                       amount_sanctioned, start_date, end_date, status
+                FROM icsr_sponsered_projects
+                {where_clause}
+                """,
+                params,
+            )
+            for row in cur.fetchall():
+                rows.append({
+                    'project_id': row['project_id'],
+                    'project_title': row['project_title'],
+                    'principal_investigator': row['principal_investigator'],
+                    'department': row['department'],
+                    'project_type': row['project_type'],
+                    'funding_agency': row['funding_agency'],
+                    'client_organization': row['client_organization'],
+                    'amount_sanctioned': _decimal_to_float(row['amount_sanctioned']),
+                    'start_date': _serialize_date(row['start_date']),
+                    'end_date': _serialize_date(row['end_date']),
+                    'status': row['status'],
+                })
+
+        # Fetch consultancy projects
+        if _table_exists(conn, 'icsr_consultancy_projects') and project_type in (None, '', 'All', 'Consultancy'):
+            where_clause, params = _build_project_filters(
+                department, project_year, status, dept_column='department'
+            )
+            cur.execute(
+                f"""
+                SELECT project_id, project_title, principal_investigator,
+                       department,
+                       'Consultancy' AS project_type,
+                       funding_agency, client_organization,
+                       amount_sanctioned, start_date, end_date, status
+                FROM icsr_consultancy_projects
+                {where_clause}
+                """,
+                params,
+            )
+            for row in cur.fetchall():
+                rows.append({
+                    'project_id': row['project_id'],
+                    'project_title': row['project_title'],
+                    'principal_investigator': row['principal_investigator'],
+                    'department': row['department'],
+                    'project_type': row['project_type'],
+                    'funding_agency': row['funding_agency'],
+                    'client_organization': row['client_organization'],
+                    'amount_sanctioned': _decimal_to_float(row['amount_sanctioned']),
+                    'start_date': _serialize_date(row['start_date']),
+                    'end_date': _serialize_date(row['end_date']),
+                    'status': row['status'],
+                })
+
+        # Sort combined results
+        rows.sort(key=lambda r: (r['start_date'] or r['end_date'] or '', r['project_title'] or ''), reverse=True)
         return jsonify({'data': rows})
     except Exception as exc:
         return jsonify({'message': f'Failed to fetch projects: {exc}'}), 500
@@ -480,6 +536,7 @@ def project_list(current_user_id):
 @research_bp.route('/consultancy/revenue-trend', methods=['GET'])
 @token_required
 def consultancy_revenue_trend(current_user_id):
+    """Return yearly revenue from both sponsored and consultancy tables."""
     conn = None
     cur = None
     try:
@@ -488,37 +545,47 @@ def consultancy_revenue_trend(current_user_id):
         status = request.args.get('status')
 
         conn = get_db_connection()
-        if not _table_exists(conn, 'research_projects'):
-            return jsonify({'data': []})
-
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        where_clause, params = _build_project_filters(department, project_year, status, None)
 
-        if where_clause:
-            where_clause += " AND project_type = 'Consultancy'"
-        else:
-            where_clause = "WHERE project_type = 'Consultancy'"
+        yearly: Dict[int, Dict[str, float]] = defaultdict(lambda: {'funded_revenue': 0.0, 'consultancy_revenue': 0.0})
 
-        query = f"""
-            SELECT
-                EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year,
-                COALESCE(SUM(amount_sanctioned), 0) AS revenue
-            FROM research_projects
-            {where_clause}
-            GROUP BY year
-            ORDER BY year
-        """
-        cur.execute(query, params)
+        # Sponsored (funded) revenue
+        if _table_exists(conn, 'icsr_sponsered_projects'):
+            wc, p = _build_project_filters(department, project_year, status, dept_column='principal_investigator_department')
+            if wc:
+                wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
+            else:
+                wc = "WHERE COALESCE(start_date, end_date) IS NOT NULL"
+            cur.execute(
+                f"SELECT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year, COALESCE(SUM(amount_sanctioned), 0) AS revenue FROM icsr_sponsered_projects {wc} GROUP BY year",
+                p,
+            )
+            for row in cur.fetchall():
+                if row['year'] is not None:
+                    yearly[int(row['year'])]['funded_revenue'] = _decimal_to_float(row['revenue'])
+
+        # Consultancy revenue
+        if _table_exists(conn, 'icsr_consultancy_projects'):
+            wc, p = _build_project_filters(department, project_year, status, dept_column='department')
+            if wc:
+                wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
+            else:
+                wc = "WHERE COALESCE(start_date, end_date) IS NOT NULL"
+            cur.execute(
+                f"SELECT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year, COALESCE(SUM(amount_sanctioned), 0) AS revenue FROM icsr_consultancy_projects {wc} GROUP BY year",
+                p,
+            )
+            for row in cur.fetchall():
+                if row['year'] is not None:
+                    yearly[int(row['year'])]['consultancy_revenue'] = _decimal_to_float(row['revenue'])
+
         data = [
-            {
-                'year': int(row['year']),
-                'revenue': _decimal_to_float(row['revenue']),
-            }
-            for row in cur.fetchall()
+            {'year': y, 'funded_revenue': yearly[y]['funded_revenue'], 'consultancy_revenue': yearly[y]['consultancy_revenue']}
+            for y in sorted(yearly.keys())
         ]
         return jsonify({'data': data}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch consultancy revenue trend: {exc}'}), 500
+        return jsonify({'message': f'Failed to fetch revenue trend: {exc}'}), 500
     finally:
         if cur:
             cur.close()
@@ -688,7 +755,10 @@ def patent_list(current_user_id):
         query = f"""
             SELECT patent_id,
                    patent_title,
-                   inventors,
+                   inventor1, inventor1_category,
+                   inventor2, inventor2_category,
+                   inventor3, inventor3_category,
+                   inventor4, inventor4_category,
                    patent_status,
                    filing_date,
                    grant_date,
@@ -700,10 +770,20 @@ def patent_list(current_user_id):
         cur.execute(query, params)
         rows = []
         for row in cur.fetchall():
+            # Build a combined inventors string from individual inventor columns
+            inventors_list = [row[f'inventor{i}'] for i in range(1, 5) if row.get(f'inventor{i}')]
             rows.append({
                 'patent_id': row['patent_id'],
                 'patent_title': row['patent_title'],
-                'inventors': row['inventors'],
+                'inventors': ', '.join(inventors_list),
+                'inventor1': row.get('inventor1'),
+                'inventor1_category': row.get('inventor1_category'),
+                'inventor2': row.get('inventor2'),
+                'inventor2_category': row.get('inventor2_category'),
+                'inventor3': row.get('inventor3'),
+                'inventor3_category': row.get('inventor3_category'),
+                'inventor4': row.get('inventor4'),
+                'inventor4_category': row.get('inventor4_category'),
                 'patent_status': row['patent_status'],
                 'filing_date': _serialize_date(row['filing_date']),
                 'grant_date': _serialize_date(row['grant_date']),

@@ -1,0 +1,17 @@
+deptcode,deptname,coursesoffered,faculty,courselist
+EE,Alice Smith,Smp18,Smp15,Smp14
+CHY,Jane Davis,Smp4,Smp20,Smp64
+HSS,Jane Davis,Smp21,Smp18,Smp72
+EE,Jane Doe,Smp65,Smp41,Smp59
+MTH,Alice Doe,Smp84,Smp55,Smp64
+CE,John Smith,Smp23,Smp16,Smp13
+CSE,Jane Davis,Smp2,Smp86,Smp98
+CHY,Alice Davis,Smp63,Smp10,Smp27
+MTH,Jane Davis,Smp21,Smp30,Smp97
+EE,Alice Davis,Smp77,Smp92,Smp31
+CSE,Alice Doe,Smp15,Smp12,Smp79
+CHY,John Doe,Smp4,Smp42,Smp78
+EE,Alice Smith,Smp50,Smp96,Smp76
+CE,Alice Doe,Smp69,Smp18,Smp58
+MTH,Jane Doe,Smp57,Smp61,Smp29
+CHY,John Smith,Smp87,Smp87,Smp59

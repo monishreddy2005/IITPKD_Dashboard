@@ -58,8 +58,8 @@ const formatScaledCurrency = (value) => {
     return { value: '0', unit: '' };
   }
   
-  const crore = 10000000; // 1 crore = 1,00,00,000
-  const lakh = 100000; // 1 lakh = 1,00,000
+  const crore = 10000000;
+  const lakh = 100000;
   
   if (numeric >= crore) {
     const crores = numeric / crore;
@@ -107,6 +107,12 @@ const buildPatentBreakdown = (source = {}) => ({
   Published: Number(source?.Published) || 0
 });
 
+/**
+ * Dashboard component for Research & Development (ICSR) metrics.
+ * Connects to the backend research API.
+ * @param {Object} props
+ * @param {Object} props.user - Logged in user details
+ */
 function ResearchIcsrSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -121,8 +127,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     patent_statuses: []
   });
 
-  // Graph type selection with radio buttons (now includes table views)
-  const [viewType, setViewType] = useState('fundedProjects'); // 'fundedProjects' | 'consultancyRevenue' | 'mous' | 'patents' | 'projectsTable' | 'mousTable'
+  // Graph type selection with radio buttons
+  const [viewType, setViewType] = useState('fundedProjects');
 
   const [filters, setFilters] = useState({
     department: 'All',
@@ -259,14 +265,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     };
 
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, token]);
 
   const projectTrendChartData = useMemo(() => {
     if (!projectTrend.length) return [];
     return projectTrend.map((row) => ({
       year: row.year,
-      projects: Number(row.total) || 0
+      funded: Number(row.funded) || 0,
+      consultancy: Number(row.consultancy) || 0
     }));
   }, [projectTrend]);
 
@@ -274,7 +280,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     if (!consultancyTrend.length) return [];
     return consultancyTrend.map((row) => ({
       year: row.year,
-      revenue: Number(row.revenue) || 0
+      funded_revenue: Number(row.funded_revenue) || 0,
+      consultancy_revenue: Number(row.consultancy_revenue) || 0
     }));
   }, [consultancyTrend]);
 
@@ -353,55 +360,230 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
         {!isPublicView && <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>}
-        <p>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
           Track externally funded and consultancy projects, partnership MoUs, and innovation outcomes through patents
           filed and granted under IIT Palakkad&apos;s ICSR portfolio.
         </p>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ 
+          padding: '10px', 
+          backgroundColor: '#f8d7da', 
+          color: '#721c24', 
+          borderRadius: '4px', 
+          marginBottom: '20px' 
+        }}>{error}</div>}
 
-        {/* Summary Cards */}
-        <div className="summary-cards icsr-summary-cards">
-          <div className="summary-card">
-            <h3>Total Sanctioned Projects</h3>
-            <p className="summary-value">{formatNumber(summary.total_projects)}</p>
-            <span className="summary-subtitle">Funded + consultancy projects</span>
+        {/* Modern Summary Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '16px',
+          marginBottom: '30px'
+        }}>
+          {/* Total Sanctioned Projects Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(79, 70, 229, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>📊</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Total Projects</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.total_projects)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Funded + Consultancy</span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <h3>Externally Funded Projects</h3>
-            <p className="summary-value accent-success">{formatNumber(summary.funded_projects)}</p>
-            <span className="summary-subtitle">Active + completed</span>
+
+          {/* Externally Funded Projects Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(59, 130, 246, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>🎯</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Funded Projects</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.funded_projects)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Active + completed</span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <h3>Consultancy Projects</h3>
-            <p className="summary-value accent-warning">{formatNumber(summary.consultancy_projects)}</p>
-            <span className="summary-subtitle">Client-driven engagements</span>
+
+          {/* Consultancy Projects Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(249, 115, 22, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>💼</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Consultancy</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.consultancy_projects)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Client engagements</span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <h3>Consultancy Revenue</h3>
-            {(() => {
-              const scaled = formatScaledCurrency(summary.consultancy_revenue);
-              return (
-                <p className="summary-value">
-                  ₹{scaled.value}
-                  {scaled.unit && <span style={{ fontSize: '0.65em', fontWeight: '500', marginLeft: '0.25rem' }}>{scaled.unit}</span>}
-                </p>
-              );
-            })()}
-            <span className="summary-subtitle">Amount sanctioned across consultancy projects</span>
+
+          {/* Consultancy Revenue Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(20, 184, 166, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>💰</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Revenue</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {(() => {
+                  const scaled = formatScaledCurrency(summary.consultancy_revenue);
+                  return (
+                    <>
+                      ₹{scaled.value}
+                      {scaled.unit && <span style={{ fontSize: '12px', marginLeft: '2px' }}>{scaled.unit}</span>}
+                    </>
+                  );
+                })()}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Sanctioned amount</span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <h3>Partnership MoUs Signed</h3>
-            <p className="summary-value">{formatNumber(summary.total_mous)}</p>
-            <span className="summary-subtitle">Strategic collaboration agreements</span>
+
+          {/* Partnership MoUs Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(168, 85, 247, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>🤝</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>MoUs Signed</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.total_mous)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Collaborations</span>
+              </div>
+            </div>
           </div>
-          <div className="summary-card">
-            <h3>Patents (Filed / Granted / Published)</h3>
-            <p className="summary-value">
-              {formatNumber(summary.patent_breakdown.Filed)} / {formatNumber(summary.patent_breakdown.Granted)} /{' '}
-              {formatNumber(summary.patent_breakdown.Published)}
-            </p>
-            <span className="summary-subtitle">Total patents: {formatNumber(summary.total_patents)}</span>
+
+          {/* Patents Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+            borderRadius: '14px',
+            padding: '16px',
+            boxShadow: '0 8px 16px rgba(236, 72, 153, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-15px',
+              right: '-15px',
+              width: '70px',
+              height: '70px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>📝</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Patents</span>
+              </div>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.patent_breakdown.Filed)} / {formatNumber(summary.patent_breakdown.Granted)} / {formatNumber(summary.patent_breakdown.Published)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Filed/Granted/Published</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -440,7 +622,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <>
                   <button
                     className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('research_projects'); setIsUploadModalOpen(true); }}
+                    onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
                     style={{ 
                       padding: '8px 16px', 
                       backgroundColor: '#28a745', 
@@ -451,7 +633,22 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       fontSize: '14px'
                     }}
                   >
-                    Upload Projects
+                    Upload Consultancy Projects
+                  </button>
+                  <button
+                    className="upload-data-btn"
+                    onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
+                    style={{ 
+                      padding: '8px 16px', 
+                      backgroundColor: '#28a745', 
+                      color: '#fff', 
+                      border: 'none', 
+                      borderRadius: '4px', 
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Upload Sponsored Projects
                   </button>
                   <button
                     className="upload-data-btn"
@@ -488,7 +685,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
           </div>
           
-          {/* View Type Selection - Radio Buttons (Now includes Charts AND Tables) */}
+          {/* View Type Selection - Radio Buttons */}
           <div style={{ 
             marginBottom: '20px', 
             padding: '15px', 
@@ -506,22 +703,21 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
               Select View Type:
             </label>
             <div style={{ 
-              display: 'flex', 
-              gap: '20px', 
-              flexWrap: 'wrap'
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '10px'
             }}>
-              {/* Chart Options */}
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px',
                 cursor: 'pointer',
                 padding: '8px 12px',
-                backgroundColor: viewType === 'fundedProjects' ? '#6366f1' : 'white',
+                backgroundColor: viewType === 'fundedProjects' ? '#4f46e5' : 'white',
                 color: viewType === 'fundedProjects' ? 'white' : '#333',
                 borderRadius: '6px',
                 transition: 'all 0.3s ease',
-                border: viewType === 'fundedProjects' ? '2px solid #6366f1' : '2px solid #ced4da'
+                border: viewType === 'fundedProjects' ? '2px solid #4f46e5' : '2px solid #ced4da'
               }}>
                 <input
                   type="radio"
@@ -530,16 +726,17 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   checked={viewType === 'fundedProjects'}
                   onChange={(e) => setViewType(e.target.value)}
                   style={{ 
-                    accentColor: '#6366f1',
+                    accentColor: '#4f46e5',
                     width: '16px',
                     height: '16px',
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'fundedProjects' ? 'bold' : 'normal' }}>
-                  📊 Funded Projects Trend
+                <span style={{ fontWeight: viewType === 'fundedProjects' ? 'bold' : 'normal', fontSize: '13px' }}>
+                  📊 Funded Projects
                 </span>
               </label>
+
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -565,21 +762,22 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'consultancyRevenue' ? 'bold' : 'normal' }}>
-                  💰 Consultancy Revenue Trend
+                <span style={{ fontWeight: viewType === 'consultancyRevenue' ? 'bold' : 'normal', fontSize: '13px' }}>
+                  💰 Consultancy Revenue
                 </span>
               </label>
+
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '8px',
                 cursor: 'pointer',
                 padding: '8px 12px',
-                backgroundColor: viewType === 'mous' ? '#8b5cf6' : 'white',
+                backgroundColor: viewType === 'mous' ? '#a855f7' : 'white',
                 color: viewType === 'mous' ? 'white' : '#333',
                 borderRadius: '6px',
                 transition: 'all 0.3s ease',
-                border: viewType === 'mous' ? '2px solid #8b5cf6' : '2px solid #ced4da'
+                border: viewType === 'mous' ? '2px solid #a855f7' : '2px solid #ced4da'
               }}>
                 <input
                   type="radio"
@@ -588,16 +786,17 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   checked={viewType === 'mous'}
                   onChange={(e) => setViewType(e.target.value)}
                   style={{ 
-                    accentColor: '#8b5cf6',
+                    accentColor: '#a855f7',
                     width: '16px',
                     height: '16px',
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'mous' ? 'bold' : 'normal' }}>
-                  🤝 MoUs Signed Trend
+                <span style={{ fontWeight: viewType === 'mous' ? 'bold' : 'normal', fontSize: '13px' }}>
+                  🤝 MoUs Trend
                 </span>
               </label>
+
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -623,12 +822,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'patents' ? 'bold' : 'normal' }}>
+                <span style={{ fontWeight: viewType === 'patents' ? 'bold' : 'normal', fontSize: '13px' }}>
                   📝 Patents Trend
                 </span>
               </label>
 
-              {/* Table Options */}
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -654,10 +852,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'projectsTable' ? 'bold' : 'normal' }}>
+                <span style={{ fontWeight: viewType === 'projectsTable' ? 'bold' : 'normal', fontSize: '13px' }}>
                   📋 Projects Directory
                 </span>
               </label>
+
               <label style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -683,8 +882,8 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     cursor: 'pointer'
                   }}
                 />
-                <span style={{ fontWeight: viewType === 'mousTable' ? 'bold' : 'normal' }}>
-                  🤝 MoUs Directory
+                <span style={{ fontWeight: viewType === 'mousTable' ? 'bold' : 'normal', fontSize: '13px' }}>
+                  📋 MoUs Directory
                 </span>
               </label>
             </div>
@@ -692,20 +891,18 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
           <div className="filter-grid" style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '15px' 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+            gap: '12px' 
           }}>
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Department
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
               <select
                 className="filter-select"
                 value={filters.department}
                 onChange={(e) => handleFilterChange('department', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Departments</option>
+                <option value="All">All</option>
                 {filterOptions.project_departments.map((dept) => (
                   <option key={dept} value={dept}>{dept}</option>
                 ))}
@@ -713,16 +910,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Project Year
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
               <select
                 className="filter-select"
                 value={filters.project_year}
                 onChange={(e) => handleFilterChange('project_year', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Years</option>
+                <option value="All">All</option>
                 {filterOptions.project_years.map((year) => (
                   <option key={year} value={year}>{year}</option>
                 ))}
@@ -730,16 +925,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Project Type
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
               <select
                 className="filter-select"
                 value={filters.project_type}
                 onChange={(e) => handleFilterChange('project_type', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Types</option>
+                <option value="All">All</option>
                 {filterOptions.project_types.map((type) => (
                   <option key={type} value={type}>{type}</option>
                 ))}
@@ -747,16 +940,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Project Status
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
               <select
                 className="filter-select"
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Status</option>
+                <option value="All">All</option>
                 {filterOptions.project_statuses.map((status) => (
                   <option key={status} value={status}>{status}</option>
                 ))}
@@ -764,16 +955,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                MoU Year
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
               <select
                 className="filter-select"
                 value={filters.mou_year}
                 onChange={(e) => handleFilterChange('mou_year', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Years</option>
+                <option value="All">All</option>
                 {filterOptions.mou_years.map((year) => (
                   <option key={year} value={year}>{year}</option>
                 ))}
@@ -781,16 +970,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Patent Year
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Year</label>
               <select
                 className="filter-select"
                 value={filters.patent_year}
                 onChange={(e) => handleFilterChange('patent_year', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Years</option>
+                <option value="All">All</option>
                 {filterOptions.patent_years.map((year) => (
                   <option key={year} value={year}>{year}</option>
                 ))}
@@ -798,16 +985,14 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             </div>
 
             <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Patent Status
-              </label>
+              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Status</label>
               <select
                 className="filter-select"
                 value={filters.patent_status}
                 onChange={(e) => handleFilterChange('patent_status', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                style={{ padding: '6px', fontSize: '13px' }}
               >
-                <option value="All">All Status</option>
+                <option value="All">All</option>
                 {filterOptions.patent_statuses.map((status) => (
                   <option key={status} value={status}>{status}</option>
                 ))}
@@ -817,24 +1002,24 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
           {/* Active Filters Summary */}
           <div style={{ 
-            marginTop: '15px', 
-            padding: '10px', 
+            marginTop: '12px', 
+            padding: '8px', 
             backgroundColor: '#e9ecef', 
             borderRadius: '4px',
-            fontSize: '14px'
+            fontSize: '12px'
           }}>
             <strong>Active Filters:</strong>{' '}
-            {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
-            {filters.project_year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Project Year: {filters.project_year}</span>}
-            {filters.project_type !== 'All' && <span style={{ marginRight: '10px' }}>📋 Type: {filters.project_type}</span>}
-            {filters.status !== 'All' && <span style={{ marginRight: '10px' }}>⚡ Status: {filters.status}</span>}
-            {filters.mou_year !== 'All' && <span style={{ marginRight: '10px' }}>🤝 MoU Year: {filters.mou_year}</span>}
-            {filters.patent_year !== 'All' && <span style={{ marginRight: '10px' }}>📝 Patent Year: {filters.patent_year}</span>}
-            {filters.patent_status !== 'All' && <span style={{ marginRight: '10px' }}>📌 Patent Status: {filters.patent_status}</span>}
+            {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+            {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
+            {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
+            {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
+            {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>🤝 {filters.mou_year}</span>}
+            {filters.patent_year !== 'All' && <span style={{ marginRight: '8px' }}>📝 {filters.patent_year}</span>}
+            {filters.patent_status !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.patent_status}</span>}
             {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && 
              filters.status === 'All' && filters.mou_year === 'All' && filters.patent_year === 'All' && 
              filters.patent_status === 'All' && 
-              <span>No filters applied (showing all data)</span>
+              <span>No filters applied</span>
             }
           </div>
         </div>
@@ -848,7 +1033,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
         {!loading && (
           <>
-            {/* Single View Section based on radio selection - Charts or Tables */}
+            {/* Single View Section based on radio selection */}
             <section className="chart-section" style={{ 
               marginBottom: '30px', 
               padding: '20px', 
@@ -861,84 +1046,38 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Externally Funded Project Trend
+                      <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Annual count of externally funded projects with the selected filters.
+                      Annual count of sponsored and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <LineChart data={projectTrendChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="year" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Year', 
-                            position: 'insideBottom', 
-                            offset: -10,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Number of Projects', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                        <Line 
-                          type="monotone" 
-                          dataKey="projects" 
-                          name="Funded Projects"
-                          stroke="#6366f1" 
-                          strokeWidth={3} 
-                          dot={{ r: 6, fill: '#6366f1' }}
-                          activeDot={{ r: 8 }}
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Bar 
+                          dataKey="funded" 
+                          name="Sponsored Projects" 
+                          stackId="a" 
+                          fill="#6366f1" 
+                          radius={[0, 0, 4, 4]} 
+                          barSize={40}
                         />
-                      </LineChart>
+                        <Bar 
+                          dataKey="consultancy" 
+                          name="Consultancy Projects" 
+                          stackId="a" 
+                          fill="#22c55e" 
+                          radius={[4, 4, 0, 0]} 
+                          barSize={40}
+                        />
+                      </BarChart>
                     </ResponsiveContainer>
-
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.reduce((sum, item) => sum + item.projects, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Funded Projects</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {projectTrendChartData.length > 0 
-                            ? Math.max(...projectTrendChartData.map(item => item.projects)) 
-                            : 0}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Count</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
@@ -948,89 +1087,45 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>💰</span> Consultancy Revenue Trend
+                      <span style={{ fontSize: '24px' }}>💰</span> Revenue Trend — Sponsored vs Consultancy
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Year-wise sanctioned consultancy revenue (₹), showcasing industry engagement momentum.
+                      Year-wise sanctioned revenue comparison (₹) from sponsored and consultancy projects.
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <LineChart data={consultancyTrendChartData} margin={{ top: 20, right: 30, left: 60, bottom: 40 }}>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <LineChart data={consultancyTrendChartData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="year" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Year', 
-                            position: 'insideBottom', 
-                            offset: -10,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Revenue (₹)', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          tickFormatter={(value) => `₹${(value/100000).toFixed(1)}L`}
-                        />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v/100000).toFixed(1)}L`} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
                         <Line 
                           type="monotone" 
-                          dataKey="revenue" 
+                          dataKey="funded_revenue" 
+                          name="Sponsored Revenue"
+                          stroke="#6366f1" 
+                          strokeWidth={3}
+                          dot={{ r: 6, fill: '#6366f1' }}
+                          activeDot={{ r: 8 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="consultancy_revenue" 
                           name="Consultancy Revenue"
                           stroke="#22c55e" 
-                          strokeWidth={3} 
+                          strokeWidth={3}
                           dot={{ r: 6, fill: '#22c55e' }}
                           activeDot={{ r: 8 }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
-
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {formatCurrency(consultancyTrendChartData.reduce((sum, item) => sum + item.revenue, 0))}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Revenue</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {consultancyTrendChartData.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {consultancyTrendChartData.length > 0 
-                            ? formatCurrency(Math.max(...consultancyTrendChartData.map(item => item.revenue)))
-                            : '₹0'}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Revenue</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
 
-              {/* MoUs Signed Trend Chart */}
+              {/* MoUs Trend Chart */}
               {viewType === 'mous' && (
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
@@ -1038,78 +1133,20 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>🤝</span> MoUs Signed Per Year
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Timeline of research and industry collaboration agreements formalised through MoUs.
+                      Research and industry collaboration agreements.
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={mouTrendChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="year" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Year', 
-                            position: 'insideBottom', 
-                            offset: -10,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Number of MoUs', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                        <Bar 
-                          dataKey="total" 
-                          name="MoUs Signed"
-                          fill="#8b5cf6" 
-                          radius={[6, 6, 0, 0]}
-                        />
+                        <Legend iconType="rect" wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar dataKey="total" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={30} />
                       </BarChart>
                     </ResponsiveContainer>
-
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
-                          {mouTrendChartData.reduce((sum, item) => sum + item.total, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total MoUs</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {mouTrendChartData.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {mouTrendChartData.length > 0 
-                            ? Math.max(...mouTrendChartData.map(item => item.total)) 
-                            : 0}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Peak Year Count</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1119,115 +1156,25 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
                     <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📝</span> Patents Filed vs Granted (Year-wise)
+                      <span style={{ fontSize: '24px' }}>📝</span> Patents Trend
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Stacked breakdown of innovation outputs across filing, granting, and publication stages.
+                      Year-wise patent filings and grants.
                     </p>
                   </div>
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <BarChart data={patentTrendChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="year" 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Year', 
-                            position: 'insideBottom', 
-                            offset: -10,
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                        />
-                        <YAxis 
-                          stroke="#666"
-                          tick={{ fill: '#666', fontSize: 12 }}
-                          label={{ 
-                            value: 'Number of Patents', 
-                            angle: -90, 
-                            position: 'insideLeft',
-                            style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                          }}
-                          allowDecimals={false}
-                        />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Legend iconType="rect" wrapperStyle={{ fontSize: '12px' }} />
                         {PATENT_STATUS_ORDER.map((status) => (
-                          <Bar
-                            key={status}
-                            dataKey={status}
-                            stackId="patents"
-                            name={status}
-                            fill={PATENT_COLORS[status]}
-                            radius={status === 'Published' ? [6, 6, 0, 0] : [0, 0, 0, 0]}
-                          />
+                          <Bar key={status} dataKey={status} stackId="patents" fill={PATENT_COLORS[status]} radius={status === 'Published' ? [4, 4, 0, 0] : [0, 0, 0, 0]} barSize={30} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
-
-                    {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                          {patentTrendChartData.reduce((sum, item) => sum + item.Filed, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Filed</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {patentTrendChartData.reduce((sum, item) => sum + item.Granted, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Granted</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {patentTrendChartData.reduce((sum, item) => sum + item.Published, 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Published</div>
-                      </div>
-                    </div>
-
-                    {/* Patent Summary Cards */}
-                    <div className="patent-summary-grid" style={{ 
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '15px',
-                      marginTop: '20px'
-                    }}>
-                      {patentOverall.map((item) => (
-                        <div key={item.status} className="patent-summary-card" style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '15px',
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '8px',
-                          border: '1px solid #e0e0e0'
-                        }}>
-                          <span style={{ 
-                            width: '12px', 
-                            height: '12px', 
-                            borderRadius: '50%', 
-                            backgroundColor: item.color,
-                            display: 'inline-block'
-                          }} />
-                          <div>
-                            <h4 style={{ margin: '0 0 5px 0', fontSize: '14px', color: '#666' }}>{item.status}</h4>
-                            <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold', color: item.color }}>{formatNumber(item.value)}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
@@ -1235,118 +1182,39 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
               {/* Projects Directory Table */}
               {viewType === 'projectsTable' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📋</span> Key Research & Consultancy Projects
+                  <div className="chart-header" style={{ marginBottom: '15px' }}>
+                    <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>📋</span> Projects Directory
                     </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Detailed snapshot of currently selected projects filtered by department, year, and status.
+                    <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+                      {projectList.length} projects found
                     </p>
                   </div>
-                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                    <table className="grievance-table" style={{ 
-                      width: '100%', 
-                      borderCollapse: 'collapse',
-                      backgroundColor: '#fff',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      border: '1px solid #e0e0e0'
-                    }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#0ea5e9', color: 'white' }}>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Title</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Principal Investigator</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Type</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Department</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Funding / Client</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Amount (₹)</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Timeline</th>
+                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#0ea5e9', color: 'white' }}>
+                        <tr>
+                          <th style={{ padding: '10px' }}>Title</th>
+                          <th style={{ padding: '10px' }}>PI</th>
+                          <th style={{ padding: '10px' }}>Type</th>
+                          <th style={{ padding: '10px' }}>Dept</th>
+                          <th style={{ padding: '10px' }}>Amount</th>
+                          <th style={{ padding: '10px' }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {projectList.length === 0 && (
-                          <tr>
-                            <td colSpan={8} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                              No projects match the selected filters.
-                            </td>
-                          </tr>
-                        )}
-                        {projectList.map((project, index) => (
-                          <tr 
-                            key={project.project_id}
-                            style={{ 
-                              backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                              borderBottom: '1px solid #e0e0e0'
-                            }}
-                          >
-                            <td style={{ padding: '12px', fontWeight: '500' }}>{project.project_title}</td>
-                            <td style={{ padding: '12px' }}>{project.principal_investigator || '—'}</td>
-                            <td style={{ padding: '12px' }}>
-                              <span style={{ 
-                                backgroundColor: project.project_type === 'Consultancy' ? '#fef3c7' : '#e0e7ff',
-                                color: project.project_type === 'Consultancy' ? '#92400e' : '#3730a3',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                fontWeight: 'bold'
-                              }}>
-                                {project.project_type}
-                              </span>
-                            </td>
-                            <td style={{ padding: '12px' }}>{project.department || '—'}</td>
-                            <td style={{ padding: '12px' }}>{project.project_type === 'Consultancy' ? project.client_organization || '—' : project.funding_agency || '—'}</td>
-                            <td style={{ padding: '12px', fontWeight: '500', color: '#059669' }}>{formatCurrency(project.amount_sanctioned || 0)}</td>
-                            <td style={{ padding: '12px' }}>
-                              <span style={{ 
-                                backgroundColor: project.status === 'Active' ? '#dcfce7' : '#fee2e2',
-                                color: project.status === 'Active' ? '#166534' : '#991b1b',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                fontWeight: 'bold'
-                              }}>
-                                {project.status}
-                              </span>
-                            </td>
-                            <td style={{ padding: '12px', fontSize: '13px' }}>
-                              {formatDate(project.start_date)} → {formatDate(project.end_date)}
-                            </td>
+                        {projectList.map((p, i) => (
+                          <tr key={p.project_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                            <td style={{ padding: '8px' }}>{p.project_title}</td>
+                            <td style={{ padding: '8px' }}>{p.principal_investigator}</td>
+                            <td style={{ padding: '8px' }}>{p.project_type}</td>
+                            <td style={{ padding: '8px' }}>{p.department}</td>
+                            <td style={{ padding: '8px' }}>{formatCurrency(p.amount_sanctioned)}</td>
+                            <td style={{ padding: '8px' }}>{p.status}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                  </div>
-
-                  {/* Table Statistics */}
-                  <div style={{ 
-                    marginTop: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: '15px'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#0ea5e9', fontWeight: 'bold', fontSize: '24px' }}>
-                        {projectList.length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Total Projects</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#059669', fontWeight: 'bold', fontSize: '24px' }}>
-                        {projectList.filter(p => p.status === 'Active').length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Active Projects</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                        {projectList.filter(p => p.project_type === 'Consultancy').length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Consultancy Projects</div>
-                    </div>
                   </div>
                 </div>
               )}
@@ -1354,97 +1222,43 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
               {/* MoUs Directory Table */}
               {viewType === 'mousTable' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🤝</span> Memoranda of Understanding (MoUs)
+                  <div className="chart-header" style={{ marginBottom: '15px' }}>
+                    <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>🤝</span> MoUs Directory
                     </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Strategic collaborations powering research and innovation.
+                    <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+                      {mouList.length} MoUs found
                     </p>
                   </div>
-                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                    <table className="grievance-table" style={{ 
-                      width: '100%', 
-                      borderCollapse: 'collapse',
-                      backgroundColor: '#fff',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      border: '1px solid #e0e0e0'
-                    }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#ec4899', color: 'white' }}>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Partner</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Collaboration Focus</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Date Signed</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Validity</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Remarks</th>
+                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#ec4899', color: 'white' }}>
+                        <tr>
+                          <th style={{ padding: '10px' }}>Partner</th>
+                          <th style={{ padding: '10px' }}>Focus</th>
+                          <th style={{ padding: '10px' }}>Signed</th>
+                          <th style={{ padding: '10px' }}>Valid Till</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {mouList.length === 0 && (
-                          <tr>
-                            <td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                              No MoUs found for the selected filters.
-                            </td>
-                          </tr>
-                        )}
-                        {mouList.map((mou, index) => (
-                          <tr 
-                            key={mou.mou_id}
-                            style={{ 
-                              backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                              borderBottom: '1px solid #e0e0e0'
-                            }}
-                          >
-                            <td style={{ padding: '12px', fontWeight: '500' }}>{mou.partner_name}</td>
-                            <td style={{ padding: '12px' }}>{mou.collaboration_nature || '—'}</td>
-                            <td style={{ padding: '12px' }}>{formatDate(mou.date_signed)}</td>
-                            <td style={{ padding: '12px' }}>{formatDate(mou.validity_end)}</td>
-                            <td style={{ padding: '12px', color: '#666' }}>{mou.remarks || '—'}</td>
+                        {mouList.map((m, i) => (
+                          <tr key={m.mou_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                            <td style={{ padding: '8px' }}>{m.partner_name}</td>
+                            <td style={{ padding: '8px' }}>{m.collaboration_nature}</td>
+                            <td style={{ padding: '8px' }}>{formatDate(m.date_signed)}</td>
+                            <td style={{ padding: '8px' }}>{formatDate(m.validity_end)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Table Statistics */}
-                  <div style={{ 
-                    marginTop: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
-                    borderRadius: '8px',
-                    border: '1px solid #e0e0e0',
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: '15px'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '24px' }}>
-                        {mouList.length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Total MoUs</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
-                        {new Set(mouList.map(m => new Date(m.date_signed).getFullYear())).size}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#0ea5e9', fontWeight: 'bold', fontSize: '24px' }}>
-                        {mouList.filter(m => m.collaboration_nature).length}
-                      </div>
-                      <div style={{ color: '#666', fontSize: '14px' }}>With Focus Area</div>
-                    </div>
-                  </div>
                 </div>
               )}
             </section>
-
-            {/* Remove the separate tables sections since they're now integrated into the radio options */}
           </>
         )}
       </div>
+
       {/* Upload Modal */}
       <DataUploadModal
         isOpen={isUploadModalOpen}

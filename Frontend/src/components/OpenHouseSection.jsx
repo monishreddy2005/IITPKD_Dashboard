@@ -26,6 +26,9 @@ function OpenHouseSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
+  // Chart type selection with radio buttons
+  const [chartType, setChartType] = useState('timeline'); // 'timeline' | 'participation'
+
   const [summary, setSummary] = useState({
     total_events: 0,
     total_visitors: 0,
@@ -143,87 +146,545 @@ function OpenHouseSection({ user, isPublicView = false }) {
 
   const content = (
     <>
-      {!isPublicView && <h1>Open House – Faculty Coordinator</h1>}
+      {!isPublicView && <h1>Open House</h1>}
 
       {isPublicView ? null : (user && user.role_id === 3 && (
-        <div className="upload-buttons-group" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '2rem',
+          flexWrap: 'wrap'
+        }}>
           <button
             className="upload-data-btn"
             onClick={() => setIsUploadModalOpen(true)}
-            style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+            style={{ 
+              padding: '10px 20px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+            }}
           >
-            Upload Open House Data
+            <span>📤</span> Upload Open House Data
           </button>
         </div>
       ))}
 
-      {/* Summary Tiles */}
-      <div className="summary-grid">
-        <div className="summary-card">
-          <h3>Total Open House Events</h3>
-          <p className="summary-value">{formatNumber(summary.total_events)}</p>
+      {/* Summary Cards - Modern Design */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '24px',
+        marginBottom: '40px'
+      }}>
+        {/* Total Events Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
+        }}>
+          {/* Decorative elements */}
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🏛️</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Total Open House Events</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_events)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Annual showcase events
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <h3>Total Visitors</h3>
-          <p className="summary-value">{formatNumber(summary.total_visitors)}</p>
+
+        {/* Total Visitors Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>👥</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Total Visitors</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.total_visitors)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Community attendees
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <h3>Participating Departments</h3>
-          <p className="summary-value">{formatNumber(summary.departments_participated)}</p>
+
+        {/* Participating Departments Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+          borderRadius: '20px',
+          padding: '28px',
+          boxShadow: '0 15px 35px rgba(67, 233, 123, 0.3)',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          cursor: 'pointer'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '-30px',
+            right: '-30px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '50%'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '180px',
+            height: '180px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '50%'
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <span style={{
+                fontSize: '32px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                padding: '10px',
+                borderRadius: '12px'
+              }}>🏢</span>
+              <h3 style={{
+                margin: 0,
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>Participating Departments</h3>
+            </div>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: 'white',
+              marginBottom: '8px',
+              lineHeight: '1.2'
+            }}>
+              {formatNumber(summary.departments_participated)}
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4ade80',
+                borderRadius: '50%'
+              }} />
+              <span style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.8)'
+              }}>
+                Academic departments
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Event Timeline Chart */}
-      {timeline.length > 0 && (
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Trend of events and visitor counts over the years.</p>
-          </div>
-          <div className="chart-container">
-            <h3 className="chart-heading">Event Timeline</h3>
-            <ResponsiveContainer width="100%" height={300}>
+      {/* Chart Type Selection - Radio Buttons */}
+      <div style={{
+        backgroundColor: '#fff',
+        borderRadius: '20px',
+        padding: '20px',
+        boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: '#333'
+          }}>Select Chart View:</span>
+          
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            padding: '8px 16px',
+            backgroundColor: chartType === 'timeline' ? '#667eea' : '#f8f9fa',
+            color: chartType === 'timeline' ? 'white' : '#333',
+            borderRadius: '8px',
+            transition: 'all 0.3s ease',
+            border: chartType === 'timeline' ? '2px solid #667eea' : '2px solid #e0e0e0'
+          }}>
+            <input
+              type="radio"
+              name="chartType"
+              value="timeline"
+              checked={chartType === 'timeline'}
+              onChange={(e) => setChartType(e.target.value)}
+              style={{
+                accentColor: '#667eea',
+                width: '16px',
+                height: '16px',
+                cursor: 'pointer'
+              }}
+            />
+            <span style={{ fontWeight: chartType === 'timeline' ? 'bold' : 'normal' }}>
+              📈 Event Timeline
+            </span>
+          </label>
+
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            padding: '8px 16px',
+            backgroundColor: chartType === 'participation' ? '#22c55e' : '#f8f9fa',
+            color: chartType === 'participation' ? 'white' : '#333',
+            borderRadius: '8px',
+            transition: 'all 0.3s ease',
+            border: chartType === 'participation' ? '2px solid #22c55e' : '2px solid #e0e0e0'
+          }}>
+            <input
+              type="radio"
+              name="chartType"
+              value="participation"
+              checked={chartType === 'participation'}
+              onChange={(e) => setChartType(e.target.value)}
+              style={{
+                accentColor: '#22c55e',
+                width: '16px',
+                height: '16px',
+                cursor: 'pointer'
+              }}
+            />
+            <span style={{ fontWeight: chartType === 'participation' ? 'bold' : 'normal' }}>
+              📊 Participation Trends
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {/* Single Chart Section based on radio selection */}
+      <div style={{
+        backgroundColor: '#fff',
+        borderRadius: '20px',
+        padding: '24px',
+        boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+        marginBottom: '40px'
+      }}>
+        {/* Event Timeline Chart */}
+        {chartType === 'timeline' && timeline.length > 0 && (
+          <div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '20px'
+            }}>
+              <span style={{
+                fontSize: '28px',
+                background: '#f0f0f0',
+                padding: '8px',
+                borderRadius: '12px'
+              }}>📈</span>
+              <div>
+                <h3 style={{ margin: 0, color: '#333', fontSize: '18px' }}>Event Timeline</h3>
+                <p style={{ color: '#666', fontSize: '14px', margin: '4px 0 0 0' }}>
+                  Trend of events and visitor counts over the years.
+                </p>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
               <LineChart data={timeline}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey="event_year" stroke="#cbd5f5" />
-                <YAxis stroke="#cbd5f5" />
-                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="event_year" stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }} 
+                />
                 <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                <Line type="monotone" dataKey="event_count" stroke="#4f46e5" name="Events" strokeWidth={3} />
-                <Line type="monotone" dataKey="total_visitors" stroke="#22c55e" name="Visitors" strokeWidth={3} />
+                <Line 
+                  type="monotone" 
+                  dataKey="event_count" 
+                  stroke="#4f46e5" 
+                  name="Events" 
+                  strokeWidth={3}
+                  dot={{ r: 6, fill: '#4f46e5' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="total_visitors" 
+                  stroke="#22c55e" 
+                  name="Visitors" 
+                  strokeWidth={3}
+                  dot={{ r: 6, fill: '#22c55e' }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Participation Trends Chart */}
-      {timeline.length > 0 && (
-        <div className="chart-section">
-          <div className="chart-header">
-            <p className="chart-description">Average departmental participation vs total visitors.</p>
-          </div>
-          <div className="chart-container">
-            <h3 className="chart-heading">Participation Trends</h3>
-            <ResponsiveContainer width="100%" height={300}>
+        {/* Participation Trends Chart */}
+        {chartType === 'participation' && timeline.length > 0 && (
+          <div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '20px'
+            }}>
+              <span style={{
+                fontSize: '28px',
+                background: '#f0f0f0',
+                padding: '8px',
+                borderRadius: '12px'
+              }}>📊</span>
+              <div>
+                <h3 style={{ margin: 0, color: '#333', fontSize: '18px' }}>Participation Trends</h3>
+                <p style={{ color: '#666', fontSize: '14px', margin: '4px 0 0 0' }}>
+                  Average departmental participation vs total visitors.
+                </p>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={timeline}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis dataKey="event_year" stroke="#cbd5f5" />
-                <YAxis stroke="#cbd5f5" />
-                <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="event_year" stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #ccc',
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  }} 
+                />
                 <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                <Bar dataKey="avg_departments" fill="#0ea5e9" name="Avg. Departments" />
-                <Bar dataKey="total_visitors" fill="#f97316" name="Total Visitors" />
+                <Bar 
+                  dataKey="avg_departments" 
+                  fill="#0ea5e9" 
+                  name="Avg. Departments"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  dataKey="total_visitors" 
+                  fill="#f97316" 
+                  name="Total Visitors"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
+        )}
+
+        {/* No data message */}
+        {timeline.length === 0 && (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '12px'
+          }}>
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+            <p style={{ color: '#666', fontSize: '16px' }}>No chart data available</p>
+          </div>
+        )}
+      </div>
+
+      {/* Events Table Section */}
+      <div style={{
+        backgroundColor: '#fff',
+        borderRadius: '20px',
+        padding: '24px',
+        boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+        marginBottom: '30px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{
+              fontSize: '28px',
+              background: '#f0f0f0',
+              padding: '8px',
+              borderRadius: '12px'
+            }}>📋</span>
+            <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>Open House Events</h2>
+          </div>
+          <span style={{
+            backgroundColor: '#667eea',
+            color: 'white',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            {pagination.total} Events
+          </span>
         </div>
-      )}
 
-      {/* Events Table */}
-      <div className="chart-section">
-        <h2>Open House Events</h2>
-
-        {/* Filters - STYLED */}
+        {/* Filters */}
         <div style={{ 
           display: 'flex', 
           gap: '1rem', 
@@ -231,85 +692,157 @@ function OpenHouseSection({ user, isPublicView = false }) {
           flexWrap: 'wrap',
           alignItems: 'center'
         }}>
-          <input
-            type="text"
-            placeholder="Search by theme, audience, or departments..."
-            value={filters.search}
-            onChange={handleSearchChange}
-            style={{
-              flex: '1',
-              minWidth: '250px',
-              padding: '0.75rem 1rem',
-              fontSize: '0.95rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              backgroundColor: '#ffffff',
-              boxSizing: 'border-box'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
-            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-          />
-          <input
-            type="number"
-            placeholder="Filter by year..."
-            value={filters.year}
-            onChange={handleYearChange}
-            style={{
-              width: '180px',
-              padding: '0.75rem 1rem',
-              fontSize: '0.95rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              outline: 'none',
-              transition: 'border-color 0.2s',
-              backgroundColor: '#ffffff',
-              boxSizing: 'border-box'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#f59e0b'}
-            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-          />
+          <div style={{ flex: 1, position: 'relative', minWidth: '250px' }}>
+            <span style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#999',
+              fontSize: '16px'
+            }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search by theme, audience, or departments..."
+              value={filters.search}
+              onChange={handleSearchChange}
+              style={{
+                width: '100%',
+                padding: '12px 12px 12px 40px',
+                fontSize: '14px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                outline: 'none',
+                transition: 'all 0.2s',
+                backgroundColor: '#fff',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+            />
+          </div>
+          <div style={{ position: 'relative', width: '180px' }}>
+            <span style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#999',
+              fontSize: '16px'
+            }}>📅</span>
+            <input
+              type="number"
+              placeholder="Filter by year..."
+              value={filters.year}
+              onChange={handleYearChange}
+              style={{
+                width: '100%',
+                padding: '12px 12px 12px 40px',
+                fontSize: '14px',
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                outline: 'none',
+                transition: 'all 0.2s',
+                backgroundColor: '#fff',
+                boxSizing: 'border-box'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#667eea'}
+              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+            />
+          </div>
         </div>
 
-        <div className="table-responsive">
-          <table className="data-table">
+        <div className="table-responsive" style={{ overflowX: 'auto' }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            overflow: 'hidden'
+          }}>
             <thead>
-              <tr>
-                <th>Year</th>
-                <th>Date</th>
-                <th>Theme</th>
-                <th>Target Audience</th>
-                <th>Departments</th>
-                <th>Visitors</th>
-                <th>Key Highlights</th>
-                <th>Images</th>
+              <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e0e0e0' }}>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Year</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Date</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Theme</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Target Audience</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Departments</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Visitors</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Key Highlights</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: '#555', fontSize: '14px', fontWeight: '600' }}>Images</th>
               </tr>
             </thead>
             <tbody>
               {eventsList.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <td colSpan="8" style={{ 
+                    textAlign: 'center', 
+                    padding: '40px',
+                    color: '#666',
+                    fontSize: '14px'
+                  }}>
+                    <span style={{ fontSize: '32px', display: 'block', marginBottom: '8px' }}>📋</span>
                     No events found
                   </td>
                 </tr>
               ) : (
-                eventsList.map((event) => (
-                  <tr key={event.event_id}>
-                    <td>{event.event_year}</td>
-                    <td>{new Date(event.event_date).toLocaleDateString()}</td>
-                    <td>{event.theme || '-'}</td>
-                    <td>{event.target_audience || '-'}</td>
-                    <td>{event.departments_participated || '-'}</td>
-                    <td>{formatNumber(event.total_visitors)}</td>
-                    <td>{event.key_highlights || '-'}</td>
-                    <td>
+                eventsList.map((event, index) => (
+                  <tr 
+                    key={event.event_id}
+                    style={{
+                      backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                      borderBottom: '1px solid #e0e0e0',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    <td style={{ padding: '16px', fontSize: '14px' }}>
+                      <span style={{
+                        backgroundColor: '#667eea20',
+                        color: '#667eea',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontWeight: '500'
+                      }}>
+                        {event.event_year}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>
+                      {new Date(event.event_date).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>
+                      {event.theme || '-'}
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>
+                      {event.target_audience || '-'}
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>
+                      {event.departments_participated || '-'}
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500', color: '#22c55e' }}>
+                      {formatNumber(event.total_visitors)}
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '14px', color: '#333', maxWidth: '200px' }}>
+                      {event.key_highlights || '-'}
+                    </td>
+                    <td style={{ padding: '16px' }}>
                       {event.photos_url ? (
-                        <a href={event.photos_url} target="_blank" rel="noopener noreferrer">
-                          View Images
+                        <a 
+                          href={event.photos_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{
+                            color: '#667eea',
+                            textDecoration: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '13px'
+                          }}
+                        >
+                          <span>📸</span> View Images
                         </a>
                       ) : (
-                        '-'
+                        <span style={{ color: '#999' }}>-</span>
                       )}
                     </td>
                   </tr>
@@ -321,21 +854,56 @@ function OpenHouseSection({ user, isPublicView = false }) {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="pagination">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '1rem',
+            marginTop: '2rem',
+            flexWrap: 'wrap'
+          }}>
             <button
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page === 1}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: pagination.page === 1 ? '#ccc' : '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: pagination.page === 1 ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.3s ease'
+              }}
             >
-              Previous
+              ← Previous
             </button>
-            <span>
-              Page {pagination.page} of {pagination.pages}
+            <span style={{ color: '#666', fontSize: '14px' }}>
+              Page <strong>{pagination.page}</strong> of <strong>{pagination.pages}</strong>
             </span>
             <button
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page === pagination.pages}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: pagination.page === pagination.pages ? '#ccc' : '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: pagination.page === pagination.pages ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'all 0.3s ease'
+              }}
             >
-              Next
+              Next →
             </button>
           </div>
         )}

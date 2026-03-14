@@ -27,11 +27,16 @@ import ResearchIcsrSection from './components/ResearchIcsrSection';
 import ResearchAdministrativeSection from './components/ResearchAdministrativeSection';
 import ResearchLibrarySection from './components/ResearchLibrarySection';
 import InnovationSection from './components/InnovationSection';
+import IptifSection from './components/IptifSection';
+import TechinSection from './components/TechinSection';
 import IcsrSection from './components/IcsrSection';
 import ConclaveSection from './components/ConclaveSection';
 import OpenHouseSection from './components/OpenHouseSection';
 import NptelSection from './components/NptelSection';
 import UbaSection from './components/UbaSection';
+import SocialEngagementsSection from './components/SocialEngagements'; 
+// Import the new Students Engagement component
+import StudentsEngagementSection from './components/StudentsEngagement'; // Adjust the import path as needed
 
 function App() {
   // State to hold the authentication token
@@ -40,8 +45,7 @@ function App() {
   // State to hold user info (optional, but good for UI)
   const [user, setUser] = useState(null);
 
-  // This `useEffect` hook runs once when the app loads
-  // It checks if a token is already saved in localStorage
+  // Rehydrate auth state on initial load
   useEffect(() => {
     const storedToken = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('authUser');
@@ -54,10 +58,6 @@ function App() {
     }
   }, []);
 
-  /**
-   * Callback function passed to the Login component.
-   * Saves the token and user to state and localStorage.
-   */
   const handleLoginSuccess = (receivedToken, receivedUser) => {
     setToken(receivedToken);
     setUser(receivedUser);
@@ -65,9 +65,6 @@ function App() {
     localStorage.setItem('authUser', JSON.stringify(receivedUser));
   };
 
-  /**
-   * Clears the token and user from state and localStorage.
-   */
   const handleLogout = () => {
     setToken(null);
     setUser(null);
@@ -84,15 +81,12 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
-        {/* Public Route - Login */}
         <Route
           path="/login"
           element={
             token ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />
           }
         />
-
-        {/* Protected Routes - Dashboard */}
         <Route
           path="/"
           element={
@@ -118,13 +112,18 @@ function App() {
           <Route path="education/administrative-section" element={<EducationAdministrativeSection user={user} />} />
           <Route path="education/academic-section" element={<EducationAcademicSection user={user} />} />
           <Route path="industry-connect" element={<IndustryConnect user={user} />} />
-          <Route path="innovation-entrepreneurship" element={<InnovationSection user={user} />} />
+          <Route path="innovation-entrepreneurship" element={<InnovationEntrepreneurship user={user} />} />
+          <Route path="innovation-entrepreneurship/iptif" element={<IptifSection user={user} />} />
+          <Route path="innovation-entrepreneurship/techin" element={<TechinSection user={user} />} />
           <Route path="industry-connect/icsr" element={<IcsrSection user={user} />} />
           <Route path="industry-connect/conclave" element={<ConclaveSection user={user} />} />
           <Route path="outreach-extension" element={<OutreachExtension user={user} />} />
           <Route path="outreach-extension/open-house" element={<OpenHouseSection user={user} />} />
           <Route path="outreach-extension/nptel" element={<NptelSection user={user} />} />
           <Route path="outreach-extension/uba" element={<UbaSection user={user} />} />
+          {/* Add the new Students Engagement route */}
+          <Route path="outreach-extension/social-engagements" element={<SocialEngagementsSection user={user} />} />
+          <Route path="outreach-extension/students-engagement" element={<StudentsEngagementSection user={user} />} />
           <Route path="profile" element={<Profile user={user} />} />
           <Route path="upload" element={<UploadForm token={token} onLogout={handleLogout} />} />
           <Route path="create-user" element={<CreateUser user={user} token={token} />} />

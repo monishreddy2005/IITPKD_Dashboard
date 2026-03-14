@@ -72,19 +72,18 @@ function AdministrativeSection({ user, isPublicView = false }) {
     department: [],
     designation: [],
     gender: [],
-    category: [],
-    cadre: [],
-    employee_type: []
+    emp_type: [],
+    empstatus: [],
+    group_name: []
   });
 
   const [filters, setFilters] = useState({
     department: null,
     designation: null,
     gender: null,
-    category: null,
-    cadre: null,
-    employee_type: null,
-    isactive: true
+    emp_type: null,
+    empstatus: 'Active',
+    group_name: null
   });
 
   const [employeeData, setEmployeeData] = useState([]);
@@ -147,10 +146,9 @@ function AdministrativeSection({ user, isPublicView = false }) {
       department: null,
       designation: null,
       gender: null,
-      category: null,
-      cadre: null,
-      employee_type: null,
-      isactive: true
+      emp_type: null,
+      empstatus: 'Active',
+      group_name: null
     });
   };
 
@@ -220,14 +218,14 @@ function AdministrativeSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* All 7 filters in one row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.6rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem' }}>
                   {[
-                    { id: 'employee-type-filter', label: 'Employee Type', key: 'employee_type', options: filterOptions.employee_type },
-                    { id: 'department-filter',    label: 'Department',    key: 'department',    options: filterOptions.department },
-                    { id: 'designation-filter',   label: 'Designation',   key: 'designation',   options: filterOptions.designation },
-                    { id: 'gender-filter',        label: 'Gender',        key: 'gender',        options: filterOptions.gender },
-                    { id: 'category-filter',      label: 'Category',      key: 'category',      options: filterOptions.category },
-                    { id: 'cadre-filter',         label: 'Cadre',         key: 'cadre',         options: filterOptions.cadre },
+                    { id: 'emp-type-filter',    label: 'Employee Type', key: 'emp_type',    options: filterOptions.emp_type },
+                    { id: 'department-filter',   label: 'Department',    key: 'department',  options: filterOptions.department },
+                    { id: 'designation-filter',  label: 'Designation',   key: 'designation', options: filterOptions.designation },
+                    { id: 'gender-filter',       label: 'Gender',        key: 'gender',      options: filterOptions.gender },
+                    { id: 'group-filter',        label: 'Group',         key: 'group_name',  options: filterOptions.group_name },
+                    { id: 'empstatus-filter',    label: 'Emp. Status',   key: 'empstatus',   options: filterOptions.empstatus },
                   ].map(({ id, label, key, options }) => (
                     <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
@@ -243,25 +241,6 @@ function AdministrativeSection({ user, isPublicView = false }) {
                       </select>
                     </div>
                   ))}
-
-                  {/* Employment Status — boolean logic */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    <label htmlFor="active-filter" style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>Emp. Status</label>
-                    <select
-                      id="active-filter"
-                      value={filters.isactive === true ? 'Active' : filters.isactive === false ? 'Inactive' : 'All'}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        handleFilterChange('isactive', v === 'All' ? null : v === 'Active');
-                      }}
-                      className="filter-select"
-                      style={{ padding: '0.3rem 1.8rem 0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px' }}
-                    >
-                      <option value="All">All</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
                 </div>
               </div>
 
@@ -315,7 +294,7 @@ function AdministrativeSection({ user, isPublicView = false }) {
         <DataUploadModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          tableName="employee"
+          tableName="employees"
           token={token}
         />
       </div>

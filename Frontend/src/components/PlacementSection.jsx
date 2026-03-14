@@ -59,6 +59,13 @@ const formatPercentage = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
+/**
+ * Interactive dashboard component for Placement & Career Outcomes.
+ * Connects to the backend placement APIs to display charts and tables.
+ * @param {Object} props
+ * @param {Object} props.user - The logged-in user object.
+ * @param {boolean} props.isPublicView - Controls upload permissions.
+ */
 function PlacementSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -245,7 +252,6 @@ function PlacementSection({ user, isPublicView = false }) {
     });
   };
 
-  // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -298,101 +304,208 @@ function PlacementSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            {/* Summary Cards */}
-            <div className="summary-cards" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '20px', 
-              marginBottom: '30px' 
+            {/* Modern Summary Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)',
+              gap: '20px',
+              marginBottom: '40px'
             }}>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#6366f1', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)'
+              {/* Total Registered Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Total Registered
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '28px', fontWeight: 'bold' }}>
-                  {formatNumber(summary.registered)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📋</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Registered</span>
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatNumber(summary.registered)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Total students</span>
+                  </div>
                 </div>
               </div>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#22c55e', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(34, 197, 94, 0.2)'
+
+              {/* Total Placed Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(34, 197, 94, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Total Placed
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '28px', fontWeight: 'bold' }}>
-                  {formatNumber(summary.placed)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🎯</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Placed</span>
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatNumber(summary.placed)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Successful placements</span>
+                  </div>
                 </div>
               </div>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#f97316', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(249, 115, 22, 0.2)'
+
+              {/* Placement Percentage Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Placement %
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '28px', fontWeight: 'bold' }}>
-                  {formatPercentage(summary.placement_percentage)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📊</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Placement %</span>
+                  </div>
+                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatPercentage(summary.placement_percentage)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Success rate</span>
+                  </div>
                 </div>
               </div>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#a855f7', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(168, 85, 247, 0.2)'
+
+              {/* Highest Package Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Highest Package
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                  {formatCurrency(summary.highest_package)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🏆</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Highest</span>
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatCurrency(summary.highest_package)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Top package</span>
+                  </div>
                 </div>
               </div>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#0ea5e9', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(14, 165, 233, 0.2)'
+
+              {/* Average Package Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Average Package
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                  {formatCurrency(summary.average_package)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📈</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Average</span>
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatCurrency(summary.average_package)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Mean package</span>
+                  </div>
                 </div>
               </div>
-              <div className="summary-card" style={{ 
-                padding: '20px', 
-                backgroundColor: '#ef4444', 
-                color: 'white', 
-                borderRadius: '10px', 
-                textAlign: 'center',
-                boxShadow: '0 4px 6px rgba(239, 68, 68, 0.2)'
+
+              {/* Lowest Package Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                borderRadius: '16px',
+                padding: '20px',
+                boxShadow: '0 10px 20px rgba(239, 68, 68, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
               }}>
-                <div className="summary-card-label" style={{ fontSize: '14px', opacity: '0.9', marginBottom: '5px' }}>
-                  Lowest Package
-                </div>
-                <div className="summary-card-value" style={{ fontSize: '24px', fontWeight: 'bold' }}>
-                  {formatCurrency(summary.lowest_package)}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '80px',
+                  height: '80px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📉</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Lowest</span>
+                  </div>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                    {formatCurrency(summary.lowest_package)}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Minimum package</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -459,6 +572,21 @@ function PlacementSection({ user, isPublicView = false }) {
                         }}
                       >
                         Upload Recruiters
+                      </button>
+                      <button
+                        className="upload-data-btn"
+                        onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}
+                        style={{ 
+                          padding: '8px 16px', 
+                          backgroundColor: '#28a745', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        Upload Packages
                       </button>
                     </>
                   )}
@@ -814,7 +942,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!placementTrendChartData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No placement trend data available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No placement trend data available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -879,26 +1008,26 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
                             {placementTrendChartData.reduce((sum, item) => sum + item.registered, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Registered</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Registered</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
                             {placementTrendChartData.reduce((sum, item) => sum + item.placed, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Placed</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Placed</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
                             {placementTrendChartData.length}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Years Covered</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
                         </div>
                       </div>
                     </div>
@@ -920,7 +1049,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!genderPieData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No gender-wise data available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>👥</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No gender-wise data available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -979,7 +1109,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         {genderPieData.map((item, index) => (
@@ -987,7 +1117,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             <div style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold', fontSize: '20px' }}>
                               {item.registered} / {item.placed}
                             </div>
-                            <div style={{ color: '#666', fontSize: '14px' }}>
+                            <div style={{ color: '#666', fontSize: '12px' }}>
                               {item.name} (Reg/Placed)
                             </div>
                           </div>
@@ -1012,7 +1142,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!programStatusChartData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No program-wise data available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎓</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No program-wise data available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -1056,7 +1187,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         {programStatusChartData.map((item) => (
@@ -1064,7 +1195,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '18px' }}>
                               {formatPercentage(item.percentage)}
                             </div>
-                            <div style={{ color: '#666', fontSize: '14px' }}>
+                            <div style={{ color: '#666', fontSize: '12px' }}>
                               {item.program} Placement %
                             </div>
                           </div>
@@ -1089,7 +1220,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!recruiterChartData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No recruiter statistics available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🏢</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No recruiter statistics available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -1133,26 +1265,26 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
                             {recruiterChartData.reduce((sum, item) => sum + item.companies, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Companies</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
                             {recruiterChartData.reduce((sum, item) => sum + item.offers, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Offers</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
                             {recruiterChartData.length}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Years Active</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Years Active</div>
                         </div>
                       </div>
                     </div>
@@ -1174,7 +1306,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!sectorPieData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No sector-wise data available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No sector-wise data available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -1230,27 +1363,53 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
                             {sectorPieData.length}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Sectors</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Sectors</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
                             {sectorPieData.reduce((sum, item) => sum + item.companies, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Companies</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
                             {sectorPieData.reduce((sum, item) => sum + item.offers, 0)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Total Offers</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
                         </div>
+                      </div>
+
+                      {/* Sector Details Cards */}
+                      <div style={{
+                        marginTop: '20px',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: '10px'
+                      }}>
+                        {sectorPieData.map((sector, index) => (
+                          <div key={sector.sector} style={{
+                            padding: '12px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '10px',
+                            border: `1px solid ${SECTOR_COLORS[index % SECTOR_COLORS.length]}`,
+                            textAlign: 'center'
+                          }}>
+                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{sector.sector}</div>
+                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: SECTOR_COLORS[index % SECTOR_COLORS.length] }}>
+                              {sector.companies}
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#999' }}>
+                              {sector.offers} offers
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1271,7 +1430,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!packageTrendChartData.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No package trend data available.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>💰</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No package trend data available.</p>
                     </div>
                   ) : (
                     <div className="chart-container">
@@ -1336,26 +1496,26 @@ function PlacementSection({ user, isPublicView = false }) {
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '15px'
                       }}>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '20px' }}>
                             {formatCurrency(summary.average_package)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Overall Average</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Average</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '20px' }}>
                             {formatCurrency(summary.highest_package)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Overall Highest</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Highest</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '20px' }}>
                             {formatCurrency(summary.lowest_package)}
                           </div>
-                          <div style={{ color: '#666', fontSize: '14px' }}>Overall Lowest</div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Lowest</div>
                         </div>
                       </div>
                     </div>
@@ -1377,7 +1537,8 @@ function PlacementSection({ user, isPublicView = false }) {
 
                   {!topRecruiters.length ? (
                     <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      No top recruiter information available for the selected filters.
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>⭐</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No top recruiter information available.</p>
                     </div>
                   ) : (
                     <div className="table-responsive" style={{ overflowX: 'auto' }}>
@@ -1454,26 +1615,26 @@ function PlacementSection({ user, isPublicView = false }) {
                       borderRadius: '8px',
                       border: '1px solid #e0e0e0',
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
                       gap: '15px'
                     }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
                           {topRecruiters.length}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Entries</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Total Entries</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
                           {new Set(topRecruiters.map(r => r.company_name)).size}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Unique Companies</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Unique Companies</div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
                           {topRecruiters.reduce((sum, r) => sum + (r.offers || 0), 0)}
                         </div>
-                        <div style={{ color: '#666', fontSize: '14px' }}>Total Offers</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
                       </div>
                     </div>
                   )}

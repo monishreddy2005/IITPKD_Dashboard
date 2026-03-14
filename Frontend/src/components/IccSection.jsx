@@ -66,7 +66,6 @@ function IccSection({ user, isPublicView = false }) {
           resolved: row.complaints_resolved,
           pending: row.complaints_pending
         }));
-        // Sort in ascending order for a natural dropdown order
         formattedYearly.sort((a, b) => a.year - b.year);
         setYearlyData(formattedYearly);
 
@@ -87,11 +86,16 @@ function IccSection({ user, isPublicView = false }) {
     loadData();
   }, [token]);
 
+  // Calculate resolution rate
+  // const resolutionRate = summary.total > 0 
+  //   ? Math.round((summary.resolved / summary.total) * 100) 
+  //   : 0;
+
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
         {!isPublicView && <h1>Internal Complaints Committee (ICC)</h1>}
-        <p>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
           Monitor the yearly trend of sexual harassment complaints received by the ICC and track their resolution
           status.
         </p>
@@ -101,14 +105,34 @@ function IccSection({ user, isPublicView = false }) {
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Data
+              <span>📤</span> Upload Data
             </button>
           </div>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ 
+          padding: '10px', 
+          backgroundColor: '#f8d7da', 
+          color: '#721c24', 
+          borderRadius: '4px', 
+          marginBottom: '20px' 
+        }}>{error}</div>}
 
         {loading ? (
           <div className="loading-container">
@@ -117,254 +141,473 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            <div className="summary-cards">
-              <div className="summary-card">
-                <h3>Total Complaints</h3>
-                <p className="summary-value">{summary.total}</p>
-                <span className="summary-subtitle">Complaints received over the years</span>
-              </div>
-              <div className="summary-card">
-                <h3>Resolved</h3>
-                <p className="summary-value accent-success">{summary.resolved}</p>
-                <span className="summary-subtitle">Complaints resolved by the ICC</span>
-              </div>
-              <div className="summary-card">
-                <h3>Pending</h3>
-                <p className="summary-value accent-warning">{summary.pending}</p>
-                <span className="summary-subtitle">Complaints currently under review</span>
+            {/* Modern Summary Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '20px',
+              marginBottom: '30px'
+            }}>
+              {/* Total Complaints Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '34px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📋</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '24px', fontWeight: '500' }}>Total Complaints</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.total}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Received over the years</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Year filter */}
-              <div className="summary-card">
-                <h3>Filter by Year</h3>
-                <select
-                  className="filter-select"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  <option value="All">All Years</option>
-                  {yearlyData.map((row) => (
-                    <option key={row.year} value={row.year}>
-                      {row.year}
-                    </option>
-                  ))}
-                </select>
-                <span className="summary-subtitle">Focus on a specific complaints year</span>
+              {/* Resolved Complaints Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(67, 233, 123, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '34px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>✅</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '24px', fontWeight: '500' }}>Resolved</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.resolved}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Successfully resolved</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Pending Complaints Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fa709a 0%, #feca57 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(250, 112, 154, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '34px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>⏳</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '24px', fontWeight: '500' }}>Pending</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.pending}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Under review</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '30px',background: 'linear-gradient(135deg, #fcfcfcff 0%, #feca57 100%)', padding: '8px', borderRadius: '8px' }}>📅</span>
+                <span style={{ fontWeight: '600',fontSize: '24px', color: '#fcfcfcff' }}>Filter by Year</span>
+              </div>
+              <select
+                className="filter-select"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                style={{
+                  position: 'relative',
+                  top: '30px',
+                  width: '75%',
+                  padding: '10px 16px',
+                  fontSize: '14px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  minWidth: '150px',
+                  backgroundColor: '#fff'
+                }}
+              >
+                <option value="All">All Years</option>
+                {yearlyData.map((row) => (
+                  <option key={row.year} value={row.year}>
+                    {row.year}
+                  </option>
+                ))}
+              </select>
             </div>
+            </div> 
+
+            {/* Year Filter Card */}
+            
 
             {/* View selector for chart vs table */}
-            <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginBottom: '20px',
+              borderBottom: '2px solid #e0e0e0',
+              paddingBottom: '10px'
+            }}>
               <button
                 type="button"
-                className={`chart-tab ${activeView === 'chart' ? 'active' : ''}`}
                 onClick={() => setActiveView('chart')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'chart' ? '#667eea' : '#f8f9fa',
+                  color: activeView === 'chart' ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'chart' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
               >
-                Trend View
+                <span>📈</span> Trend View
               </button>
               <button
                 type="button"
-                className={`chart-tab ${activeView === 'table' ? 'active' : ''}`}
                 onClick={() => setActiveView('table')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'table' ? '#667eea' : '#f8f9fa',
+                  color: activeView === 'table' ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'table' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
               >
-                Yearly Statistics
+                <span>📊</span> Yearly Statistics
               </button>
             </div>
 
             {activeView === 'chart' && (
-              <div className="chart-section">
-              <div className="chart-header">
-                <div>
-                  <p className="chart-description">
-                    Overview of total complaints vis-à-vis resolved and pending cases.
-                  </p>
-                </div>
-                <div className="metric-toggle-group">
-                  <button
-                    type="button"
-                    className={`metric-toggle ${visibleMetrics.total ? 'active' : ''}`}
-                    onClick={() =>
-                      setVisibleMetrics(prev => {
-                        const next = { ...prev, total: !prev.total };
-                        if (!next.total && !next.resolved && !next.pending) {
-                          return prev;
-                        }
-                        return next;
-                      })
-                    }
-                  >
-                    Total
-                  </button>
-                  <button
-                    type="button"
-                    className={`metric-toggle ${visibleMetrics.resolved ? 'active' : ''}`}
-                    onClick={() =>
-                      setVisibleMetrics(prev => {
-                        const next = { ...prev, resolved: !prev.resolved };
-                        if (!next.total && !next.resolved && !next.pending) {
-                          return prev;
-                        }
-                        return next;
-                      })
-                    }
-                  >
-                    Resolved
-                  </button>
-                  <button
-                    type="button"
-                    className={`metric-toggle ${visibleMetrics.pending ? 'active' : ''}`}
-                    onClick={() =>
-                      setVisibleMetrics(prev => {
-                        const next = { ...prev, pending: !prev.pending };
-                        if (!next.total && !next.resolved && !next.pending) {
-                          return prev;
-                        }
-                        return next;
-                      })
-                    }
-                  >
-                    Pending
-                  </button>
-                </div>
-              </div>
-
-              {yearlyData.length === 0 ? (
-                <div className="no-data">No complaint records available.</div>
-              ) : (
-                <div className="chart-container">
-                  <h3 className="chart-heading">Year-wise Complaint Trend</h3>
-                  <ResponsiveContainer width="100%" height={420}>
-                    <AreaChart
-                      data={
-                        selectedYear === 'All'
-                          ? yearlyData
-                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
-                      }
-                      margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
+              <div className="chart-section" style={{
+                backgroundColor: '#fff',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 5px 20px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px',
+                  flexWrap: 'wrap',
+                  gap: '15px'
+                }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
+                      Year-wise Complaint Trend
+                    </h2>
+                    <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
+                      Overview of total complaints vis-à-vis resolved and pending cases.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setVisibleMetrics(prev => ({ ...prev, total: !prev.total }))}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: visibleMetrics.total ? AREA_COLORS.total : '#f0f0f0',
+                        color: visibleMetrics.total ? 'white' : '#666',
+                        border: 'none',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+                      }}
                     >
-                      <defs>
-                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
-                          <stop offset="95%" stopColor={AREA_COLORS.total} stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={AREA_COLORS.resolved} stopOpacity={0.8} />
-                          <stop offset="95%" stopColor={AREA_COLORS.resolved} stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={AREA_COLORS.pending} stopOpacity={0.8} />
-                          <stop offset="95%" stopColor={AREA_COLORS.pending} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <YAxis 
-                        stroke="#000000"
-                        tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                        label={{ value: 'Number of Complaints', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                      />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
-                        cursor={{ strokeDasharray: '4 2', stroke: '#667eea' }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="rect" 
-                      />
-                      {visibleMetrics.total && (
-                        <Area
-                          type="monotone"
-                          dataKey="total"
-                          name="Total"
-                          stroke={AREA_COLORS.total}
-                          fill="url(#colorTotal)"
-                        />
-                      )}
-                      {visibleMetrics.resolved && (
-                        <Area
-                          type="monotone"
-                          dataKey="resolved"
-                          name="Resolved"
-                          stroke={AREA_COLORS.resolved}
-                          fill="url(#colorResolved)"
-                        />
-                      )}
-                      {visibleMetrics.pending && (
-                        <Area
-                          type="monotone"
-                          dataKey="pending"
-                          name="Pending"
-                          stroke={AREA_COLORS.pending}
-                          fill="url(#colorPending)"
-                        />
-                      )}
-                    </AreaChart>
-                  </ResponsiveContainer>
+                      Total
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVisibleMetrics(prev => ({ ...prev, resolved: !prev.resolved }))}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: visibleMetrics.resolved ? AREA_COLORS.resolved : '#f0f0f0',
+                        color: visibleMetrics.resolved ? 'white' : '#666',
+                        border: 'none',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Resolved
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVisibleMetrics(prev => ({ ...prev, pending: !prev.pending }))}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: visibleMetrics.pending ? AREA_COLORS.pending : '#f0f0f0',
+                        color: visibleMetrics.pending ? 'white' : '#666',
+                        border: 'none',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Pending
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {yearlyData.length === 0 ? (
+                  <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                    <p style={{ color: '#666', fontSize: '16px' }}>No complaint records available.</p>
+                  </div>
+                ) : (
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={350}>
+                      <AreaChart
+                        data={
+                          selectedYear === 'All'
+                            ? yearlyData
+                            : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                        }
+                        margin={{ top: 10, right: 20, left: 40, bottom: 30 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={AREA_COLORS.total} stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={AREA_COLORS.resolved} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={AREA_COLORS.resolved} stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={AREA_COLORS.pending} stopOpacity={0.8} />
+                            <stop offset="95%" stopColor={AREA_COLORS.pending} stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                        <Tooltip
+                          contentStyle={{ 
+                            backgroundColor: '#fff', 
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                          }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                        {visibleMetrics.total && (
+                          <Area
+                            type="monotone"
+                            dataKey="total"
+                            name="Total"
+                            stroke={AREA_COLORS.total}
+                            fill="url(#colorTotal)"
+                            strokeWidth={2}
+                          />
+                        )}
+                        {visibleMetrics.resolved && (
+                          <Area
+                            type="monotone"
+                            dataKey="resolved"
+                            name="Resolved"
+                            stroke={AREA_COLORS.resolved}
+                            fill="url(#colorResolved)"
+                            strokeWidth={2}
+                          />
+                        )}
+                        {visibleMetrics.pending && (
+                          <Area
+                            type="monotone"
+                            dataKey="pending"
+                            name="Pending"
+                            stroke={AREA_COLORS.pending}
+                            fill="url(#colorPending)"
+                            strokeWidth={2}
+                          />
+                        )}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             )}
 
             {activeView === 'table' && (
-              <div className="chart-section">
-                <div className="grievance-table-wrapper">
-                  <div className="chart-header">
-                    <div>
-                      <h2>Yearly Complaint Statistics</h2>
-                      <p className="chart-description">
-                        Detailed breakdown of total complaints and their resolution status.
-                      </p>
-                    </div>
+              <div className="chart-section" style={{
+                backgroundColor: '#fff',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 5px 20px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '20px'
+                }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
+                      Yearly Complaint Statistics
+                    </h2>
+                    <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
+                      Detailed breakdown of total complaints and their resolution status.
+                    </p>
                   </div>
-
-                  {yearlyData.length === 0 ? (
-                    <div className="no-data">No records available to display.</div>
-                  ) : (
-                    <div className="table-responsive icc-yearly-table-scrollable">
-                      <table className="grievance-table">
-                        <thead>
-                          <tr>
-                            <th>Year</th>
-                            <th>Total Complaints</th>
-                            <th>Resolved</th>
-                            <th>Pending</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(selectedYear === 'All'
-                            ? yearlyData
-                            : yearlyData.filter((row) => String(row.year) === String(selectedYear))
-                          ).map((row) => {
-                            const statusLabel =
-                              row.pending === 0 ? (
-                                <span className="status-pill resolved">All Resolved</span>
-                              ) : row.resolved === 0 ? (
-                                <span className="status-pill pending">All Pending</span>
-                              ) : (
-                                <span className="status-pill mixed">Mixed</span>
-                              );
-
-                            return (
-                              <tr key={row.year}>
-                                <td>{row.year}</td>
-                                <td>{row.total}</td>
-                                <td>{row.resolved}</td>
-                                <td>{row.pending}</td>
-                                <td>{statusLabel}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                  <span style={{
+                    backgroundColor: '#667eea',
+                    color: 'white',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontWeight: '500'
+                  }}>
+                    {selectedYear === 'All' ? yearlyData.length : 1} {selectedYear === 'All' ? 'Years' : 'Year'}
+                  </span>
                 </div>
+
+                {yearlyData.length === 0 ? (
+                  <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📋</span>
+                    <p style={{ color: '#666', fontSize: '16px' }}>No records available to display.</p>
+                  </div>
+                ) : (
+                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                    <table style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px'
+                    }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e0e0e0' }}>
+                          <th style={{ padding: '12px', textAlign: 'left', color: '#555' }}>Year</th>
+                          <th style={{ padding: '12px', textAlign: 'left', color: '#555' }}>Total Complaints</th>
+                          <th style={{ padding: '12px', textAlign: 'left', color: '#555' }}>Resolved</th>
+                          <th style={{ padding: '12px', textAlign: 'left', color: '#555' }}>Pending</th>
+                          <th style={{ padding: '12px', textAlign: 'left', color: '#555' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedYear === 'All'
+                          ? yearlyData
+                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
+                        ).map((row, index) => {
+                          const statusLabel =
+                            row.pending === 0 ? (
+                              <span style={{
+                                backgroundColor: '#dcfce7',
+                                color: '#166534',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}>All Resolved</span>
+                            ) : row.resolved === 0 ? (
+                              <span style={{
+                                backgroundColor: '#fee2e2',
+                                color: '#991b1b',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}>All Pending</span>
+                            ) : (
+                              <span style={{
+                                backgroundColor: '#fef3c7',
+                                color: '#92400e',
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                              }}>Mixed</span>
+                            );
+
+                          return (
+                            <tr key={row.year} style={{ 
+                              backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                              borderBottom: '1px solid #e0e0e0'
+                            }}>
+                              <td style={{ padding: '12px', fontWeight: '500' }}>{row.year}</td>
+                              <td style={{ padding: '12px' }}>{row.total}</td>
+                              <td style={{ padding: '12px', color: '#22c55e', fontWeight: '500' }}>{row.resolved}</td>
+                              <td style={{ padding: '12px', color: '#f97316', fontWeight: '500' }}>{row.pending}</td>
+                              <td style={{ padding: '12px' }}>{statusLabel}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -383,4 +626,3 @@ function IccSection({ user, isPublicView = false }) {
 }
 
 export default IccSection;
-

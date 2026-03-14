@@ -136,13 +136,46 @@ function IarSection({ user, isPublicView = false }) {
     }));
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      year: 'All',
+      department: 'All',
+      gender: 'All',
+      program: 'All',
+      category: 'All'
+    });
+  };
+
   const trendData = useMemo(() => summary.trend || [], [summary.trend]);
+
+  // Custom Tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: '#fff',
+          padding: '10px',
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ margin: '0', color: entry.color }}>
+              {entry.name}: {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
         {!isPublicView && <h1>International and Alumni Relations</h1>}
-        <p>
+        <p style={{ color: '#666', marginBottom: '20px' }}>
           Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
           year, department, program, gender, and category.
         </p>
@@ -152,14 +185,34 @@ function IarSection({ user, isPublicView = false }) {
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+              style={{ 
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
             >
-              Upload Data
+              <span>📤</span> Upload Data
             </button>
           </div>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ 
+          padding: '10px', 
+          backgroundColor: '#f8d7da', 
+          color: '#721c24', 
+          borderRadius: '4px', 
+          marginBottom: '20px' 
+        }}>{error}</div>}
 
         {loading ? (
           <div className="loading-container">
@@ -168,363 +221,667 @@ function IarSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            <div className="summary-cards">
-              <div className="summary-card">
-                <h3>Total Alumni</h3>
-                <p className="summary-value">{summary.total_alumni}</p>
-                <span className="summary-subtitle">Alumni matched with filters</span>
+            {/* Filter Panel */}
+            <div className="filter-panel" style={{ 
+              marginBottom: '20px', 
+              padding: '20px', 
+              backgroundColor: '#f8f9fa', 
+              borderRadius: '8px', 
+              border: '1px solid #e9ecef' 
+            }}>
+              <div className="filter-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: '15px' 
+              }}>
+                <h3 style={{ margin: '0', color: '#333' }}>Filters</h3>
+                <button
+                  className="clear-filters-btn"
+                  onClick={handleClearFilters}
+                  style={{ 
+                    padding: '8px 16px', 
+                    backgroundColor: '#dc3545', 
+                    color: '#fff', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  Clear Filters
+                </button>
               </div>
-              <div className="summary-card">
-                <h3>Higher Studies</h3>
-                <p className="summary-value accent-success">{summary.higher_studies}</p>
-                <span className="summary-subtitle">Pursuing research or advanced education</span>
+
+              <div className="filter-grid" style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '15px' 
+              }}>
+                <div className="filter-group">
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                    Year of Admission
+                  </label>
+                  <select
+                    id="yearFilter"
+                    className="filter-select"
+                    value={filters.year}
+                    onChange={(e) => handleFilterChange('year', e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  >
+                    <option value="All">All Years</option>
+                    {filterOptions.years?.map((year) => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                    Department
+                  </label>
+                  <select
+                    id="departmentFilter"
+                    className="filter-select"
+                    value={filters.department}
+                    onChange={(e) => handleFilterChange('department', e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  >
+                    <option value="All">All Departments</option>
+                    {filterOptions.departments?.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                    Program
+                  </label>
+                  <select
+                    id="programFilter"
+                    className="filter-select"
+                    value={filters.program}
+                    onChange={(e) => handleFilterChange('program', e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  >
+                    <option value="All">All Programs</option>
+                    {filterOptions.programs?.map((program) => (
+                      <option key={program} value={program}>{program}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                    Gender
+                  </label>
+                  <select
+                    id="genderFilter"
+                    className="filter-select"
+                    value={filters.gender}
+                    onChange={(e) => handleFilterChange('gender', e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  >
+                    <option value="All">All Genders</option>
+                    {filterOptions.genders?.map((gender) => (
+                      <option key={gender} value={gender}>{gender}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="filter-group">
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
+                    Category
+                  </label>
+                  <select
+                    id="categoryFilter"
+                    className="filter-select"
+                    value={filters.category}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                  >
+                    <option value="All">All Categories</option>
+                    {filterOptions.categories?.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="summary-card">
-                <h3>Corporate Careers</h3>
-                <p className="summary-value accent-warning">{summary.corporate}</p>
-                <span className="summary-subtitle">Working in industry and corporate roles</span>
+
+              {/* Active Filters Summary */}
+              <div style={{ 
+                marginTop: '15px', 
+                padding: '10px', 
+                backgroundColor: '#e9ecef', 
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}>
+                <strong>Active Filters:</strong>{' '}
+                {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
+                {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
+                {filters.program !== 'All' && <span style={{ marginRight: '10px' }}>🎓 Program: {filters.program}</span>}
+                {filters.gender !== 'All' && <span style={{ marginRight: '10px' }}>👤 Gender: {filters.gender}</span>}
+                {filters.category !== 'All' && <span style={{ marginRight: '10px' }}>📋 Category: {filters.category}</span>}
+                {filters.year === 'All' && filters.department === 'All' && filters.program === 'All' && 
+                 filters.gender === 'All' && filters.category === 'All' && 
+                  <span>No filters applied (showing all data)</span>
+                }
               </div>
             </div>
 
-            <div className="chart-section">
-              {/* Filter Panel */}
-              <div className="filter-panel">
-                <div className="filter-header">
-                  <h3>Filters</h3>
-                  <button
-                    className="clear-filters-btn"
-                    onClick={() =>
-                      setFilters({
-                        year: 'All',
-                        department: 'All',
-                        gender: 'All',
-                        program: 'All',
-                        category: 'All'
-                      })
-                    }
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-
-                <div className="filter-grid">
-                  <div className="filter-group">
-                    <label htmlFor="yearFilter">Year of Admission</label>
-                    <select
-                      id="yearFilter"
-                      className="filter-select"
-                      value={filters.year}
-                      onChange={(e) => handleFilterChange('year', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.years?.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
+            {/* Modern Summary Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '20px',
+              marginBottom: '30px'
+            }}>
+              {/* Total Alumni Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>👥</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Total Alumni</span>
                   </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="departmentFilter">Department</label>
-                    <select
-                      id="departmentFilter"
-                      className="filter-select"
-                      value={filters.department}
-                      onChange={(e) => handleFilterChange('department', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.departments?.map((dept) => (
-                        <option key={dept} value={dept}>
-                          {dept}
-                        </option>
-                      ))}
-                    </select>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.total_alumni}
                   </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="programFilter">Program</label>
-                    <select
-                      id="programFilter"
-                      className="filter-select"
-                      value={filters.program}
-                      onChange={(e) => handleFilterChange('program', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.programs?.map((program) => (
-                        <option key={program} value={program}>
-                          {program}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="genderFilter">Gender</label>
-                    <select
-                      id="genderFilter"
-                      className="filter-select"
-                      value={filters.gender}
-                      onChange={(e) => handleFilterChange('gender', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.genders?.map((gender) => (
-                        <option key={gender} value={gender}>
-                          {gender}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label htmlFor="categoryFilter">Category</label>
-                    <select
-                      id="categoryFilter"
-                      className="filter-select"
-                      value={filters.category}
-                      onChange={(e) => handleFilterChange('category', e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      {filterOptions.categories?.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Alumni matched with filters</span>
                   </div>
                 </div>
               </div>
-              {/* View selector for different IAR charts */}
-              <div className="chart-tabs" style={{ marginTop: '1.5rem' }}>
-                <button
-                  type="button"
-                  className={`chart-tab ${activeView === 'trend' ? 'active' : ''}`}
-                  onClick={() => setActiveView('trend')}
-                >
-                  Outcome Trend
-                </button>
-                <button
-                  type="button"
-                  className={`chart-tab ${activeView === 'state' ? 'active' : ''}`}
-                  onClick={() => setActiveView('state')}
-                >
-                  State Distribution
-                </button>
-                <button
-                  type="button"
-                  className={`chart-tab ${activeView === 'country' ? 'active' : ''}`}
-                  onClick={() => setActiveView('country')}
-                >
-                  Country Distribution
-                </button>
-                <button
-                  type="button"
-                  className={`chart-tab ${activeView === 'outcome' ? 'active' : ''}`}
-                  onClick={() => setActiveView('outcome')}
-                >
-                  Department Outcome
-                </button>
+
+              {/* Higher Studies Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(34, 211, 238, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>🎓</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Higher Studies</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.higher_studies}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Pursuing research/education</span>
+                  </div>
+                </div>
               </div>
 
+              {/* Corporate Careers Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>💼</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Corporate Careers</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.corporate}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Working in industry</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* View selector for different IAR charts */}
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginBottom: '20px',
+              borderBottom: '2px solid #e0e0e0',
+              paddingBottom: '10px',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                type="button"
+                onClick={() => setActiveView('trend')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'trend' ? '#667eea' : '#f8f9fa',
+                  color: activeView === 'trend' ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'trend' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>📈</span> Outcome Trend
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('state')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'state' ? '#67e8f9' : '#f8f9fa',
+                  color: activeView === 'state' ? '#333' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'state' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>🗺️</span> State Distribution
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('country')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'country' ? '#764ba2' : '#f8f9fa',
+                  color: activeView === 'country' ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'country' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>🌍</span> Country Distribution
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView('outcome')}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: activeView === 'outcome' ? '#43e97b' : '#f8f9fa',
+                  color: activeView === 'outcome' ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: activeView === 'outcome' ? '600' : '500',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>📊</span> Department Outcome
+              </button>
+            </div>
+
+            <div className="chart-section" style={{ 
+              marginBottom: '30px', 
+              padding: '20px', 
+              backgroundColor: '#fff', 
+              borderRadius: '10px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+            }}>
               {activeView === 'trend' && (
-                <>
-                  <div className="chart-header">
-                    <div>
-                      <p className="chart-description">
-                        Track the proportion of alumni opting for higher studies versus corporate roles across admission
-                        years.
-                      </p>
-                    </div>
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>📈</span> Outcome Trend Over Years
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Track the proportion of alumni opting for higher studies versus corporate roles across admission years.
+                    </p>
                   </div>
 
                   {trendData.length === 0 ? (
-                    <div className="no-data">No trend data available for the selected filters.</div>
+                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No trend data available for the selected filters.</p>
+                    </div>
                   ) : (
                     <div className="chart-container">
-                      <h3 className="chart-heading">Outcome Trend Over Years</h3>
-                      <ResponsiveContainer width="100%" height={420}>
-                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis 
-                            dataKey="year" 
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <YAxis 
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                          <Legend 
-                            wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                            iconType="plainline" 
-                          />
-                          <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={3} />
-                          <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={3} />
-                          <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={3} />
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: '11px' }} />
+                          <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={2.5} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={2} dot={{ r: 3 }} />
                         </LineChart>
                       </ResponsiveContainer>
+
+                      {/* Chart Statistics */}
+                      <div style={{ 
+                        marginTop: '20px', 
+                        padding: '15px', 
+                        backgroundColor: '#f8f9fa', 
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: '10px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
+                            {trendData.reduce((sum, item) => sum + item.total, 0)}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '20px' }}>
+                            {trendData.reduce((sum, item) => sum + item.higher, 0)}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Higher Studies</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
+                            {trendData.reduce((sum, item) => sum + item.corporate, 0)}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Corporate</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '20px' }}>
+                            {trendData.length}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Years Covered</div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {activeView === 'state' && (
-                <>
-                  <div className="chart-header">
-                    <div>
-                      <p className="chart-description">
-                        Alumni counts mapped to Indian states based on their registered home state.
-                      </p>
-                    </div>
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>🗺️</span> State-wise Alumni Distribution
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Alumni counts mapped to Indian states based on their registered home state.
+                    </p>
                   </div>
 
                   {stateDistribution.length === 0 ? (
-                    <div className="no-data">No state distribution data to display.</div>
+                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🗺️</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No state distribution data to display.</p>
+                    </div>
                   ) : (
                     <div className="chart-container">
-                      <h3 className="chart-heading">State-wise Alumni Distribution</h3>
-                      <ResponsiveContainer width="100%" height={420}>
-                        <BarChart data={stateDistribution} margin={{ top: 20, right: 30, left: 60, bottom: 60 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis 
-                            dataKey="state" 
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'State', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <YAxis 
-                            stroke="#000000"
-                            tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                            label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                          />
-                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                          <Legend 
-                            wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                            iconType="rect" 
-                          />
-                          <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} />
+                      <ResponsiveContainer width="100%" height={350}>
+                        <BarChart data={stateDistribution} margin={{ top: 10, right: 20, left: 40, bottom: 60 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="state" angle={-30} textAnchor="end" height={70} tick={{ fontSize: 10 }} interval={0} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
                         </BarChart>
                       </ResponsiveContainer>
+
+                      {/* Chart Statistics */}
+                      <div style={{ 
+                        marginTop: '20px', 
+                        padding: '15px', 
+                        backgroundColor: '#f8f9fa', 
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '10px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#67e8f9', fontWeight: 'bold', fontSize: '20px' }}>
+                            {stateDistribution.reduce((sum, item) => sum + item.count, 0)}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
+                            {stateDistribution.length}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>States Represented</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
+                            {stateDistribution.length > 0 ? Math.max(...stateDistribution.map(item => item.count)) : 0}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {activeView === 'country' && (
-                <>
-                  <div className="chart-header">
-                    <div>
-                      <p className="chart-description">
-                        Breakdown of alumni locations across countries to understand international presence.
-                      </p>
-                    </div>
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>🌍</span> Global Alumni Reach
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Breakdown of alumni locations across countries to understand international presence.
+                    </p>
                   </div>
 
                   {countryDistribution.length === 0 ? (
-                    <div className="no-data">No country distribution data to display.</div>
+                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🌍</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No country distribution data to display.</p>
+                    </div>
                   ) : (
                     <div className="chart-container">
-                      <h3 className="chart-heading">Global Alumni Reach</h3>
-                      <ResponsiveContainer width="100%" height={380}>
+                      <ResponsiveContainer width="100%" height={350}>
                         <PieChart>
                           <Pie
-                            dataKey="count"
                             data={countryDistribution}
+                            dataKey="count"
                             nameKey="country"
                             cx="50%"
                             cy="50%"
-                            outerRadius={140}
-                            label={({ name, value }) => `${name} (${value})`}
+                            outerRadius={120}
+                            label={({ country, percent }) => `${country} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
                           >
                             {countryDistribution.map((entry, index) => (
                               <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="circle" />
+                          <Tooltip formatter={(value) => [`${value} alumni`, 'Count']} />
                         </PieChart>
                       </ResponsiveContainer>
+
+                      {/* Chart Statistics */}
+                      <div style={{ 
+                        marginTop: '20px', 
+                        padding: '15px', 
+                        backgroundColor: '#f8f9fa', 
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '10px'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
+                            {countryDistribution.length}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Countries</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '20px' }}>
+                            {countryDistribution.reduce((sum, item) => sum + item.count, 0)}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
+                            {countryDistribution.length > 0 ? Math.max(...countryDistribution.map(item => item.count)) : 0}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </>
+                </div>
               )}
 
               {activeView === 'outcome' && (
-                <>
-                  <div className="chart-header">
-                    <div>
-                      <p className="chart-description">
-                        Compare higher studies versus corporate career paths chosen by alumni from each department.
-                      </p>
-                    </div>
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>📊</span> Outcome by Department
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Compare higher studies versus corporate career paths chosen by alumni from each department.
+                    </p>
                   </div>
 
                   {outcomeBreakdown.length === 0 ? (
-                    <div className="no-data">No departmental breakdown to display.</div>
+                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                      <p style={{ color: '#666', fontSize: '16px' }}>No departmental breakdown to display.</p>
+                    </div>
                   ) : (
                     <>
                       <div className="chart-container">
-                        <h3 className="chart-heading">Outcome by Department</h3>
-                        <ResponsiveContainer width="100%" height={420}>
-                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 20, right: 30, left: 60, bottom: 80 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                            <XAxis 
-                              dataKey="department" 
-                              angle={-45}
-                              textAnchor="end"
-                              height={100}
-                              stroke="#000000"
-                              tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                              label={{ value: 'Department', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                            />
-                            <YAxis 
-                              stroke="#000000"
-                              tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
-                              label={{ value: 'Number of Alumni', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
-                            />
-                            <Tooltip contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }} />
-                            <Legend 
-                              align="right"
-                              verticalAlign="top"
-                              wrapperStyle={{ paddingTop: '10px', fontWeight: 'bold' }} 
-                              iconType="rect" 
-                            />
-                            <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} />
-                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} />
+                        <ResponsiveContainer width="100%" height={350}>
+                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 10, right: 20, left: 40, bottom: 60 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="department" angle={-30} textAnchor="end" height={70} tick={{ fontSize: 10 }} interval={0} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
+                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
                           </BarChart>
                         </ResponsiveContainer>
-                      </div>
 
-                      <div className="grievance-table-wrapper">
-                        <div className="chart-header">
-                          <div>
-                            <h2>Departmental Outcome Summary</h2>
-                            <p className="chart-description">
-                              Tabular view listing counts per department for transparency and export needs.
-                            </p>
+                        {/* Chart Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(4, 1fr)',
+                          gap: '10px'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
+                              {outcomeBreakdown.reduce((sum, item) => sum + item.total, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#43e97b', fontWeight: 'bold', fontSize: '20px' }}>
+                              {outcomeBreakdown.reduce((sum, item) => sum + (item.higher || 0), 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Higher Studies</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#fa709a', fontWeight: 'bold', fontSize: '20px' }}>
+                              {outcomeBreakdown.reduce((sum, item) => sum + (item.corporate || 0), 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Corporate</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
+                              {outcomeBreakdown.length}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Departments</div>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="table-responsive iar-outcome-table-scrollable">
-                          <table className="grievance-table">
-                            <thead>
+                      {/* Departmental Outcome Summary Table */}
+                      <div className="grievance-table-wrapper" style={{ marginTop: '20px' }}>
+                        <div className="chart-header" style={{ marginBottom: '15px' }}>
+                          <h3 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '18px' }}>Departmental Outcome Summary</h3>
+                          <p className="chart-description" style={{ color: '#666', fontSize: '12px', margin: 0 }}>
+                            Tabular view listing counts per department.
+                          </p>
+                        </div>
+
+                        <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '300px', overflowY: 'auto' }}>
+                          <table style={{ 
+                            width: '100%', 
+                            borderCollapse: 'collapse',
+                            fontSize: '13px'
+                          }}>
+                            <thead style={{ position: 'sticky', top: 0, backgroundColor: '#43e97b', color: 'white' }}>
                               <tr>
-                                <th>Department</th>
-                                <th>Total Alumni</th>
-                                <th>Higher Studies</th>
-                                <th>Corporate</th>
+                                <th style={{ padding: '10px', textAlign: 'left' }}>Department</th>
+                                <th style={{ padding: '10px', textAlign: 'left' }}>Total Alumni</th>
+                                <th style={{ padding: '10px', textAlign: 'left' }}>Higher Studies</th>
+                                <th style={{ padding: '10px', textAlign: 'left' }}>Corporate</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {sortedOutcomeBreakdown.map((row) => (
-                                <tr key={row.department}>
-                                  <td>{row.department}</td>
-                                  <td>{row.total}</td>
-                                  <td>{row.higher}</td>
-                                  <td>{row.corporate}</td>
+                              {sortedOutcomeBreakdown.map((row, index) => (
+                                <tr key={row.department} style={{ backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                                  <td style={{ padding: '8px' }}>{row.department}</td>
+                                  <td style={{ padding: '8px' }}>{row.total}</td>
+                                  <td style={{ padding: '8px', color: '#43e97b', fontWeight: '500' }}>{row.higher}</td>
+                                  <td style={{ padding: '8px', color: '#fa709a', fontWeight: '500' }}>{row.corporate}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -533,7 +890,7 @@ function IarSection({ user, isPublicView = false }) {
                       </div>
                     </>
                   )}
-                </>
+                </div>
               )}
             </div>
           </>
@@ -547,9 +904,8 @@ function IarSection({ user, isPublicView = false }) {
         tableName="alumni"
         token={token}
       />
-    </div >
+    </div>
   );
 }
 
 export default IarSection;
-

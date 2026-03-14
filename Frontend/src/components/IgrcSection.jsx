@@ -117,39 +117,165 @@ function IgrcSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            <div className="summary-cards">
-              <div className="summary-card">
-                <h3>Total Grievances</h3>
-                <p className="summary-value">{summary.total}</p>
-                <span className="summary-subtitle">All grievances filed to date</span>
-              </div>
-              <div className="summary-card">
-                <h3>Resolved</h3>
-                <p className="summary-value accent-success">{summary.resolved}</p>
-                <span className="summary-subtitle">Grievances successfully closed</span>
-              </div>
-              <div className="summary-card">
-                <h3>Pending</h3>
-                <p className="summary-value accent-warning">{summary.pending}</p>
-                <span className="summary-subtitle">Grievances currently in process</span>
+            {/* Modern Gradient Summary Cards */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '20px',
+              marginBottom: '30px'
+            }}>
+              {/* Total Grievances Card - Purple Gradient */}
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📋</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Total Grievances</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.total}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>All grievances filed</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Year filter */}
-              <div className="summary-card">
-                <h3>Filter by Year</h3>
-                <select
-                  className="filter-select"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  <option value="All">All Years</option>
-                  {yearlyData.map((row) => (
-                    <option key={row.year} value={row.year}>
-                      {row.year}
-                    </option>
-                  ))}
-                </select>
-                <span className="summary-subtitle">Focus on a specific grievance year</span>
+              {/* Resolved Card - Green Gradient */}
+              <div style={{
+                background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(67, 233, 123, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>✅</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Resolved</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.resolved}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Successfully closed</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pending Card - Pink Gradient */}
+              <div style={{
+                background: 'linear-gradient(135deg, #fa709a 0%, #feca57 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(250, 112, 154, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>⏳</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Pending</span>
+                  </div>
+                  <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                    {summary.pending}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Currently in process</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter by Year Card - Purple Gradient */}
+              <div style={{
+                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+                borderRadius: '16px',
+                padding: '24px',
+                boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-20px',
+                  width: '100px',
+                  height: '100px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '50%'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📅</span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>Filter by Year</span>
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        fontSize: '14px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="All" style={{ color: '#333' }}>All Years</option>
+                      {yearlyData.map((row) => (
+                        <option key={row.year} value={row.year} style={{ color: '#333' }}>
+                          {row.year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }} />
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Focus on a specific year</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -273,4 +399,3 @@ function IgrcSection({ user, isPublicView = false }) {
 }
 
 export default IgrcSection;
-

@@ -7,25 +7,25 @@ import './PeopleCampus.css';
 
 const OUTREACH_EXTENSION_SECTIONS = [
   {
-    code: 'O',
+    code: '🏛️',
     title: 'Open House',
-    description: 'Faculty coordinator: Open House events, themes, and visitor statistics',
+    description: 'Community Engagement Events',
     route: '/outreach-extension/open-house',
-    allowedRoles: [3] // Super admin and another role
+    allowedRoles: [3]
   },
   {
-    code: 'N',
-    title: 'NPTEL – CCE',
-    description: 'NPTEL local chapters, courses, enrollments, and certifications',
+    code: '📚',
+    title: 'NPTEL - CCE',
+    description: 'Centre for Continuing Education',
     route: '/outreach-extension/nptel',
-    allowedRoles: [3] // Only super admin
+    allowedRoles: [3]
   },
   {
-    code: 'U',
-    title: 'UBA',
-    description: 'Unnat Bharat Abhiyan: Projects, events, and rural interventions',
+    code: '🌾',
+    title: 'Unnat Bharat Abhiyan',
+    description: 'Rural Development Initiative',
     route: '/outreach-extension/uba',
-    allowedRoles: [3] // Only super admin
+    allowedRoles: [3]
   }
 ];
 

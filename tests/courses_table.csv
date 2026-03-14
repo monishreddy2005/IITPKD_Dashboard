@@ -1,0 +1,16 @@
+course_code,course_name,credit_l_t_p_c,course_category,proposing_faculty_name,faculty_affiliation,target_programme,target_discipline,prerequisite,date_of_proposal,proposal_type,bac_number,senate_number,course_proposal_pdf,is_industry_course,industry_partner,industry_coordinator_name,industry_course_status_currentay,course_status_history
+C7386,Jane Doe,Smp12,ELECTIVE,Jane Doe,Smp93,MSC,Smp98,Smp97,2022-12-01,REVISED,61,69,Smp63,NO,Smp60,Jane Doe,ACTIVE,ACTIVE
+C7387,John Doe,Smp91,MOOC,John Doe,Smp24,MTECH,Smp77,Smp55,2024-09-03,REVISED,93,5,Smp30,YES,Smp17,Jane Smith,ACTIVE,INACTIVE
+C7388,Jane Doe,Smp52,ELECTIVE,Alice Smith,Smp23,BTECH,Smp91,Smp54,2023-01-31,NEW,75,28,Smp82,YES,Smp94,Jane Davis,ACTIVE,ACTIVE
+C7389,John Davis,Smp41,ELECTIVE,Alice Doe,Smp80,PHD,Smp23,Smp37,2020-02-03,NEW,31,30,Smp23,YES,Smp71,John Doe,INACTIVE,ACTIVE
+C7390,John Doe,Smp82,CORE,Jane Davis,Smp62,PHD,Smp97,Smp34,2020-02-05,REVISED,20,37,Smp15,NO,Smp8,Jane Doe,INACTIVE,INACTIVE
+C7391,Jane Smith,Smp24,ELECTIVE,John Smith,Smp11,MSC,Smp51,Smp82,2023-04-10,REVISED,61,23,Smp67,YES,Smp71,John Davis,ACTIVE,ACTIVE
+C7392,John Doe,Smp17,ELECTIVE,Alice Davis,Smp83,MSC,Smp88,Smp68,2022-02-28,REVISED,73,55,Smp11,YES,Smp48,John Doe,INACTIVE,INACTIVE
+C7393,Alice Doe,Smp45,CORE,John Smith,Smp35,MSC,Smp44,Smp23,2022-05-07,REVISED,24,18,Smp22,NO,Smp86,Alice Smith,ACTIVE,ACTIVE
+C7394,John Doe,Smp56,CORE,John Davis,Smp83,BTECH,Smp88,Smp70,2021-12-24,NEW,71,99,Smp47,YES,Smp69,John Doe,INACTIVE,INACTIVE
+C7395,Jane Davis,Smp87,ELECTIVE,Jane Davis,Smp70,MSC,Smp90,Smp62,2022-04-20,REVISED,36,77,Smp54,YES,Smp49,John Davis,ACTIVE,INACTIVE
+C7396,Jane Doe,Smp6,CORE,John Smith,Smp40,PHD,Smp12,Smp59,2020-05-12,NEW,36,88,Smp62,YES,Smp28,John Smith,INACTIVE,ACTIVE
+C7397,Alice Davis,Smp55,ELECTIVE,John Doe,Smp59,PHD,Smp57,Smp32,2023-04-14,NEW,33,72,Smp35,NO,Smp9,Jane Smith,INACTIVE,ACTIVE
+C7398,Jane Davis,Smp41,CORE,Jane Doe,Smp38,BTECH,Smp15,Smp44,2021-02-16,REVISED,5,61,Smp7,YES,Smp55,Alice Smith,ACTIVE,INACTIVE
+C7399,John Davis,Smp94,CORE,Alice Smith,Smp81,PHD,Smp88,Smp29,2021-10-03,REVISED,46,84,Smp19,NO,Smp95,John Davis,INACTIVE,ACTIVE
+C7400,Jane Davis,Smp48,CORE,Alice Doe,Smp1,BTECH,Smp53,Smp44,2021-08-13,REVISED,6,75,Smp94,YES,Smp80,Alice Smith,INACTIVE,INACTIVE

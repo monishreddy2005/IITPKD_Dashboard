@@ -16,28 +16,44 @@ const handleError = (error, defaultMessage) => {
   throw new Error(defaultMessage);
 };
 
-// ICSR Section APIs
-export const fetchIcsrSummary = async (token) => {
+const buildQuery = (filters = {}) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '' && value !== 'All') {
+      params.append(key, value);
+    }
+  });
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
+/**
+ * Retrieves the summary statistics for ICSR.
+ * @param {Object} filters - Active dashboard filters.
+ * @param {string} token - The user's auth token.
+ * @returns {Promise<Object>} ICSR summary data.
+ */
+export const fetchIcsrSummary = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/icsr/summary`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/icsr/summary${buildQuery(filters)}`, authHeaders(token));
     return response.data;
   } catch (error) {
     handleError(error, 'Failed to fetch ICSR summary');
   }
 };
 
-export const fetchIcsrYearlyDistribution = async (token) => {
+export const fetchIcsrYearlyDistribution = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/icsr/yearly-distribution`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/icsr/yearly-distribution${buildQuery(filters)}`, authHeaders(token));
     return response.data;
   } catch (error) {
     handleError(error, 'Failed to fetch ICSR yearly distribution');
   }
 };
 
-export const fetchIcsrEventTypes = async (token) => {
+export const fetchIcsrEventTypes = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/icsr/event-types`, authHeaders(token));
+    const response = await axios.get(`${API_BASE_URL}/icsr/event-types${buildQuery(filters)}`, authHeaders(token));
     return response.data;
   } catch (error) {
     handleError(error, 'Failed to fetch ICSR event types');
@@ -46,17 +62,8 @@ export const fetchIcsrEventTypes = async (token) => {
 
 export const fetchIcsrEvents = async (filters, page = 1, perPage = 50, token) => {
   try {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '' && value !== 'All') {
-        params.append(key, value);
-      }
-    });
-    params.append('page', page);
-    params.append('per_page', perPage);
-    
     const response = await axios.get(
-      `${API_BASE_URL}/icsr/events?${params.toString()}`,
+      `${API_BASE_URL}/icsr/events${buildQuery(filters)}${buildQuery(filters) ? '&' : '?'}${(new URLSearchParams({page, per_page: perPage})).toString()}`,
       authHeaders(token)
     );
     return response.data;
