@@ -25,7 +25,6 @@ const AREA_COLORS = {
 function IccSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
-  const [selectedYear, setSelectedYear] = useState('All');
   const [visibleMetrics, setVisibleMetrics] = useState({
     total: true,
     resolved: true,
@@ -144,7 +143,7 @@ function IccSection({ user, isPublicView = false }) {
             {/* Modern Summary Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '20px',
               marginBottom: '30px'
             }}>
@@ -247,55 +246,9 @@ function IccSection({ user, isPublicView = false }) {
                 </div>
               </div>
 
-              <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '100px',
-                  height: '100px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '30px',background: 'linear-gradient(135deg, #fcfcfcff 0%, #feca57 100%)', padding: '8px', borderRadius: '8px' }}>📅</span>
-                <span style={{ fontWeight: '600',fontSize: '24px', color: '#fcfcfcff' }}>Filter by Year</span>
-              </div>
-              <select
-                className="filter-select"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                style={{
-                  position: 'relative',
-                  top: '30px',
-                  width: '75%',
-                  padding: '10px 16px',
-                  fontSize: '14px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  minWidth: '150px',
-                  backgroundColor: '#fff'
-                }}
-              >
-                <option value="All">All Years</option>
-                {yearlyData.map((row) => (
-                  <option key={row.year} value={row.year}>
-                    {row.year}
-                  </option>
-                ))}
-              </select>
             </div>
-            </div> 
 
-            {/* Year Filter Card */}
-            
+
 
             {/* View selector for chart vs table */}
             <div style={{
@@ -432,11 +385,7 @@ function IccSection({ user, isPublicView = false }) {
                   <div className="chart-container">
                     <ResponsiveContainer width="100%" height={350}>
                       <AreaChart
-                        data={
-                          selectedYear === 'All'
-                            ? yearlyData
-                            : yearlyData.filter((row) => String(row.year) === String(selectedYear))
-                        }
+                        data={yearlyData}
                         margin={{ top: 10, right: 20, left: 40, bottom: 30 }}
                       >
                         <defs>
@@ -531,7 +480,7 @@ function IccSection({ user, isPublicView = false }) {
                     fontSize: '13px',
                     fontWeight: '500'
                   }}>
-                    {selectedYear === 'All' ? yearlyData.length : 1} {selectedYear === 'All' ? 'Years' : 'Year'}
+                    {yearlyData.length} Years
                   </span>
                 </div>
 
@@ -557,10 +506,7 @@ function IccSection({ user, isPublicView = false }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {(selectedYear === 'All'
-                          ? yearlyData
-                          : yearlyData.filter((row) => String(row.year) === String(selectedYear))
-                        ).map((row, index) => {
+                        {yearlyData.map((row, index) => {
                           const statusLabel =
                             row.pending === 0 ? (
                               <span style={{

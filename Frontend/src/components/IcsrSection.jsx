@@ -405,245 +405,6 @@ function IcsrSection({ user, isPublicView = false }) {
           </div>
         </div>
 
-        {/* Filter Panel with Radio Buttons for View Selection */}
-        <div className="filter-panel" style={{
-          marginBottom: '20px',
-          padding: '20px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
-        }}>
-          <div className="filter-header" style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '15px'
-          }}>
-            <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button
-                className="clear-filters-btn"
-                onClick={handleClearFilters}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#dc3545',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Clear Filters
-              </button>
-              {!isPublicView && user && user.role_id === 3 && (
-                <button
-                  className="upload-data-btn"
-                  onClick={() => setIsUploadModalOpen(true)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#28a745',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Upload Industry Events
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* View Type Selection - Radio Buttons */}
-          <div style={{
-            marginBottom: '20px',
-            padding: '15px',
-            backgroundColor: '#e9ecef',
-            borderRadius: '6px',
-            border: '1px solid #dee2e6'
-          }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '10px',
-              fontWeight: '600',
-              color: '#333',
-              fontSize: '14px'
-            }}>
-              Select View Type:
-            </label>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '12px'
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'yearly' ? '#667eea' : 'white',
-                color: viewType === 'yearly' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'yearly' ? '2px solid #667eea' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="yearly"
-                  checked={viewType === 'yearly'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{
-                    accentColor: '#667eea',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'yearly' ? 'bold' : 'normal' }}>
-                  📊 Year-wise Distribution
-                </span>
-              </label>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'eventTypes' ? '#22c55e' : 'white',
-                color: viewType === 'eventTypes' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'eventTypes' ? '2px solid #22c55e' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="eventTypes"
-                  checked={viewType === 'eventTypes'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{
-                    accentColor: '#22c55e',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'eventTypes' ? 'bold' : 'normal' }}>
-                  🥧 Event Types Distribution
-                </span>
-              </label>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'eventsDirectory' ? '#f97316' : 'white',
-                color: viewType === 'eventsDirectory' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'eventsDirectory' ? '2px solid #f97316' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="eventsDirectory"
-                  checked={viewType === 'eventsDirectory'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{
-                    accentColor: '#f97316',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'eventsDirectory' ? 'bold' : 'normal' }}>
-                  📋 Events Directory
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="filter-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '15px'
-          }}>
-            <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Event Type
-              </label>
-              <select
-                className="filter-select"
-                value={filters.event_type}
-                onChange={(e) => handleFilterChange('event_type', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-              >
-                <option value="All">All Types</option>
-                {filterOptions.event_types.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-
-
-
-            <div className="filter-group">
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Year
-              </label>
-              <select
-                className="filter-select"
-                value={filters.year}
-                onChange={(e) => handleFilterChange('year', e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-              >
-                <option value="All">All Years</option>
-                {filterOptions.years.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group" style={{ gridColumn: '1 / -1' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                Search Events
-              </label>
-              <input
-                type="text"
-                placeholder="Search by event title, industry partner, or description..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="filter-select"
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-              />
-            </div>
-          </div>
-
-          {/* Active Filters Summary */}
-          <div style={{
-            marginTop: '15px',
-            padding: '10px',
-            backgroundColor: '#e9ecef',
-            borderRadius: '4px',
-            fontSize: '14px'
-          }}>
-            <strong>Active Filters:</strong>{' '}
-            {filters.event_type !== 'All' && <span style={{ marginRight: '10px' }}>📌 Type: {filters.event_type}</span>}
-            {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
-            {filters.search && <span style={{ marginRight: '10px' }}>🔍 Search: "{filters.search}"</span>}
-            {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
-              <span>No filters applied (showing all events)</span>
-            }
-          </div>
-        </div>
-
         {/* Single View Section based on radio selection */}
         <div className="chart-section" style={{
           marginBottom: '30px',
@@ -652,6 +413,91 @@ function IcsrSection({ user, isPublicView = false }) {
           borderRadius: '10px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}>
+          {/* ── Compact filter bar ── */}
+          <div style={{
+            background: '#f8f9fa', border: '1px solid #e0e0e0',
+            borderRadius: '10px', padding: '0.75rem 1rem', marginBottom: '20px'
+          }}>
+            {/* Header row */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: '0.75rem', paddingBottom: '0.6rem', borderBottom: '1px solid #e0e0e0',
+              flexWrap: 'wrap', gap: '0.5rem'
+            }}>
+              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a1a1a' }}>Filters &amp; View</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button onClick={handleClearFilters}
+                  style={{ padding: '0.3rem 0.85rem', fontSize: '0.78rem', borderRadius: '6px', border: 'none', backgroundColor: '#dc3545', color: '#fff', cursor: 'pointer' }}>
+                  Clear Filters
+                </button>
+                {!isPublicView && user && user.role_id === 3 && (
+                  <button onClick={() => setIsUploadModalOpen(true)}
+                    style={{ padding: '0.3rem 0.85rem', fontSize: '0.78rem', borderRadius: '6px', border: 'none', backgroundColor: '#28a745', color: '#fff', cursor: 'pointer' }}>
+                    Upload Data
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* View type selector */}
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+              {[
+                { value: 'yearly',          label: '📊 Year-wise',        color: '#667eea' },
+                { value: 'eventTypes',      label: '🥧 Event Types',      color: '#22c55e' },
+                { value: 'eventsDirectory', label: '📋 Events Directory', color: '#f97316' },
+              ].map(({ value, label, color }) => (
+                <button key={value} onClick={() => setViewType(value)}
+                  style={{
+                    padding: '0.3rem 0.9rem', fontSize: '0.78rem', borderRadius: '6px', cursor: 'pointer',
+                    border: `2px solid ${color}`,
+                    backgroundColor: viewType === value ? color : '#fff',
+                    color: viewType === value ? '#fff' : color,
+                    fontWeight: viewType === value ? 700 : 500,
+                    transition: 'all 0.2s ease'
+                  }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Filter dropdowns */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>Event Type</label>
+                <select value={filters.event_type} onChange={(e) => handleFilterChange('event_type', e.target.value)}
+                  className="filter-select"
+                  style={{ padding: '0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px', border: '1px solid #ced4da' }}>
+                  <option value="All">All Types</option>
+                  {filterOptions.event_types.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>Year</label>
+                <select value={filters.year} onChange={(e) => handleFilterChange('year', e.target.value)}
+                  className="filter-select"
+                  style={{ padding: '0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px', border: '1px solid #ced4da' }}>
+                  <option value="All">All Years</option>
+                  {filterOptions.years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>Search Events</label>
+                <input type="text"
+                  placeholder="Search by title, industry partner..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="filter-select"
+                  style={{ padding: '0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px', border: '1px solid #ced4da' }}
+                />
+              </div>
+            </div>
+          </div>
           {/* Yearly Distribution Chart */}
           {viewType === 'yearly' && (
             <div>

@@ -37,7 +37,11 @@ def build_filter_query(filters):
         if not column_name:
             continue
 
-        conditions.append(f"{column_name} = %s")
+        # NULL emp_type is treated as Teaching (default)
+        if column_name == 'emp_type' and value == 'Teaching':
+            conditions.append("(emp_type = %s OR emp_type IS NULL)")
+        else:
+            conditions.append(f"{column_name} = %s")
         params.append(value)
 
     where_clause = ""
@@ -656,6 +660,67 @@ def get_department_breakdown(current_user_id):
         import traceback
         print(f"Error fetching department breakdown: {e}\n{traceback.format_exc()}")
         return jsonify({'message': f'An error occurred while fetching department breakdown: {e}'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+@administrative_bp.route('/stats/yearwise-strength', methods=['GET'])
+@token_required
+def get_yearwise_strength(current_user_id):
+    """Total employee count grouped by year of joining (doj)."""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+
+        filters = _read_common_filters()
+        where_clause, params = build_filter_query(filters)
+
+        if where_clause:
+            where_clause += " AND doj IS NOT NULL"
+        else:
+            where_clause = "WHERE doj IS NOT NULL"
+
+        query = f"""
+            SELECT
+                EXTRACT(YEAR FROM doj)::integer AS year,
+                COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE gender = 'Male')   AS male,
+                COUNT(*) FILTER (WHERE gender = 'Female') AS female,
+                COUNT(*) FILTER (WHERE gender = 'Other')  AS other
+            FROM employees
+            {where_clause}
+            GROUP BY year
+            ORDER BY year;
+        """
+
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(query, params)
+        results = cur.fetchall()
+
+        data = [
+            {
+                'year':   str(row['year']),
+                'Total':  int(row['total']),
+                'Male':   int(row['male']),
+                'Female': int(row['female']),
+                'Other':  int(row['other']),
+            }
+            for row in results
+        ]
+        total = sum(row['Total'] for row in data)
+
+        return jsonify({'data': data, 'total': total}), 200
+
+    except Exception as e:
+        import traceback
+        print(f"Error fetching yearwise strength: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching yearwise strength: {e}'}), 500
     finally:
         if cur:
             cur.close()

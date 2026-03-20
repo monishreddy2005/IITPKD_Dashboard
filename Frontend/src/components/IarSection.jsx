@@ -41,19 +41,13 @@ const TREND_CORPORATE_COLOR = '#f97316';
 function IarSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
-    years: [],
     departments: [],
-    genders: [],
-    programs: [],
-    categories: []
+    course_types: [],
   });
 
   const [filters, setFilters] = useState({
-    year: 'All',
     department: 'All',
-    gender: 'All',
-    program: 'All',
-    category: 'All'
+    course_type: 'All',
   });
 
   const [summary, setSummary] = useState({
@@ -70,6 +64,24 @@ function IarSection({ user, isPublicView = false }) {
   const sortedOutcomeBreakdown = useMemo(() => {
     return [...outcomeBreakdown].sort((a, b) => (b.total || 0) - (a.total || 0));
   }, [outcomeBreakdown]);
+
+  // Top 10 states + "Other" for pie chart
+  const stateTop10 = useMemo(() => {
+    const sorted = [...stateDistribution].sort((a, b) => b.count - a.count);
+    if (sorted.length <= 10) return sorted;
+    const top10 = sorted.slice(0, 10);
+    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
+    return [...top10, { state: 'Other', count: otherCount }];
+  }, [stateDistribution]);
+
+  // Top 10 countries + "Other" for pie chart
+  const countryTop10 = useMemo(() => {
+    const sorted = [...countryDistribution].sort((a, b) => b.count - a.count);
+    if (sorted.length <= 10) return sorted;
+    const top10 = sorted.slice(0, 10);
+    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
+    return [...top10, { country: 'Other', count: otherCount }];
+  }, [countryDistribution]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -88,11 +100,8 @@ function IarSection({ user, isPublicView = false }) {
       try {
         const options = await fetchFilterOptions(token);
         setFilterOptions({
-          years: Array.isArray(options?.years) ? options.years : [],
           departments: Array.isArray(options?.departments) ? options.departments : [],
-          genders: Array.isArray(options?.genders) ? options.genders : [],
-          programs: Array.isArray(options?.programs) ? options.programs : [],
-          categories: Array.isArray(options?.categories) ? options.categories : []
+          course_types: Array.isArray(options?.course_types) ? options.course_types : [],
         });
       } catch (err) {
         console.error('Failed to load filter options:', err);
@@ -137,13 +146,7 @@ function IarSection({ user, isPublicView = false }) {
   };
 
   const handleClearFilters = () => {
-    setFilters({
-      year: 'All',
-      department: 'All',
-      gender: 'All',
-      program: 'All',
-      category: 'All'
-    });
+    setFilters({ department: 'All', course_type: 'All' });
   };
 
   const trendData = useMemo(() => summary.trend || [], [summary.trend]);
@@ -221,155 +224,6 @@ function IarSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            {/* Filter Panel */}
-            <div className="filter-panel" style={{ 
-              marginBottom: '20px', 
-              padding: '20px', 
-              backgroundColor: '#f8f9fa', 
-              borderRadius: '8px', 
-              border: '1px solid #e9ecef' 
-            }}>
-              <div className="filter-header" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '15px' 
-              }}>
-                <h3 style={{ margin: '0', color: '#333' }}>Filters</h3>
-                <button
-                  className="clear-filters-btn"
-                  onClick={handleClearFilters}
-                  style={{ 
-                    padding: '8px 16px', 
-                    backgroundColor: '#dc3545', 
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Clear Filters
-                </button>
-              </div>
-
-              <div className="filter-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '15px' 
-              }}>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Year of Admission
-                  </label>
-                  <select
-                    id="yearFilter"
-                    className="filter-select"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Years</option>
-                    {filterOptions.years?.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Department
-                  </label>
-                  <select
-                    id="departmentFilter"
-                    className="filter-select"
-                    value={filters.department}
-                    onChange={(e) => handleFilterChange('department', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Departments</option>
-                    {filterOptions.departments?.map((dept) => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Program
-                  </label>
-                  <select
-                    id="programFilter"
-                    className="filter-select"
-                    value={filters.program}
-                    onChange={(e) => handleFilterChange('program', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Programs</option>
-                    {filterOptions.programs?.map((program) => (
-                      <option key={program} value={program}>{program}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Gender
-                  </label>
-                  <select
-                    id="genderFilter"
-                    className="filter-select"
-                    value={filters.gender}
-                    onChange={(e) => handleFilterChange('gender', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Genders</option>
-                    {filterOptions.genders?.map((gender) => (
-                      <option key={gender} value={gender}>{gender}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Category
-                  </label>
-                  <select
-                    id="categoryFilter"
-                    className="filter-select"
-                    value={filters.category}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Categories</option>
-                    {filterOptions.categories?.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters Summary */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '10px', 
-                backgroundColor: '#e9ecef', 
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}>
-                <strong>Active Filters:</strong>{' '}
-                {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
-                {filters.department !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Dept: {filters.department}</span>}
-                {filters.program !== 'All' && <span style={{ marginRight: '10px' }}>🎓 Program: {filters.program}</span>}
-                {filters.gender !== 'All' && <span style={{ marginRight: '10px' }}>👤 Gender: {filters.gender}</span>}
-                {filters.category !== 'All' && <span style={{ marginRight: '10px' }}>📋 Category: {filters.category}</span>}
-                {filters.year === 'All' && filters.department === 'All' && filters.program === 'All' && 
-                 filters.gender === 'All' && filters.category === 'All' && 
-                  <span>No filters applied (showing all data)</span>
-                }
-              </div>
-            </div>
-
             {/* Modern Summary Cards */}
             <div style={{
               display: 'grid',
@@ -568,13 +422,47 @@ function IarSection({ user, isPublicView = false }) {
               </button>
             </div>
 
-            <div className="chart-section" style={{ 
-              marginBottom: '30px', 
-              padding: '20px', 
-              backgroundColor: '#fff', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+            <div className="chart-section" style={{
+              marginBottom: '30px',
+              padding: '20px',
+              backgroundColor: '#fff',
+              borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
+              {/* ── Compact filter bar ── */}
+              <div style={{
+                background: '#f8f9fa', border: '1px solid #e0e0e0',
+                borderRadius: '10px', padding: '0.65rem 1rem', marginBottom: '20px'
+              }}>
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  marginBottom: '0.6rem', paddingBottom: '0.5rem', borderBottom: '1px solid #e0e0e0'
+                }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a1a1a' }}>Filters</span>
+                  <button className="clear-filters-btn" onClick={handleClearFilters}
+                    style={{ padding: '0.3rem 0.85rem', fontSize: '0.78rem', borderRadius: '6px', border: 'none', backgroundColor: '#dc3545', color: '#fff', cursor: 'pointer' }}>
+                    Clear All Filters
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
+                  {[
+                    { id: 'iar-dept',    label: 'Department',   key: 'department',  options: filterOptions.departments },
+                    { id: 'iar-program', label: 'Course Type',  key: 'course_type', options: filterOptions.course_types },
+                  ].map(({ id, label, key, options }) => (
+                    <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
+                      <select id={id} value={filters[key]}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        className="filter-select"
+                        style={{ padding: '0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px', border: '1px solid #ced4da' }}>
+                        <option value="All">All</option>
+                        {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {activeView === 'trend' && (
                 <div>
                   <div className="chart-header" style={{ marginBottom: '20px' }}>
@@ -665,21 +553,32 @@ function IarSection({ user, isPublicView = false }) {
                     </div>
                   ) : (
                     <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={350}>
-                        <BarChart data={stateDistribution} margin={{ top: 10, right: 20, left: 40, bottom: 60 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis dataKey="state" angle={-30} textAnchor="end" height={70} tick={{ fontSize: 10 }} interval={0} />
-                          <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Bar dataKey="count" name="Alumni count" fill={STATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
-                        </BarChart>
+                      <ResponsiveContainer width="100%" height={380}>
+                        <PieChart>
+                          <Pie
+                            data={stateTop10}
+                            dataKey="count"
+                            nameKey="state"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={130}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            labelLine={false}
+                          >
+                            {stateTop10.map((entry, index) => (
+                              <Cell key={entry.state} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value, name) => [`${value} alumni`, name]} />
+                          <Legend />
+                        </PieChart>
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
@@ -728,23 +627,24 @@ function IarSection({ user, isPublicView = false }) {
                     </div>
                   ) : (
                     <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={350}>
+                      <ResponsiveContainer width="100%" height={380}>
                         <PieChart>
                           <Pie
-                            data={countryDistribution}
+                            data={countryTop10}
                             dataKey="count"
                             nameKey="country"
                             cx="50%"
                             cy="50%"
-                            outerRadius={120}
-                            label={({ country, percent }) => `${country} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={130}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                             labelLine={false}
                           >
-                            {countryDistribution.map((entry, index) => (
+                            {countryTop10.map((entry, index) => (
                               <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(value) => [`${value} alumni`, 'Count']} />
+                          <Tooltip formatter={(value, name) => [`${value} alumni`, name]} />
+                          <Legend />
                         </PieChart>
                       </ResponsiveContainer>
 
