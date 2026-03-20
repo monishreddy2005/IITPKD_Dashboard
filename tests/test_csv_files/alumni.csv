@@ -1,16 +1,16 @@
 sl_no,roll_number,year_of_admission,year_of_graduation,course_type,course_name,department,current_job,country_of_settlement,place_of_settlement_state,alumni_contribution
-4420,Smp95,2021,2024,Smp87,Alice Davis,MTH,Smp63,Smp99,Smp93,Smp87
-4421,Smp30,2021,2020,Smp68,Jane Davis,CSE,Smp55,Smp43,Smp93,Smp49
-4422,Smp18,2024,2023,Smp1,John Davis,CE,Smp46,Smp67,Smp7,Smp25
-4423,Smp86,2019,2023,Smp88,Alice Davis,CE,Smp37,Smp92,Smp44,Smp8
-4424,Smp66,2023,2019,Smp50,Alice Doe,HSS,Smp82,Smp23,Smp68,Smp40
-4425,Smp33,2020,2020,Smp98,Jane Doe,CE,Smp17,Smp65,Smp82,Smp12
-4426,Smp67,2021,2021,Smp50,Jane Smith,PHY,Smp59,Smp12,Smp87,Smp58
-4427,Smp44,2021,2023,Smp84,Jane Doe,HSS,Smp28,Smp99,Smp22,Smp15
-4428,Smp9,2023,2018,Smp98,Alice Davis,CE,Smp36,Smp17,Smp21,Smp23
-4429,Smp60,2019,2023,Smp71,John Davis,PHY,Smp17,Smp37,Smp43,Smp92
-4430,Smp96,2024,2020,Smp40,Jane Davis,HSS,Smp62,Smp92,Smp19,Smp23
-4431,Smp71,2018,2020,Smp24,John Doe,EE,Smp19,Smp1,Smp50,Smp82
-4432,Smp87,2022,2020,Smp87,John Smith,CSE,Smp29,Smp49,Smp75,Smp91
-4433,Smp86,2023,2024,Smp50,John Smith,CE,Smp49,Smp21,Smp62,Smp6
-4434,Smp59,2018,2024,Smp73,Alice Doe,CSE,Smp78,Smp33,Smp8,Smp88
+1001,B18CS001,2018,2022,B.Tech,Computer Science and Engineering,CSE,Software Engineer,India,Kerala,10000
+1002,B18EE001,2018,2022,B.Tech,Electrical Engineering,EE,Hardware Engineer,India,Tamil Nadu,5000
+1003,B18CE001,2018,2022,B.Tech,Civil Engineering,CE,Project Manager,India,Maharashtra,
+1004,B18ME001,2018,2022,B.Tech,Mechanical Engineering,ME,Design Engineer,India,Karnataka,2000
+1005,M19CS001,2019,2021,M.Tech,Computer Science and Engineering,CSE,Research Scientist,USA,California,
+1006,M19EE001,2019,2021,M.Tech,Electrical Engineering,EE,Power Systems Engineer,India,Gujarat,3000
+1007,P18CS001,2018,2023,Ph.D,Computer Science and Engineering,CSE,Assistant Professor,India,Kerala,
+1008,B19CS001,2019,2023,B.Tech,Computer Science and Engineering,CSE,Data Analyst,Germany,Berlin,
+1009,B19MTH001,2019,2023,B.Tech,Mathematics and Computing,MTH,Quantitative Analyst,India,Maharashtra,1000
+1010,M20CS001,2020,2022,M.Tech,Computer Science and Engineering,CSE,ML Engineer,Canada,Ontario,
+1011,B20CS001,2020,2024,B.Tech,Computer Science and Engineering,CSE,Software Developer,India,Delhi,
+1012,B20PHY001,2020,2024,B.Tech,Engineering Physics,PHY,Researcher,India,Kerala,500
+1013,M20EE001,2020,2022,M.Tech,Electrical Engineering,EE,Systems Architect,India,Tamil Nadu,
+1014,P20CS001,2020,2024,Ph.D,Computer Science and Engineering,CSE,Postdoctoral Fellow,USA,Massachusetts,
+1015,B21HSS001,2021,2025,B.Tech,Humanities and Social Sciences,HSS,Policy Analyst,India,Delhi,

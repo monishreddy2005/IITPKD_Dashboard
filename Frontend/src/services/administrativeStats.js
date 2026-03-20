@@ -262,6 +262,35 @@ export const fetchDepartmentBreakdown = async (filters, employeeType, token) => 
 };
 
 /**
+ * Fetches total employee count grouped by year of joining.
+ * @param {Object} filters - Filter object with optional fields
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} Yearwise strength data with total
+ */
+export const fetchYearwiseStrength = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '' && value !== 'All') {
+        params.append(key, value);
+      }
+    });
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/yearwise-strength?${params.toString()}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching yearwise strength:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch yearwise strength data');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
  * Fetches faculty gender distribution for the last five years.
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Array of year-wise gender counts
