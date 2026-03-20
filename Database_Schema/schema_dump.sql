@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict IhAi19f4afjh0UV17Jo3a6xHPBOkBVXjP4m8ePQwj8ECJ0CF2vD2Im5fgvWfT6J
+\restrict V3RfebOlqE609VEwzRzU1hnA1zxb1GuKEogEbcbU3tZ7ngKVPko1tDkEk7bL79M
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -1364,7 +1364,6 @@ ALTER TABLE public.techin_startup_table OWNER TO postgres;
 
 CREATE TABLE public.uba_events (
     event_id integer NOT NULL,
-    project_id integer,
     event_title character varying(250) NOT NULL,
     event_type character varying(100),
     event_date date NOT NULL,
@@ -1968,13 +1967,6 @@ CREATE INDEX idx_uba_events_date ON public.uba_events USING btree (event_date);
 
 
 --
--- Name: idx_uba_events_project; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_uba_events_project ON public.uba_events USING btree (project_id);
-
-
---
 -- Name: idx_uba_projects_status; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1990,16 +1982,8 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: uba_events uba_events_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.uba_events
-    ADD CONSTRAINT uba_events_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.uba_projects(project_id);
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict IhAi19f4afjh0UV17Jo3a6xHPBOkBVXjP4m8ePQwj8ECJ0CF2vD2Im5fgvWfT6J
+\unrestrict V3RfebOlqE609VEwzRzU1hnA1zxb1GuKEogEbcbU3tZ7ngKVPko1tDkEk7bL79M
 

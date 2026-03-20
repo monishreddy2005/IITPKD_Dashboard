@@ -1,21 +1,11 @@
-project_title,event_title,event_type,event_date,location,description,photos_url,brochure_url,created_at
-Proj 57,Proj 57 kick off,Smp81,2024-11-03,Smp36,Smp56,http://ex.co/8,http://ex.co/3,2020-11-01
-Proj 54,Proj 54 review,Smp49,2024-10-08,Smp59,Smp52,http://ex.co/6,http://ex.co/3,2021-07-10
-Proj 44,Proj 44 meeting,Smp90,2021-12-22,Smp2,Smp46,http://ex.co/8,http://ex.co/7,2024-08-01
-Proj 78,Proj 78 meetup,Smp44,2022-06-01,Smp38,Smp5,http://ex.co/3,http://ex.co/1,2023-04-10
-Proj 62,Proj 62 session,Smp99,2022-07-29,Smp20,Smp26,http://ex.co/3,http://ex.co/2,2022-03-30
-Proj 79,Proj 79 seminar,Smp36,2020-12-28,Smp50,Smp36,http://ex.co/6,http://ex.co/2,2020-05-27
-Proj 95,Proj 95 summit,Smp73,2021-09-29,Smp69,Smp11,http://ex.co/7,http://ex.co/2,2024-10-02
-Proj 84,Proj 84 talk,Smp51,2022-07-21,Smp45,Smp6,http://ex.co/3,http://ex.co/3,2023-09-16
-Proj 89,Proj 89 demo,Smp83,2024-10-17,Smp16,Smp80,http://ex.co/8,http://ex.co/1,2024-04-11
-Proj 41,Proj 41 intro,Smp53,2023-02-20,Smp69,Smp56,http://ex.co/6,http://ex.co/1,2024-06-24
-Proj 18,Proj 18 closure,Smp99,2020-07-01,Smp90,Smp3,http://ex.co/3,http://ex.co/6,2020-03-28
-Proj 30,Proj 30 launch,Smp70,2022-09-12,Smp79,Smp43,http://ex.co/6,http://ex.co/3,2021-01-12
-Proj 85,Proj 85 pitch,Smp32,2023-01-03,Smp84,Smp54,http://ex.co/2,http://ex.co/7,2020-04-26
-Proj 24,Proj 24 qna,Smp56,2023-12-13,Smp57,Smp13,http://ex.co/5,http://ex.co/2,2023-12-16
-Proj 94,Proj 94 presentation,Smp100,2022-02-04,Smp21,Smp38,http://ex.co/2,http://ex.co/6,2020-07-02
-Proj 57,Proj 57 second meeting,Smp86,2024-03-19,Smp100,Smp68,http://ex.co/2,http://ex.co/4,2022-10-06
-Proj 54,Proj 54 check in,Smp29,2020-09-04,Smp65,Smp28,http://ex.co/4,http://ex.co/1,2024-06-10
-Proj 44,Proj 44 site visit,Smp68,2021-10-05,Smp39,Smp4,http://ex.co/2,http://ex.co/9,2021-08-17
-Proj 78,Proj 78 update,Smp59,2020-08-20,Smp28,Smp7,http://ex.co/3,http://ex.co/3,2020-11-19
-Proj 62,Proj 62 end of year,Smp35,2020-09-19,Smp91,Smp15,http://ex.co/8,http://ex.co/2,2023-01-23
+event_title,event_type,event_date,location,description,photos_url,brochure_url
+Village Health Camp 2024,Workshop,2024-01-15,Nenmara Village Hall,Free health checkup and awareness camp for villagers,,
+Swachh Bharat Cleanliness Drive,Other,2024-02-10,Chittur Town,Student-led cleanliness drive in adopted village,http://example.com/photos/cleanathon,
+Digital Literacy Workshop,Training Program,2024-03-05,Govt. School Palakkad,Teaching basic computer and internet skills to school students,,http://example.com/brochures/digital_literacy.pdf
+Tree Plantation Drive,Other,2024-04-22,IIT Palakkad Campus,Planted 200 saplings on Earth Day,http://example.com/photos/trees,
+Rural Women Entrepreneurship Seminar,Seminar,2024-05-18,Chittur Panchayat Office,Seminar on self-help groups and micro-financing for rural women,,http://example.com/brochures/women_seminar.pdf
+Blood Donation Camp,Other,2024-06-14,IIT Palakkad Main Block,Annual blood donation camp in collaboration with local hospital,http://example.com/photos/blood_camp,
+Farmers Technology Interaction,Workshop,2024-07-30,Nenmara Agricultural Centre,Introducing modern farming techniques to local farmers,,
+Road Safety Awareness Program,Panel Discussion,2024-08-20,Palakkad District Collectorate,Panel discussion on road safety with local administration officials,,
+School Science Exhibition,Other,2024-09-28,Govt. High School Kanjikode,UBA students mentor school students in science experiments,http://example.com/photos/science_expo,
+Waste Management Awareness Drive,Training Program,2024-10-05,Chittur Municipality,Workshop on waste segregation and composting for households,,http://example.com/brochures/waste_mgmt.pdf

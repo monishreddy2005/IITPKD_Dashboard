@@ -579,14 +579,18 @@ function EwdSection({ user, isPublicView = false }) {
                     <div style={{ textAlign: 'center', marginBottom: '10px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
                       Scale: 1 unit = 1,000 kWh
                     </div>
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={scaledYearlyData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
+                    <ResponsiveContainer width="100%" height={380}>
+                      <BarChart data={scaledYearlyData} margin={{ top: 10, right: 20, left: 60, bottom: 55 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Financial Year', position: 'insideBottom', offset: -30, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Consumption (× 1,000 kWh)', angle: -90, position: 'insideLeft', offset: -45, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
                         <Tooltip
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -596,7 +600,8 @@ function EwdSection({ user, isPublicView = false }) {
                             return [formatNumber(actualValue), 'kWh'];
                           }}
                         />
-                        <Bar dataKey="annualElectricityScaled" name="Electricity Consumption" fill="#667eea" radius={[4, 4, 0, 0]} barSize={30} />
+                        <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                        <Bar dataKey="annualElectricityScaled" name="Electricity Consumption (× 1,000 kWh)" fill="#667eea" radius={[4, 4, 0, 0]} barSize={30} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -627,14 +632,18 @@ function EwdSection({ user, isPublicView = false }) {
                   </div>
                 ) : (
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <LineChart data={filteredYearlyData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <LineChart data={filteredYearlyData} margin={{ top: 10, right: 20, left: 60, bottom: 55 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Financial Year', position: 'insideBottom', offset: -30, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Per Capita Consumption', angle: -90, position: 'insideLeft', offset: -45, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
                         <Tooltip
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -644,10 +653,10 @@ function EwdSection({ user, isPublicView = false }) {
                             return [formatDecimal(value), suffix];
                           }}
                         />
-                        <Legend wrapperStyle={{ fontSize: '11px' }} />
-                        <Line type="monotone" dataKey="perCapitaElectricity" name="Electricity" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="perCapitaWater" name="Water" stroke="#43e97b" strokeWidth={2.5} dot={{ r: 3 }} />
-                        <Line type="monotone" dataKey="perCapitaRecycled" name="Recycled" stroke="#fa709a" strokeWidth={2.5} dot={{ r: 3 }} />
+                        <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                        <Line type="monotone" dataKey="perCapitaElectricity" name="Electricity (kWh / person)" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="perCapitaWater" name="Water (litres / person)" stroke="#43e97b" strokeWidth={2.5} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="perCapitaRecycled" name="Recycled Water (litres / person)" stroke="#fa709a" strokeWidth={2.5} dot={{ r: 3 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
@@ -678,8 +687,8 @@ function EwdSection({ user, isPublicView = false }) {
                   </div>
                 ) : (
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={filteredYearlyData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
+                    <ResponsiveContainer width="100%" height={370}>
+                      <AreaChart data={filteredYearlyData} margin={{ top: 10, right: 20, left: 60, bottom: 55 }}>
                         <defs>
                           <linearGradient id="colorGreenCoverage" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#34d399" stopOpacity={0.8} />
@@ -687,21 +696,26 @@ function EwdSection({ user, isPublicView = false }) {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Financial Year', position: 'insideBottom', offset: -30, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }}
+                          label={{ value: 'Green Coverage (sq.m)', angle: -90, position: 'insideLeft', offset: -45, style: { fill: '#555', fontSize: 12, fontWeight: 500 } }}
+                        />
                         <Tooltip
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                           }}
                           formatter={(value) => [formatDecimal(value), 'sq.m']}
                         />
+                        <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
                         <Area
                           type="monotone"
                           dataKey="greenCoverage"
-                          name="Green Coverage"
+                          name="Green Coverage (sq.m)"
                           stroke="#34d399"
                           fill="url(#colorGreenCoverage)"
                           strokeWidth={2}

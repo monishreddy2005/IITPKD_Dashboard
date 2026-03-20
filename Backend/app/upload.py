@@ -84,6 +84,9 @@ def _preprocess_employees(reader, csv_headers):
     - Renames 'group' → 'group_name' (reserved SQL word).
     - Drops any existing 'id' column and auto-generates it as empid+designation+doj.
     - Normalises date columns from DD/MM/YY to YYYY-MM-DD.
+
+    Returns (new_headers, processed_rows, error) — rows as a plain list of dicts
+    so the caller can use them directly without re-reading the original stream.
     """
     DATE_COLS = {'dob', 'initial_doj', 'doj', 'dor', 'notificationdate'}
 
@@ -126,53 +129,8 @@ def _preprocess_employees(reader, csv_headers):
         new_row['id'] = f"{empid}{desig}{doj}"
         processed.append(new_row)
 
-    return _rebuild_stream(new_headers, processed)
+    return new_headers, processed, None
 
-
-def _preprocess_uba_events(reader, csv_headers, conn):
-    """
-    For the 'uba_events' table:
-    Accepts 'project_title' in CSV and resolves it to 'project_id' via DB lookup.
-    """
-    if 'project_title' not in csv_headers:
-        return reader, csv_headers, None
-
-    rows = list(reader)
-    if not rows:
-        return None, None, 'CSV file is empty.'
-
-    titles = {r.get('project_title', '').strip() for r in rows if r.get('project_title')}
-    if not titles:
-        return None, None, 'No project_title values found in CSV.'
-
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    try:
-        cur.execute(
-            "SELECT project_title, project_id FROM uba_projects WHERE LOWER(project_title) = ANY(%s)",
-            ([t.lower() for t in titles],)
-        )
-        title_to_id = {r['project_title'].lower(): r['project_id'] for r in cur.fetchall()}
-    finally:
-        cur.close()
-
-    missing = [t for t in titles if t.lower() not in title_to_id]
-    if missing:
-        return None, None, (
-            f"Project titles not found in database: {', '.join(missing)}. "
-            "Ensure strings match exactly."
-        )
-
-    new_headers = [h for h in csv_headers if h != 'project_title']
-    if 'project_id' not in new_headers:
-        new_headers.append('project_id')
-
-    processed = []
-    for row in rows:
-        title = row.pop('project_title', '').strip()
-        row['project_id'] = title_to_id.get(title.lower())
-        processed.append(row)
-
-    return _rebuild_stream(new_headers, processed)
 
 
 def _preprocess_nptel_enrollments(reader, csv_headers, conn):
@@ -285,11 +243,12 @@ def upload_csv(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
 
         # --- Per-table pre-processing ---
+        # processed_rows: plain list of dicts produced by preprocessing (bypasses
+        # the csv_text.seek(0) re-read in the data-collection phase below).
+        processed_rows = None
         error = None
         if table_name == 'employees':
-            reader, csv_headers, error = _preprocess_employees(reader, csv_headers)
-        elif table_name == 'uba_events' and 'project_title' in csv_headers:
-            reader, csv_headers, error = _preprocess_uba_events(reader, csv_headers, conn)
+            csv_headers, processed_rows, error = _preprocess_employees(reader, csv_headers)
         elif table_name == 'nptel_enrollments' and 'course_code' in csv_headers:
             reader, csv_headers, error = _preprocess_nptel_enrollments(reader, csv_headers, conn)
 
@@ -378,11 +337,17 @@ def upload_csv(current_user_id):
         )
         query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s ON CONFLICT ({conflict_sql}) {conflict_action};'
 
-        # Collect and normalise rows
-        csv_text.seek(0)
-        reader = csv.DictReader(csv_text)
+        # Collect and normalise rows.
+        # If preprocessing produced a ready-made list, use it directly so that
+        # generated/renamed fields (e.g. employee 'id') are preserved.
+        # Otherwise fall back to re-reading the original CSV stream.
+        if processed_rows is not None:
+            data_iter = iter(processed_rows)
+        else:
+            csv_text.seek(0)
+            data_iter = csv.DictReader(csv_text)
         data, rows_processed = [], 0
-        for i, row in enumerate(reader, start=1):
+        for i, row in enumerate(data_iter, start=1):
             row_vals, is_empty = [], True
             for col in columns_to_insert:
                 val = next(
@@ -426,23 +391,25 @@ def upload_csv(current_user_id):
             return jsonify({'message': 'CSV contains no data rows.'}), 400
 
         # Deduplicate on conflict keys — psycopg2 cannot handle duplicates in the same INSERT
+        dupes = 0
         if conflict_keys_db:
             key_indices = [
                 next((i for i, c in enumerate(columns_to_insert) if c.lower() == k.lower()), None)
                 for k in conflict_keys_db
             ]
             key_indices = [i for i in key_indices if i is not None]
-            seen, deduped, dupes = set(), [], 0
-            for row in data:
-                key = tuple(row[i] for i in key_indices)
-                if key in seen:
-                    dupes += 1
-                    continue
-                seen.add(key)
-                deduped.append(row)
-            data = deduped
-            if not data:
-                return jsonify({'message': 'No unique rows after deduplication.'}), 400
+            if key_indices:
+                seen, deduped = set(), []
+                for row in data:
+                    key = tuple(row[i] for i in key_indices)
+                    if key in seen:
+                        dupes += 1
+                        continue
+                    seen.add(key)
+                    deduped.append(row)
+                data = deduped
+                if not data:
+                    return jsonify({'message': 'No unique rows after deduplication.'}), 400
 
         psycopg2.extras.execute_values(cur, query, data)
         conn.commit()
