@@ -6,6 +6,7 @@ interaction. Column names come from information_schema, not raw user input.
 """
 import csv
 import io
+import traceback
 
 import psycopg2
 import psycopg2.extras
@@ -24,7 +25,7 @@ UPDATABLE_TABLES = {
     'alumni':                       ['sl_no'],
     'employees':                    ['id'],
     'courses_table':                ['course_code'],
-    'student_table':                ['roll_no_admission'],
+    'student_table':                ['roll_no_current'],
     # Grievance / Welfare
     'externship_info':              ['externid'],
     'igrs_yearwise':                ['grievance_year'],
@@ -84,9 +85,6 @@ def _preprocess_employees(reader, csv_headers):
     - Renames 'group' → 'group_name' (reserved SQL word).
     - Drops any existing 'id' column and auto-generates it as empid+designation+doj.
     - Normalises date columns from DD/MM/YY to YYYY-MM-DD.
-
-    Returns (new_headers, processed_rows, error) — rows as a plain list of dicts
-    so the caller can use them directly without re-reading the original stream.
     """
     DATE_COLS = {'dob', 'initial_doj', 'doj', 'dor', 'notificationdate'}
 
@@ -129,8 +127,85 @@ def _preprocess_employees(reader, csv_headers):
         new_row['id'] = f"{empid}{desig}{doj}"
         processed.append(new_row)
 
-    return new_headers, processed, None
+    return _rebuild_stream(new_headers, processed)
 
+
+def _preprocess_student_table(reader, csv_headers):
+    """
+    For the 'student_table':
+    Renames human-readable CSV column names to their snake_case database equivalents.
+    """
+    RENAME_MAP = {
+        'aadhar number':                      'aadhar_number',
+        'preparatory ay':                     'preparatory_ay',
+        'withdrawn/ terminated':              'withdrawn_terminated',
+        'date of withdrawal/ termination':    'date_of_withdrawal_termination',
+        'ay of withdrawal/ termination':      'ay_of_withdrawal_termination',
+        'reason for withdrawal/ termination': 'reason_for_withdrawal_termination',
+    }
+
+    needs_rename = any(h.lower() in RENAME_MAP for h in csv_headers)
+    if not needs_rename:
+        return reader, csv_headers, None
+
+    rows = list(reader)
+    new_headers = [RENAME_MAP.get(h.lower(), h) for h in csv_headers]
+
+    processed = []
+    for row in rows:
+        new_row = {}
+        for old_key, val in row.items():
+            new_key = RENAME_MAP.get(old_key.lower(), old_key)
+            new_row[new_key] = val
+        processed.append(new_row)
+
+    return _rebuild_stream(new_headers, processed)
+
+
+def _preprocess_uba_events(reader, csv_headers, conn):
+    """
+    For the 'uba_events' table:
+    Accepts 'project_title' in CSV and resolves it to 'project_id' via DB lookup.
+    """
+    if 'project_title' not in csv_headers:
+        return reader, csv_headers, None
+
+    rows = list(reader)
+    if not rows:
+        return None, None, 'CSV file is empty.'
+
+    titles = {r.get('project_title', '').strip() for r in rows if r.get('project_title')}
+    if not titles:
+        return None, None, 'No project_title values found in CSV.'
+
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute(
+            "SELECT project_title, project_id FROM uba_projects WHERE LOWER(project_title) = ANY(%s)",
+            ([t.lower() for t in titles],)
+        )
+        title_to_id = {r['project_title'].lower(): r['project_id'] for r in cur.fetchall()}
+    finally:
+        cur.close()
+
+    missing = [t for t in titles if t.lower() not in title_to_id]
+    if missing:
+        return None, None, (
+            f"Project titles not found in database: {', '.join(missing)}. "
+            "Ensure strings match exactly."
+        )
+
+    new_headers = [h for h in csv_headers if h != 'project_title']
+    if 'project_id' not in new_headers:
+        new_headers.append('project_id')
+
+    processed = []
+    for row in rows:
+        title = row.pop('project_title', '').strip()
+        row['project_id'] = title_to_id.get(title.lower())
+        processed.append(row)
+
+    return _rebuild_stream(new_headers, processed)
 
 
 def _preprocess_nptel_enrollments(reader, csv_headers, conn):
@@ -229,12 +304,35 @@ def upload_csv(current_user_id):
     )
     if not table_name:
         return jsonify({'message': f"Updating table '{request.form['table_name']}' is not allowed."}), 403
+    
+    # Log upload attempt
+    print(f"\n{'='*80}")
+    print(f"CSV UPLOAD INITIATED")
+    print(f"{'='*80}")
+    print(f"File: {file.filename}")
+    print(f"Table: {table_name}")
+    print(f"User ID: {current_user_id}")
+    print(f"{'='*80}\n")
 
     conn = None
     try:
         csv_text = io.StringIO(file.stream.read().decode('utf-8'))
         reader   = csv.DictReader(csv_text)
         csv_headers = reader.fieldnames or []
+        
+        # Strip BOM from the first column name if present
+        if csv_headers and csv_headers[0].startswith('\ufeff'):
+            original_first = csv_headers[0]
+            csv_headers = [csv_headers[0].lstrip('\ufeff')] + csv_headers[1:]
+            # Also update the reader's fieldnames
+            reader.fieldnames = csv_headers
+            print(f"\n{'='*80}")
+            print(f"BOM DETECTED AND STRIPPED")
+            print(f"{'='*80}")
+            print(f"Original first column: {repr(original_first)}")
+            print(f"Corrected first column: {repr(csv_headers[0])}")
+            print(f"{'='*80}\n")
+        
         if not csv_headers:
             return jsonify({'message': 'CSV file is empty or headers are missing.'}), 400
 
@@ -243,17 +341,23 @@ def upload_csv(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
 
         # --- Per-table pre-processing ---
-        # processed_rows: plain list of dicts produced by preprocessing (bypasses
-        # the csv_text.seek(0) re-read in the data-collection phase below).
-        processed_rows = None
         error = None
         if table_name == 'employees':
-            csv_headers, processed_rows, error = _preprocess_employees(reader, csv_headers)
+            reader, csv_headers, error = _preprocess_employees(reader, csv_headers)
+        elif table_name == 'student_table':
+            reader, csv_headers, error = _preprocess_student_table(reader, csv_headers)
+        elif table_name == 'uba_events' and 'project_title' in csv_headers:
+            reader, csv_headers, error = _preprocess_uba_events(reader, csv_headers, conn)
         elif table_name == 'nptel_enrollments' and 'course_code' in csv_headers:
             reader, csv_headers, error = _preprocess_nptel_enrollments(reader, csv_headers, conn)
 
         if error:
-            return jsonify({'message': error}), 400
+            print(f"\n{'='*80}")
+            print(f"PRE-PROCESSING ERROR - Table: {table_name}")
+            print(f"{'='*80}")
+            print(f"Error: {error}")
+            print(f"{'='*80}\n")
+            return jsonify({'message': error, 'error_type': 'preprocessing_error'}), 400
 
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -269,7 +373,7 @@ def upload_csv(current_user_id):
         # Fetch column metadata
         cur.execute(
             """
-            SELECT column_name, is_generated, column_default, data_type, is_nullable
+            SELECT column_name, is_generated, column_default, data_type, is_nullable, character_maximum_length
             FROM information_schema.columns
             WHERE table_schema = 'public' AND LOWER(table_name) = LOWER(%s)
             ORDER BY ordinal_position;
@@ -303,9 +407,25 @@ def upload_csv(current_user_id):
 
         missing = [c for c in required_cols if c not in csv_lower]
         if missing:
+            # Debug logging for missing columns
+            print(f"\n{'='*80}")
+            print(f"COLUMN MISMATCH ERROR - Table: {table_name}")
+            print(f"{'='*80}")
+            print(f"Missing required columns: {missing}")
+            print(f"Expected required columns: {sorted(required_cols)}")
+            print(f"CSV provided columns: {csv_headers}")
+            print(f"Database required columns: {sorted([c for r in col_rows if (r.get('is_nullable') or 'YES').upper() == 'NO' and not (r.get('column_default') or '') for c in [r['column_name']]])}")
+            print(f"{'='*80}\n")
+            # Return enhanced error response
             return jsonify({
                 'message': 'CSV is missing required columns.',
-                'details': {'missing_in_csv': missing, 'required_columns': list(required_cols)},
+                'details': {
+                    'missing_in_csv': missing,
+                    'required_columns': sorted(list(required_cols)),
+                    'provided_columns': csv_headers,
+                    'expected_required': sorted([r['column_name'] for r in col_rows if (r.get('is_nullable') or 'YES').upper() == 'NO' and not (r.get('column_default') or '')]),
+                },
+                'error_type': 'missing_columns',
             }), 400
 
         serial_lower   = [c.lower() for c in serial_cols]
@@ -315,9 +435,49 @@ def upload_csv(current_user_id):
             if h not in all_db_lower and h not in serial_lower and h not in optional_lower
         ]
         if extra:
+            # Debug logging for extra columns
+            print(f"\n{'='*80}")
+            print(f"COLUMN MISMATCH ERROR - Table: {table_name}")
+            print(f"{'='*80}")
+            print(f"Total CSV columns: {len(csv_headers)}")
+            print(f"Total database columns: {len(col_rows)}")
+            print(f"\nExtra/Unknown columns in CSV: {extra}")
+            print(f"Number of extra columns: {len(extra)}")
+            
+            # Show detailed breakdown of each extra column
+            print(f"\nDetailed breakdown of problematic columns:")
+            for ex_col in extra:
+                print(f"  - '{ex_col}' (lowercase: '{ex_col.lower()}')")
+                # Try to find similar columns in database (case-insensitive)
+                possible_matches = [
+                    c for c in [r['column_name'] for r in col_rows]
+                    if c.lower() == ex_col.lower()
+                ]
+                if possible_matches:
+                    print(f"    → Found in DB with different case: {possible_matches}")
+                else:
+                    print(f"    → NOT found in database (even with case variations)")
+            
+            print(f"\nValid database columns (all {len(col_rows)}): {sorted([r['column_name'] for r in col_rows])}")
+            print(f"CSV provided columns ({len(csv_headers)}): {csv_headers}")
+            print(f"\nSerial/Auto-generated columns (skipped): {serial_cols}")
+            print(f"Optional columns (skipped): {optional_cols}")
+            print(f"Expected/Required columns: {db_columns}")
+            print(f"{'='*80}\n")
+            
+            # Return enhanced error response
             return jsonify({
                 'message': 'CSV contains columns not present in the database.',
-                'details': {'extra_in_csv': extra, 'expected_columns': db_columns},
+                'details': {
+                    'extra_in_csv': extra,
+                    'expected_columns': db_columns,
+                    'provided_columns': csv_headers,
+                    'all_valid_columns': [r['column_name'] for r in col_rows],
+                    'suggested_columns': [c for c in csv_headers if c.lower() not in extra],
+                    'serial_columns': serial_cols,
+                    'optional_columns': optional_cols,
+                },
+                'error_type': 'extra_columns',
             }), 400
 
         # Build INSERT … ON CONFLICT query
@@ -329,25 +489,30 @@ def upload_csv(current_user_id):
         ]
         update_cols = [c for c in columns_to_insert if c not in conflict_keys_db]
 
-        cols_sql     = ', '.join(f'"{c}"' for c in columns_to_insert)
-        conflict_sql = ', '.join(f'"{c}"' for c in conflict_keys_db)
-        conflict_action = (
-            f"DO UPDATE SET {', '.join(f'{chr(34)}{c}{chr(34)} = EXCLUDED.{chr(34)}{c}{chr(34)}' for c in update_cols)}"
-            if update_cols and conflict_keys_db else "DO NOTHING"
-        )
-        query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s ON CONFLICT ({conflict_sql}) {conflict_action};'
+        # Check if conflict key columns are actually present in the CSV
+        conflict_keys_in_csv = [k for k in conflict_keys_db if k.lower() in csv_lower]
 
-        # Collect and normalise rows.
-        # If preprocessing produced a ready-made list, use it directly so that
-        # generated/renamed fields (e.g. employee 'id') are preserved.
-        # Otherwise fall back to re-reading the original CSV stream.
-        if processed_rows is not None:
-            data_iter = iter(processed_rows)
+        cols_sql = ', '.join(f'"{c}"' for c in columns_to_insert)
+
+        if conflict_keys_in_csv:
+            # Normal upsert: conflict keys are in the CSV
+            conflict_sql = ', '.join(f'"{c}"' for c in conflict_keys_db)
+            conflict_action = (
+                f"DO UPDATE SET {', '.join(f'{chr(34)}{c}{chr(34)} = EXCLUDED.{chr(34)}{c}{chr(34)}' for c in update_cols)}"
+                if update_cols and conflict_keys_db else "DO NOTHING"
+            )
+            query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s ON CONFLICT ({conflict_sql}) {conflict_action};'
+            use_truncate = False
         else:
-            csv_text.seek(0)
-            data_iter = csv.DictReader(csv_text)
+            # Conflict keys not in CSV (e.g. auto-increment PK) — truncate and re-insert
+            query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s;'
+            use_truncate = True
+
+        # Collect and normalise rows
+        csv_text.seek(0)
+        reader = csv.DictReader(csv_text)
         data, rows_processed = [], 0
-        for i, row in enumerate(data_iter, start=1):
+        for i, row in enumerate(reader, start=1):
             row_vals, is_empty = [], True
             for col in columns_to_insert:
                 val = next(
@@ -398,6 +563,8 @@ def upload_csv(current_user_id):
                 for k in conflict_keys_db
             ]
             key_indices = [i for i in key_indices if i is not None]
+            
+            # Only deduplicate if we actually have some conflict key indices in the CSV
             if key_indices:
                 seen, deduped = set(), []
                 for row in data:
@@ -411,33 +578,126 @@ def upload_csv(current_user_id):
                 if not data:
                     return jsonify({'message': 'No unique rows after deduplication.'}), 400
 
+        # Validate string lengths before insertion to give precise error
+        col_max_lengths = {r['column_name'].lower(): r['character_maximum_length'] for r in col_rows if r.get('character_maximum_length')}
+        for row_idx, row in enumerate(data):
+            for col_idx, col_name in enumerate(columns_to_insert):
+                val = row[col_idx]
+                max_len = col_max_lengths.get(col_name.lower())
+                if val is not None and max_len is not None and len(str(val)) > max_len:
+                    error_details = f"Value '{val}' (length {len(str(val))}) exceeds maximum length {max_len} for column '{col_name}' at row {row_idx + 1}."
+                    print(f"\n{'='*80}")
+                    print(f"VALIDATION ERROR - String Too Long")
+                    print(f"{'='*80}")
+                    print(f"Table: {table_name}")
+                    print(f"Column: {col_name} (Max: {max_len})")
+                    print(f"Value: '{val}' (Length: {len(str(val))})")
+                    print(f"Row Index: {row_idx}")
+                    print(f"Full Row: {row}")
+                    print(f"{'='*80}\n")
+                    return jsonify({
+                        'message': 'Data Truncation Error', 
+                        'details': error_details
+                    }), 400
+
+        if use_truncate:
+            cur.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE;')
         psycopg2.extras.execute_values(cur, query, data)
         conn.commit()
 
-        msg = f"Successfully updated {len(data)} rows in '{table_name}'."
+        if use_truncate:
+            msg = f"Successfully replaced all data in '{table_name}' with {len(data)} rows."
+        else:
+            msg = f"Successfully updated {len(data)} rows in '{table_name}'."
         if dupes > 0:
             msg += f" Removed {dupes} duplicate row(s)."
+        
+        # Log successful upload
+        print(f"\n{'='*80}")
+        print(f"CSV UPLOAD SUCCESSFUL")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Rows processed: {rows_processed}")
+        print(f"Rows inserted/updated: {len(data)}")
+        if dupes > 0:
+            print(f"Duplicate rows removed: {dupes}")
+        print(f"Columns inserted: {columns_to_insert}")
+        print(f"{'='*80}\n")
+        
         return jsonify({'message': msg}), 200
 
+    except psycopg2.errors.StringDataRightTruncation as e:
+        safe_rollback(conn)
+        error_msg = str(e).strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - String Data Right Truncation")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Data Too Long For Column', 'details': error_msg}), 400
     except psycopg2.errors.UniqueViolation as e:
         safe_rollback(conn)
-        return jsonify({'message': 'Duplicate Entry Error', 'details': str(e).split('DETAIL:')[-1].strip()}), 409
+        error_msg = str(e).split('DETAIL:')[-1].strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - Unique Violation")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Duplicate Entry Error', 'details': error_msg}), 409
     except psycopg2.errors.InvalidTextRepresentation as e:
         safe_rollback(conn)
-        return jsonify({'message': 'Data Format Error', 'details': str(e).strip()}), 400
+        error_msg = str(e).strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - Invalid Text Representation")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Data Format Error', 'details': error_msg}), 400
     except psycopg2.errors.NotNullViolation as e:
         safe_rollback(conn)
-        return jsonify({'message': 'Missing Required Data', 'details': str(e).strip()}), 400
+        error_msg = str(e).strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - Not Null Violation")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Missing Required Data', 'details': error_msg}), 400
     except psycopg2.errors.DatatypeMismatch as e:
         safe_rollback(conn)
-        return jsonify({'message': 'Data Type Mismatch', 'details': str(e).strip()}), 400
+        error_msg = str(e).strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - Data Type Mismatch")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Data Type Mismatch', 'details': error_msg}), 400
     except psycopg2.errors.ForeignKeyViolation as e:
         safe_rollback(conn)
-        return jsonify({'message': 'Foreign Key Constraint Violation', 'details': str(e).split('DETAIL:')[-1].strip()}), 400
+        error_msg = str(e).split('DETAIL:')[-1].strip()
+        print(f"\n{'='*80}")
+        print(f"DATABASE ERROR - Foreign Key Violation")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error: {error_msg}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'Foreign Key Constraint Violation', 'details': error_msg}), 400
     except Exception as e:
         safe_rollback(conn)
-        print(f"CSV upload error: {e}")
-        return jsonify({'message': 'An error occurred during processing.', 'error': str(e)}), 500
+        error_msg = str(e)
+        print(f"\n{'='*80}")
+        print(f"GENERAL ERROR - CSV Upload")
+        print(f"{'='*80}")
+        print(f"Table: {table_name}")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Message: {error_msg}")
+        print(f"Traceback:\n{traceback.format_exc()}")
+        print(f"{'='*80}\n")
+        return jsonify({'message': 'An error occurred during processing.', 'error': error_msg}), 500
     finally:
         if conn:
             try:

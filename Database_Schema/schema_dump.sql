@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict euWbGXPAQOhKymtyndheb6AtTQAWCrdasVgh9NCgUk4zFFZGA8Ppv2TUbOb6p2U
+\restrict V4lLC6OvKzTWSmnpgNKGV3y8Tlp60JvGu3m1iPz8YRTRnvZNAZSRJaOeVbQwsAP
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -375,16 +375,16 @@ ALTER TABLE public.alumni OWNER TO postgres;
 
 CREATE TABLE public.courses_table (
     course_code character varying(50) NOT NULL,
-    course_name character varying(50),
+    course_name character varying(200),
     credit_l_t_p_c character varying(50),
-    course_category character varying(20),
-    proposing_faculty_name character varying(50),
+    course_category character varying(200),
+    proposing_faculty_name character varying(200),
     faculty_affiliation character varying(50),
-    target_programme character varying(20),
+    target_programme character varying(200),
     target_discipline character varying(50),
-    prerequisite character varying(100),
+    prerequisite character varying(500),
     date_of_proposal date,
-    proposal_type character varying(20),
+    proposal_type text,
     bac_number integer,
     senate_number integer,
     course_proposal_pdf character varying(255),
@@ -392,10 +392,7 @@ CREATE TABLE public.courses_table (
     industry_partner character varying(100),
     industry_coordinator_name character varying(200),
     industry_course_status_currentay character varying(100),
-    course_status_history text,
-    CONSTRAINT courses_table_course_category_check CHECK (((course_category)::text = ANY ((ARRAY['CORE'::character varying, 'ELECTIVE'::character varying, 'MOOC'::character varying])::text[]))),
-    CONSTRAINT courses_table_proposal_type_check CHECK (((proposal_type)::text = ANY ((ARRAY['NEW'::character varying, 'REVISED'::character varying, 'MOOC'::character varying])::text[]))),
-    CONSTRAINT courses_table_target_programme_check CHECK (((target_programme)::text = ANY ((ARRAY['BTECH'::character varying, 'MTECH'::character varying, 'MSC'::character varying, 'PHD'::character varying])::text[])))
+    course_status_history text
 );
 
 
@@ -623,7 +620,7 @@ ALTER TABLE public.icsr_sponsered_projects OWNER TO postgres;
 --
 
 CREATE TABLE public.igrs_yearwise (
-    grievance_year integer NOT NULL,
+    grievance_year character varying(10) NOT NULL,
     total_grievances_filed integer NOT NULL,
     grievances_resolved integer NOT NULL,
     grievances_pending integer NOT NULL,
@@ -1044,7 +1041,7 @@ ALTER SEQUENCE public.placement_companies_company_id_seq OWNED BY public.placeme
 --
 
 CREATE TABLE public.placement_packages (
-    placement_year integer NOT NULL,
+    placement_year character varying(10) NOT NULL,
     program public.program_type NOT NULL,
     highest_package numeric(10,2),
     lowest_package numeric(10,2),
@@ -1120,16 +1117,16 @@ CREATE TABLE public.research_patents (
     patent_title character varying(250) NOT NULL,
     patent_status public.patent_status_type NOT NULL,
     filing_date date,
-    grant_date date,
+    grant_date character varying(50),
     remarks text,
-    inventor1 character varying(50),
-    inventor1_category character varying(50),
-    inventor2 character varying(50),
-    inventor2_category character varying(50),
-    inventor3 character varying(50),
-    inventor3_category character varying(50),
-    inventor4 character varying(50),
-    inventor4_category character varying(50)
+    inventor1 character varying(200),
+    inventor1_category character varying(200),
+    inventor2 character varying(200),
+    inventor2_category character varying(200),
+    inventor3 character varying(200),
+    inventor3_category character varying(200),
+    inventor4 character varying(200),
+    inventor4_category character varying(200)
 );
 
 
@@ -1163,12 +1160,12 @@ ALTER SEQUENCE public.research_patents_patent_id_seq OWNED BY public.research_pa
 
 CREATE TABLE public.research_publications (
     publication_id integer NOT NULL,
-    publication_title character varying(250) NOT NULL,
-    journal_name character varying(200),
+    publication_title character varying(500) NOT NULL,
+    journal_name character varying(500),
     department character varying(100),
     faculty_name character varying(150),
     publication_year integer NOT NULL,
-    publication_type public.publication_category NOT NULL,
+    publication_type character varying(300) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1237,7 +1234,7 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 CREATE TABLE public.student_table (
     roll_no_admission integer NOT NULL,
-    roll_no_current integer,
+    roll_no_current integer NOT NULL,
     name_of_student character varying(100),
     programme_admission character varying(50),
     programme_current character varying(50),
@@ -1840,7 +1837,7 @@ ALTER TABLE ONLY public.research_patents
 --
 
 ALTER TABLE ONLY public.research_publications
-    ADD CONSTRAINT research_publications_pkey PRIMARY KEY (publication_id);
+    ADD CONSTRAINT research_publications_pkey PRIMARY KEY (publication_title);
 
 
 --
@@ -1864,7 +1861,7 @@ ALTER TABLE ONLY public.roles
 --
 
 ALTER TABLE ONLY public.student_table
-    ADD CONSTRAINT student_table_pkey PRIMARY KEY (roll_no_admission);
+    ADD CONSTRAINT student_table_pkey PRIMARY KEY (roll_no_current);
 
 
 --
@@ -1985,5 +1982,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict IhAi19f4afjh0UV17Jo3a6xHPBOkBVXjP4m8ePQwj8ECJ0CF2vD2Im5fgvWfT6J
+\unrestrict V4lLC6OvKzTWSmnpgNKGV3y8Tlp60JvGu3m1iPz8YRTRnvZNAZSRJaOeVbQwsAP
 

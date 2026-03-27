@@ -53,6 +53,8 @@ def _decimal_to_float(value):
 def _serialize_date(value):
     if value is None:
         return None
+    if isinstance(value, str):
+        return value
     return value.isoformat()
 
 
@@ -117,7 +119,7 @@ def _build_patent_filters(
         try:
             year_int = int(patent_year)
             conditions.append(
-                "EXTRACT(YEAR FROM COALESCE(grant_date, filing_date))::INT = %s"
+                "EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT = %s"
             )
             params.append(year_int)
         except ValueError:
@@ -235,7 +237,7 @@ def get_filter_options(current_user_id):
         if _table_exists(conn, 'research_patents'):
             cur.execute(
                 """
-                SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(grant_date, filing_date))::INT AS year
+                SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT AS year
                 FROM research_patents
                 WHERE filing_date IS NOT NULL OR grant_date IS NOT NULL
                 ORDER BY year DESC
@@ -694,7 +696,7 @@ def patent_stats(current_user_id):
 
         query = f"""
             SELECT
-                EXTRACT(YEAR FROM COALESCE(grant_date, filing_date))::INT AS year,
+                EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT AS year,
                 patent_status,
                 COUNT(*) AS total
             FROM research_patents
@@ -765,7 +767,7 @@ def patent_list(current_user_id):
                    remarks
             FROM research_patents
             {where_clause}
-            ORDER BY COALESCE(grant_date, filing_date) DESC NULLS LAST, patent_title
+            ORDER BY COALESCE(grant_date::date, filing_date) DESC NULLS LAST, patent_title
         """
         cur.execute(query, params)
         rows = []
@@ -995,6 +997,23 @@ def publication_summary(current_user_id):
         cur.execute(query_type, params)
         by_type = {row['publication_type']: row['total'] for row in cur.fetchall()}
 
+        # Count journal and conference by checking if lowercased publication_type
+        # contains the keyword 'journal' or 'conference'
+        journal_count = 0
+        conference_count = 0
+        for pub_type, count in by_type.items():
+            if pub_type is None:
+                continue
+            words = pub_type.lower().split()
+            temp = pub_type.lower().split('-')
+            for t in temp: 
+                words.append(t)
+                
+            if 'journal' in words:
+                journal_count += count
+            if 'conference' in words:
+                conference_count += count
+
         cur.execute(
             f"""
             SELECT MAX(publication_year) AS latest_year
@@ -1004,7 +1023,13 @@ def publication_summary(current_user_id):
         , params)
         latest_year = cur.fetchone()['latest_year']
 
-        return jsonify({'total': total, 'by_type': by_type, 'latest_year': latest_year})
+        return jsonify({
+            'total': total,
+            'by_type': by_type,
+            'latest_year': latest_year,
+            'journal_count': journal_count,
+            'conference_count': conference_count
+        })
     except Exception as exc:
         return jsonify({'message': f'Failed to fetch publication summary: {exc}'}), 500
     finally:
