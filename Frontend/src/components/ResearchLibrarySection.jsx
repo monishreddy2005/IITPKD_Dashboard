@@ -61,7 +61,9 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
   const [summary, setSummary] = useState({
     total: 0,
     by_type: {},
-    latest_year: null
+    latest_year: null,
+    journal_count: 0,
+    conference_count: 0
   });
 
   const [trendData, setTrendData] = useState([]);
@@ -121,7 +123,9 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
         setSummary({
           total: summaryResp?.total || 0,
           by_type: summaryResp?.by_type || {},
-          latest_year: summaryResp?.latest_year || null
+          latest_year: summaryResp?.latest_year || null,
+          journal_count: summaryResp?.journal_count || 0,
+          conference_count: summaryResp?.conference_count || 0
         });
         setTrendData(trendResp?.data || []);
         setDepartmentBreakdown(deptResp?.data || []);
@@ -169,10 +173,8 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
   );
 
   const journalVsConference = useMemo(() => {
-    const journal = summary.by_type?.Journal || 0;
-    const conference = summary.by_type?.Conference || 0;
-    return `${formatNumber(journal)} / ${formatNumber(conference)}`;
-  }, [summary.by_type]);
+    return `${formatNumber(summary.journal_count)} / ${formatNumber(summary.conference_count)}`;
+  }, [summary.journal_count, summary.conference_count]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
