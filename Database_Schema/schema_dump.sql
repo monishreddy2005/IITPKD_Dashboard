@@ -1235,7 +1235,7 @@ ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 --
 
 CREATE TABLE public.student_table (
-    roll_no_admission integer NOT NULL,
+    roll_no_admission integer,
     roll_no_current integer NOT NULL,
     name_of_student character varying(100),
     programme_admission character varying(50),
