@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 3HV7WHcwmB5XRHqO5aBBJdawjUxqTCZec0ACthNgsWHtfzdDs13myMLeYifXebA
+\restrict 45VGdSgQVXleB7bIVD5wcSBCxcm5fiXhxH4j3HxtnUWaUQQKOk9YhaigZYfi6QM
 
--- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
--- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
+-- Dumped from database version 18.1
+-- Dumped by pg_dump version 18.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -18,6 +18,22 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
 
 --
 -- Name: academic_program_type; Type: TYPE; Schema: public; Owner: postgres
@@ -1251,8 +1267,8 @@ CREATE TABLE public.student_table (
     stream_current character varying(50),
     current_semester integer,
     gender character varying(20),
-    original_category character varying(10),
-    admission_category character varying(10),
+    original_category character varying(20),
+    admission_category character varying(20),
     hosteller_day_scholar character varying(20),
     date_of_birth date,
     residential_address character varying(1000),
@@ -1263,14 +1279,14 @@ CREATE TABLE public.student_table (
     blood_group character varying(10),
     apaar_id character varying(20),
     qualifying_exam character varying(100),
-    qualifying_exam_score integer,
-    student_contact_no character varying(20),
+    qualifying_exam_score numeric(10,5),
+    student_contact_no character varying(50),
     institute_email character varying(50),
     personal_email character varying(50),
     parent_name character varying(50),
-    parent_contact_no character varying(20),
+    parent_contact_no character varying(50),
     parent_email character varying(50),
-    faculty_advisor character varying(50),
+    faculty_advisor character varying(300),
     institute_scholarship character varying(200),
     nsp_scholarship_recipient character varying(50),
     preparatory character varying(50),
@@ -1283,10 +1299,10 @@ CREATE TABLE public.student_table (
     number_of_total_idcs integer,
     idc_history character varying(200),
     break_type character varying(50),
-    break_from_date date,
-    break_to_date date,
+    break_from_date character varying(100),
+    break_to_date character varying(100),
     break_history character varying(500),
-    student_status character varying(20),
+    student_status character varying(30),
     student_status_date date,
     student_status_remarks character varying(200),
     fellowship_status_admission character varying(50),
@@ -1990,5 +2006,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 3HV7WHcwmB5XRHqO5aBBJdawjUxqTCZec0ACthNgsWHtfzdDs13myMLeYifXebA
+\unrestrict 45VGdSgQVXleB7bIVD5wcSBCxcm5fiXhxH4j3HxtnUWaUQQKOk9YhaigZYfi6QM
 
