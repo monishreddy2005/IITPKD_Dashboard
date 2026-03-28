@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict V4lLC6OvKzTWSmnpgNKGV3y8Tlp60JvGu3m1iPz8YRTRnvZNAZSRJaOeVbQwsAP
+\restrict yRtO3owLgL4kBsjIALKm30XLJFYG57z9NF6K4MQB2WrTfz2Oegge00AJVGa2cnT
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -460,11 +460,11 @@ ALTER TABLE public.employees OWNER TO postgres;
 
 CREATE TABLE public.ewd_yearwise (
     ewd_year integer NOT NULL,
-    annual_electricity_consumption integer NOT NULL,
+    annual_electricity_consumption bigint NOT NULL,
     per_capita_electricity_consumption numeric(10,2) NOT NULL,
     per_capita_water_consumption numeric(10,2) NOT NULL,
     per_capita_recycled_water numeric(10,2) NOT NULL,
-    green_coverage numeric(5,2) NOT NULL,
+    green_coverage numeric(10,2) NOT NULL,
     CONSTRAINT check_non_negativity CHECK (((annual_electricity_consumption >= 0) AND (per_capita_electricity_consumption >= (0)::numeric) AND (per_capita_water_consumption >= (0)::numeric) AND (per_capita_recycled_water >= (0)::numeric) AND (green_coverage >= (0)::numeric)))
 );
 
@@ -741,12 +741,13 @@ ALTER SEQUENCE public.innovation_projects_project_id_seq OWNED BY public.innovat
 --
 
 CREATE TABLE public.iptif_facilities_table (
-    facility_id integer NOT NULL,
+    facility_id character varying(300) NOT NULL,
     facility_name character varying(200) NOT NULL,
     facility_type character varying(100),
     revenue_made numeric(12,2),
     availability_status character varying(50),
-    financial_year integer
+    financial_year character varying(10),
+    remarks text
 );
 
 
@@ -776,11 +777,12 @@ ALTER TABLE public.iptif_program_table OWNER TO postgres;
 --
 
 CREATE TABLE public.iptif_projects_table (
-    project_id integer NOT NULL,
+    project_id character varying(300) NOT NULL,
     project_name character varying(255) NOT NULL,
     scheme character varying(150),
     status character varying(50),
-    start_date date
+    start_date date,
+    end_date date
 );
 
 
@@ -791,7 +793,7 @@ ALTER TABLE public.iptif_projects_table OWNER TO postgres;
 --
 
 CREATE TABLE public.iptif_startup_table (
-    id integer NOT NULL,
+    id character varying(300) NOT NULL,
     startup_name character varying(200) NOT NULL,
     domain character varying(150),
     startup_origin character varying(100),
@@ -1238,13 +1240,13 @@ CREATE TABLE public.student_table (
     name_of_student character varying(100),
     programme_admission character varying(50),
     programme_current character varying(50),
-    admission_year integer,
+    admission_year character varying(10),
     admission_cycle character varying(20),
     admission_batch integer,
     date_of_joining date,
     date_of_validity date,
-    department_admission character varying(50),
-    department_current character varying(50),
+    department_admission character varying(100),
+    department_current character varying(100),
     stream_admission character varying(50),
     stream_current character varying(50),
     current_semester integer,
@@ -1253,27 +1255,27 @@ CREATE TABLE public.student_table (
     admission_category character varying(10),
     hosteller_day_scholar character varying(20),
     date_of_birth date,
-    residential_address character varying(300),
+    residential_address character varying(1000),
     nationality character varying(50),
     state character varying(50),
     pwd_status character varying(5),
     disability_type character varying(100),
     blood_group character varying(10),
     apaar_id character varying(20),
-    qualifying_exam character varying(20),
+    qualifying_exam character varying(100),
     qualifying_exam_score integer,
-    student_contact_no bigint,
+    student_contact_no character varying(20),
     institute_email character varying(50),
     personal_email character varying(50),
     parent_name character varying(50),
-    parent_contact_no bigint,
+    parent_contact_no character varying(20),
     parent_email character varying(50),
     faculty_advisor character varying(50),
-    institute_scholarship character varying(50),
+    institute_scholarship character varying(200),
     nsp_scholarship_recipient character varying(50),
     preparatory character varying(50),
     branch_change character varying(10),
-    branch_change_remarks character varying(200),
+    branch_change_remarks text,
     slowpaced character varying(10),
     upgraded character varying(10),
     date_of_upgradation date,
@@ -1283,16 +1285,22 @@ CREATE TABLE public.student_table (
     break_type character varying(50),
     break_from_date date,
     break_to_date date,
-    break_history character varying(200),
+    break_history character varying(500),
     student_status character varying(20),
     student_status_date date,
     student_status_remarks character varying(200),
     fellowship_status_admission character varying(50),
     fellowship_status_current character varying(50),
-    dc_chairperson character varying(50),
-    dc_members character varying(100),
+    dc_chairperson character varying(500),
+    dc_members character varying(1000),
     thesis_submission_date date,
-    viva_voice_date date
+    viva_voice_date date,
+    aadhar_number character varying(20),
+    preparatory_ay character varying(10),
+    withdrawn_terminated character varying(20),
+    date_of_withdrawal_termination date,
+    ay_of_withdrawal_termination character varying(10),
+    reason_for_withdrawal_termination text
 );
 
 
@@ -1982,5 +1990,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict V4lLC6OvKzTWSmnpgNKGV3y8Tlp60JvGu3m1iPz8YRTRnvZNAZSRJaOeVbQwsAP
+\unrestrict yRtO3owLgL4kBsjIALKm30XLJFYG57z9NF6K4MQB2WrTfz2Oegge00AJVGa2cnT
 
