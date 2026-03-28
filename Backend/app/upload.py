@@ -85,6 +85,9 @@ def _preprocess_employees(reader, csv_headers):
     - Renames 'group' → 'group_name' (reserved SQL word).
     - Drops any existing 'id' column and auto-generates it as empid+designation+doj.
     - Normalises date columns from DD/MM/YY to YYYY-MM-DD.
+
+    Returns (new_headers, processed_rows, error) — rows as a plain list of dicts
+    so the caller can use them directly without re-reading the original stream.
     """
     DATE_COLS = {'dob', 'initial_doj', 'doj', 'dor', 'notificationdate'}
 
@@ -195,17 +198,6 @@ def _preprocess_uba_events(reader, csv_headers, conn):
             "Ensure strings match exactly."
         )
 
-    new_headers = [h for h in csv_headers if h != 'project_title']
-    if 'project_id' not in new_headers:
-        new_headers.append('project_id')
-
-    processed = []
-    for row in rows:
-        title = row.pop('project_title', '').strip()
-        row['project_id'] = title_to_id.get(title.lower())
-        processed.append(row)
-
-    return _rebuild_stream(new_headers, processed)
 
 
 def _preprocess_nptel_enrollments(reader, csv_headers, conn):
@@ -341,6 +333,9 @@ def upload_csv(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
 
         # --- Per-table pre-processing ---
+        # processed_rows: plain list of dicts produced by preprocessing (bypasses
+        # the csv_text.seek(0) re-read in the data-collection phase below).
+        processed_rows = None
         error = None
         if table_name == 'employees':
             reader, csv_headers, error = _preprocess_employees(reader, csv_headers)
@@ -508,11 +503,17 @@ def upload_csv(current_user_id):
             query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s;'
             use_truncate = True
 
-        # Collect and normalise rows
-        csv_text.seek(0)
-        reader = csv.DictReader(csv_text)
+        # Collect and normalise rows.
+        # If preprocessing produced a ready-made list, use it directly so that
+        # generated/renamed fields (e.g. employee 'id') are preserved.
+        # Otherwise fall back to re-reading the original CSV stream.
+        if processed_rows is not None:
+            data_iter = iter(processed_rows)
+        else:
+            csv_text.seek(0)
+            data_iter = csv.DictReader(csv_text)
         data, rows_processed = [], 0
-        for i, row in enumerate(reader, start=1):
+        for i, row in enumerate(data_iter, start=1):
             row_vals, is_empty = [], True
             for col in columns_to_insert:
                 val = next(
