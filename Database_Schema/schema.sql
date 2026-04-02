@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 45VGdSgQVXleB7bIVD5wcSBCxcm5fiXhxH4j3HxtnUWaUQQKOk9YhaigZYfi6QM
+\restrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -18,22 +18,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
---
-
-CREATE SCHEMA public;
-
-
-ALTER SCHEMA public OWNER TO pg_database_owner;
-
---
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
---
-
-COMMENT ON SCHEMA public IS 'standard public schema';
-
 
 --
 -- Name: academic_program_type; Type: TYPE; Schema: public; Owner: postgres
@@ -379,7 +363,10 @@ CREATE TABLE public.alumni (
     current_job text,
     country_of_settlement character varying(100),
     place_of_settlement_state character varying(150),
-    alumni_contribution text
+    alumni_contribution text,
+    gender character varying(10),
+    name character varying(150),
+    sector character varying(50)
 );
 
 
@@ -464,7 +451,9 @@ CREATE TABLE public.employees (
     prior_industry_exp_in_months integer,
     prior_research_exp_in_months integer,
     prior_teaching_exp_in_months integer,
-    total_teaching_exp_in_months integer
+    total_teaching_exp_in_months integer,
+    original_category character varying(10),
+    appointed_category character varying(10)
 );
 
 
@@ -2006,5 +1995,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 45VGdSgQVXleB7bIVD5wcSBCxcm5fiXhxH4j3HxtnUWaUQQKOk9YhaigZYfi6QM
+\unrestrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
 
