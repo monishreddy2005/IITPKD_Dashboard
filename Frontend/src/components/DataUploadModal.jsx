@@ -134,8 +134,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 };
             case 'employees':
                 return {
-                    headers: ["empid", "empname", "designation", "phonenumber", "bloodgroup", "dob", "initial_doj", "doj", "dor", "gender", "email", "personalmail", "marital_status", "address", "paylevel", "group_name", "ltchometown", "employmentnature", "appointmentmode", "basicpay", "department", "emp_type", "pwd", "notificationnumber", "notificationdate", "empstatus", "prior_industry_exp_in_months", "prior_research_exp_in_months", "prior_teaching_exp_in_months", "total_teaching_exp_in_months"],
-                    sample: ["IITPKD1234", "John Doe", "Assistant Professor Gr. I", "9876543210", "O+", "1990-01-15", "2017-11-01", "2022-03-25", "2055-01-31", "Male", "john@iitpkd.ac.in", "john@gmail.com", "Married", "123 Main St, City", "F13A1", "group_name", "Hometown", "Regular", "Direct Recruitment", "101500", "Computer Science and Engineering", "Teaching", "No", "IITPKD/R/F/01/2022", "2022-01-10", "Active", "", "", "", ""]
+                    headers: ["empid", "empname", "designation", "phonenumber", "bloodgroup", "dob", "initial_doj", "doj", "dor", "gender", "email", "personalmail", "marital_status", "address", "paylevel", "group_name", "ltchometown", "employmentnature", "appointmentmode", "basicpay", "department", "emp_type", "pwd", "notificationnumber", "notificationdate", "empstatus", "prior_industry_exp_in_months", "prior_research_exp_in_months", "prior_teaching_exp_in_months", "total_teaching_exp_in_months", "original_category", "appointed_category"],
+                    sample: ["IITPKD1234", "John Doe", "Assistant Professor Gr. I", "9876543210", "O+", "1990-01-15", "2017-11-01", "2022-03-25", "2055-01-31", "Male", "john@iitpkd.ac.in", "john@gmail.com", "Married", "123 Main St, City", "F13A1", "group_name", "Hometown", "Regular", "Direct Recruitment", "101500", "Computer Science and Engineering", "Teaching", "No", "IITPKD/R/F/01/2022", "2022-01-10", "Active", "", "", "", "", "GEN", "OBC"]
                 };
             case 'ewd_yearwise':
                 return {
