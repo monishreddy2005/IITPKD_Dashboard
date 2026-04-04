@@ -18,6 +18,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [failingRow, setFailingRow] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -26,6 +27,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             setMessage(null);
             setUploadSuccess(false);
             setIsLoading(false);
+            setFailingRow(null);
         }
     }, [isOpen]);
 
@@ -37,6 +39,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
         setMessage(null);
         setUploadSuccess(false);
         setIsLoading(false);
+        setFailingRow(null);
         onClose();
     };
 
@@ -46,7 +49,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             if (lines.length === 0) return;
 
             const header = lines[0].split(',');
-            const rows = lines.slice(1, 6)
+            const rows = lines.slice(1, 51)
                 .filter(line => line)
                 .map(line => line.split(','));
 
@@ -62,6 +65,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
         setSelectedFile(file);
         setMessage(null);
         setUploadSuccess(false);
+        setFailingRow(null);
 
         if (file) {
             const reader = new FileReader();
@@ -106,13 +110,13 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'An error occurred during upload.';
             const errorDetails = error.response?.data?.details;
+            const rowNumber = error.response?.data?.row_number ?? null;
 
-            // Format the final message to include details if available
-            const finalMessage = errorDetails
-                ? `${errorMsg} (${errorDetails})`
-                : errorMsg;
+            let finalMessage = errorMsg;
+            if (errorDetails) finalMessage += ` — ${errorDetails}`;
 
             setMessage({ type: 'error', text: finalMessage });
+            setFailingRow(rowNumber);
             setUploadSuccess(false);
         } finally {
             setIsLoading(false);
@@ -381,7 +385,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
                             {previewData && (
                                 <div className="preview-section">
-                                    <h4>CSV Preview (First 5 Rows)</h4>
+                                    <h4>CSV Preview (First {previewData.rows.length} Rows)</h4>
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto', overflowX: 'auto' }}>
                                     <table className="preview-table">
                                         <thead>
                                             <tr>
@@ -389,18 +394,34 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {previewData.rows.map((row, i) => (
-                                                <tr key={i}>
-                                                    {row.map((cell, j) => <td key={j}>{cell}</td>)}
-                                                </tr>
-                                            ))}
+                                            {previewData.rows.map((row, i) => {
+                                                // i is 0-based; failingRow is 1-based data row number
+                                                const isFailingRow = failingRow !== null && failingRow === i + 1;
+                                                return (
+                                                    <tr key={i} style={isFailingRow ? {
+                                                        backgroundColor: 'rgba(220, 53, 69, 0.25)',
+                                                        outline: '2px solid #dc3545'
+                                                    } : {}}>
+                                                        {row.map((cell, j) => <td key={j}>{cell}</td>)}
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
+                                    </div>
                                 </div>
                             )}
 
                             {message && (
                                 <div className={`status-message ${message.type}`}>
+                                    {message.type === 'error' && failingRow && (
+                                        <div style={{ fontWeight: 'bold', marginBottom: '0.3rem' }}>
+                                            Problem at CSV row {failingRow}
+                                            {failingRow <= 50
+                                                ? ' (highlighted in preview above)'
+                                                : ' (beyond preview range — check your CSV directly)'}
+                                        </div>
+                                    )}
                                     {message.text}
                                 </div>
                             )}
