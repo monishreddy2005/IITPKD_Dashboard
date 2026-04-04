@@ -3,6 +3,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -159,13 +161,31 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
     });
   }, [summary.yearly, externshipTypeKeys]);
 
-  const departmentChartData = useMemo(() => {
-    if (!summary.department.length) return [];
-    return summary.department.map((row) => ({
-      department: row.department || 'Unspecified',
-      total: Number(row.total) || 0
-    }));
-  }, [summary.department]);
+  // Process data for department-wise yearly trend line graph
+  const departmentYearlyTrendData = useMemo(() => {
+    if (!summary.yearly.length) return { trendData: [], departments: [] };
+    
+    // Get all departments from the data
+    const departments = new Set();
+    summary.yearly.forEach((yearData) => {
+      Object.keys(yearData).forEach((key) => {
+        if (key !== 'year' && key !== 'total') {
+          departments.add(key);
+        }
+      });
+    });
+    
+    // Transform data for line chart
+    const trendData = summary.yearly.map((yearData) => {
+      const yearItem = { year: yearData.year };
+      departments.forEach((dept) => {
+        yearItem[dept] = Number(yearData[dept]) || 0;
+      });
+      return yearItem;
+    });
+    
+    return { trendData, departments: Array.from(departments) };
+  }, [summary.yearly]);
 
   const typeTotals = useMemo(() => {
     const totals = {};
@@ -250,7 +270,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           marginBottom: '20px' 
         }}>{error}</div>}
 
-        {/* Modern Summary Cards - Larger Font Sizes */}
+        {/* Modern Summary Cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
@@ -390,222 +410,63 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           </div>
         </div>
 
-        {/* Filter Panel with Radio Buttons for View Selection */}
-        <div className="filter-panel" style={{ 
-          marginBottom: '20px', 
-          padding: '20px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '8px', 
-          border: '1px solid #e9ecef' 
+        {/* Radio Buttons */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '20px',
+          marginBottom: '30px',
+          padding: '20px',
+          borderRadius: '12px'
         }}>
-          <div className="filter-header" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '15px' 
-          }}>
-            <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                className="clear-filters-btn" 
-                onClick={handleClearFilters}
-                style={{ 
-                  padding: '8px 16px', 
-                  backgroundColor: '#dc3545', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Clear Filters
-              </button>
-              {!isPublicView && user && user.role_id === 3 && (
-                <button
-                  className="upload-data-btn"
-                  onClick={() => setIsUploadModalOpen(true)}
-                  style={{ 
-                    padding: '8px 16px', 
-                    backgroundColor: '#28a745', 
-                    color: '#fff', 
-                    border: 'none', 
-                    borderRadius: '4px', 
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  Upload Externships
-                </button>
-              )}
-            </div>
-          </div>
-          
-          {/* View Type Selection - Radio Buttons */}
-          <div style={{ 
-            marginBottom: '20px', 
-            padding: '15px', 
-            backgroundColor: '#e9ecef', 
-            borderRadius: '6px',
-            border: '1px solid #dee2e6'
-          }}>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '10px', 
-              fontWeight: '600', 
-              color: '#333',
-              fontSize: '14px'
-            }}>
-              Select View Type:
-            </label>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '10px'
-            }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'yearly' ? '#6366f1' : 'white',
-                color: viewType === 'yearly' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'yearly' ? '2px solid #6366f1' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="yearly"
-                  checked={viewType === 'yearly'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#6366f1',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'yearly' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📊 Year-wise Externships
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'department' ? '#22c55e' : 'white',
-                color: viewType === 'department' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'department' ? '2px solid #22c55e' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="department"
-                  checked={viewType === 'department'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#22c55e',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'department' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  🏢 Department-wise
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'externshipTable' ? '#f97316' : 'white',
-                color: viewType === 'externshipTable' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'externshipTable' ? '2px solid #f97316' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="externshipTable"
-                  checked={viewType === 'externshipTable'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#f97316',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'externshipTable' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📋 Externship Directory
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="filter-grid" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: '12px' 
-          }}>
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-              <select
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-              >
-                <option value="All">All Departments</option>
-                {filterOptions.externship_departments.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Externship Year</label>
-              <select
-                className="filter-select"
-                value={filters.externship_year}
-                onChange={(e) => handleFilterChange('externship_year', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-              >
-                <option value="All">All Years</option>
-                {filterOptions.externship_years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Active Filters Summary */}
-          <div style={{ 
-            marginTop: '12px', 
-            padding: '8px', 
-            backgroundColor: '#e9ecef', 
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
-            <strong>Active Filters:</strong>{' '}
-            {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
-            {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
-            {filters.department === 'All' && filters.externship_year === 'All' && 
-              <span>No filters applied</span>
-            }
-          </div>
+          <button 
+            onClick={() => setViewType('yearly')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'yearly' ? '#6366f1' : 'transparent',
+              color: viewType === 'yearly' ? 'white' : '#333',
+              border: viewType === 'yearly' ? '2px solid #6366f1' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'yearly' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📊 Year-wise Externships
+          </button>
+          <button 
+            onClick={() => setViewType('department')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'department' ? '#22c55e' : 'transparent',
+              color: viewType === 'department' ? 'white' : '#333',
+              border: viewType === 'department' ? '2px solid #22c55e' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'department' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            🏢 Department-wise
+          </button>
+          <button 
+            onClick={() => setViewType('externshipTable')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'externshipTable' ? '#f97316' : 'transparent',
+              color: viewType === 'externshipTable' ? 'white' : '#333',
+              border: viewType === 'externshipTable' ? '2px solid #f97316' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'externshipTable' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📋 Externship Directory
+          </button>
         </div>
 
         {loading && (
@@ -636,6 +497,91 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                       Distribution by type over time
                     </p>
                   </div>
+                  
+                  {/* Filters inside the yearly view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
+                        <select
+                          className="filter-select"
+                          value={filters.department}
+                          onChange={(e) => handleFilterChange('department', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Departments</option>
+                          {filterOptions.externship_departments.map((dept) => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Externship Year</label>
+                        <select
+                          className="filter-select"
+                          value={filters.externship_year}
+                          onChange={(e) => handleFilterChange('externship_year', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.externship_years.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+                      {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
+                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
                   <div className="chart-container">
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={yearlyChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
@@ -649,55 +595,131 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
-
-                    {/* Type Summary Cards */}
-                    <div style={{ 
-                      marginTop: '15px',
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${Math.min(externshipTypeKeys.length, 3)}, 1fr)`,
-                      gap: '10px'
-                    }}>
-                      {Object.entries(typeTotals).map(([type, total], index) => (
-                        <div key={type} style={{
-                          padding: '12px',
-                          backgroundColor: '#f8f9fa',
-                          borderRadius: '8px',
-                          border: `1px solid ${TYPE_COLORS[index % TYPE_COLORS.length]}`,
-                          textAlign: 'center'
-                        }}>
-                          <div style={{ fontSize: '12px', color: '#666' }}>{type}</div>
-                          <div style={{ fontSize: '18px', fontWeight: 'bold', color: TYPE_COLORS[index % TYPE_COLORS.length] }}>
-                            {formatNumber(total)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Department-wise Participation Chart */}
+              {/* Department-wise Yearly Trend Line Graph */}
               {viewType === 'department' && (
                 <div>
                   <div className="chart-header" style={{ marginBottom: '15px' }}>
                     <h2 style={{ margin: '0 0 5px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '22px' }}>🏢</span> Department-wise Participation
+                      <span style={{ fontSize: '22px' }}>🏢</span> Department-wise Yearly Trend
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0', fontSize: '13px' }}>
-                      Externships by department
+                      Yearly trend of externships by department
                     </p>
                   </div>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={departmentChartData} margin={{ top: 10, right: 20, left: 40, bottom: 50 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="department" angle={-30} textAnchor="end" height={60} tick={{ fontSize: 10 }} interval={0} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="total" fill="#60a5fa" radius={[4,4,0,0]} barSize={20} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                  
+                  {/* Filters inside the department view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
+                        <select
+                          className="filter-select"
+                          value={filters.department}
+                          onChange={(e) => handleFilterChange('department', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Departments</option>
+                          {filterOptions.externship_departments.map((dept) => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Externship Year</label>
+                        <select
+                          className="filter-select"
+                          value={filters.externship_year}
+                          onChange={(e) => handleFilterChange('externship_year', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.externship_years.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+                      {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
+                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
                   </div>
+
+                  {/* Department-wise Yearly Trend Line Graph */}
+                  {departmentYearlyTrendData.trendData.length > 0 && (
+                    <div className="chart-container">
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart data={departmentYearlyTrendData.trendData} margin={{ top: 10, right: 30, left: 40, bottom: 30 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: '11px' }} />
+                          {departmentYearlyTrendData.departments.map((dept, index) => (
+                            <Line
+                              key={dept}
+                              type="monotone"
+                              dataKey={dept}
+                              stroke={TYPE_COLORS[index % TYPE_COLORS.length]}
+                              strokeWidth={2}
+                              dot={{ r: 4 }}
+                              activeDot={{ r: 6 }}
+                            />
+                          ))}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -712,6 +734,91 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                       {externshipList.length} records found
                     </p>
                   </div>
+                  
+                  {/* Filters inside the table view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
+                        <select
+                          className="filter-select"
+                          value={filters.department}
+                          onChange={(e) => handleFilterChange('department', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Departments</option>
+                          {filterOptions.externship_departments.map((dept) => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Externship Year</label>
+                        <select
+                          className="filter-select"
+                          value={filters.externship_year}
+                          onChange={(e) => handleFilterChange('externship_year', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.externship_years.map((year) => (
+                            <option key={year} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+                      {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
+                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
                   <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                     <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
                       <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f97316', color: 'white' }}>

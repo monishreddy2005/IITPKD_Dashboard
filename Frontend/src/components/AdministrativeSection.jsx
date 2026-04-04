@@ -349,56 +349,49 @@ function AdministrativeSection({ isPublicView = false }) {
           }}>{error}</div>
         )}
 
-        {/* ══ Check Employee Overview by Year ═════════════════════════════ */}
-        <h2 style={{ textDecoration: 'underline', color: '#000000ff', marginBottom: '16px' }}>
-          Check Employee Overview by Year
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
 
-          {/* Year Filter Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
-            borderRadius: '16px', padding: '24px',
-            boxShadow: '0 10px 20px rgba(168,85,247,0.3)',
-            position: 'relative', overflow: 'hidden',
+        {/* ══ Separator + Title: Check Employee Overview by Year ═══════════ */}
+        <div  />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <h2 style={{
+            display: 'inline-block',
+            padding: '6px 12px',
+            borderRadius: '12px',
+            // background: 'rgba(0, 110, 255, 0.5)',
+            // backdropFilter: 'blur(10px)',
+            // WebkitBackdropFilter: 'blur(20px)',
+            // border: '1px solid rgba(0, 183, 255, 1)',
+            textDecoration:'underline', 
+            color: '#000000ff'
           }}>
-            <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📅</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '600' }}>Filter by Year</span>
-              </div>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                style={{
-                  width: '100%', padding: '8px 12px', borderRadius: '8px',
-                  border: 'none', fontSize: '14px', fontWeight: '500',
-                  background: 'rgba(255,255,255,0.2)', color: 'white',
-                  cursor: 'pointer', outline: 'none',
-                }}
-              >
-                {[...allYearwise].reverse().map((row) => (
-                  <option key={row.year} value={String(row.year)} style={{ color: '#333', background: '#fff' }}>
-                    {row.year}
-                  </option>
-                ))}
-              </select>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px' }}>
-                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%', flexShrink: 0 }} />
-                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Focus on a specific year</span>
-              </div>
-            </div>
-          </div>
+            Check Employee Overview by Year
+          </h2>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(e.target.value)}
+            style={{
+              padding: '8px 14px', borderRadius: '8px', border: '1px solid #d0d0d0',
+              fontSize: '14px', fontWeight: '500', color: '#333', background: '#fff',
+              cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+            }}
+          >
+            <option value="All">All</option>
+            {[...allYearwise].reverse().map((row) => (
+              <option key={row.year} value={String(row.year)}>{row.year}</option>
+            ))}
+          </select>
+        </div>
 
-          {/* Data Cards */}
+        {/* ══ Row 1: Year-filtered cards ═══════════════════════════════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
           {[
             { label: 'Total Employees', icon: '👥', data: allYearwise,         grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
             { label: 'Faculty',         icon: '🎓', data: teachingYearwise,    grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
             { label: 'Staff',           icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
           ].map(({ label, icon, data, grad, shadow }) => {
-            const row = data.find((r) => String(r.year) === selectedYear);
-            const val = row ? (row.Total || 0) : 0;
+            const val = selectedYear === 'All'
+              ? data.reduce((sum, r) => sum + (r.Total || 0), 0)
+              : (data.find((r) => String(r.year) === selectedYear)?.Total || 0);
             return (
               <div key={label} style={{
                 background: grad, borderRadius: '16px', padding: '24px',
@@ -416,7 +409,7 @@ function AdministrativeSection({ isPublicView = false }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%', flexShrink: 0 }} />
                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
-                      {selectedYear ? `In year ${selectedYear}` : 'Select a year'}
+                      {selectedYear === 'All' ? 'Sum across all years' : selectedYear ? `In year ${selectedYear}` : 'Select a year'}
                     </span>
                   </div>
                 </div>
