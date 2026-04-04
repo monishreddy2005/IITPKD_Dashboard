@@ -165,10 +165,7 @@ def get_gender_distribution_filtered(current_user_id):
         if yearofadmission_param == 'All':
             filters['yearofadmission'] = 'All'
         elif yearofadmission_param:
-            try:
-                filters['yearofadmission'] = int(yearofadmission_param)
-            except (ValueError, TypeError):
-                filters['yearofadmission'] = None
+            filters['yearofadmission'] = yearofadmission_param
 
         # Convert PWD string to boolean if provided
         if filters['pwd'] == 'true':
@@ -251,10 +248,7 @@ def get_student_strength(current_user_id):
         if yearofadmission_param == 'All':
             filters['yearofadmission'] = 'All'
         elif yearofadmission_param:
-            try:
-                filters['yearofadmission'] = int(yearofadmission_param)
-            except (ValueError, TypeError):
-                filters['yearofadmission'] = None
+            filters['yearofadmission'] = yearofadmission_param
 
         if filters['yearofadmission'] is None:
             latest_year = get_latest_year()
