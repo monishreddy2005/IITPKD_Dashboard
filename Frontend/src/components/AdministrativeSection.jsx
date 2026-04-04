@@ -349,49 +349,6 @@ function AdministrativeSection({ isPublicView = false }) {
           }}>{error}</div>
         )}
 
-        {/* ══ Title: Overall Employee Overview ════════════════════════════ */}
-        <h2
-          style={{
-            display: 'inline-block',
-            padding: '6px 12px',
-            borderRadius: '12px',
-            // background: 'rgba(255, 255, 255, 1)',
-            // backdropFilter: 'blur(10px)',
-            // WebkitBackdropFilter: 'blur(20px)',
-            // border: '1px solid rgba(0, 183, 255, 1)',
-            textDecoration:'underline', 
-            color: '#000000ff'
-          }}
-        >
-          Overall Employee Overview
-        </h2>
-
-        {/* ══ Row 1: IAR-style summary cards ══════════════════════════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '28px' }}>
-          {[
-            { label: 'Total Employees', value: summaryTotals.all,         icon: '👥', subtitle: 'Sum across all years', grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
-            { label: 'Total Faculty',   value: summaryTotals.teaching,    icon: '🎓', subtitle: 'Teaching staff across all years', grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
-            { label: 'Total Staff',     value: summaryTotals.nonTeaching, icon: '🏢', subtitle: 'Non-teaching staff across all years', grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
-          ].map(({ label, value, icon, subtitle, grad, shadow }) => (
-            <div key={label} style={{
-              background: grad, borderRadius: '16px', padding: '24px',
-              boxShadow: `0 10px 20px ${shadow}`, position: 'relative', overflow: 'hidden',
-            }}>
-              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>{icon}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>{label}</span>
-                </div>
-                <div style={{ fontSize: '42px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>{value}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%', flexShrink: 0 }} />
-                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{subtitle}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* ══ Separator + Title: Check Employee Overview by Year ═══════════ */}
         <div  />
@@ -418,20 +375,23 @@ function AdministrativeSection({ isPublicView = false }) {
               cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
             }}
           >
+            <option value="All">All</option>
             {[...allYearwise].reverse().map((row) => (
               <option key={row.year} value={String(row.year)}>{row.year}</option>
             ))}
           </select>
         </div>
 
-          {/* Data Cards */}
+        {/* ══ Row 1: Year-filtered cards ═══════════════════════════════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
           {[
             { label: 'Total Employees', icon: '👥', data: allYearwise,         grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
             { label: 'Faculty',         icon: '🎓', data: teachingYearwise,    grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
             { label: 'Staff',           icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
           ].map(({ label, icon, data, grad, shadow }) => {
-            const row = data.find((r) => String(r.year) === selectedYear);
-            const val = row ? (row.Total || 0) : 0;
+            const val = selectedYear === 'All'
+              ? data.reduce((sum, r) => sum + (r.Total || 0), 0)
+              : (data.find((r) => String(r.year) === selectedYear)?.Total || 0);
             return (
               <div key={label} style={{
                 background: grad, borderRadius: '16px', padding: '24px',
@@ -449,7 +409,7 @@ function AdministrativeSection({ isPublicView = false }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%', flexShrink: 0 }} />
                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
-                      {selectedYear ? `In year ${selectedYear}` : 'Select a year'}
+                      {selectedYear === 'All' ? 'Sum across all years' : selectedYear ? `In year ${selectedYear}` : 'Select a year'}
                     </span>
                   </div>
                 </div>
