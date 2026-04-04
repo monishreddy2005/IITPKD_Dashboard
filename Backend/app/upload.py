@@ -75,6 +75,34 @@ def safe_rollback(conn):
             pass
 
 
+def _find_failing_row(cur, conn, query, data, use_truncate, table_name):
+    """
+    Retries insertion row-by-row inside a savepoint to identify which CSV data
+    row caused a bulk-insert failure.  All changes are rolled back afterwards.
+    Returns (1-based row number, exception) or (None, None) if every row passes.
+    """
+    try:
+        cur.execute("SAVEPOINT _diag_start")
+        if use_truncate:
+            cur.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE;')
+        for i, row in enumerate(data, start=1):
+            cur.execute("SAVEPOINT _diag_row")
+            try:
+                psycopg2.extras.execute_values(cur, query, [row])
+                cur.execute("RELEASE SAVEPOINT _diag_row")
+            except Exception as row_err:
+                cur.execute("ROLLBACK TO SAVEPOINT _diag_row")
+                cur.execute("ROLLBACK TO SAVEPOINT _diag_start")
+                cur.execute("RELEASE SAVEPOINT _diag_start")
+                return i, row_err
+        # All rows passed individually — roll back diagnostic inserts
+        cur.execute("ROLLBACK TO SAVEPOINT _diag_start")
+        cur.execute("RELEASE SAVEPOINT _diag_start")
+    except Exception:
+        safe_rollback(conn)
+    return None, None
+
+
 # ---------------------------------------------------------------------------
 # Per-table pre-processing helpers
 # ---------------------------------------------------------------------------
@@ -85,6 +113,9 @@ def _preprocess_employees(reader, csv_headers):
     - Renames 'group' → 'group_name' (reserved SQL word).
     - Drops any existing 'id' column and auto-generates it as empid+designation+doj.
     - Normalises date columns from DD/MM/YY to YYYY-MM-DD.
+
+    Returns (new_headers, processed_rows, error) — rows as a plain list of dicts
+    so the caller can use them directly without re-reading the original stream.
     """
     DATE_COLS = {'dob', 'initial_doj', 'doj', 'dor', 'notificationdate'}
 
@@ -195,17 +226,6 @@ def _preprocess_uba_events(reader, csv_headers, conn):
             "Ensure strings match exactly."
         )
 
-    new_headers = [h for h in csv_headers if h != 'project_title']
-    if 'project_id' not in new_headers:
-        new_headers.append('project_id')
-
-    processed = []
-    for row in rows:
-        title = row.pop('project_title', '').strip()
-        row['project_id'] = title_to_id.get(title.lower())
-        processed.append(row)
-
-    return _rebuild_stream(new_headers, processed)
 
 
 def _preprocess_nptel_enrollments(reader, csv_headers, conn):
@@ -315,6 +335,7 @@ def upload_csv(current_user_id):
     print(f"{'='*80}\n")
 
     conn = None
+    _failing_row_num = None   # set by _find_failing_row if a specific row is at fault
     try:
         csv_text = io.StringIO(file.stream.read().decode('utf-8'))
         reader   = csv.DictReader(csv_text)
@@ -341,6 +362,8 @@ def upload_csv(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
 
         # --- Per-table pre-processing ---
+        # processed_rows: plain list of dicts produced by preprocessing (bypasses
+        # the csv_text.seek(0) re-read in the data-collection phase below).
         error = None
         if table_name == 'employees':
             reader, csv_headers, error = _preprocess_employees(reader, csv_headers)
@@ -508,11 +531,13 @@ def upload_csv(current_user_id):
             query = f'INSERT INTO "{table_name}" ({cols_sql}) VALUES %s;'
             use_truncate = True
 
-        # Collect and normalise rows
-        csv_text.seek(0)
-        reader = csv.DictReader(csv_text)
+        # Collect and normalise rows.
+        # `reader` is always the correct stream to use: either the original
+        # DictReader (header already consumed, data rows intact) or the
+        # rebuilt stream returned by a per-table pre-processor.
+        data_iter = reader
         data, rows_processed = [], 0
-        for i, row in enumerate(reader, start=1):
+        for i, row in enumerate(data_iter, start=1):
             row_vals, is_empty = [], True
             for col in columns_to_insert:
                 val = next(
@@ -602,8 +627,13 @@ def upload_csv(current_user_id):
 
         if use_truncate:
             cur.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE;')
-        psycopg2.extras.execute_values(cur, query, data)
-        conn.commit()
+        try:
+            psycopg2.extras.execute_values(cur, query, data)
+            conn.commit()
+        except Exception:
+            safe_rollback(conn)
+            _failing_row_num, _ = _find_failing_row(cur, conn, query, data, use_truncate, table_name)
+            raise
 
         if use_truncate:
             msg = f"Successfully replaced all data in '{table_name}' with {len(data)} rows."
@@ -629,75 +659,89 @@ def upload_csv(current_user_id):
     except psycopg2.errors.StringDataRightTruncation as e:
         safe_rollback(conn)
         error_msg = str(e).strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - String Data Right Truncation")
+        print(f"DATABASE ERROR - String Data Right Truncation{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Data Too Long For Column', 'details': error_msg}), 400
+        return jsonify({'message': f'Data Too Long For Column{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 400
     except psycopg2.errors.UniqueViolation as e:
         safe_rollback(conn)
         error_msg = str(e).split('DETAIL:')[-1].strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - Unique Violation")
+        print(f"DATABASE ERROR - Unique Violation{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Duplicate Entry Error', 'details': error_msg}), 409
+        return jsonify({'message': f'Duplicate Entry Error{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 409
     except psycopg2.errors.InvalidTextRepresentation as e:
         safe_rollback(conn)
         error_msg = str(e).strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - Invalid Text Representation")
+        print(f"DATABASE ERROR - Invalid Text Representation{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Data Format Error', 'details': error_msg}), 400
+        return jsonify({'message': f'Data Format Error{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 400
     except psycopg2.errors.NotNullViolation as e:
         safe_rollback(conn)
         error_msg = str(e).strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - Not Null Violation")
+        print(f"DATABASE ERROR - Not Null Violation{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Missing Required Data', 'details': error_msg}), 400
+        return jsonify({'message': f'Missing Required Data{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 400
     except psycopg2.errors.DatatypeMismatch as e:
         safe_rollback(conn)
         error_msg = str(e).strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - Data Type Mismatch")
+        print(f"DATABASE ERROR - Data Type Mismatch{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Data Type Mismatch', 'details': error_msg}), 400
+        return jsonify({'message': f'Data Type Mismatch{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 400
     except psycopg2.errors.ForeignKeyViolation as e:
         safe_rollback(conn)
         error_msg = str(e).split('DETAIL:')[-1].strip()
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"DATABASE ERROR - Foreign Key Violation")
+        print(f"DATABASE ERROR - Foreign Key Violation{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error: {error_msg}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'Foreign Key Constraint Violation', 'details': error_msg}), 400
+        return jsonify({'message': f'Foreign Key Constraint Violation{row_hint}', 'details': error_msg,
+                        'row_number': _failing_row_num}), 400
     except Exception as e:
         safe_rollback(conn)
         error_msg = str(e)
+        row_hint = f' at CSV row {_failing_row_num}' if _failing_row_num else ''
         print(f"\n{'='*80}")
-        print(f"GENERAL ERROR - CSV Upload")
+        print(f"GENERAL ERROR - CSV Upload{row_hint}")
         print(f"{'='*80}")
         print(f"Table: {table_name}")
         print(f"Error Type: {type(e).__name__}")
         print(f"Error Message: {error_msg}")
         print(f"Traceback:\n{traceback.format_exc()}")
         print(f"{'='*80}\n")
-        return jsonify({'message': 'An error occurred during processing.', 'error': error_msg}), 500
+        return jsonify({'message': f'An error occurred during processing{row_hint}.', 'error': error_msg,
+                        'row_number': _failing_row_num}), 500
     finally:
         if conn:
             try:

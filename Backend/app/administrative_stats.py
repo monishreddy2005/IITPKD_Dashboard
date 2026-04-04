@@ -27,6 +27,7 @@ def build_filter_query(filters):
         'emp_type': 'emp_type',
         'empstatus': 'empstatus',
         'group_name': 'group_name',
+        'appointed_category': 'appointed_category',
     }
 
     for filter_name, value in filters.items():
@@ -129,6 +130,10 @@ def get_filter_options(current_user_id):
         # Group Name
         cur.execute("SELECT DISTINCT group_name FROM employees WHERE group_name IS NOT NULL ORDER BY group_name;")
         filter_options['group_name'] = [row['group_name'] for row in cur.fetchall()]
+
+        # Appointed Category
+        cur.execute("SELECT DISTINCT appointed_category FROM employees WHERE appointed_category IS NOT NULL ORDER BY appointed_category;")
+        filter_options['appointed_category'] = [row['appointed_category'] for row in cur.fetchall()]
 
         return jsonify(filter_options), 200
 
@@ -670,7 +675,16 @@ def get_department_breakdown(current_user_id):
 @administrative_bp.route('/stats/yearwise-strength', methods=['GET'])
 @token_required
 def get_yearwise_strength(current_user_id):
-    """Total employee count grouped by year of joining (doj)."""
+    """
+    Active employee headcount for each calendar year.
+
+    An employee is counted for year Y if:
+      doj <= Y-12-31  AND  (dor IS NULL OR dor >= Y-12-31)
+
+    Teaching  : employmentnature = 'Regular', emp_type = 'Teaching', designation != 'Director'
+    Non Teaching: employmentnature = 'Regular', emp_type = 'Non Teaching'
+    All       : union of the two above
+    """
     conn = None
     cur = None
     try:
@@ -678,44 +692,104 @@ def get_yearwise_strength(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
 
-        filters = _read_common_filters()
-        where_clause, params = build_filter_query(filters)
+        emp_type           = request.args.get('emp_type',           type=str)
+        department         = request.args.get('department',         type=str)
+        designation        = request.args.get('designation',        type=str)
+        gender             = request.args.get('gender',             type=str)
+        group_name         = request.args.get('group_name',         type=str)
+        appointed_category = request.args.get('appointed_category', type=str)
+        num_years          = request.args.get('num_years',          type=int) or 5
+        # empstatus intentionally ignored: doj/dor window captures "active that year"
 
-        if where_clause:
-            where_clause += " AND doj IS NOT NULL"
+        # Hard-coded emp_type filter (no user string interpolated into SQL)
+        if emp_type == 'Teaching':
+            emp_filter = (
+                "e.employmentnature = 'Regular' "
+                "AND e.emp_type = 'Teaching' "
+                "AND e.designation != 'Director'"
+            )
+        elif emp_type == 'Non Teaching':
+            emp_filter = (
+                "e.employmentnature = 'Regular' "
+                "AND e.emp_type = 'Non Teaching'"
+            )
         else:
-            where_clause = "WHERE doj IS NOT NULL"
+            emp_filter = (
+                "e.employmentnature = 'Regular' "
+                "AND ("
+                "  (e.emp_type = 'Teaching' AND e.designation != 'Director') "
+                "  OR e.emp_type = 'Non Teaching'"
+                ")"
+            )
+
+        # Parameterised extra filters (safe against SQL injection)
+        extra_conditions, filter_params = [], []
+        if department:
+            extra_conditions.append("e.department = %s")
+            filter_params.append(department)
+        if designation:
+            extra_conditions.append("e.designation = %s")
+            filter_params.append(designation)
+        if gender:
+            extra_conditions.append("e.gender = %s")
+            filter_params.append(gender)
+        if group_name:
+            extra_conditions.append("e.group_name = %s")
+            filter_params.append(group_name)
+        if appointed_category:
+            extra_conditions.append("e.appointed_category = %s")
+            filter_params.append(appointed_category)
+
+        full_filter = emp_filter
+        if extra_conditions:
+            full_filter += " AND " + " AND ".join(extra_conditions)
+
+        # num_years appears first in the query; filter_params follow
+        query_params = [num_years] + filter_params
 
         query = f"""
             SELECT
-                EXTRACT(YEAR FROM doj)::integer AS year,
-                COUNT(*) AS total,
-                COUNT(*) FILTER (WHERE gender = 'Male')   AS male,
-                COUNT(*) FILTER (WHERE gender = 'Female') AS female,
-                COUNT(*) FILTER (WHERE gender = 'Other')  AS other
-            FROM employees
-            {where_clause}
-            GROUP BY year
-            ORDER BY year;
+                y.yr                                                    AS year,
+                COUNT(e.id)                                             AS total,
+                COUNT(e.id) FILTER (WHERE e.gender = 'Male')            AS male,
+                COUNT(e.id) FILTER (WHERE e.gender = 'Female')          AS female,
+                COUNT(e.id) FILTER (WHERE e.gender NOT IN ('Male','Female') AND e.gender IS NOT NULL) AS other
+            FROM (
+                SELECT generate_series(
+                    GREATEST(
+                        (SELECT EXTRACT(YEAR FROM MIN(doj))::int
+                         FROM employees WHERE doj IS NOT NULL),
+                        EXTRACT(YEAR FROM CURRENT_DATE)::int - %s + 1
+                    ),
+                    EXTRACT(YEAR FROM CURRENT_DATE)::int
+                ) AS yr
+            ) y
+            LEFT JOIN employees e
+                ON  e.doj <= make_date(y.yr::int, 12, 31)
+                AND (e.dor IS NULL OR e.dor >= make_date(y.yr::int, 12, 31))
+                AND {full_filter}
+            GROUP BY y.yr
+            ORDER BY y.yr;
         """
 
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(query, params)
+        cur.execute(query, query_params)
         results = cur.fetchall()
 
         data = [
             {
                 'year':   str(row['year']),
-                'Total':  int(row['total']),
-                'Male':   int(row['male']),
-                'Female': int(row['female']),
-                'Other':  int(row['other']),
+                'Total':  int(row['total'] or 0),
+                'Male':   int(row['male']  or 0),
+                'Female': int(row['female'] or 0),
+                'Other':  int(row['other']  or 0),
             }
             for row in results
         ]
-        total = sum(row['Total'] for row in data)
+        # `total` here reflects the most-recent year's active headcount
+        current_total = data[-1]['Total'] if data else 0
 
-        return jsonify({'data': data, 'total': total}), 200
+        return jsonify({'data': data, 'total': current_total}), 200
 
     except Exception as e:
         import traceback

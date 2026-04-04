@@ -44,6 +44,14 @@ const VIEWS = [
   { value: 'gender',     label: 'Gender Ratio',        icon: '🥧' },
 ];
 
+const NUM_YEARS_OPTIONS = [
+  { value: 1,  label: 'Last 1 Yr'  },
+  { value: 2,  label: 'Last 2 Yrs' },
+  { value: 3,  label: 'Last 3 Yrs' },
+  { value: 5,  label: 'Last 5 Yrs' },
+  { value: 10, label: 'Last 10 Yrs' },
+];
+
 // Chart white-box style — identical to ICC
 const CHART_BOX = {
   backgroundColor: '#fff',
@@ -129,11 +137,11 @@ function AdministrativeSection({ isPublicView = false }) {
   const [activeView, setActiveView]               = useState('yearwise');
 
   const [filterOptions, setFilterOptions] = useState({
-    department: [], designation: [], gender: [], emp_type: [], empstatus: [], group_name: []
+    department: [], designation: [], gender: [], emp_type: [], group_name: [], appointed_category: []
   });
   const [filters, setFilters] = useState({
     department: null, designation: null, gender: null,
-    emp_type: null, empstatus: 'Active', group_name: null
+    emp_type: null, group_name: null, appointed_category: null, num_years: 5
   });
 
   const [employeeData, setEmployeeData] = useState([]);
@@ -169,15 +177,16 @@ function AdministrativeSection({ isPublicView = false }) {
       fetchYearwiseStrength({ emp_type: 'Non Teaching' }, token),
     ]).then(([rAll, rTeaching, rNonTeaching]) => {
       const data = (r) => r.data || [];
-      const sumTotal = (arr) => arr.reduce((acc, row) => acc + (row.Total || 0), 0);
+      // Use the latest year's active headcount for summary cards
+      const latestTotal = (arr) => arr.length > 0 ? (arr[arr.length - 1].Total || 0) : 0;
       const allData = data(rAll);
       setAllYearwise(allData);
       setTeachingYearwise(data(rTeaching));
       setNonTeachingYearwise(data(rNonTeaching));
       setSummaryTotals({
-        all: sumTotal(allData),
-        teaching: sumTotal(data(rTeaching)),
-        nonTeaching: sumTotal(data(rNonTeaching)),
+        all: latestTotal(allData),
+        teaching: latestTotal(data(rTeaching)),
+        nonTeaching: latestTotal(data(rNonTeaching)),
       });
       if (allData.length > 0) {
         setSelectedYear(String(allData[allData.length - 1].year));
@@ -222,11 +231,15 @@ function AdministrativeSection({ isPublicView = false }) {
   // ── handlers ────────────────────────────────────────────────────────────
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value === 'All' ? null : value }));
+    if (key === 'num_years') {
+      setFilters(prev => ({ ...prev, [key]: Number(value) }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: value === 'All' ? null : value }));
+    }
   };
 
   const handleClearFilters = () => {
-    setFilters({ department: null, designation: null, gender: null, emp_type: null, empstatus: 'Active', group_name: null });
+    setFilters({ department: null, designation: null, gender: null, emp_type: null, group_name: null, appointed_category: null, num_years: 5 });
   };
 
   const toggleSeries = (key) => {
@@ -259,23 +272,30 @@ function AdministrativeSection({ isPublicView = false }) {
           Clear All Filters
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.6rem' }}>
         {[
-          { id: 'emp-type-filter',    label: 'Employee Type', key: 'emp_type',    options: filterOptions.emp_type },
-          { id: 'department-filter',  label: 'Department',    key: 'department',  options: filterOptions.department },
-          { id: 'designation-filter', label: 'Designation',   key: 'designation', options: filterOptions.designation },
-          { id: 'gender-filter',      label: 'Gender',        key: 'gender',      options: filterOptions.gender },
-          { id: 'group-filter',       label: 'Group',         key: 'group_name',  options: filterOptions.group_name },
-          { id: 'empstatus-filter',   label: 'Emp. Status',   key: 'empstatus',   options: filterOptions.empstatus },
-        ].map(({ id, label, key, options }) => (
+          { id: 'emp-type-filter',    label: 'Employee Type', key: 'emp_type',           options: filterOptions.emp_type },
+          { id: 'department-filter',  label: 'Department',    key: 'department',         options: filterOptions.department },
+          { id: 'designation-filter', label: 'Designation',   key: 'designation',        options: filterOptions.designation },
+          { id: 'gender-filter',      label: 'Gender',        key: 'gender',             options: filterOptions.gender },
+          { id: 'group-filter',       label: 'Group',         key: 'group_name',         options: filterOptions.group_name },
+          { id: 'category-filter',    label: 'Category',      key: 'appointed_category', options: filterOptions.appointed_category },
+          { id: 'num-years-filter',   label: 'No. of Years',  key: 'num_years',          customOptions: NUM_YEARS_OPTIONS },
+        ].map(({ id, label, key, options, customOptions }) => (
           <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
-            <select id={id} value={filters[key] || 'All'}
+            <select id={id}
+              value={customOptions ? filters[key] : (filters[key] || 'All')}
               onChange={(e) => handleFilterChange(key, e.target.value)}
               className="filter-select"
               style={{ padding: '0.3rem 1.8rem 0.3rem 0.5rem', fontSize: '0.78rem', borderRadius: '7px' }}>
-              <option value="All">All</option>
-              {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              {customOptions
+                ? customOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)
+                : (<>
+                    <option value="All">All</option>
+                    {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </>)
+              }
             </select>
           </div>
         ))}
@@ -329,7 +349,7 @@ function AdministrativeSection({ isPublicView = false }) {
           }}>{error}</div>
         )}
 
-        {/* ══ Title: Overall Employee Overview ════════════════════════════
+        {/* ══ Title: Overall Employee Overview ════════════════════════════ */}
         <h2
           style={{
             display: 'inline-block',
@@ -344,9 +364,9 @@ function AdministrativeSection({ isPublicView = false }) {
           }}
         >
           Overall Employee Overview
-        </h2> */}
+        </h2>
 
-        {/* ══ Row 1: IAR-style summary cards ══════════════════════════════
+        {/* ══ Row 1: IAR-style summary cards ══════════════════════════════ */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '28px' }}>
           {[
             { label: 'Total Employees', value: summaryTotals.all,         icon: '👥', subtitle: 'Sum across all years', grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
@@ -371,7 +391,7 @@ function AdministrativeSection({ isPublicView = false }) {
               </div>
             </div>
           ))}
-        </div> */}
+        </div>
 
         {/* ══ Separator + Title: Check Employee Overview by Year ═══════════ */}
         <div  />
@@ -387,7 +407,7 @@ function AdministrativeSection({ isPublicView = false }) {
             textDecoration:'underline', 
             color: '#000000ff'
           }}>
-            Employee Overview by Year
+            Check Employee Overview by Year
           </h2>
           <select
             value={selectedYear}
@@ -404,8 +424,7 @@ function AdministrativeSection({ isPublicView = false }) {
           </select>
         </div>
 
-        {/* ══ Row 2: Year-filtered cards ═══════════════════════════════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+          {/* Data Cards */}
           {[
             { label: 'Total Employees', icon: '👥', data: allYearwise,         grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
             { label: 'Faculty',         icon: '🎓', data: teachingYearwise,    grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
