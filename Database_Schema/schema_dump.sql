@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -1994,6 +1993,4 @@ ALTER TABLE ONLY public.users
 --
 -- PostgreSQL database dump complete
 --
-
-\unrestrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
 
