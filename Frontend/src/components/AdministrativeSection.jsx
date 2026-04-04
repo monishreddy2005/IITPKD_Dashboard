@@ -329,7 +329,7 @@ function AdministrativeSection({ isPublicView = false }) {
           }}>{error}</div>
         )}
 
-        {/* ══ Title: Overall Employee Overview ════════════════════════════ */}
+        {/* ══ Title: Overall Employee Overview ════════════════════════════
         <h2
           style={{
             display: 'inline-block',
@@ -344,9 +344,9 @@ function AdministrativeSection({ isPublicView = false }) {
           }}
         >
           Overall Employee Overview
-        </h2>
+        </h2> */}
 
-        {/* ══ Row 1: IAR-style summary cards ══════════════════════════════ */}
+        {/* ══ Row 1: IAR-style summary cards ══════════════════════════════
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '28px' }}>
           {[
             { label: 'Total Employees', value: summaryTotals.all,         icon: '👥', subtitle: 'Sum across all years', grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
@@ -371,7 +371,7 @@ function AdministrativeSection({ isPublicView = false }) {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* ══ Separator + Title: Check Employee Overview by Year ═══════════ */}
         <div  />
@@ -387,7 +387,7 @@ function AdministrativeSection({ isPublicView = false }) {
             textDecoration:'underline', 
             color: '#000000ff'
           }}>
-            Check Employee Overview by Year
+            Employee Overview by Year
           </h2>
           <select
             value={selectedYear}

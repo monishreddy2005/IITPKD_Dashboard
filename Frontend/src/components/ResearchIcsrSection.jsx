@@ -107,12 +107,6 @@ const buildPatentBreakdown = (source = {}) => ({
   Published: Number(source?.Published) || 0
 });
 
-/**
- * Dashboard component for Research & Development (ICSR) metrics.
- * Connects to the backend research API.
- * @param {Object} props
- * @param {Object} props.user - Logged in user details
- */
 function ResearchIcsrSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -128,7 +122,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
   });
 
   // Graph type selection with radio buttons
-  const [viewType, setViewType] = useState('fundedProjects');
+  const [viewType, setViewType] = useState('projects');
 
   const [filters, setFilters] = useState({
     department: 'All',
@@ -304,15 +298,6 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
       return entry;
     });
   }, [patentStats.yearly]);
-
-  const patentOverall = useMemo(
-    () => PATENT_STATUS_ORDER.map((status) => ({
-      status,
-      value: patentStats.overall[status] || 0,
-      color: PATENT_COLORS[status]
-    })),
-    [patentStats.overall]
-  );
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -587,442 +572,132 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           </div>
         </div>
 
-        {/* Filter Panel with Radio Buttons for View Selection */}
-        <div className="filter-panel" style={{ 
-          marginBottom: '20px', 
-          padding: '20px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '8px', 
-          border: '1px solid #e9ecef' 
+        {/* Radio Buttons - Moved Outside */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '20px',
+          marginBottom: '30px',
+          padding: '20px',
+          borderRadius: '12px'
         }}>
-          <div className="filter-header" style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            marginBottom: '15px' 
-          }}>
-            <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button 
-                className="clear-filters-btn" 
-                onClick={handleClearFilters}
-                style={{ 
-                  padding: '8px 16px', 
-                  backgroundColor: '#dc3545', 
-                  color: '#fff', 
-                  border: 'none', 
-                  borderRadius: '4px', 
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Clear Filters
-              </button>
-              {!isPublicView && user && user.role_id === 3 && (
-                <>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#28a745', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Upload Consultancy Projects
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#28a745', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Upload Sponsored Projects
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#28a745', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Upload MoUs
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#28a745', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Upload Patents
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          
-          {/* View Type Selection - Radio Buttons */}
-          <div style={{ 
-            marginBottom: '20px', 
-            padding: '15px', 
-            backgroundColor: '#e9ecef', 
-            borderRadius: '6px',
-            border: '1px solid #dee2e6'
-          }}>
-            <label style={{ 
-              display: 'block', 
-              marginBottom: '10px', 
-              fontWeight: '600', 
-              color: '#333',
-              fontSize: '14px'
-            }}>
-              Select View Type:
-            </label>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '10px'
-            }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'fundedProjects' ? '#4f46e5' : 'white',
-                color: viewType === 'fundedProjects' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'fundedProjects' ? '2px solid #4f46e5' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="fundedProjects"
-                  checked={viewType === 'fundedProjects'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#4f46e5',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'fundedProjects' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📊 Funded Projects
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'consultancyRevenue' ? '#22c55e' : 'white',
-                color: viewType === 'consultancyRevenue' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'consultancyRevenue' ? '2px solid #22c55e' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="consultancyRevenue"
-                  checked={viewType === 'consultancyRevenue'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#22c55e',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'consultancyRevenue' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  💰 Consultancy Revenue
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'mous' ? '#a855f7' : 'white',
-                color: viewType === 'mous' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'mous' ? '2px solid #a855f7' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="mous"
-                  checked={viewType === 'mous'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#a855f7',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'mous' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  🤝 MoUs Trend
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'patents' ? '#f97316' : 'white',
-                color: viewType === 'patents' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'patents' ? '2px solid #f97316' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="patents"
-                  checked={viewType === 'patents'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#f97316',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'patents' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📝 Patents Trend
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'projectsTable' ? '#0ea5e9' : 'white',
-                color: viewType === 'projectsTable' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'projectsTable' ? '2px solid #0ea5e9' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="projectsTable"
-                  checked={viewType === 'projectsTable'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#0ea5e9',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'projectsTable' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📋 Projects Directory
-                </span>
-              </label>
-
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px',
-                cursor: 'pointer',
-                padding: '8px 12px',
-                backgroundColor: viewType === 'mousTable' ? '#ec4899' : 'white',
-                color: viewType === 'mousTable' ? 'white' : '#333',
-                borderRadius: '6px',
-                transition: 'all 0.3s ease',
-                border: viewType === 'mousTable' ? '2px solid #ec4899' : '2px solid #ced4da'
-              }}>
-                <input
-                  type="radio"
-                  name="viewType"
-                  value="mousTable"
-                  checked={viewType === 'mousTable'}
-                  onChange={(e) => setViewType(e.target.value)}
-                  style={{ 
-                    accentColor: '#ec4899',
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer'
-                  }}
-                />
-                <span style={{ fontWeight: viewType === 'mousTable' ? 'bold' : 'normal', fontSize: '13px' }}>
-                  📋 MoUs Directory
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div className="filter-grid" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-            gap: '12px' 
-          }}>
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-              <select
-                className="filter-select"
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_departments.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
-              <select
-                className="filter-select"
-                value={filters.project_year}
-                onChange={(e) => handleFilterChange('project_year', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
-              <select
-                className="filter-select"
-                value={filters.project_type}
-                onChange={(e) => handleFilterChange('project_type', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_types.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
-              <select
-                className="filter-select"
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.project_statuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
-              <select
-                className="filter-select"
-                value={filters.mou_year}
-                onChange={(e) => handleFilterChange('mou_year', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.mou_years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Year</label>
-              <select
-                className="filter-select"
-                value={filters.patent_year}
-                onChange={(e) => handleFilterChange('patent_year', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.patent_years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Status</label>
-              <select
-                className="filter-select"
-                value={filters.patent_status}
-                onChange={(e) => handleFilterChange('patent_status', e.target.value)}
-                style={{ padding: '6px', fontSize: '13px' }}
-              >
-                <option value="All">All</option>
-                {filterOptions.patent_statuses.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Active Filters Summary */}
-          <div style={{ 
-            marginTop: '12px', 
-            padding: '8px', 
-            backgroundColor: '#e9ecef', 
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
-            <strong>Active Filters:</strong>{' '}
-            {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
-            {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
-            {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
-            {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
-            {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>🤝 {filters.mou_year}</span>}
-            {filters.patent_year !== 'All' && <span style={{ marginRight: '8px' }}>📝 {filters.patent_year}</span>}
-            {filters.patent_status !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.patent_status}</span>}
-            {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && 
-             filters.status === 'All' && filters.mou_year === 'All' && filters.patent_year === 'All' && 
-             filters.patent_status === 'All' && 
-              <span>No filters applied</span>
-            }
-          </div>
+          <button 
+            onClick={() => setViewType('projects')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'projects' ? '#4f46e5' : 'transparent',
+              color: viewType === 'projects' ? 'white' : '#333',
+              border: viewType === 'projects' ? '2px solid #4f46e5' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'projects' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📊 Projects Trend
+          </button>
+          <button 
+            onClick={() => setViewType('mous')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'mous' ? '#a855f7' : 'transparent',
+              color: viewType === 'mous' ? 'white' : '#333',
+              border: viewType === 'mous' ? '2px solid #a855f7' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'mous' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            🤝 MoUs Trend
+          </button>
+          <button 
+            onClick={() => setViewType('patents')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'patents' ? '#f97316' : 'transparent',
+              color: viewType === 'patents' ? 'white' : '#333',
+              border: viewType === 'patents' ? '2px solid #f97316' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'patents' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📝 Patents Trend
+          </button>
+          <button 
+            onClick={() => setViewType('projectsTable')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'projectsTable' ? '#0ea5e9' : 'transparent',
+              color: viewType === 'projectsTable' ? 'white' : '#333',
+              border: viewType === 'projectsTable' ? '2px solid #0ea5e9' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'projectsTable' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📋 Projects Directory
+          </button>
+          <button 
+            onClick={() => setViewType('mousTable')}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: viewType === 'mousTable' ? '#ec4899' : 'transparent',
+              color: viewType === 'mousTable' ? 'white' : '#333',
+              border: viewType === 'mousTable' ? '2px solid #ec4899' : '2px solid #dee2e6',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: viewType === 'mousTable' ? 'bold' : 'normal',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            📋 MoUs Directory
+          </button>
         </div>
+
+        {/* Upload Buttons */}
+        {!isPublicView && user && user.role_id === 3 && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end'
+          }}>
+            <button
+              onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Consultancy Projects
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Sponsored Projects
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload MoUs
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Patents
+            </button>
+          </div>
+        )}
 
         {loading && (
           <div className="loading-state">
@@ -1033,228 +708,668 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
         {!loading && (
           <>
-            {/* Single View Section based on radio selection */}
-            <section className="chart-section" style={{ 
-              marginBottom: '30px', 
-              padding: '20px', 
-              backgroundColor: '#fff', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
-            }}>
-              {/* Funded Projects Trend Chart */}
-              {viewType === 'fundedProjects' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Annual count of sponsored and consultancy projects.
-                    </p>
-                  </div>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                        <Bar 
-                          dataKey="funded" 
-                          name="Sponsored Projects" 
-                          stackId="a" 
-                          fill="#6366f1" 
-                          radius={[0, 0, 4, 4]} 
-                          barSize={40}
-                        />
-                        <Bar 
-                          dataKey="consultancy" 
-                          name="Consultancy Projects" 
-                          stackId="a" 
-                          fill="#22c55e" 
-                          radius={[4, 4, 0, 0]} 
-                          barSize={40}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+            {/* Projects Trend Section */}
+            {viewType === 'projects' && (
+              <section className="chart-section" style={{ 
+                marginBottom: '30px', 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                borderRadius: '10px', 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              }}>
+                <div className="chart-header" style={{ marginBottom: '20px' }}>
+                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
+                  </h2>
+                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                    Annual count of sponsored and consultancy projects.
+                  </p>
                 </div>
-              )}
 
-              {/* Consultancy Revenue Trend Chart */}
-              {viewType === 'consultancyRevenue' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>💰</span> Revenue Trend — Sponsored vs Consultancy
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Year-wise sanctioned revenue comparison (₹) from sponsored and consultancy projects.
-                    </p>
+                {/* Filters inside projects view */}
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                    <button 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <LineChart data={consultancyTrendChartData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v/100000).toFixed(1)}L`} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                        <Line 
-                          type="monotone" 
-                          dataKey="funded_revenue" 
-                          name="Sponsored Revenue"
-                          stroke="#6366f1" 
-                          strokeWidth={3}
-                          dot={{ r: 6, fill: '#6366f1' }}
-                          activeDot={{ r: 8 }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="consultancy_revenue" 
-                          name="Consultancy Revenue"
-                          stroke="#22c55e" 
-                          strokeWidth={3}
-                          dot={{ r: 6, fill: '#22c55e' }}
-                          activeDot={{ r: 8 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-
-              {/* MoUs Trend Chart */}
-              {viewType === 'mous' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🤝</span> MoUs Signed Per Year
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Research and industry collaboration agreements.
-                    </p>
-                  </div>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="rect" wrapperStyle={{ fontSize: '12px' }} />
-                        <Bar dataKey="total" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={30} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-
-              {/* Patents Trend Chart */}
-              {viewType === 'patents' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📝</span> Patents Trend
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Year-wise patent filings and grants.
-                    </p>
-                  </div>
-                  <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="rect" wrapperStyle={{ fontSize: '12px' }} />
-                        {PATENT_STATUS_ORDER.map((status) => (
-                          <Bar key={status} dataKey={status} stackId="patents" fill={PATENT_COLORS[status]} radius={status === 'Published' ? [4, 4, 0, 0] : [0, 0, 0, 0]} barSize={30} />
+                  
+                  <div className="filter-grid" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(4, 1fr)', 
+                    gap: '12px' 
+                  }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
+                      <select
+                        value={filters.department}
+                        onChange={(e) => handleFilterChange('department', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Departments</option>
+                        {filterOptions.project_departments.map((dept) => (
+                          <option key={dept} value={dept}>{dept}</option>
                         ))}
-                      </BarChart>
-                    </ResponsiveContainer>
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
+                      <select
+                        value={filters.project_year}
+                        onChange={(e) => handleFilterChange('project_year', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Years</option>
+                        {filterOptions.project_years.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
+                      <select
+                        value={filters.project_type}
+                        onChange={(e) => handleFilterChange('project_type', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Types</option>
+                        {filterOptions.project_types.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
+                      <select
+                        value={filters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.project_statuses.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+                    {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
+                    {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
+                    {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
+                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' && 
+                      <span>No filters applied</span>
+                    }
                   </div>
                 </div>
-              )}
 
-              {/* Projects Directory Table */}
-              {viewType === 'projectsTable' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>📋</span> Projects Directory
-                    </h2>
-                    <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
-                      {projectList.length} projects found
-                    </p>
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                      <Bar 
+                        dataKey="funded" 
+                        name="Sponsored Projects" 
+                        stackId="a" 
+                        fill="#6366f1" 
+                        radius={[0, 0, 4, 4]} 
+                        barSize={40}
+                      />
+                      <Bar 
+                        dataKey="consultancy" 
+                        name="Consultancy Projects" 
+                        stackId="a" 
+                        fill="#22c55e" 
+                        radius={[4, 4, 0, 0]} 
+                        barSize={40}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            )}
+
+            {/* MoUs Trend Section */}
+            {viewType === 'mous' && (
+              <section className="chart-section" style={{ 
+                marginBottom: '30px', 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                borderRadius: '10px', 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              }}>
+                <div className="chart-header" style={{ marginBottom: '20px' }}>
+                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>🤝</span> MoUs Trend
+                  </h2>
+                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                    Yearly trend of Memorandum of Understanding signed.
+                  </p>
+                </div>
+
+                {/* Filters inside MoUs view */}
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                    <button 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
-                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#0ea5e9', color: 'white' }}>
-                        <tr>
-                          <th style={{ padding: '10px' }}>Title</th>
-                          <th style={{ padding: '10px' }}>PI</th>
-                          <th style={{ padding: '10px' }}>Type</th>
-                          <th style={{ padding: '10px' }}>Dept</th>
-                          <th style={{ padding: '10px' }}>Amount</th>
-                          <th style={{ padding: '10px' }}>Status</th>
+                  
+                  <div className="filter-grid" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr', 
+                    gap: '12px' 
+                  }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
+                      <select
+                        value={filters.mou_year}
+                        onChange={(e) => handleFilterChange('mou_year', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Years</option>
+                        {filterOptions.mou_years.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
+                    {filters.mou_year === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
+
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="total" 
+                        name="MoUs Signed"
+                        stroke="#a855f7" 
+                        strokeWidth={3}
+                        dot={{ r: 6, fill: '#a855f7' }}
+                        activeDot={{ r: 8 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            )}
+
+            {/* Patents Trend Section */}
+            {viewType === 'patents' && (
+              <section className="chart-section" style={{ 
+                marginBottom: '30px', 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                borderRadius: '10px', 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              }}>
+                <div className="chart-header" style={{ marginBottom: '20px' }}>
+                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '24px' }}>📝</span> Patents Trend
+                  </h2>
+                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                    Year-wise patent filings, grants, and publications.
+                  </p>
+                </div>
+
+                {/* Filters inside patents view */}
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                    <button 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                  
+                  <div className="filter-grid" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                    gap: '12px' 
+                  }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Year</label>
+                      <select
+                        value={filters.patent_year}
+                        onChange={(e) => handleFilterChange('patent_year', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Years</option>
+                        {filterOptions.patent_years.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Status</label>
+                      <select
+                        value={filters.patent_status}
+                        onChange={(e) => handleFilterChange('patent_status', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.patent_statuses.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {filters.patent_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.patent_year}</span>}
+                    {filters.patent_status !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.patent_status}</span>}
+                    {filters.patent_year === 'All' && filters.patent_status === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
+
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                      {PATENT_STATUS_ORDER.map((status) => (
+                        <Line
+                          key={status}
+                          type="monotone"
+                          dataKey={status}
+                          name={status}
+                          stroke={PATENT_COLORS[status]}
+                          strokeWidth={2.5}
+                          dot={{ r: 5, fill: PATENT_COLORS[status] }}
+                          activeDot={{ r: 7 }}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            )}
+
+            {/* Projects Directory Table */}
+            {viewType === 'projectsTable' && (
+              <section className="chart-section" style={{ 
+                marginBottom: '30px', 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                borderRadius: '10px', 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              }}>
+                <div className="chart-header" style={{ marginBottom: '15px' }}>
+                  <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>📋</span> Projects Directory
+                  </h2>
+                  <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+                    {projectList.length} projects found
+                  </p>
+                </div>
+
+                {/* Filters inside projects table view */}
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                    <button 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                  
+                  <div className="filter-grid" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(4, 1fr)', 
+                    gap: '12px' 
+                  }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
+                      <select
+                        value={filters.department}
+                        onChange={(e) => handleFilterChange('department', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Departments</option>
+                        {filterOptions.project_departments.map((dept) => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
+                      <select
+                        value={filters.project_year}
+                        onChange={(e) => handleFilterChange('project_year', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Years</option>
+                        {filterOptions.project_years.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
+                      <select
+                        value={filters.project_type}
+                        onChange={(e) => handleFilterChange('project_type', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Types</option>
+                        {filterOptions.project_types.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
+                      <select
+                        value={filters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.project_statuses.map((status) => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
+                    {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
+                    {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
+                    {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
+                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
+
+                <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#0ea5e9', color: 'white' }}>
+                      <tr>
+                        <th style={{ padding: '10px' }}>Title</th>
+                        <th style={{ padding: '10px' }}>PI</th>
+                        <th style={{ padding: '10px' }}>Type</th>
+                        <th style={{ padding: '10px' }}>Dept</th>
+                        <th style={{ padding: '10px' }}>Amount</th>
+                        <th style={{ padding: '10px' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {projectList.map((p, i) => (
+                        <tr key={p.project_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                          <td style={{ padding: '8px' }}>{p.project_title}</td>
+                          <td style={{ padding: '8px' }}>{p.principal_investigator}</td>
+                          <td style={{ padding: '8px' }}>{p.project_type}</td>
+                          <td style={{ padding: '8px' }}>{p.department}</td>
+                          <td style={{ padding: '8px' }}>{formatCurrency(p.amount_sanctioned)}</td>
+                          <td style={{ padding: '8px' }}>{p.status}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {projectList.map((p, i) => (
-                          <tr key={p.project_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
-                            <td style={{ padding: '8px' }}>{p.project_title}</td>
-                            <td style={{ padding: '8px' }}>{p.principal_investigator}</td>
-                            <td style={{ padding: '8px' }}>{p.project_type}</td>
-                            <td style={{ padding: '8px' }}>{p.department}</td>
-                            <td style={{ padding: '8px' }}>{formatCurrency(p.amount_sanctioned)}</td>
-                            <td style={{ padding: '8px' }}>{p.status}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </section>
+            )}
 
-              {/* MoUs Directory Table */}
-              {viewType === 'mousTable' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>🤝</span> MoUs Directory
-                    </h2>
-                    <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
-                      {mouList.length} MoUs found
-                    </p>
+            {/* MoUs Directory Table */}
+            {viewType === 'mousTable' && (
+              <section className="chart-section" style={{ 
+                marginBottom: '30px', 
+                padding: '20px', 
+                backgroundColor: '#fff', 
+                borderRadius: '10px', 
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              }}>
+                <div className="chart-header" style={{ marginBottom: '15px' }}>
+                  <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🤝</span> MoUs Directory
+                  </h2>
+                  <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
+                    {mouList.length} MoUs found
+                  </p>
+                </div>
+
+                {/* Filters inside MoUs table view */}
+                <div style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                    <button 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
-                  <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                      <thead style={{ position: 'sticky', top: 0, backgroundColor: '#ec4899', color: 'white' }}>
-                        <tr>
-                          <th style={{ padding: '10px' }}>Partner</th>
-                          <th style={{ padding: '10px' }}>Focus</th>
-                          <th style={{ padding: '10px' }}>Signed</th>
-                          <th style={{ padding: '10px' }}>Valid Till</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mouList.map((m, i) => (
-                          <tr key={m.mou_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
-                            <td style={{ padding: '8px' }}>{m.partner_name}</td>
-                            <td style={{ padding: '8px' }}>{m.collaboration_nature}</td>
-                            <td style={{ padding: '8px' }}>{formatDate(m.date_signed)}</td>
-                            <td style={{ padding: '8px' }}>{formatDate(m.validity_end)}</td>
-                          </tr>
+                  
+                  <div className="filter-grid" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr', 
+                    gap: '12px' 
+                  }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
+                      <select
+                        value={filters.mou_year}
+                        onChange={(e) => handleFilterChange('mou_year', e.target.value)}
+                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                      >
+                        <option value="All">All Years</option>
+                        {filterOptions.mou_years.map((year) => (
+                          <option key={year} value={year}>{year}</option>
                         ))}
-                      </tbody>
-                    </table>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
+                    {filters.mou_year === 'All' && 
+                      <span>No filters applied</span>
+                    }
                   </div>
                 </div>
-              )}
-            </section>
+
+                <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#ec4899', color: 'white' }}>
+                      <tr>
+                        <th style={{ padding: '10px' }}>Partner</th>
+                        <th style={{ padding: '10px' }}>Focus</th>
+                        <th style={{ padding: '10px' }}>Signed</th>
+                        <th style={{ padding: '10px' }}>Valid Till</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mouList.map((m, i) => (
+                        <tr key={m.mou_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                          <td style={{ padding: '8px' }}>{m.partner_name}</td>
+                          <td style={{ padding: '8px' }}>{m.collaboration_nature}</td>
+                          <td style={{ padding: '8px' }}>{formatDate(m.date_signed)}</td>
+                          <td style={{ padding: '8px' }}>{formatDate(m.validity_end)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

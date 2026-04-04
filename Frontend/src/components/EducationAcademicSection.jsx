@@ -47,7 +47,22 @@ function EducationAcademicSection({ user, isPublicView = false }) {
   // View type selection with radio buttons
   const [viewType, setViewType] = useState('categoryBreakdown'); // 'categoryBreakdown' | 'programmeBreakdown' | 'courseCatalogue'
 
-  const [filters, setFilters] = useState({
+  // Independent filter states for each view
+  const [categoryFilters, setCategoryFilters] = useState({
+    category: 'All',
+    programme: 'All',
+    status: 'All',
+    proposal_type: 'All'
+  });
+
+  const [programmeFilters, setProgrammeFilters] = useState({
+    category: 'All',
+    programme: 'All',
+    status: 'All',
+    proposal_type: 'All'
+  });
+
+  const [catalogueFilters, setCatalogueFilters] = useState({
     category: 'All',
     programme: 'All',
     status: 'All',
@@ -66,10 +81,61 @@ function EducationAcademicSection({ user, isPublicView = false }) {
   const [programmeBreakdown, setProgrammeBreakdown] = useState([]);
   const [courseList, setCourseList] = useState([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    category: false,
+    programme: false,
+    catalogue: false
+  });
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem('authToken');
+
+  // Get current filters based on view type
+  const getCurrentFilters = () => {
+    switch(viewType) {
+      case 'categoryBreakdown': return categoryFilters;
+      case 'programmeBreakdown': return programmeFilters;
+      case 'courseCatalogue': return catalogueFilters;
+      default: return categoryFilters;
+    }
+  };
+
+  // Handle filter change for current view
+  const handleFilterChange = (field, value) => {
+    switch(viewType) {
+      case 'categoryBreakdown':
+        setCategoryFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'programmeBreakdown':
+        setProgrammeFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'courseCatalogue':
+        setCatalogueFilters(prev => ({ ...prev, [field]: value }));
+        break;
+    }
+  };
+
+  // Clear filters for current view
+  const handleClearFilters = () => {
+    const defaultFilters = {
+      category: 'All',
+      programme: 'All',
+      status: 'All',
+      proposal_type: 'All'
+    };
+    
+    switch(viewType) {
+      case 'categoryBreakdown':
+        setCategoryFilters(defaultFilters);
+        break;
+      case 'programmeBreakdown':
+        setProgrammeFilters(defaultFilters);
+        break;
+      case 'courseCatalogue':
+        setCatalogueFilters(defaultFilters);
+        break;
+    }
+  };
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -95,35 +161,97 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     loadFilterOptions();
   }, [token]);
 
+  // Fetch summary data
   useEffect(() => {
-    const loadData = async () => {
+    const loadSummaryData = async () => {
       if (!token) return;
       try {
-        setLoading(true);
+        setLoading(prev => ({ ...prev, category: true }));
         setError(null);
 
-        const [summaryResp, trendResp, progBreakdownResp, courseResp] = await Promise.all([
-          fetchSummary(filters, token),
-          fetchCategoryBreakdown(filters, token),
-          fetchProgrammeBreakdown(filters, token),
-          fetchCourses(filters, '', 1, 1000, token)
+        const filterParams = {};
+        if (categoryFilters.category !== 'All') filterParams.category = categoryFilters.category;
+        if (categoryFilters.programme !== 'All') filterParams.programme = categoryFilters.programme;
+        if (categoryFilters.status !== 'All') filterParams.status = categoryFilters.status;
+        if (categoryFilters.proposal_type !== 'All') filterParams.proposal_type = categoryFilters.proposal_type;
+
+        const [summaryResp, trendResp] = await Promise.all([
+          fetchSummary(filterParams, token),
+          fetchCategoryBreakdown(filterParams, token)
         ]);
 
         setSummary(summaryResp?.data || summary);
         setCourseTrend(trendResp?.data || []);
-        setProgrammeBreakdown(progBreakdownResp?.data || []);
-        setCourseList(courseResp?.data || []);
       } catch (err) {
-        console.error('Failed to load academic module data:', err);
-        setError(err.message || 'Failed to load academic analytics.');
+        console.error('Failed to load category data:', err);
+        setError(err.message || 'Failed to load category analytics.');
       } finally {
-        setLoading(false);
+        setLoading(prev => ({ ...prev, category: false }));
       }
     };
 
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, token]);
+    if (viewType === 'categoryBreakdown') {
+      loadSummaryData();
+    }
+  }, [categoryFilters, token, viewType]);
+
+  // Fetch programme breakdown data
+  useEffect(() => {
+    const loadProgrammeData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, programme: true }));
+        setError(null);
+
+        const filterParams = {};
+        if (programmeFilters.category !== 'All') filterParams.category = programmeFilters.category;
+        if (programmeFilters.programme !== 'All') filterParams.programme = programmeFilters.programme;
+        if (programmeFilters.status !== 'All') filterParams.status = programmeFilters.status;
+        if (programmeFilters.proposal_type !== 'All') filterParams.proposal_type = programmeFilters.proposal_type;
+
+        const progBreakdownResp = await fetchProgrammeBreakdown(filterParams, token);
+        setProgrammeBreakdown(progBreakdownResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load programme data:', err);
+        setError(err.message || 'Failed to load programme analytics.');
+      } finally {
+        setLoading(prev => ({ ...prev, programme: false }));
+      }
+    };
+
+    if (viewType === 'programmeBreakdown') {
+      loadProgrammeData();
+    }
+  }, [programmeFilters, token, viewType]);
+
+  // Fetch course catalogue data
+  useEffect(() => {
+    const loadCatalogueData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, catalogue: true }));
+        setError(null);
+
+        const filterParams = {};
+        if (catalogueFilters.category !== 'All') filterParams.category = catalogueFilters.category;
+        if (catalogueFilters.programme !== 'All') filterParams.programme = catalogueFilters.programme;
+        if (catalogueFilters.status !== 'All') filterParams.status = catalogueFilters.status;
+        if (catalogueFilters.proposal_type !== 'All') filterParams.proposal_type = catalogueFilters.proposal_type;
+
+        const courseResp = await fetchCourses(filterParams, '', 1, 1000, token);
+        setCourseList(courseResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load course catalogue:', err);
+        setError(err.message || 'Failed to load course catalogue.');
+      } finally {
+        setLoading(prev => ({ ...prev, catalogue: false }));
+      }
+    };
+
+    if (viewType === 'courseCatalogue') {
+      loadCatalogueData();
+    }
+  }, [catalogueFilters, token, viewType]);
 
   const courseTrendChartData = useMemo(() => {
     if (!courseTrend.length) return [];
@@ -140,22 +268,6 @@ function EducationAcademicSection({ user, isPublicView = false }) {
       value: row.count || 0
     }));
   }, [programmeBreakdown]);
-
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      category: 'All',
-      programme: 'All',
-      status: 'All',
-      proposal_type: 'All'
-    });
-  };
 
   // Custom Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
@@ -180,6 +292,23 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     return null;
   };
 
+  // Get loading state for current view
+  const isLoading = () => {
+    switch(viewType) {
+      case 'categoryBreakdown': return loading.category;
+      case 'programmeBreakdown': return loading.programme;
+      case 'courseCatalogue': return loading.catalogue;
+      default: return false;
+    }
+  };
+
+  // Radio button configurations
+  const radioButtons = [
+    { id: 'categoryBreakdown', label: 'Category Breakdown', color: '#6366f1'},
+    { id: 'programmeBreakdown', label: 'Programme Breakdown', color: '#f97316'},
+    { id: 'courseCatalogue', label: 'Course Catalogue', color: '#22d3ee' }
+  ];
+
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
@@ -196,656 +325,769 @@ function EducationAcademicSection({ user, isPublicView = false }) {
           marginBottom: '20px' 
         }}>{error}</div>}
 
-        {loading ? (
+        {/* Summary Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '20px',
+          marginBottom: '40px'
+        }}>
+          {/* Industry-linked Courses Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📚</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Industry Courses</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.total_courses)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Active courses</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Categories Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 10px 20px rgba(34, 211, 238, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🏢</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Categories</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.distinct_categories)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Participating</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Programmes Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🎓</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Programmes</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.distinct_programmes)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Identified</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Courses Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📊</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Active</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.active_courses)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>In Delivery</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Inactive Courses Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+            borderRadius: '16px',
+            padding: '20px',
+            boxShadow: '0 10px 20px rgba(20, 184, 166, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '-20px',
+              right: '-20px',
+              width: '80px',
+              height: '80px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '50%'
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>👥</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Inactive</span>
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
+                {formatNumber(summary.inactive_courses)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '6px', height: '6px', background: '#f87171', borderRadius: '50%' }} />
+                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Completed/Paused</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Styled Radio Buttons - Transparent Background */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: '15px',
+          marginBottom: '30px',
+          flexWrap: 'wrap'
+        }}>
+          {radioButtons.map((btn) => (
+            <label
+              key={btn.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '10px 20px',
+                backgroundColor: viewType === btn.id ? btn.color : 'transparent',
+                color: viewType === btn.id ? 'white' : '#666',
+                borderRadius: '40px',
+                transition: 'all 0.3s ease',
+                border: `2px solid ${viewType === btn.id ? btn.color : '#e0e0e0'}`,
+                boxShadow: viewType === btn.id ? `0 4px 12px ${btn.color}40` : 'none'
+              }}
+            >
+              <input
+                type="radio"
+                name="viewType"
+                value={btn.id}
+                checked={viewType === btn.id}
+                onChange={(e) => setViewType(e.target.value)}
+                style={{
+                  accentColor: btn.color,
+                  width: '18px',
+                  height: '18px',
+                  cursor: 'pointer'
+                }}
+              />
+              <span style={{
+                fontWeight: viewType === btn.id ? '600' : '500',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span style={{ fontSize: '16px' }}>{btn.icon}</span>
+                {btn.label}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {isLoading() ? (
           <div className="loading-container">
-            <div className="loading-spinner" />
-            <p>Loading academic insights...</p>
+            <div className="loading-spinner"></div>
+            <p>Loading data...</p>
           </div>
         ) : (
           <>
-            {/* Modern Summary Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(5, 1fr)',
-              gap: '20px',
-              marginBottom: '40px'
-            }}>
-              {/* Industry-linked Courses Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '80px',
-                  height: '80px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📚</span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Industry Courses</span>
+            {/* Category Breakdown View */}
+            {viewType === 'categoryBreakdown' && (
+              <div className="chart-section" style={{ marginTop: '0' }}>
+                {/* Filters for Category View */}
+                <div className="filter-panel" style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e9ecef' 
+                }}>
+                  <div className="filter-header" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: '0', color: '#333' }}>Filters for Category Breakdown</h4>
+                    <button 
+                      className="clear-filters-btn" 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {formatNumber(summary.total_courses)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Active courses</span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Categories Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 10px 20px rgba(34, 211, 238, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '80px',
-                  height: '80px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🏢</span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Categories</span>
-                  </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {formatNumber(summary.distinct_categories)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Participating</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Programmes Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '80px',
-                  height: '80px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>🎓</span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Programmes</span>
-                  </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {formatNumber(summary.distinct_programmes)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Identified</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Courses Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '80px',
-                  height: '80px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>📊</span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Active</span>
-                  </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {formatNumber(summary.active_courses)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>In Delivery</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Inactive Courses Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-                borderRadius: '16px',
-                padding: '20px',
-                boxShadow: '0 10px 20px rgba(20, 184, 166, 0.2)',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-20px',
-                  right: '-20px',
-                  width: '80px',
-                  height: '80px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50%'
-                }} />
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '20px', background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '8px' }}>👥</span>
-                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', fontWeight: '500' }}>Inactive</span>
-                  </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                    {formatNumber(summary.inactive_courses)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: '6px', height: '6px', background: '#f87171', borderRadius: '50%' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)' }}>Completed/Paused</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Filter Panel with Radio Buttons for View Selection */}
-            <div className="filter-panel" style={{ 
-              marginBottom: '20px', 
-              padding: '20px', 
-              backgroundColor: '#f8f9fa', 
-              borderRadius: '8px', 
-              border: '1px solid #e9ecef' 
-            }}>
-              <div className="filter-header" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '15px' 
-              }}>
-                <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button 
-                    className="clear-filters-btn" 
-                    onClick={handleClearFilters}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                  {!isPublicView && user && user.role_id === 3 && (
-                    <>
-                      <button
-                        className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('courses_table'); setIsUploadModalOpen(true); }}
-                        style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#28a745', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
+                  <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Category</label>
+                      <select
+                        value={categoryFilters.category}
+                        onChange={(e) => handleFilterChange('category', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                       >
-                        Upload Courses
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* View Type Selection - Radio Buttons */}
-              <div style={{ 
-                marginBottom: '20px', 
-                padding: '15px', 
-                backgroundColor: '#e9ecef', 
-                borderRadius: '6px',
-                border: '1px solid #dee2e6'
-              }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '10px', 
-                  fontWeight: '600', 
-                  color: '#333',
-                  fontSize: '14px'
-                }}>
-                  Select View Type:
-                </label>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '12px'
-                }}>
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'categoryBreakdown' ? '#6366f1' : 'white',
-                    color: viewType === 'categoryBreakdown' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'categoryBreakdown' ? '2px solid #6366f1' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="categoryBreakdown"
-                      checked={viewType === 'categoryBreakdown'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#6366f1',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'categoryBreakdown' ? 'bold' : 'normal' }}>
-                      📈 Category Breakdown
-                    </span>
-                  </label>
+                        <option value="All">All Categories</option>
+                        {filterOptions.categories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'programmeBreakdown' ? '#f97316' : 'white',
-                    color: viewType === 'programmeBreakdown' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'programmeBreakdown' ? '2px solid #f97316' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="programmeBreakdown"
-                      checked={viewType === 'programmeBreakdown'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#f97316',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'programmeBreakdown' ? 'bold' : 'normal' }}>
-                      🎓 Programme Breakdown
-                    </span>
-                  </label>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Programme</label>
+                      <select
+                        value={categoryFilters.programme}
+                        onChange={(e) => handleFilterChange('programme', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Programmes</option>
+                        {filterOptions.programmes.map((prog) => (
+                          <option key={prog} value={prog}>{prog}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'courseCatalogue' ? '#22d3ee' : 'white',
-                    color: viewType === 'courseCatalogue' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'courseCatalogue' ? '2px solid #22d3ee' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="courseCatalogue"
-                      checked={viewType === 'courseCatalogue'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#22d3ee',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'courseCatalogue' ? 'bold' : 'normal' }}>
-                      📚 Course Catalogue
-                    </span>
-                  </label>
-                </div>
-              </div>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
+                      <select
+                        value={categoryFilters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.statuses.map((stat) => (
+                          <option key={stat} value={stat}>{stat}</option>
+                        ))}
+                      </select>
+                    </div>
 
-              <div className="filter-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '15px' 
-              }}>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Category
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.category}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Categories</option>
-                    {filterOptions.categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Programme
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.programme}
-                    onChange={(e) => handleFilterChange('programme', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Programmes</option>
-                    {filterOptions.programmes.map((prog) => (
-                      <option key={prog} value={prog}>{prog}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Status
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.status}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Statuses</option>
-                    {filterOptions.statuses.map((stat) => (
-                      <option key={stat} value={stat}>{stat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Proposal Type
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.proposal_type}
-                    onChange={(e) => handleFilterChange('proposal_type', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Types</option>
-                    {filterOptions.proposal_types.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters Summary */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '10px', 
-                backgroundColor: '#e9ecef', 
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}>
-                <strong>Active Filters:</strong>{' '}
-                {filters.category !== 'All' && <span style={{ marginRight: '10px' }}>📁 Category: {filters.category}</span>}
-                {filters.programme !== 'All' && <span style={{ marginRight: '10px' }}>🎓 Prog: {filters.programme}</span>}
-                {filters.status !== 'All' && <span style={{ marginRight: '10px' }}>✅ Status: {filters.status}</span>}
-                {filters.proposal_type !== 'All' && <span style={{ marginRight: '10px' }}>📝 Type: {filters.proposal_type}</span>}
-                {filters.category === 'All' && filters.programme === 'All' && filters.status === 'All' && filters.proposal_type === 'All' && 
-                  <span>No filters applied (showing all industry courses)</span>
-                }
-              </div>
-            </div>
-
-            {/* Single View Section based on radio selection */}
-            <div className="chart-section" style={{ 
-              marginBottom: '30px', 
-              padding: '20px', 
-              backgroundColor: '#fff', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
-            }}>
-              {/* Category Breakdown Chart */}
-              {viewType === 'categoryBreakdown' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Industry Course Categories
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Distribution of industry-linked courses across different categories.
-                    </p>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Proposal Type</label>
+                      <select
+                        value={categoryFilters.proposal_type}
+                        onChange={(e) => handleFilterChange('proposal_type', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Types</option>
+                        {filterOptions.proposal_types.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  {!courseTrendChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No category data available for the selected filters.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <PieChart>
-                          <Pie
-                            data={courseTrendChartData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={80}
-                            outerRadius={140}
-                            paddingAngle={5}
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                          >
-                            {courseTrendChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={PROGRAM_COLORS[index % PROGRAM_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value) => [value, 'Courses']}
-                            contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
-                          />
-                          <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                        </PieChart>
-                      </ResponsiveContainer>
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {categoryFilters.category !== 'All' && <span style={{ marginRight: '8px' }}>📁 {categoryFilters.category}</span>}
+                    {categoryFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {categoryFilters.programme}</span>}
+                    {categoryFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {categoryFilters.status}</span>}
+                    {categoryFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {categoryFilters.proposal_type}</span>}
+                    {categoryFilters.category === 'All' && categoryFilters.programme === 'All' && categoryFilters.status === 'All' && categoryFilters.proposal_type === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
 
-                      {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseTrendChartData.reduce((sum, item) => sum + item.value, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                <div className="chart-header">
+                  <h2>Industry Course Categories</h2>
+                  <p className="chart-description">
+                    Distribution of industry-linked courses across different categories.
+                  </p>
+                </div>
+
+                {!courseTrendChartData.length ? (
+                  <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                    <p style={{ color: '#666', fontSize: '16px' }}>No category data available for the selected filters.</p>
+                  </div>
+                ) : (
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <PieChart>
+                        <Pie
+                          data={courseTrendChartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={80}
+                          outerRadius={140}
+                          paddingAngle={5}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        >
+                          {courseTrendChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={PROGRAM_COLORS[index % PROGRAM_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [value, 'Courses']}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    {/* Chart Statistics */}
+                    <div style={{ 
+                      marginTop: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '15px'
+                    }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                          {courseTrendChartData.reduce((sum, item) => sum + item.value, 0)}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseTrendChartData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
+                          {courseTrendChartData.length}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseTrendChartData.length > 0 
-                              ? courseTrendChartData.reduce((prev, current) => (prev.value > current.value) ? prev : current).name
-                              : 'N/A'}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Dominant Category</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                          {courseTrendChartData.length > 0 
+                            ? courseTrendChartData.reduce((prev, current) => (prev.value > current.value) ? prev : current).name
+                            : 'N/A'}
                         </div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Dominant Category</div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* Programme Breakdown Chart */}
-              {viewType === 'programmeBreakdown' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🎓</span> Industry Courses by Programme
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Distribution of industry-linked courses across different academic programmes.
-                    </p>
+            {/* Programme Breakdown View */}
+            {viewType === 'programmeBreakdown' && (
+              <div className="chart-section" style={{ marginTop: '0' }}>
+                {/* Filters for Programme View */}
+                <div className="filter-panel" style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e9ecef' 
+                }}>
+                  <div className="filter-header" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: '0', color: '#333' }}>Filters for Programme Breakdown</h4>
+                    <button 
+                      className="clear-filters-btn" 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
 
-                  {!programmeBreakdownChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎓</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No programme data available for the selected filters.</p>
+                  <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Category</label>
+                      <select
+                        value={programmeFilters.category}
+                        onChange={(e) => handleFilterChange('category', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Categories</option>
+                        {filterOptions.categories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={programmeBreakdownChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="name" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 10 }}
-                            interval={0}
-                            angle={-45}
-                            textAnchor="end"
-                            height={80}
-                          />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            allowDecimals={false}
-                          />
-                          <Tooltip 
-                            formatter={(value) => [value, 'Courses']}
-                            contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
-                          />
-                          <Bar 
-                            dataKey="value" 
-                            name="Courses" 
-                            fill="#f97316" 
-                            radius={[6, 6, 0, 0]} 
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
 
-                      {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {programmeBreakdownChartData.reduce((sum, item) => sum + item.value, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Programme</label>
+                      <select
+                        value={programmeFilters.programme}
+                        onChange={(e) => handleFilterChange('programme', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Programmes</option>
+                        {filterOptions.programmes.map((prog) => (
+                          <option key={prog} value={prog}>{prog}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
+                      <select
+                        value={programmeFilters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.statuses.map((stat) => (
+                          <option key={stat} value={stat}>{stat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Proposal Type</label>
+                      <select
+                        value={programmeFilters.proposal_type}
+                        onChange={(e) => handleFilterChange('proposal_type', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Types</option>
+                        {filterOptions.proposal_types.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {programmeFilters.category !== 'All' && <span style={{ marginRight: '8px' }}>📁 {programmeFilters.category}</span>}
+                    {programmeFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {programmeFilters.programme}</span>}
+                    {programmeFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {programmeFilters.status}</span>}
+                    {programmeFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {programmeFilters.proposal_type}</span>}
+                    {programmeFilters.category === 'All' && programmeFilters.programme === 'All' && programmeFilters.status === 'All' && programmeFilters.proposal_type === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
+
+                <div className="chart-header">
+                  <h2>Industry Courses by Programme</h2>
+                  <p className="chart-description">
+                    Distribution of industry-linked courses across different academic programmes.
+                  </p>
+                </div>
+
+                {!programmeBreakdownChartData.length ? (
+                  <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎓</span>
+                    <p style={{ color: '#666', fontSize: '16px' }}>No programme data available for the selected filters.</p>
+                  </div>
+                ) : (
+                  <div className="chart-container">
+                    <ResponsiveContainer width="100%" height={400}>
+                      <BarChart data={programmeBreakdownChartData} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis 
+                          dataKey="name" 
+                          stroke="#666"
+                          tick={{ fill: '#666', fontSize: 10 }}
+                          interval={0}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis 
+                          stroke="#666"
+                          tick={{ fill: '#666', fontSize: 12 }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [value, 'Courses']}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
+                        />
+                        <Bar 
+                          dataKey="value" 
+                          name="Courses" 
+                          fill="#f97316" 
+                          radius={[6, 6, 0, 0]} 
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+
+                    {/* Chart Statistics */}
+                    <div style={{ 
+                      marginTop: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '15px'
+                    }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                          {programmeBreakdownChartData.reduce((sum, item) => sum + item.value, 0)}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {programmeBreakdownChartData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Programmes</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                          {programmeBreakdownChartData.length}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
-                            {programmeBreakdownChartData.length > 0 
-                              ? Math.max(...programmeBreakdownChartData.map(d => d.value))
-                              : 0}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Max in Single Prog</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Programmes</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
+                          {programmeBreakdownChartData.length > 0 
+                            ? Math.max(...programmeBreakdownChartData.map(d => d.value))
+                            : 0}
                         </div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Max in Single Prog</div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* Course Catalogue Table */}
-              {viewType === 'courseCatalogue' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📚</span> Industry Collaboration Course Catalogue
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Complete registry of courses collaborating with industry partners.
-                    </p>
+            {/* Course Catalogue View */}
+            {viewType === 'courseCatalogue' && (
+              <div className="chart-section" style={{ marginTop: '0' }}>
+                {/* Filters for Catalogue View */}
+                <div className="filter-panel" style={{ 
+                  marginBottom: '20px', 
+                  padding: '15px', 
+                  backgroundColor: '#f8f9fa', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e9ecef' 
+                }}>
+                  <div className="filter-header" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    marginBottom: '15px' 
+                  }}>
+                    <h4 style={{ margin: '0', color: '#333' }}>Filters for Course Catalogue</h4>
+                    <button 
+                      className="clear-filters-btn" 
+                      onClick={handleClearFilters}
+                      style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: '#dc3545', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Clear Filters
+                    </button>
                   </div>
 
-                  {!courseList.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📚</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No industry courses found for the selected filters.</p>
+                  <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Category</label>
+                      <select
+                        value={catalogueFilters.category}
+                        onChange={(e) => handleFilterChange('category', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Categories</option>
+                        {filterOptions.categories.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
-                  ) : (
-                    <div>
-                      <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                        <table className="grievance-table" style={{ 
-                          width: '100%', 
-                          borderCollapse: 'collapse',
-                          backgroundColor: '#fff',
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          border: '1px solid #e0e0e0'
-                        }}>
-                          <thead>
-                            <tr style={{ backgroundColor: '#22d3ee', color: 'white' }}>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Course Name</th>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Category</th>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Programme</th>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Industry Partner</th>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Coordinator</th>
-                              <th style={{ padding: '12px', textAlign: 'left' }}>Status</th>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Programme</label>
+                      <select
+                        value={catalogueFilters.programme}
+                        onChange={(e) => handleFilterChange('programme', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Programmes</option>
+                        {filterOptions.programmes.map((prog) => (
+                          <option key={prog} value={prog}>{prog}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
+                      <select
+                        value={catalogueFilters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Statuses</option>
+                        {filterOptions.statuses.map((stat) => (
+                          <option key={stat} value={stat}>{stat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Proposal Type</label>
+                      <select
+                        value={catalogueFilters.proposal_type}
+                        onChange={(e) => handleFilterChange('proposal_type', e.target.value)}
+                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                      >
+                        <option value="All">All Types</option>
+                        {filterOptions.proposal_types.map((type) => (
+                          <option key={type} value={type}>{type}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '8px', 
+                    backgroundColor: '#e9ecef', 
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
+                    <strong>Active Filters:</strong>{' '}
+                    {catalogueFilters.category !== 'All' && <span style={{ marginRight: '8px' }}>📁 {catalogueFilters.category}</span>}
+                    {catalogueFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {catalogueFilters.programme}</span>}
+                    {catalogueFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {catalogueFilters.status}</span>}
+                    {catalogueFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {catalogueFilters.proposal_type}</span>}
+                    {catalogueFilters.category === 'All' && catalogueFilters.programme === 'All' && catalogueFilters.status === 'All' && catalogueFilters.proposal_type === 'All' && 
+                      <span>No filters applied</span>
+                    }
+                  </div>
+                </div>
+
+                <div className="chart-header">
+                  <h2>Industry Collaboration Course Catalogue</h2>
+                  <p className="chart-description">
+                    Complete registry of courses collaborating with industry partners.
+                  </p>
+                </div>
+
+                {!courseList.length ? (
+                  <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📚</span>
+                    <p style={{ color: '#666', fontSize: '16px' }}>No industry courses found for the selected filters.</p>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Fixed height scrollable table */}
+                    <div style={{ 
+                      maxHeight: '500px', 
+                      overflowY: 'auto', 
+                      overflowX: 'auto',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '12px',
+                      backgroundColor: '#fff',
+                      position: 'relative'
+                    }}>
+                      <table className="grievance-table" style={{ 
+                        width: '100%', 
+                        borderCollapse: 'collapse',
+                        backgroundColor: '#fff',
+                        minWidth: '800px'
+                      }}>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                          <tr style={{ backgroundColor: '#22d3ee', color: 'white' }}>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Course Name</th>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Category</th>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Programme</th>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Industry Partner</th>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Coordinator</th>
+                            <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Status</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -858,7 +1100,18 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                                 }}
                               >
                                 <td style={{ padding: '12px', fontWeight: '500' }}>{course.course_name}</td>
-                                <td style={{ padding: '12px' }}>{course.course_category}</td>
+                                <td style={{ padding: '12px' }}>
+                                  <span style={{
+                                    backgroundColor: '#e0e7ff',
+                                    color: '#4f46e5',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '12px',
+                                    fontWeight: '500'
+                                  }}>
+                                    {course.course_category}
+                                  </span>
+                                </td>
                                 <td style={{ padding: '12px' }}>{course.target_programme}</td>
                                 <td style={{ padding: '12px' }}>{course.industry_partner || '—'}</td>
                                 <td style={{ padding: '12px' }}>{course.industry_coordinator_name || '—'}</td>
@@ -899,7 +1152,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {new Set(courseList.map(c => c.category)).size}
+                            {new Set(courseList.map(c => c.course_category)).size}
                           </div>
                           <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
                         </div>
@@ -914,19 +1167,17 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                   )}
                 </div>
               )}
+            </>
+          )}
+        </div>
 
-            </div>
-          </>
-        )}
-      </div>
-
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName={activeUploadTable}
-        token={token}
-      />
-    </div>
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName={activeUploadTable}
+          token={token}
+        />
+      </div>   
   );
 }
 

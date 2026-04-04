@@ -59,13 +59,6 @@ const formatPercentage = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
-/**
- * Interactive dashboard component for Placement & Career Outcomes.
- * Connects to the backend placement APIs to display charts and tables.
- * @param {Object} props
- * @param {Object} props.user - The logged-in user object.
- * @param {boolean} props.isPublicView - Controls upload permissions.
- */
 function PlacementSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -78,9 +71,52 @@ function PlacementSection({ user, isPublicView = false }) {
   });
 
   // View type selection with radio buttons
-  const [viewType, setViewType] = useState('placementTrend'); // 'placementTrend' | 'genderWise' | 'programWise' | 'recruiters' | 'sectorWise' | 'packageTrend' | 'topRecruiters'
+  const [viewType, setViewType] = useState('placementTrend');
 
-  const [filters, setFilters] = useState({
+  // Independent filter states for each view
+  const [trendFilters, setTrendFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [genderFilters, setGenderFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [programFilters, setProgramFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [recruitersFilters, setRecruitersFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [sectorFilters, setSectorFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [packageFilters, setPackageFilters] = useState({
+    year: 'All',
+    program: 'All',
+    gender: 'All',
+    sector: 'All'
+  });
+
+  const [topRecruitersFilters, setTopRecruitersFilters] = useState({
     year: 'All',
     program: 'All',
     gender: 'All',
@@ -104,10 +140,93 @@ function PlacementSection({ user, isPublicView = false }) {
   const [packageTrend, setPackageTrend] = useState([]);
   const [topRecruiters, setTopRecruiters] = useState([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    trend: false,
+    gender: false,
+    program: false,
+    recruiters: false,
+    sector: false,
+    package: false,
+    topRecruiters: false
+  });
   const [error, setError] = useState(null);
 
   const token = localStorage.getItem('authToken');
+
+  // Get current filters based on view type
+  const getCurrentFilters = () => {
+    switch(viewType) {
+      case 'placementTrend': return trendFilters;
+      case 'genderWise': return genderFilters;
+      case 'programWise': return programFilters;
+      case 'recruiters': return recruitersFilters;
+      case 'sectorWise': return sectorFilters;
+      case 'packageTrend': return packageFilters;
+      case 'topRecruiters': return topRecruitersFilters;
+      default: return trendFilters;
+    }
+  };
+
+  // Handle filter change for current view
+  const handleFilterChange = (field, value) => {
+    switch(viewType) {
+      case 'placementTrend':
+        setTrendFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'genderWise':
+        setGenderFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'programWise':
+        setProgramFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'recruiters':
+        setRecruitersFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'sectorWise':
+        setSectorFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'packageTrend':
+        setPackageFilters(prev => ({ ...prev, [field]: value }));
+        break;
+      case 'topRecruiters':
+        setTopRecruitersFilters(prev => ({ ...prev, [field]: value }));
+        break;
+    }
+  };
+
+  // Clear filters for current view
+  const handleClearFilters = () => {
+    const defaultFilters = {
+      year: 'All',
+      program: 'All',
+      gender: 'All',
+      sector: 'All'
+    };
+    
+    switch(viewType) {
+      case 'placementTrend':
+        setTrendFilters(defaultFilters);
+        break;
+      case 'genderWise':
+        setGenderFilters(defaultFilters);
+        break;
+      case 'programWise':
+        setProgramFilters(defaultFilters);
+        break;
+      case 'recruiters':
+        setRecruitersFilters(defaultFilters);
+        break;
+      case 'sectorWise':
+        setSectorFilters(defaultFilters);
+        break;
+      case 'packageTrend':
+        setPackageFilters(defaultFilters);
+        break;
+      case 'topRecruiters':
+        setTopRecruitersFilters(defaultFilters);
+        break;
+    }
+  };
 
   useEffect(() => {
     const loadFilterOptions = async () => {
@@ -132,25 +251,18 @@ function PlacementSection({ user, isPublicView = false }) {
     loadFilterOptions();
   }, [token]);
 
+  // Load placement trend data
   useEffect(() => {
-    const loadPlacementData = async () => {
-      if (!token) {
-        return;
-      }
+    const loadTrendData = async () => {
+      if (!token) return;
       try {
-        setLoading(true);
+        setLoading(prev => ({ ...prev, trend: true }));
         setError(null);
-        const [summaryResp, trendResp, genderResp, programResp, recruiterResp, sectorResp, packageResp, topRecruiterResp] =
-          await Promise.all([
-            fetchPlacementSummary(filters, token),
-            fetchPlacementTrend(filters, token),
-            fetchPlacementGenderBreakdown(filters, token),
-            fetchPlacementProgramStatus(filters, token),
-            fetchPlacementRecruiters(filters, token),
-            fetchPlacementSectorDistribution(filters, token),
-            fetchPlacementPackageTrend(filters, token),
-            fetchTopRecruiters(filters, token)
-          ]);
+        
+        const [summaryResp, trendResp] = await Promise.all([
+          fetchPlacementSummary(trendFilters, token),
+          fetchPlacementTrend(trendFilters, token)
+        ]);
 
         setSummary(summaryResp?.data || {
           registered: 0,
@@ -161,22 +273,156 @@ function PlacementSection({ user, isPublicView = false }) {
           average_package: null
         });
         setTrendData(trendResp?.data || []);
-        setGenderData(genderResp?.data || []);
-        setProgramStatus(programResp?.data || []);
-        setRecruiterStats(recruiterResp?.data || []);
-        setSectorDistribution(sectorResp?.data || []);
-        setPackageTrend(packageResp?.data || []);
-        setTopRecruiters(topRecruiterResp?.data || []);
       } catch (err) {
-        console.error('Failed to load placement data:', err);
+        console.error('Failed to load trend data:', err);
         setError(err.message || 'Failed to load placement statistics.');
       } finally {
-        setLoading(false);
+        setLoading(prev => ({ ...prev, trend: false }));
       }
     };
 
-    loadPlacementData();
-  }, [filters, token]);
+    if (viewType === 'placementTrend') {
+      loadTrendData();
+    }
+  }, [trendFilters, token, viewType]);
+
+  // Load gender data
+  useEffect(() => {
+    const loadGenderData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, gender: true }));
+        setError(null);
+        
+        const genderResp = await fetchPlacementGenderBreakdown(genderFilters, token);
+        setGenderData(genderResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load gender data:', err);
+        setError(err.message || 'Failed to load gender statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, gender: false }));
+      }
+    };
+
+    if (viewType === 'genderWise') {
+      loadGenderData();
+    }
+  }, [genderFilters, token, viewType]);
+
+  // Load program data
+  useEffect(() => {
+    const loadProgramData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, program: true }));
+        setError(null);
+        
+        const programResp = await fetchPlacementProgramStatus(programFilters, token);
+        setProgramStatus(programResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load program data:', err);
+        setError(err.message || 'Failed to load program statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, program: false }));
+      }
+    };
+
+    if (viewType === 'programWise') {
+      loadProgramData();
+    }
+  }, [programFilters, token, viewType]);
+
+  // Load recruiters data
+  useEffect(() => {
+    const loadRecruitersData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, recruiters: true }));
+        setError(null);
+        
+        const recruiterResp = await fetchPlacementRecruiters(recruitersFilters, token);
+        setRecruiterStats(recruiterResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load recruiters data:', err);
+        setError(err.message || 'Failed to load recruiters statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, recruiters: false }));
+      }
+    };
+
+    if (viewType === 'recruiters') {
+      loadRecruitersData();
+    }
+  }, [recruitersFilters, token, viewType]);
+
+  // Load sector data
+  useEffect(() => {
+    const loadSectorData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, sector: true }));
+        setError(null);
+        
+        const sectorResp = await fetchPlacementSectorDistribution(sectorFilters, token);
+        setSectorDistribution(sectorResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load sector data:', err);
+        setError(err.message || 'Failed to load sector statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, sector: false }));
+      }
+    };
+
+    if (viewType === 'sectorWise') {
+      loadSectorData();
+    }
+  }, [sectorFilters, token, viewType]);
+
+  // Load package data
+  useEffect(() => {
+    const loadPackageData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, package: true }));
+        setError(null);
+        
+        const packageResp = await fetchPlacementPackageTrend(packageFilters, token);
+        setPackageTrend(packageResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load package data:', err);
+        setError(err.message || 'Failed to load package statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, package: false }));
+      }
+    };
+
+    if (viewType === 'packageTrend') {
+      loadPackageData();
+    }
+  }, [packageFilters, token, viewType]);
+
+  // Load top recruiters data
+  useEffect(() => {
+    const loadTopRecruitersData = async () => {
+      if (!token) return;
+      try {
+        setLoading(prev => ({ ...prev, topRecruiters: true }));
+        setError(null);
+        
+        const topRecruitersResp = await fetchTopRecruiters(topRecruitersFilters, token);
+        setTopRecruiters(topRecruitersResp?.data || []);
+      } catch (err) {
+        console.error('Failed to load top recruiters data:', err);
+        setError(err.message || 'Failed to load top recruiters statistics.');
+      } finally {
+        setLoading(prev => ({ ...prev, topRecruiters: false }));
+      }
+    };
+
+    if (viewType === 'topRecruiters') {
+      loadTopRecruitersData();
+    }
+  }, [topRecruitersFilters, token, viewType]);
 
   const placementTrendChartData = useMemo(() => {
     if (!trendData.length) return [];
@@ -236,22 +482,6 @@ function PlacementSection({ user, isPublicView = false }) {
     }));
   }, [packageTrend]);
 
-  const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      year: 'All',
-      program: 'All',
-      gender: 'All',
-      sector: 'All'
-    });
-  };
-
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -280,6 +510,31 @@ function PlacementSection({ user, isPublicView = false }) {
     return null;
   };
 
+  // Get loading state for current view
+  const isLoading = () => {
+    switch(viewType) {
+      case 'placementTrend': return loading.trend;
+      case 'genderWise': return loading.gender;
+      case 'programWise': return loading.program;
+      case 'recruiters': return loading.recruiters;
+      case 'sectorWise': return loading.sector;
+      case 'packageTrend': return loading.package;
+      case 'topRecruiters': return loading.topRecruiters;
+      default: return false;
+    }
+  };
+
+  // Radio button configurations
+  const radioButtons = [
+    { id: 'placementTrend', label: 'Placement Trend', color: '#6366f1'},
+    { id: 'genderWise', label: 'Gender-wise', color: '#ec4899' },
+    { id: 'programWise', label: 'Program-wise', color: '#f97316' },
+    { id: 'recruiters', label: 'Recruiters', color: '#f59e0b' },
+    { id: 'sectorWise', label: 'Sector-wise', color: '#4f46e5' },
+    { id: 'packageTrend', label: 'Package Trends', color: '#10b981'},
+    { id: 'topRecruiters', label: 'Top Recruiters', color: '#8b5cf6'}
+  ];
+
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
@@ -297,7 +552,7 @@ function PlacementSection({ user, isPublicView = false }) {
           marginBottom: '20px' 
         }}>{error}</div>}
 
-        {loading ? (
+        {loading.trend && viewType === 'placementTrend' ? (
           <div className="loading-container">
             <div className="loading-spinner" />
             <p>Compiling placement performance metrics...</p>
@@ -510,1148 +765,1369 @@ function PlacementSection({ user, isPublicView = false }) {
               </div>
             </div>
 
-            {/* Filter Panel with Radio Buttons for View Selection */}
-            <div className="filter-panel" style={{ 
-              marginBottom: '20px', 
-              padding: '20px', 
-              backgroundColor: '#f8f9fa', 
-              borderRadius: '8px', 
-              border: '1px solid #e9ecef' 
+            {/* Styled Radio Buttons - Outside */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '15px',
+              marginBottom: '30px',
+              flexWrap: 'wrap'
             }}>
-              <div className="filter-header" style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: '15px' 
-              }}>
-                <h3 style={{ margin: '0', color: '#333' }}>Filters & Visualization Options</h3>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button 
-                    className="clear-filters-btn" 
-                    onClick={handleClearFilters}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
-                      cursor: 'pointer',
-                      fontSize: '14px'
+              {radioButtons.map((btn) => (
+                <label
+                  key={btn.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    padding: '10px 20px',
+                    backgroundColor: viewType === btn.id ? btn.color : 'transparent',
+                    color: viewType === btn.id ? 'white' : '#666',
+                    borderRadius: '40px',
+                    transition: 'all 0.3s ease',
+                    border: `2px solid ${viewType === btn.id ? btn.color : '#e0e0e0'}`,
+                    boxShadow: viewType === btn.id ? `0 4px 12px ${btn.color}40` : 'none'
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="viewType"
+                    value={btn.id}
+                    checked={viewType === btn.id}
+                    onChange={(e) => setViewType(e.target.value)}
+                    style={{
+                      accentColor: btn.color,
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer'
                     }}
-                  >
-                    Clear Filters
-                  </button>
-                  {!isPublicView && user && user.role_id === 3 && (
-                    <>
-                      <button
-                        className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
-                        style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#28a745', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        Upload Summaries
-                      </button>
-                      <button
-                        className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
-                        style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#28a745', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        Upload Recruiters
-                      </button>
-                      <button
-                        className="upload-data-btn"
-                        onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}
-                        style={{ 
-                          padding: '8px 16px', 
-                          backgroundColor: '#28a745', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
-                          cursor: 'pointer',
-                          fontSize: '14px'
-                        }}
-                      >
-                        Upload Packages
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* View Type Selection - Radio Buttons */}
-              <div style={{ 
-                marginBottom: '20px', 
-                padding: '15px', 
-                backgroundColor: '#e9ecef', 
-                borderRadius: '6px',
-                border: '1px solid #dee2e6'
-              }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '10px', 
-                  fontWeight: '600', 
-                  color: '#333',
-                  fontSize: '14px'
-                }}>
-                  Select View Type:
+                  />
+                  <span style={{
+                    fontWeight: viewType === btn.id ? '600' : '500',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ fontSize: '16px' }}>{btn.icon}</span>
+                    {btn.label}
+                  </span>
                 </label>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '12px'
-                }}>
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'placementTrend' ? '#6366f1' : 'white',
-                    color: viewType === 'placementTrend' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'placementTrend' ? '2px solid #6366f1' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="placementTrend"
-                      checked={viewType === 'placementTrend'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#6366f1',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'placementTrend' ? 'bold' : 'normal' }}>
-                      📈 Placement Trend
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'genderWise' ? '#ec4899' : 'white',
-                    color: viewType === 'genderWise' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'genderWise' ? '2px solid #ec4899' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="genderWise"
-                      checked={viewType === 'genderWise'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#ec4899',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'genderWise' ? 'bold' : 'normal' }}>
-                      👥 Gender-wise
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'programWise' ? '#f97316' : 'white',
-                    color: viewType === 'programWise' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'programWise' ? '2px solid #f97316' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="programWise"
-                      checked={viewType === 'programWise'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#f97316',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'programWise' ? 'bold' : 'normal' }}>
-                      🎓 Program-wise
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'recruiters' ? '#f59e0b' : 'white',
-                    color: viewType === 'recruiters' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'recruiters' ? '2px solid #f59e0b' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="recruiters"
-                      checked={viewType === 'recruiters'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#f59e0b',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'recruiters' ? 'bold' : 'normal' }}>
-                      🏢 Recruiters
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'sectorWise' ? '#4f46e5' : 'white',
-                    color: viewType === 'sectorWise' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'sectorWise' ? '2px solid #4f46e5' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="sectorWise"
-                      checked={viewType === 'sectorWise'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#4f46e5',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'sectorWise' ? 'bold' : 'normal' }}>
-                      📊 Sector-wise
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'packageTrend' ? '#10b981' : 'white',
-                    color: viewType === 'packageTrend' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'packageTrend' ? '2px solid #10b981' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="packageTrend"
-                      checked={viewType === 'packageTrend'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#10b981',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'packageTrend' ? 'bold' : 'normal' }}>
-                      💰 Package Trends
-                    </span>
-                  </label>
-
-                  <label style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    backgroundColor: viewType === 'topRecruiters' ? '#8b5cf6' : 'white',
-                    color: viewType === 'topRecruiters' ? 'white' : '#333',
-                    borderRadius: '6px',
-                    transition: 'all 0.3s ease',
-                    border: viewType === 'topRecruiters' ? '2px solid #8b5cf6' : '2px solid #ced4da'
-                  }}>
-                    <input
-                      type="radio"
-                      name="viewType"
-                      value="topRecruiters"
-                      checked={viewType === 'topRecruiters'}
-                      onChange={(e) => setViewType(e.target.value)}
-                      style={{ 
-                        accentColor: '#8b5cf6',
-                        width: '16px',
-                        height: '16px',
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <span style={{ fontWeight: viewType === 'topRecruiters' ? 'bold' : 'normal' }}>
-                      ⭐ Top Recruiters
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="filter-grid" style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                gap: '15px' 
-              }}>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Year
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Years</option>
-                    {filterOptions.years.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Program
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.program}
-                    onChange={(e) => handleFilterChange('program', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Programs</option>
-                    {filterOptions.programs.map((program) => (
-                      <option key={program} value={program}>{program}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Gender
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.gender}
-                    onChange={(e) => handleFilterChange('gender', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Genders</option>
-                    {filterOptions.genders.map((gender) => (
-                      <option key={gender} value={gender}>{gender}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', color: '#555' }}>
-                    Sector
-                  </label>
-                  <select
-                    className="filter-select"
-                    value={filters.sector}
-                    onChange={(e) => handleFilterChange('sector', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Sectors</option>
-                    {filterOptions.sectors.map((sector) => (
-                      <option key={sector} value={sector}>{sector}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Active Filters Summary */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '10px', 
-                backgroundColor: '#e9ecef', 
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}>
-                <strong>Active Filters:</strong>{' '}
-                {filters.year !== 'All' && <span style={{ marginRight: '10px' }}>📅 Year: {filters.year}</span>}
-                {filters.program !== 'All' && <span style={{ marginRight: '10px' }}>🎓 Program: {filters.program}</span>}
-                {filters.gender !== 'All' && <span style={{ marginRight: '10px' }}>👤 Gender: {filters.gender}</span>}
-                {filters.sector !== 'All' && <span style={{ marginRight: '10px' }}>🏢 Sector: {filters.sector}</span>}
-                {filters.year === 'All' && filters.program === 'All' && filters.gender === 'All' && filters.sector === 'All' && 
-                  <span>No filters applied (showing all data)</span>
-                }
-              </div>
+              ))}
             </div>
 
-            {/* Single View Section based on radio selection */}
-            <div className="chart-section" style={{ 
-              marginBottom: '30px', 
-              padding: '20px', 
-              backgroundColor: '#fff', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
-            }}>
-              {/* Placement Trend Chart */}
-              {viewType === 'placementTrend' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📈</span> Placement Percentage Trend
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Track how overall placement conversion has evolved across years.
-                    </p>
-                  </div>
-
-                  {!placementTrendChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No placement trend data available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={placementTrendChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="year" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Year', 
-                              position: 'insideBottom', 
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Count / Percentage', 
-                              angle: -90, 
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                          <Line 
-                            type="monotone" 
-                            dataKey="percentage" 
-                            name="Placement %" 
-                            stroke="#38bdf8" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#38bdf8' }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="placed" 
-                            name="Placed" 
-                            stroke="#22c55e" 
-                            strokeWidth={2} 
-                            dot={{ r: 4 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="registered" 
-                            name="Registered" 
-                            stroke="#6366f1" 
-                            strokeWidth={2} 
-                            dot={{ r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-
-                      {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {placementTrendChartData.reduce((sum, item) => sum + item.registered, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Registered</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                            {placementTrendChartData.reduce((sum, item) => sum + item.placed, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Placed</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
-                            {placementTrendChartData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Gender-wise Placement Chart */}
-              {viewType === 'genderWise' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>👥</span> Gender-wise Placement Share
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Understand gender balance in placement outcomes.
-                    </p>
-                  </div>
-
-                  {!genderPieData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>👥</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No gender-wise data available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
-                          <Pie
-                            data={genderPieData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={150}
-                            label={({ name, value }) => `${name}: ${formatPercentage(value)}`}
-                            labelLine={{ stroke: '#666', strokeWidth: 1 }}
-                          >
-                            {genderPieData.map((entry, index) => (
-                              <Cell 
-                                key={entry.name} 
-                                fill={GENDER_COLORS[index % GENDER_COLORS.length]}
-                                stroke="#fff"
-                                strokeWidth={2}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value, name, props) => {
-                              if (name === 'value') return formatPercentage(value);
-                              return value;
-                            }}
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #ccc', 
-                              borderRadius: '4px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                            }}
-                          />
-                          <Legend 
-                            layout="vertical"
-                            align="right"
-                            verticalAlign="middle"
-                            wrapperStyle={{
-                              paddingLeft: '20px',
-                              fontWeight: 'bold',
-                              fontSize: '12px'
-                            }}
-                            iconType="circle"
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-
-                      {/* Gender Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        {genderPieData.map((item, index) => (
-                          <div key={item.name} style={{ textAlign: 'center' }}>
-                            <div style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold', fontSize: '20px' }}>
-                              {item.registered} / {item.placed}
-                            </div>
-                            <div style={{ color: '#666', fontSize: '12px' }}>
-                              {item.name} (Reg/Placed)
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Program-wise Placement Chart */}
-              {viewType === 'programWise' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🎓</span> Program-wise Placement Status
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Compare registrations and offers across UG, PG, and PhD cohorts.
-                    </p>
-                  </div>
-
-                  {!programStatusChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎓</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No program-wise data available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={programStatusChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="program" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Program', 
-                              position: 'insideBottom', 
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Number of Students', 
-                              angle: -90, 
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                            allowDecimals={false}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                          <Bar dataKey="registered" name="Registered" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                          <Bar dataKey="placed" name="Placed" fill="#22c55e" radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-
-                      {/* Program Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        {programStatusChartData.map((item) => (
-                          <div key={item.program} style={{ textAlign: 'center' }}>
-                            <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '18px' }}>
-                              {formatPercentage(item.percentage)}
-                            </div>
-                            <div style={{ color: '#666', fontSize: '12px' }}>
-                              {item.program} Placement %
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Recruiters Chart */}
-              {viewType === 'recruiters' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🏢</span> Recruiters per Year
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Monitor company participation and total offers year over year.
-                    </p>
-                  </div>
-
-                  {!recruiterChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🏢</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No recruiter statistics available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={recruiterChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="year" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Year', 
-                              position: 'insideBottom', 
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Count', 
-                              angle: -90, 
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                            allowDecimals={false}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                          <Bar dataKey="companies" name="Companies" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-                          <Bar dataKey="offers" name="Offers" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-
-                      {/* Recruiter Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
-                            {recruiterChartData.reduce((sum, item) => sum + item.companies, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
-                            {recruiterChartData.reduce((sum, item) => sum + item.offers, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {recruiterChartData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Years Active</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Sector-wise Distribution */}
-              {viewType === 'sectorWise' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Sector-wise Company Split
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Distribution of visiting recruiters by industry sector.
-                    </p>
-                  </div>
-
-                  {!sectorPieData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No sector-wise data available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
-                          <Pie
-                            data={sectorPieData}
-                            dataKey="companies"
-                            nameKey="sector"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={150}
-                            label={({ sector, companies }) => `${sector}: ${companies}`}
-                            labelLine={{ stroke: '#666', strokeWidth: 1 }}
-                          >
-                            {sectorPieData.map((entry, index) => (
-                              <Cell 
-                                key={entry.sector} 
-                                fill={SECTOR_COLORS[index % SECTOR_COLORS.length]}
-                                stroke="#fff"
-                                strokeWidth={2}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value) => formatNumber(value)}
-                            contentStyle={{ 
-                              backgroundColor: '#fff', 
-                              border: '1px solid #ccc', 
-                              borderRadius: '4px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                            }}
-                          />
-                          <Legend 
-                            layout="vertical"
-                            align="right"
-                            verticalAlign="middle"
-                            wrapperStyle={{
-                              paddingLeft: '20px',
-                              fontWeight: 'bold',
-                              fontSize: '12px'
-                            }}
-                            iconType="circle"
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-
-                      {/* Sector Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
-                            {sectorPieData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Sectors</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                            {sectorPieData.reduce((sum, item) => sum + item.companies, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {sectorPieData.reduce((sum, item) => sum + item.offers, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
-                        </div>
-                      </div>
-
-                      {/* Sector Details Cards */}
-                      <div style={{
-                        marginTop: '20px',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                        gap: '10px'
-                      }}>
-                        {sectorPieData.map((sector, index) => (
-                          <div key={sector.sector} style={{
-                            padding: '12px',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '10px',
-                            border: `1px solid ${SECTOR_COLORS[index % SECTOR_COLORS.length]}`,
-                            textAlign: 'center'
-                          }}>
-                            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{sector.sector}</div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: SECTOR_COLORS[index % SECTOR_COLORS.length] }}>
-                              {sector.companies}
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#999' }}>
-                              {sector.offers} offers
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Package Trends Chart */}
-              {viewType === 'packageTrend' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>💰</span> Package Trends
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Track average package trends across years.
-                    </p>
-                  </div>
-
-                  {!packageTrendChartData.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>💰</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No package trend data available.</p>
-                    </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={packageTrendChartData} margin={{ top: 20, right: 30, left: 60, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis 
-                            dataKey="year" 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Year', 
-                              position: 'insideBottom', 
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <YAxis 
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{ 
-                              value: 'Package (LPA)', 
-                              angle: -90, 
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="plainline" />
-                          <Line 
-                            type="monotone" 
-                            dataKey="average" 
-                            name="Average Package" 
-                            stroke="#10b981" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#10b981' }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="highest" 
-                            name="Highest Package" 
-                            stroke="#3b82f6" 
-                            strokeWidth={2} 
-                            dot={{ r: 4 }}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="lowest" 
-                            name="Lowest Package" 
-                            stroke="#ef4444" 
-                            strokeWidth={2} 
-                            dot={{ r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-
-                      {/* Package Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '20px' }}>
-                            {formatCurrency(summary.average_package)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Average</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '20px' }}>
-                            {formatCurrency(summary.highest_package)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Highest</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '20px' }}>
-                            {formatCurrency(summary.lowest_package)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Overall Lowest</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Top Recruiters Table */}
-              {viewType === 'topRecruiters' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>⭐</span> Top Recruiters
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Highlights of visiting recruiters, their sectors, and offer volume.
-                    </p>
-                  </div>
-
-                  {!topRecruiters.length ? (
-                    <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>⭐</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No top recruiter information available.</p>
-                    </div>
-                  ) : (
-                    <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                      <table className="grievance-table" style={{ 
-                        width: '100%', 
-                        borderCollapse: 'collapse',
-                        backgroundColor: '#fff',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        border: '1px solid #e0e0e0'
-                      }}>
-                        <thead>
-                          <tr style={{ backgroundColor: '#8b5cf6', color: 'white' }}>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Year</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Company</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Sector</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Offers</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Hires</th>
-                            <th style={{ padding: '12px', textAlign: 'left' }}>Flagged</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {topRecruiters.map((row, index) => (
-                            <tr 
-                              key={`${row.year}-${row.company_name}`}
-                              style={{ 
-                                backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                                borderBottom: '1px solid #e0e0e0'
-                              }}
-                            >
-                              <td style={{ padding: '12px', fontWeight: '500' }}>{row.year}</td>
-                              <td style={{ padding: '12px' }}>{row.company_name}</td>
-                              <td style={{ padding: '12px' }}>
-                                {row.sector && (
-                                  <span style={{ 
-                                    backgroundColor: '#e0e7ff',
-                                    color: '#3730a3',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: 'bold'
-                                  }}>
-                                    {row.sector}
-                                  </span>
-                                )}
-                              </td>
-                              <td style={{ padding: '12px' }}>{formatNumber(row.offers)}</td>
-                              <td style={{ padding: '12px' }}>{formatNumber(row.hires)}</td>
-                              <td style={{ padding: '12px' }}>
-                                <span style={{ 
-                                  backgroundColor: row.is_top_recruiter ? '#dcfce7' : '#fee2e2',
-                                  color: row.is_top_recruiter ? '#166534' : '#991b1b',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  fontWeight: 'bold'
-                                }}>
-                                  {row.is_top_recruiter ? 'Yes' : 'No'}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Recruiter Statistics */}
-                  {topRecruiters.length > 0 && (
-                    <div style={{ 
-                      marginTop: '20px', 
+            {isLoading() ? (
+              <div className="loading-container">
+                <div className="loading-spinner" />
+                <p>Loading data...</p>
+              </div>
+            ) : (
+              <>
+                {/* Placement Trend View */}
+                {viewType === 'placementTrend' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Placement Trend View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
                       padding: '15px', 
                       backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: '15px'
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
                     }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
-                          {topRecruiters.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Total Entries</div>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Placement Trend</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
                       </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
-                          {new Set(topRecruiters.map(r => r.company_name)).size}
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={trendFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
                         </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Unique Companies</div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={trendFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={trendFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={trendFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                          {topRecruiters.reduce((sum, r) => sum + (r.offers || 0), 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {trendFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {trendFilters.year}</span>}
+                        {trendFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {trendFilters.program}</span>}
+                        {trendFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {trendFilters.gender}</span>}
+                        {trendFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {trendFilters.sector}</span>}
+                        {trendFilters.year === 'All' && trendFilters.program === 'All' && trendFilters.gender === 'All' && trendFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
 
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName={activeUploadTable}
-        token={token}
-      />
-    </div>
+                    <div className="chart-header">
+                      <h2>Placement Percentage Trend</h2>
+                      <p className="chart-description">
+                        Track how overall placement conversion has evolved across years.
+                      </p>
+                    </div>
+
+                    {!placementTrendChartData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No placement trend data available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        <ResponsiveContainer width="100%" height={350}>
+                          <LineChart data={placementTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend wrapperStyle={{ fontSize: '11px' }} />
+                            <Line type="monotone" dataKey="percentage" name="Placement %" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="placed" name="Placed" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="registered" name="Registered" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+
+                        {/* Chart Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                              {placementTrendChartData.reduce((sum, item) => sum + item.registered, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Registered</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                              {placementTrendChartData.reduce((sum, item) => sum + item.placed, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Placed</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
+                              {placementTrendChartData.length}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Gender-wise Placement View */}
+                {viewType === 'genderWise' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Gender-wise View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Gender-wise View</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={genderFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={genderFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={genderFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={genderFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {genderFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {genderFilters.year}</span>}
+                        {genderFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {genderFilters.program}</span>}
+                        {genderFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {genderFilters.gender}</span>}
+                        {genderFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {genderFilters.sector}</span>}
+                        {genderFilters.year === 'All' && genderFilters.program === 'All' && genderFilters.gender === 'All' && genderFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Gender-wise Placement Share</h2>
+                      <p className="chart-description">
+                        Understand gender balance in placement outcomes.
+                      </p>
+                    </div>
+
+                    {!genderPieData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>👥</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No gender-wise data available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        <ResponsiveContainer width="100%" height={350}>
+                          <PieChart>
+                            <Pie
+                              data={genderPieData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={120}
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                              labelLine={false}
+                            >
+                              {genderPieData.map((entry, index) => (
+                                <Cell key={entry.name} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => formatPercentage(value)} />
+                          </PieChart>
+                        </ResponsiveContainer>
+
+                        {/* Gender Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          {genderPieData.map((item, index) => (
+                            <div key={item.name} style={{ textAlign: 'center' }}>
+                              <div style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold', fontSize: '20px' }}>
+                                {item.registered} / {item.placed}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '12px' }}>
+                                {item.name} (Reg/Placed)
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Program-wise Placement View */}
+                {viewType === 'programWise' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Program-wise View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Program-wise View</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={programFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={programFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={programFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={programFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {programFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {programFilters.year}</span>}
+                        {programFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {programFilters.program}</span>}
+                        {programFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {programFilters.gender}</span>}
+                        {programFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {programFilters.sector}</span>}
+                        {programFilters.year === 'All' && programFilters.program === 'All' && programFilters.gender === 'All' && programFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Program-wise Placement Status</h2>
+                      <p className="chart-description">
+                        Compare registrations and offers across UG, PG, and PhD cohorts.
+                      </p>
+                    </div>
+
+                    {!programStatusChartData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🎓</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No program-wise data available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        <ResponsiveContainer width="100%" height={350}>
+                          <BarChart data={programStatusChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="program" stroke="#666" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Bar dataKey="registered" name="Registered" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={30} />
+                            <Bar dataKey="placed" name="Placed" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={30} />
+                          </BarChart>
+                        </ResponsiveContainer>
+
+                        {/* Program Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          {programStatusChartData.map((item) => (
+                            <div key={item.program} style={{ textAlign: 'center' }}>
+                              <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '18px' }}>
+                                {formatPercentage(item.percentage)}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '12px' }}>
+                                {item.program}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Recruiters View */}
+                {viewType === 'recruiters' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Recruiters View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Recruiters View</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={recruitersFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={recruitersFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={recruitersFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={recruitersFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {recruitersFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {recruitersFilters.year}</span>}
+                        {recruitersFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {recruitersFilters.program}</span>}
+                        {recruitersFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {recruitersFilters.gender}</span>}
+                        {recruitersFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {recruitersFilters.sector}</span>}
+                        {recruitersFilters.year === 'All' && recruitersFilters.program === 'All' && recruitersFilters.gender === 'All' && recruitersFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Recruiters per Year</h2>
+                      <p className="chart-description">
+                        Monitor company participation and total offers year over year.
+                      </p>
+                    </div>
+
+                    {!recruiterChartData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🏢</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No recruiter statistics available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        <ResponsiveContainer width="100%" height={350}>
+                          <BarChart data={recruiterChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Bar dataKey="companies" name="Companies" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={30} />
+                            <Bar dataKey="offers" name="Offers" fill="#38bdf8" radius={[4, 4, 0, 0]} barSize={30} />
+                          </BarChart>
+                        </ResponsiveContainer>
+
+                        {/* Recruiter Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
+                              {recruiterChartData.reduce((sum, item) => sum + item.companies, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '24px' }}>
+                              {recruiterChartData.reduce((sum, item) => sum + item.offers, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                              {recruiterChartData.length}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Years Active</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sector-wise Distribution - Updated with Top 5 Sectors Only */}
+                {viewType === 'sectorWise' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Sector-wise View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Sector-wise View</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={sectorFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={sectorFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={sectorFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={sectorFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {sectorFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {sectorFilters.year}</span>}
+                        {sectorFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {sectorFilters.program}</span>}
+                        {sectorFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {sectorFilters.gender}</span>}
+                        {sectorFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {sectorFilters.sector}</span>}
+                        {sectorFilters.year === 'All' && sectorFilters.program === 'All' && sectorFilters.gender === 'All' && sectorFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Sector-wise Company Split</h2>
+                      <p className="chart-description">
+                        Distribution of visiting recruiters by industry sector (Top 5 sectors shown).
+                      </p>
+                    </div>
+
+                    {!sectorPieData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No sector-wise data available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        {/* Get top 5 sectors for pie chart */}
+                        {(() => {
+                          const top5Sectors = [...sectorPieData]
+                            .sort((a, b) => b.companies - a.companies)
+                            .slice(0, 5);
+                          const otherSectors = sectorPieData.slice(5);
+                          const otherTotal = otherSectors.reduce((sum, s) => sum + s.companies, 0);
+                          
+                          const pieData = [...top5Sectors];
+                          if (otherTotal > 0) {
+                            pieData.push({ sector: 'Others', companies: otherTotal, offers: otherTotal });
+                          }
+                          
+                          return (
+                            <ResponsiveContainer width="100%" height={350}>
+                              <PieChart>
+                                <Pie
+                                  data={pieData}
+                                  dataKey="companies"
+                                  nameKey="sector"
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={120}
+                                  label={({ sector, percent }) => `${sector} ${(percent * 100).toFixed(0)}%`}
+                                  labelLine={false}
+                                >
+                                  {pieData.map((entry, index) => (
+                                    <Cell 
+                                      key={entry.sector} 
+                                      fill={index < SECTOR_COLORS.length ? SECTOR_COLORS[index % SECTOR_COLORS.length] : '#a0a0a0'} 
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip formatter={(value) => formatNumber(value)} />
+                                <Legend 
+                                  layout="vertical" 
+                                  align="right" 
+                                  verticalAlign="middle"
+                                  wrapperStyle={{ fontSize: '12px' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          );
+                        })()}
+
+                        {/* Sector Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
+                              {sectorPieData.length}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Sectors</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                              {sectorPieData.reduce((sum, item) => sum + item.companies, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Companies</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                              {sectorPieData.reduce((sum, item) => sum + item.offers, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Package Trends View */}
+                {viewType === 'packageTrend' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Package Trends View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Package Trends</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={packageFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={packageFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={packageFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={packageFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {packageFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {packageFilters.year}</span>}
+                        {packageFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {packageFilters.program}</span>}
+                        {packageFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {packageFilters.gender}</span>}
+                        {packageFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {packageFilters.sector}</span>}
+                        {packageFilters.year === 'All' && packageFilters.program === 'All' && packageFilters.gender === 'All' && packageFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Package Trends</h2>
+                      <p className="chart-description">
+                        Track average package trends across years.
+                      </p>
+                    </div>
+
+                    {!packageTrendChartData.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>💰</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No package trend data available.</p>
+                      </div>
+                    ) : (
+                      <div className="chart-container">
+                        <ResponsiveContainer width="100%" height={350}>
+                          <LineChart data={packageTrendChartData} margin={{ top: 10, right: 20, left: 50, bottom: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Line type="monotone" dataKey="average" name="Average Package" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="highest" name="Highest Package" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                            <Line type="monotone" dataKey="lowest" name="Lowest Package" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+
+                        {/* Package Statistics */}
+                        <div style={{ 
+                          marginTop: '20px', 
+                          padding: '15px', 
+                          backgroundColor: '#f8f9fa', 
+                          borderRadius: '8px',
+                          border: '1px solid #e0e0e0',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '15px'
+                        }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '20px' }}>
+                              {formatCurrency(summary.average_package)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Overall Average</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '20px' }}>
+                              {formatCurrency(summary.highest_package)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Overall Highest</div>
+                          </div>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '20px' }}>
+                              {formatCurrency(summary.lowest_package)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '12px' }}>Overall Lowest</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Top Recruiters View */}
+                {viewType === 'topRecruiters' && (
+                  <div className="chart-section" style={{ marginTop: '0' }}>
+                    {/* Filters for Top Recruiters View */}
+                    <div className="filter-panel" style={{ 
+                      marginBottom: '20px', 
+                      padding: '15px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px', 
+                      border: '1px solid #e9ecef' 
+                    }}>
+                      <div className="filter-header" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: '15px' 
+                      }}>
+                        <h4 style={{ margin: '0', color: '#333' }}>Filters for Top Recruiters</h4>
+                        <button 
+                          className="clear-filters-btn" 
+                          onClick={handleClearFilters}
+                          style={{ 
+                            padding: '6px 12px', 
+                            backgroundColor: '#dc3545', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          Clear Filters
+                        </button>
+                      </div>
+
+                      <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
+                          <select
+                            value={topRecruitersFilters.year}
+                            onChange={(e) => handleFilterChange('year', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Years</option>
+                            {filterOptions.years.map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Program</label>
+                          <select
+                            value={topRecruitersFilters.program}
+                            onChange={(e) => handleFilterChange('program', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Programs</option>
+                            {filterOptions.programs.map((program) => (
+                              <option key={program} value={program}>{program}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Gender</label>
+                          <select
+                            value={topRecruitersFilters.gender}
+                            onChange={(e) => handleFilterChange('gender', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Genders</option>
+                            {filterOptions.genders.map((gender) => (
+                              <option key={gender} value={gender}>{gender}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="filter-group">
+                          <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Sector</label>
+                          <select
+                            value={topRecruitersFilters.sector}
+                            onChange={(e) => handleFilterChange('sector', e.target.value)}
+                            style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
+                          >
+                            <option value="All">All Sectors</option>
+                            {filterOptions.sectors.map((sector) => (
+                              <option key={sector} value={sector}>{sector}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Active Filters Summary */}
+                      <div style={{ 
+                        marginTop: '12px', 
+                        padding: '8px', 
+                        backgroundColor: '#e9ecef', 
+                        borderRadius: '4px',
+                        fontSize: '12px'
+                      }}>
+                        <strong>Active Filters:</strong>{' '}
+                        {topRecruitersFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {topRecruitersFilters.year}</span>}
+                        {topRecruitersFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {topRecruitersFilters.program}</span>}
+                        {topRecruitersFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {topRecruitersFilters.gender}</span>}
+                        {topRecruitersFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {topRecruitersFilters.sector}</span>}
+                        {topRecruitersFilters.year === 'All' && topRecruitersFilters.program === 'All' && topRecruitersFilters.gender === 'All' && topRecruitersFilters.sector === 'All' && 
+                          <span>No filters applied</span>
+                        }
+                      </div>
+                    </div>
+
+                    <div className="chart-header">
+                      <h2>Top Recruiters</h2>
+                      <p className="chart-description">
+                        Highlights of visiting recruiters, their sectors, and offer volume.
+                      </p>
+                    </div>
+
+                    {!topRecruiters.length ? (
+                      <div className="no-data" style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>⭐</span>
+                        <p style={{ color: '#666', fontSize: '16px' }}>No top recruiter information available.</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
+                          <table className="grievance-table" style={{ 
+                            width: '100%', 
+                            borderCollapse: 'collapse',
+                            backgroundColor: '#fff',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            border: '1px solid #e0e0e0',
+                            minWidth: '600px'
+                          }}>
+                            <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                              <tr style={{ backgroundColor: '#8b5cf6', color: 'white' }}>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Year</th>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Company</th>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Sector</th>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Offers</th>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Hires</th>
+                                <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Flagged</th>
+                               </tr>
+                              </thead>
+                              <tbody>
+                                {topRecruiters.map((row, index) => (
+                                  <tr 
+                                    key={`${row.year}-${row.company_name}`}
+                                    style={{ 
+                                      backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                      borderBottom: '1px solid #e0e0e0'
+                                    }}
+                                  >
+                                    <td style={{ padding: '10px', fontSize: '13px' }}>{row.year}</td>
+                                    <td style={{ padding: '10px', fontSize: '13px', fontWeight: '500' }}>{row.company_name}</td>
+                                    <td style={{ padding: '10px', fontSize: '13px' }}>
+                                      {row.sector && (
+                                        <span style={{ 
+                                          backgroundColor: '#e0e7ff',
+                                          color: '#3730a3',
+                                          padding: '4px 8px',
+                                          borderRadius: '4px',
+                                          fontSize: '11px',
+                                          fontWeight: '500'
+                                        }}>
+                                          {row.sector}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.offers)}</td>
+                                    <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.hires)}</td>
+                                    <td style={{ padding: '10px', fontSize: '13px' }}>
+                                      <span style={{ 
+                                        backgroundColor: row.is_top_recruiter ? '#dcfce7' : '#fee2e2',
+                                        color: row.is_top_recruiter ? '#166534' : '#991b1b',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        fontSize: '11px',
+                                        fontWeight: '500'
+                                      }}>
+                                        {row.is_top_recruiter ? 'Yes' : 'No'}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Recruiter Statistics */}
+                          {topRecruiters.length > 0 && (
+                            <div style={{ 
+                              marginTop: '20px', 
+                              padding: '15px', 
+                              backgroundColor: '#f8f9fa', 
+                              borderRadius: '8px',
+                              border: '1px solid #e0e0e0',
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(3, 1fr)',
+                              gap: '15px'
+                            }}>
+                              <div style={{ textAlign: 'center' }}>
+                                <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
+                                  {topRecruiters.length}
+                                </div>
+                                <div style={{ color: '#666', fontSize: '12px' }}>Total Entries</div>
+                              </div>
+                              <div style={{ textAlign: 'center' }}>
+                                <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
+                                  {new Set(topRecruiters.map(r => r.company_name)).size}
+                                </div>
+                                <div style={{ color: '#666', fontSize: '12px' }}>Unique Companies</div>
+                              </div>
+                              <div style={{ textAlign: 'center' }}>
+                                <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                                  {topRecruiters.reduce((sum, r) => sum + (r.offers || 0), 0)}
+                                </div>
+                                <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        <DataUploadModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          tableName={activeUploadTable}
+          token={token}
+        />
+      </div>
+    
   );
 }
 

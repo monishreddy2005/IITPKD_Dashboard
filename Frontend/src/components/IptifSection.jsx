@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -24,6 +25,7 @@ import './PeopleCampus.css';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function IptifSection({ user }) {
+  const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -138,7 +140,7 @@ function IptifSection({ user }) {
           <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>Year: {label}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ margin: '0', color: entry.color }}>
-              Count/Revenue: {formatNumber(entry.value)}
+              {entry.name}: {formatNumber(entry.value)}
             </p>
           ))}
         </div>
@@ -147,13 +149,83 @@ function IptifSection({ user }) {
     return null;
   };
 
+  // Handle back navigation
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="page-container">
       <div className="page-content">
+        {/* Back Button */}
+        <div style={{ marginBottom: '20px' }}>
+          <button
+            onClick={handleGoBack}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#5a6268';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#6c757d';
+            }}
+          >
+            <span>←</span> Back
+          </button>
+        </div>
+
         <h1 style={{ marginBottom: '5px' }}>IPTIF</h1>
         <p style={{ color: '#666', marginBottom: '20px' }}>
           Overview of IIT Palakkad Technology IHub Foundation initiatives.
         </p>
+
+        {/* Upload Buttons - Moved to Top */}
+        {user && user.role_id === 3 && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end'
+          }}>
+            <button
+              onClick={() => { setActiveUploadTable('iptif_projects_table'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Projects
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('iptif_program_table'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#f093fb', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Programs
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('iptif_startup_table'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#43e97b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Startups
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('iptif_facilities_table'); setIsUploadModalOpen(true); }}
+              style={{ padding: '8px 16px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            >
+              📤 Upload Facilities
+            </button>
+          </div>
+        )}
 
         {error && <div className="error-message" style={{ 
           padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px' 
@@ -189,316 +261,831 @@ function IptifSection({ user }) {
           </div>
         </div>
 
-        {/* View Selection & Filters Container */}
-        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0 }}>Trends & Analysis</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={handleClearFilters}
-                style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-              >
-                Clear Current Filters
-              </button>
-              {user && user.role_id === 3 && (
-                <>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('iptif_projects_table'); setIsUploadModalOpen(true); }}
-                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Upload Projects
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('iptif_program_table'); setIsUploadModalOpen(true); }}
-                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Upload Programs
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('iptif_startup_table'); setIsUploadModalOpen(true); }}
-                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Upload Startups
-                  </button>
-                  <button
-                    className="upload-data-btn"
-                    onClick={() => { setActiveUploadTable('iptif_facilities_table'); setIsUploadModalOpen(true); }}
-                    style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-                  >
-                    Upload Facilities
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '25px' }}>
-            {[
-              { id: 'projects', label: 'Projects Trend', color: '#667eea' },
-              { id: 'programs', label: 'Programs Trend', color: '#f093fb' },
-              { id: 'startups', label: 'Startups Trend', color: '#43e97b' },
-              { id: 'facilities', label: 'Facilities Revenue', color: '#f97316' }
-            ].map(type => (
-              <label key={type.id} style={{
-                display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '8px 16px',
-                backgroundColor: viewType === type.id ? type.color : 'white',
-                color: viewType === type.id ? 'white' : '#333',
-                borderRadius: '6px', border: `2px solid ${type.color}`, transition: 'all 0.2s ease'
-              }}>
-                <input
-                  type="radio" name="iptifViewType" value={type.id}
-                  checked={viewType === type.id} onChange={(e) => setViewType(e.target.value)}
-                  style={{ accentColor: type.color }}
-                />
-                <span style={{ fontWeight: viewType === type.id ? 'bold' : 'normal' }}>{type.label}</span>
-              </label>
-            ))}
-          </div>
-
-          {/* Dynamic Filters Area */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-            
-            {viewType === 'projects' && (
-              <>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Scheme</label>
-                  <select
-                    className="filter-select" value={projectFilters.scheme}
-                    onChange={(e) => handleFilterChange(setProjectFilters)('scheme', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Schemes</option>
-                    {filterOptions.projects.schemes.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Status</label>
-                  <select
-                    className="filter-select" value={projectFilters.status}
-                    onChange={(e) => handleFilterChange(setProjectFilters)('status', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Statuses</option>
-                    {filterOptions.projects.statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Start Year</label>
-                  <select
-                    className="filter-select" value={projectFilters.year}
-                    onChange={(e) => handleFilterChange(setProjectFilters)('year', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Years</option>
-                    {filterOptions.projects.years.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
-
-            {viewType === 'programs' && (
-              <>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type</label>
-                  <select
-                    className="filter-select" value={programFilters.type}
-                    onChange={(e) => handleFilterChange(setProgramFilters)('type', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Types</option>
-                    {filterOptions.programs.types.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Association</label>
-                  <select
-                    className="filter-select" value={programFilters.association}
-                    onChange={(e) => handleFilterChange(setProgramFilters)('association', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Associations</option>
-                    {filterOptions.programs.associations.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
-
-            {viewType === 'startups' && (
-              <>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Domain</label>
-                  <select
-                    className="filter-select" value={startupFilters.domain}
-                    onChange={(e) => handleFilterChange(setStartupFilters)('domain', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Domains</option>
-                    {filterOptions.startups.domains.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Status</label>
-                  <select
-                    className="filter-select" value={startupFilters.status}
-                    onChange={(e) => handleFilterChange(setStartupFilters)('status', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Statuses</option>
-                    {filterOptions.startups.statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
-
-            {viewType === 'facilities' && (
-              <>
-                <div className="filter-group">
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Facility Type</label>
-                  <select
-                    className="filter-select" value={facilityFilters.facility_type}
-                    onChange={(e) => handleFilterChange(setFacilityFilters)('facility_type', e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                  >
-                    <option value="All">All Facility Types</option>
-                    {filterOptions.facilities.types.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
-
-          </div>
+        {/* Radio Buttons - White Background with Black Text */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '20px',
+          marginBottom: '30px',
+          padding: '20px',
+          borderRadius: '12px',
+          backgroundColor: 'transparent',
+          flexWrap: 'wrap'
+        }}>
+          <button 
+            onClick={() => setViewType('projects')}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: viewType === 'projects' ? '#667eea' : 'white',
+              color: viewType === 'projects' ? 'white' : '#333',
+              border: viewType === 'projects' ? '2px solid #667eea' : '2px solid #dee2e6',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: viewType === 'projects' ? '600' : '500',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: viewType === 'projects' ? `0 6px 16px #667eea40` : 'none'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>📊</span>
+            Projects Trend
+          </button>
+          <button 
+            onClick={() => setViewType('programs')}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: viewType === 'programs' ? '#f093fb' : 'white',
+              color: viewType === 'programs' ? 'white' : '#333',
+              border: viewType === 'programs' ? '2px solid #f093fb' : '2px solid #dee2e6',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: viewType === 'programs' ? '600' : '500',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: viewType === 'programs' ? `0 6px 16px #f093fb40` : 'none'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>🎓</span>
+            Programs Trend
+          </button>
+          <button 
+            onClick={() => setViewType('startups')}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: viewType === 'startups' ? '#43e97b' : 'white',
+              color: viewType === 'startups' ? 'white' : '#333',
+              border: viewType === 'startups' ? '2px solid #43e97b' : '2px solid #dee2e6',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: viewType === 'startups' ? '600' : '500',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: viewType === 'startups' ? `0 6px 16px #43e97b40` : 'none'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>🚀</span>
+            Startups Growth
+          </button>
+          <button 
+            onClick={() => setViewType('facilities')}
+            style={{
+              padding: '12px 28px',
+              backgroundColor: viewType === 'facilities' ? '#f97316' : 'white',
+              color: viewType === 'facilities' ? 'white' : '#333',
+              border: viewType === 'facilities' ? '2px solid #f97316' : '2px solid #dee2e6',
+              borderRadius: '50px',
+              cursor: 'pointer',
+              fontSize: '15px',
+              fontWeight: viewType === 'facilities' ? '600' : '500',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: viewType === 'facilities' ? `0 6px 16px #f9731640` : 'none'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>🏭</span>
+            Facilities Revenue
+          </button>
         </div>
 
         {/* Dynamic Views: Charts and Tables */}
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}><div className="loading-spinner" /><p>Loading data...</p></div>
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <div className="loading-spinner" />
+              <p>Loading data...</p>
+            </div>
           ) : (
             <>
-              {trendData.length > 0 ? (
-                <div style={{ marginBottom: '40px' }}>
-                  <h3 style={{ marginBottom: '20px', color: '#333' }}>
-                    {viewType === 'projects' ? 'Projects Trend' : 
-                     viewType === 'programs' ? 'Programs Trend' : 
-                     viewType === 'startups' ? 'Startups Growth' : 'Revenue Growth'}
-                  </h3>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                      <YAxis stroke="#666" />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="count" 
-                        name={viewType === 'facilities' ? 'Revenue' : 'Count'} 
-                        stroke="#667eea" 
-                        strokeWidth={3} 
-                        dot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }} 
-                        activeDot={{ r: 8 }} 
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '10px' }}>📈</span>
-                  No trend data available for the selected filters.
+              {/* Projects View */}
+              {viewType === 'projects' && (
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Yearly trend of projects by scheme and status
+                    </p>
+                  </div>
+
+                  {/* Filters inside projects view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(3, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Scheme</label>
+                        <select
+                          value={projectFilters.scheme}
+                          onChange={(e) => handleFilterChange(setProjectFilters)('scheme', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Schemes</option>
+                          {filterOptions.projects.schemes.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
+                        <select
+                          value={projectFilters.status}
+                          onChange={(e) => handleFilterChange(setProjectFilters)('status', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Statuses</option>
+                          {filterOptions.projects.statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Start Year</label>
+                        <select
+                          value={projectFilters.year}
+                          onChange={(e) => handleFilterChange(setProjectFilters)('year', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.projects.years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {projectFilters.scheme !== 'All' && <span style={{ marginRight: '8px' }}>📌 {projectFilters.scheme}</span>}
+                      {projectFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {projectFilters.status}</span>}
+                      {projectFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {projectFilters.year}</span>}
+                      {projectFilters.scheme === 'All' && projectFilters.status === 'All' && projectFilters.year === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Trend Chart */}
+                  {trendData.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
+                          <YAxis stroke="#666" />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Projects Count" 
+                            stroke="#667eea" 
+                            strokeWidth={3} 
+                            dot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }} 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Scrollable Projects Table */}
+                  {tableData.length > 0 && (
+                    <div>
+                      <h3 style={{ marginBottom: '15px' }}>Projects Directory</h3>
+                      <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        backgroundColor: '#fff'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#667eea',
+                          color: 'white',
+                          display: 'grid',
+                          gridTemplateColumns: '2fr 1.5fr 1fr 1.2fr',
+                          gap: '8px',
+                          padding: '12px',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10
+                        }}>
+                          <div>Project Name</div>
+                          <div>Scheme</div>
+                          <div>Status</div>
+                          <div>Start Date</div>
+                        </div>
+                        <div style={{
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          overflowX: 'auto'
+                        }}>
+                          {tableData.map((row, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1.5fr 1fr 1.2fr',
+                                gap: '8px',
+                                padding: '12px',
+                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
+                                borderBottom: '1px solid #e0e0e0',
+                                fontSize: '13px',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <div style={{ fontWeight: '500' }}>{row.project_name}</div>
+                              <div>{row.scheme}</div>
+                              <div>
+                                <span style={{
+                                  backgroundColor: row.status === 'Ongoing' ? '#e0f2fe' : '#f1f5f9',
+                                  color: row.status === 'Ongoing' ? '#0284c7' : '#475569',
+                                  padding: '4px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  display: 'inline-block'
+                                }}>
+                                  {row.status}
+                                </span>
+                              </div>
+                              <div>{row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Data Table */}
-              <div style={{ overflowX: 'auto', marginTop: '30px' }}>
-                <h3 style={{ marginBottom: '15px' }}>Detailed Data</h3>
-                {tableData.length > 0 ? (
-                  <div className="table-responsive" style={{ overflowX: 'auto' }}>
-                    <table className="grievance-table" style={{
-                      width: '100%',
-                      minWidth: '800px',
-                      borderCollapse: 'collapse',
-                      backgroundColor: '#fff',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      border: '1px solid #e0e0e0'
-                    }}>
-                      <thead>
-                        <tr style={{ backgroundColor: viewType === 'facilities' ? '#f97316' : viewType === 'startups' ? '#43e97b' : viewType === 'programs' ? '#f093fb' : '#667eea', color: 'white' }}>
-                          {viewType === 'projects' && (
-                            <><th style={{ padding: '12px', textAlign: 'left' }}>Project Name</th><th style={{ padding: '12px', textAlign: 'left' }}>Scheme</th><th style={{ padding: '12px', textAlign: 'left' }}>Status</th><th style={{ padding: '12px', textAlign: 'left' }}>Start Date</th></>
-                          )}
-                          {viewType === 'programs' && (
-                            <><th style={{ padding: '12px', textAlign: 'left' }}>Program Name</th><th style={{ padding: '12px', textAlign: 'left' }}>Type</th><th style={{ padding: '12px', textAlign: 'left' }}>Association</th><th style={{ padding: '12px', textAlign: 'left' }}>Target Audience</th><th style={{ padding: '12px', textAlign: 'left' }}>Attendees</th></>
-                          )}
-                          {viewType === 'startups' && (
-                            <><th style={{ padding: '12px', textAlign: 'left' }}>Startup Name</th><th style={{ padding: '12px', textAlign: 'left' }}>Domain</th><th style={{ padding: '12px', textAlign: 'left' }}>Status</th><th style={{ padding: '12px', textAlign: 'left' }}>Jobs</th><th style={{ padding: '12px', textAlign: 'left' }}>Revenue</th></>
-                          )}
-                          {viewType === 'facilities' && (
-                            <><th style={{ padding: '12px', textAlign: 'left' }}>Facility Name</th><th style={{ padding: '12px', textAlign: 'left' }}>Type</th><th style={{ padding: '12px', textAlign: 'left' }}>Availability</th><th style={{ padding: '12px', textAlign: 'left' }}>Financial Year</th><th style={{ padding: '12px', textAlign: 'left' }}>Revenue (₹)</th></>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tableData.map((row, idx) => (
-                          <tr
-                            key={idx}
-                            style={{
-                              backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                              borderBottom: '1px solid #e0e0e0'
-                            }}
-                          >
-                            {viewType === 'projects' && (
-                              <>
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{row.project_name}</td>
-                                <td style={{ padding: '12px' }}>{row.scheme}</td>
-                                <td style={{ padding: '12px' }}><span className="status-badge" style={{ backgroundColor: row.status === 'Ongoing' ? '#e0f2fe' : '#f1f5f9', color: row.status === 'Ongoing' ? '#0284c7' : '#475569', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>{row.status}</span></td>
-                                <td style={{ padding: '12px' }}>{row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'}</td>
-                              </>
-                            )}
-                            {viewType === 'programs' && (
-                              <>
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{row.program_name}</td>
-                                <td style={{ padding: '12px' }}>{row.type}</td>
-                                <td style={{ padding: '12px' }}>{row.association}</td>
-                                <td style={{ padding: '12px' }}>{row.targetted_audi}</td>
-                                <td style={{ padding: '12px' }}>{row.no_of_attendees}</td>
-                              </>
-                            )}
-                            {viewType === 'startups' && (
-                              <>
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{row.startup_name}</td>
-                                <td style={{ padding: '12px' }}>{row.domain}</td>
-                                <td style={{ padding: '12px' }}>{row.status}</td>
-                                <td style={{ padding: '12px' }}>{row.number_of_jobs}</td>
-                                <td style={{ padding: '12px' }}>{row.revenue ? `₹${formatNumber(row.revenue)}` : '-'}</td>
-                              </>
-                            )}
-                            {viewType === 'facilities' && (
-                              <>
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{row.facility_name}</td>
-                                <td style={{ padding: '12px' }}>{row.facility_type}</td>
-                                <td style={{ padding: '12px' }}>{row.availability_status}</td>
-                                <td style={{ padding: '12px' }}>{row.financial_year}</td>
-                                <td style={{ padding: '12px' }}>{row.revenue_made ? formatNumber(row.revenue_made) : '0'}</td>
-                              </>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {/* Programs View */}
+              {viewType === 'programs' && (
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>🎓</span> Programs Trend
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Yearly trend of programs by type and association
+                    </p>
                   </div>
-                ) : (
-                  <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>No records found.</p>
-                )}
-              </div>
+
+                  {/* Filters inside programs view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Type</label>
+                        <select
+                          value={programFilters.type}
+                          onChange={(e) => handleFilterChange(setProgramFilters)('type', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Types</option>
+                          {filterOptions.programs.types.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Association</label>
+                        <select
+                          value={programFilters.association}
+                          onChange={(e) => handleFilterChange(setProgramFilters)('association', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Associations</option>
+                          {filterOptions.programs.associations.map(a => <option key={a} value={a}>{a}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {programFilters.type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {programFilters.type}</span>}
+                      {programFilters.association !== 'All' && <span style={{ marginRight: '8px' }}>🤝 {programFilters.association}</span>}
+                      {programFilters.type === 'All' && programFilters.association === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Trend Chart */}
+                  {trendData.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
+                          <YAxis stroke="#666" />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Programs Count" 
+                            stroke="#f093fb" 
+                            strokeWidth={3} 
+                            dot={{ r: 6, fill: '#f093fb', strokeWidth: 2, stroke: '#fff' }} 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Scrollable Programs Table */}
+                  {tableData.length > 0 && (
+                    <div>
+                      <h3 style={{ marginBottom: '15px' }}>Programs Directory</h3>
+                      <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        backgroundColor: '#fff'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#f093fb',
+                          color: 'white',
+                          display: 'grid',
+                          gridTemplateColumns: '2fr 1.2fr 1.2fr 1.5fr 1fr',
+                          gap: '8px',
+                          padding: '12px',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10
+                        }}>
+                          <div>Program Name</div>
+                          <div>Type</div>
+                          <div>Association</div>
+                          <div>Target Audience</div>
+                          <div>Attendees</div>
+                        </div>
+                        <div style={{
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          overflowX: 'auto'
+                        }}>
+                          {tableData.map((row, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1.2fr 1.2fr 1.5fr 1fr',
+                                gap: '8px',
+                                padding: '12px',
+                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
+                                borderBottom: '1px solid #e0e0e0',
+                                fontSize: '13px',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <div style={{ fontWeight: '500' }}>{row.program_name}</div>
+                              <div>{row.type}</div>
+                              <div>{row.association}</div>
+                              <div>{row.targetted_audi}</div>
+                              <div>{row.no_of_attendees}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Startups View */}
+              {viewType === 'startups' && (
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>🚀</span> Startups Growth
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Yearly growth of startups by domain and status
+                    </p>
+                  </div>
+
+                  {/* Filters inside startups view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Domain</label>
+                        <select
+                          value={startupFilters.domain}
+                          onChange={(e) => handleFilterChange(setStartupFilters)('domain', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Domains</option>
+                          {filterOptions.startups.domains.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
+                        <select
+                          value={startupFilters.status}
+                          onChange={(e) => handleFilterChange(setStartupFilters)('status', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Statuses</option>
+                          {filterOptions.startups.statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {startupFilters.domain !== 'All' && <span style={{ marginRight: '8px' }}>🌐 {startupFilters.domain}</span>}
+                      {startupFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {startupFilters.status}</span>}
+                      {startupFilters.domain === 'All' && startupFilters.status === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Trend Chart */}
+                  {trendData.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
+                          <YAxis stroke="#666" />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Startups Count" 
+                            stroke="#43e97b" 
+                            strokeWidth={3} 
+                            dot={{ r: 6, fill: '#43e97b', strokeWidth: 2, stroke: '#fff' }} 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Scrollable Startups Table */}
+                  {tableData.length > 0 && (
+                    <div>
+                      <h3 style={{ marginBottom: '15px' }}>Startups Directory</h3>
+                      <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        backgroundColor: '#fff'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#43e97b',
+                          color: 'white',
+                          display: 'grid',
+                          gridTemplateColumns: '1.8fr 1.5fr 1fr 1fr 1.2fr',
+                          gap: '8px',
+                          padding: '12px',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10
+                        }}>
+                          <div>Startup Name</div>
+                          <div>Domain</div>
+                          <div>Status</div>
+                          <div>Jobs Created</div>
+                          <div>Revenue (₹)</div>
+                        </div>
+                        <div style={{
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          overflowX: 'auto'
+                        }}>
+                          {tableData.map((row, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1.8fr 1.5fr 1fr 1fr 1.2fr',
+                                gap: '8px',
+                                padding: '12px',
+                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
+                                borderBottom: '1px solid #e0e0e0',
+                                fontSize: '13px',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <div style={{ fontWeight: '500' }}>{row.startup_name}</div>
+                              <div>{row.domain}</div>
+                              <div>{row.status}</div>
+                              <div>{row.number_of_jobs}</div>
+                              <div>{row.revenue ? `₹${formatNumber(row.revenue)}` : '-'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Facilities View */}
+              {viewType === 'facilities' && (
+                <div>
+                  <div className="chart-header" style={{ marginBottom: '20px' }}>
+                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '24px' }}>🏭</span> Facilities Revenue
+                    </h2>
+                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                      Yearly revenue trend from facilities by type
+                    </p>
+                  </div>
+
+                  {/* Filters inside facilities view */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '15px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '8px',
+                    border: '1px solid #e9ecef'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      marginBottom: '15px' 
+                    }}>
+                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
+                      <button 
+                        onClick={handleClearFilters}
+                        style={{ 
+                          padding: '6px 12px', 
+                          backgroundColor: '#dc3545', 
+                          color: '#fff', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+                    
+                    <div className="filter-grid" style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr', 
+                      gap: '12px' 
+                    }}>
+                      <div className="filter-group">
+                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Facility Type</label>
+                        <select
+                          value={facilityFilters.facility_type}
+                          onChange={(e) => handleFilterChange(setFacilityFilters)('facility_type', e.target.value)}
+                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
+                        >
+                          <option value="All">All Facility Types</option>
+                          {filterOptions.facilities.types.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Active Filters Summary */}
+                    <div style={{ 
+                      marginTop: '12px', 
+                      padding: '8px', 
+                      backgroundColor: '#e9ecef', 
+                      borderRadius: '4px',
+                      fontSize: '12px'
+                    }}>
+                      <strong>Active Filters:</strong>{' '}
+                      {facilityFilters.facility_type !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {facilityFilters.facility_type}</span>}
+                      {facilityFilters.facility_type === 'All' && 
+                        <span>No filters applied</span>
+                      }
+                    </div>
+                  </div>
+
+                  {/* Trend Chart */}
+                  {trendData.length > 0 && (
+                    <div style={{ marginBottom: '40px' }}>
+                      <ResponsiveContainer width="100%" height={350}>
+                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
+                          <YAxis stroke="#666" />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="count" 
+                            name="Revenue (₹)" 
+                            stroke="#f97316" 
+                            strokeWidth={3} 
+                            dot={{ r: 6, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }} 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+
+                  {/* Scrollable Facilities Table */}
+                  {tableData.length > 0 && (
+                    <div>
+                      <h3 style={{ marginBottom: '15px' }}>Facilities Directory</h3>
+                      <div style={{
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        backgroundColor: '#fff'
+                      }}>
+                        <div style={{
+                          backgroundColor: '#f97316',
+                          color: 'white',
+                          display: 'grid',
+                          gridTemplateColumns: '2fr 1.5fr 1.2fr 1.2fr 1.2fr',
+                          gap: '8px',
+                          padding: '12px',
+                          fontWeight: 'bold',
+                          fontSize: '13px',
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10
+                        }}>
+                          <div>Facility Name</div>
+                          <div>Type</div>
+                          <div>Availability</div>
+                          <div>Financial Year</div>
+                          <div>Revenue (₹)</div>
+                        </div>
+                        <div style={{
+                          maxHeight: '400px',
+                          overflowY: 'auto',
+                          overflowX: 'auto'
+                        }}>
+                          {tableData.map((row, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '2fr 1.5fr 1.2fr 1.2fr 1.2fr',
+                                gap: '8px',
+                                padding: '12px',
+                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
+                                borderBottom: '1px solid #e0e0e0',
+                                fontSize: '13px',
+                                alignItems: 'center'
+                              }}
+                            >
+                              <div style={{ fontWeight: '500' }}>{row.facility_name}</div>
+                              <div>{row.facility_type}</div>
+                              <div>{row.availability_status}</div>
+                              <div>{row.financial_year}</div>
+                              <div>{row.revenue_made ? formatNumber(row.revenue_made) : '0'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* No Data Message */}
+              {trendData.length === 0 && tableData.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                  <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
+                  <p>No data available for the selected filters.</p>
+                </div>
+              )}
             </>
           )}
         </div>
-
       </div>
 
       <DataUploadModal
