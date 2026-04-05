@@ -274,8 +274,8 @@ function TechinSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
+    <div className="page-container" style={{ backgroundColor: 'transparent' }}>
+      <div className="page-content" style={{ backgroundColor: '#ffffff' }}>
         {/* Back Button */}
         <div style={{ marginBottom: '20px' }}>
           <button
@@ -345,7 +345,7 @@ function TechinSection({ user }) {
           padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px' 
         }}>{error}</div>}
 
-        {/* First Row of Summary Cards - Larger Size */}
+        {/* First Row of Summary Cards - Larger Size - Keeping original colors */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -449,7 +449,7 @@ function TechinSection({ user }) {
           </div>
         </div>
 
-        {/* Revenue Summary Cards - Larger Size */}
+        {/* Revenue Summary Cards - Larger Size - Keeping original colors */}
         <h3 style={{ marginTop: '0', marginBottom: '20px', color: '#333', fontSize: '18px', fontWeight: '600' }}>Startup Revenue Metrics</h3>
         <div style={{
           display: 'grid',

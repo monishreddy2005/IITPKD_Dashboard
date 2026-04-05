@@ -155,8 +155,8 @@ function IptifSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
+    <div className="page-container" style={{ backgroundColor: 'transparent' }}>
+      <div className="page-content" style={{ backgroundColor: '#ffffff' }}>
         {/* Back Button */}
         <div style={{ marginBottom: '20px' }}>
           <button
@@ -231,7 +231,7 @@ function IptifSection({ user }) {
           padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px' 
         }}>{error}</div>}
 
-        {/* Summary Cards */}
+        {/* Summary Cards - Keeping original colors */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -261,7 +261,7 @@ function IptifSection({ user }) {
           </div>
         </div>
 
-        {/* Radio Buttons - White Background with Black Text */}
+        {/* Radio Buttons - Keeping original styling */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
@@ -358,7 +358,7 @@ function IptifSection({ user }) {
           </button>
         </div>
 
-        {/* Dynamic Views: Charts and Tables */}
+        {/* Dynamic Views: Charts and Tables - Keeping original styling */}
         <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '40px' }}>
