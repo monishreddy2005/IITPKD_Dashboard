@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
   AreaChart, Area,
@@ -133,6 +134,7 @@ const PieTooltip = ({ active, payload, total }) => {
 // ── Main component ─────────────────────────────────────────────────────────
 
 function AdministrativeSection({ isPublicView = false }) {
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeView, setActiveView]               = useState('yearwise');
 
@@ -309,37 +311,23 @@ function AdministrativeSection({ isPublicView = false }) {
     <div className={isPublicView ? '' : 'page-container'}>
       <div className={isPublicView ? '' : 'page-content'}>
 
-        {/* Page title + description — matches ICC structure */}
-        {!isPublicView && <h1>Employee Overview</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor employee strength trends, department-wise distribution, and gender ratio across IIT Palakkad.
-        </p>
-
-        {/* Upload button — styled like ICC */}
         {!isPublicView && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📤</span> Upload Employee Data
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+              ← Back to People & Campus
             </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Employee Overview</h1>
+                <p>Monitor employee strength trends, department-wise distribution, and gender ratio across IIT Palakkad.</p>
+              </div>
+              <div className="page-header-actions">
+                <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
+                  <span>📤</span> Upload Employee Data
+                </button>
+              </div>
+            </div>
+          </>  
         )}
 
         {error && (

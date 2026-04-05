@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -33,6 +34,7 @@ const PROGRAM_COLORS = ['#6366f1', '#22d3ee', '#f97316', '#a855f7', '#14b8a6', '
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function EducationAcademicSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -312,35 +314,27 @@ function EducationAcademicSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Academic Section · Industry Collaboration Courses</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Explore specialised courses developed in collaboration with industry partners across various academic programmes at IIT Palakkad.
-        </p>
-
-        {/* Upload Button — visible only for admin (role_id === 3) */}
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              onClick={() => { setActiveUploadTable('courses_table'); setIsUploadModalOpen(true); }}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📤</span> Upload Course Data
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/education')}>
+              ← Back to Education
             </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Academic Section · Industry Collaboration Courses</h1>
+                <p>
+                  Explore specialised courses developed in collaboration with industry partners across various academic programmes at IIT Palakkad.
+                </p>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('courses_table'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Course Data
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {error && <div className="error-message" style={{ 

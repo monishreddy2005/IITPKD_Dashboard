@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   BarChart,
@@ -55,6 +56,7 @@ const formatDuration = (days) => {
 };
 
 function ResearchAdministrativeSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState({
@@ -256,36 +258,28 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Research · Administrative (Industry Externships)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor faculty participation in industry externship programmes and collaborations, segmented by department,
-          engagement type, and year.
-        </p>
-
-        {/* Upload Button — visible only for admin (role_id === 3) */}
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              onClick={() => setIsUploadModalOpen(true)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📤</span> Upload Externship Data
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/research')}>
+              ← Back to Research
             </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Research · Administrative (Industry Externships)</h1>
+                <p>
+                  Monitor faculty participation in industry externship programmes and collaborations, segmented by department,
+                  engagement type, and year.
+                </p>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
+                    <span>📤</span> Upload Externship Data
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {error && <div className="error-message" style={{ 

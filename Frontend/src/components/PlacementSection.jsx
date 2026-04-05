@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -60,6 +61,7 @@ const formatPercentage = (value) => {
 };
 
 function PlacementSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -538,39 +540,34 @@ function PlacementSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Placements & Career Outcomes</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Analyse multi-year placement performance, cohort-wise conversion rates, visiting recruiters, and package
-          benchmarks to understand student career trajectories at IIT Palakkad.
-        </p>
-
-        {/* Upload Buttons — visible only for admin (role_id === 3) */}
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ 
-            display: 'flex', 
-            gap: '1rem', 
-            marginBottom: '20px',
-            flexWrap: 'wrap'
-          }}>
-            <button
-              onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
-              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
-            >
-              <span>📤</span> Upload Placement Summary
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/education')}>
+              ← Back to Education
             </button>
-            <button
-              onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
-              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
-            >
-              <span>📤</span> Upload Companies
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}
-              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
-            >
-              <span>📤</span> Upload Packages
-            </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Placements & Career Outcomes</h1>
+                <p>
+                  Analyse multi-year placement performance, cohort-wise conversion rates, visiting recruiters, and package
+                  benchmarks to understand student career trajectories at IIT Palakkad.
+                </p>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Summary
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Companies
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Packages
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         {error && <div className="error-message" style={{ 

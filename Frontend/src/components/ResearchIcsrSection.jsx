@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -108,6 +109,7 @@ const buildPatentBreakdown = (source = {}) => ({
 });
 
 function ResearchIcsrSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -344,11 +346,38 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Track externally funded and consultancy projects, partnership MoUs, and innovation outcomes through patents
-          filed and granted under IIT Palakkad&apos;s ICSR portfolio.
-        </p>
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/research')}>
+              ← Back to Research
+            </button>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>
+                <p>
+                  Track externally funded and consultancy projects, partnership MoUs, and innovation outcomes through patents
+                  filed and granted under IIT Palakkad&apos;s ICSR portfolio.
+                </p>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Consultancy
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Sponsored
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> MoUs
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Patents
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {error && <div className="error-message" style={{ 
           padding: '10px', 
@@ -663,41 +692,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           </button>
         </div>
 
-        {/* Upload Buttons */}
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ 
-            display: 'flex', 
-            gap: '1rem', 
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end'
-          }}>
-            <button
-              onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Consultancy Projects
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Sponsored Projects
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload MoUs
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Patents
-            </button>
-          </div>
-        )}
+
 
         {loading && (
           <div className="loading-state">

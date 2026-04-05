@@ -403,3 +403,103 @@
     font-size: 26px;
   }
 }
+
+/* ===================================================== */
+/* CONSISTENT PAGE HEADER – Title + Back + Upload row   */
+/* ===================================================== */
+
+/* Top-level row: back button on left, upload buttons on right */
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+/* Left side — title + description */
+.page-header-row .page-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.page-header-row .page-header-left h1 {
+  margin-bottom: 4px;
+}
+
+.page-header-row .page-header-left p {
+  color: #2d2d2d;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Right side — upload buttons */
+.page-header-row .page-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+/* ===== Back Button ===== */
+.page-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.page-back-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: translateX(-2px);
+}
+
+/* ===== Upload Button (green) ===== */
+.page-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+  white-space: nowrap;
+}
+
+.page-upload-btn:hover {
+  background-color: #218838;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ===== Mobile: Stack header ===== */
+@media (max-width: 768px) {
+  .page-header-row {
+    flex-direction: column;
+  }
+
+  .page-header-row .page-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
