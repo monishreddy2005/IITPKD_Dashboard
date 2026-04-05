@@ -544,6 +544,35 @@ function PlacementSection({ user, isPublicView = false }) {
           benchmarks to understand student career trajectories at IIT Palakkad.
         </p>
 
+        {/* Upload Buttons — visible only for admin (role_id === 3) */}
+        {!isPublicView && user && user.role_id === 3 && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '1rem', 
+            marginBottom: '20px',
+            flexWrap: 'wrap'
+          }}>
+            <button
+              onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}
+              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
+            >
+              <span>📤</span> Upload Placement Summary
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}
+              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
+            >
+              <span>📤</span> Upload Companies
+            </button>
+            <button
+              onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}
+              style={{ padding: '10px 20px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)' }}
+            >
+              <span>📤</span> Upload Packages
+            </button>
+          </div>
+        )}
+
         {error && <div className="error-message" style={{ 
           padding: '10px', 
           backgroundColor: '#f8d7da', 

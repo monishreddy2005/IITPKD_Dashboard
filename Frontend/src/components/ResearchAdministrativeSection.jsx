@@ -262,6 +262,32 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           engagement type, and year.
         </p>
 
+        {/* Upload Button — visible only for admin (role_id === 3) */}
+        {!isPublicView && user && user.role_id === 3 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
+              }}
+            >
+              <span>📤</span> Upload Externship Data
+            </button>
+          </div>
+        )}
+
         {error && <div className="error-message" style={{ 
           padding: '10px', 
           backgroundColor: '#f8d7da', 

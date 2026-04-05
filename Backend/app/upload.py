@@ -5,6 +5,7 @@ Security: table name is validated against UPDATABLE_TABLES before any DB
 interaction. Column names come from information_schema, not raw user input.
 """
 import csv
+import hashlib
 import io
 import traceback
 
@@ -280,6 +281,49 @@ def _preprocess_nptel_enrollments(reader, csv_headers, conn):
     return _rebuild_stream(new_headers, processed)
 
 
+def _preprocess_research_publications(reader, csv_headers):
+    """
+    For the 'research_publications' table:
+    Auto-generates a deterministic `publication_id` as the MD5 hash of
+    (publication_title + publication_year + faculty_name), ensuring
+    natural deduplication across uploads.
+
+    Drops any existing 'publication_id' column from the CSV — the ID is
+    always recomputed so users never need to supply it.
+    """
+    rows = list(reader)
+    if not rows:
+        return None, None, 'CSV file is empty.'
+
+    # Ensure the three source columns are present
+    lower_headers = [h.lower() for h in csv_headers]
+    for required in ('publication_title', 'publication_year', 'faculty_name'):
+        if required not in lower_headers:
+            return None, None, (
+                f"CSV is missing '{required}' column, which is required "
+                "to generate publication_id."
+            )
+
+    # Build new header list: prepend publication_id, drop it if already present
+    new_headers = ['publication_id'] + [
+        h for h in csv_headers if h.lower() != 'publication_id'
+    ]
+
+    processed = []
+    for row in rows:
+        new_row = {k: v for k, v in row.items() if k.lower() != 'publication_id'}
+
+        title = (new_row.get('publication_title') or '').strip().lower()
+        year  = (new_row.get('publication_year') or '').strip()
+        fac   = (new_row.get('faculty_name') or '').strip().lower()
+
+        hash_input = f"{title}|{year}|{fac}"
+        new_row['publication_id'] = hashlib.md5(hash_input.encode('utf-8')).hexdigest()
+        processed.append(new_row)
+
+    return _rebuild_stream(new_headers, processed)
+
+
 def _rebuild_stream(headers, rows):
     """Serialises processed rows back into a DictReader-ready StringIO stream."""
     buf = io.StringIO()
@@ -373,6 +417,8 @@ def upload_csv(current_user_id):
             reader, csv_headers, error = _preprocess_uba_events(reader, csv_headers, conn)
         elif table_name == 'nptel_enrollments' and 'course_code' in csv_headers:
             reader, csv_headers, error = _preprocess_nptel_enrollments(reader, csv_headers, conn)
+        elif table_name == 'research_publications':
+            reader, csv_headers, error = _preprocess_research_publications(reader, csv_headers)
 
         if error:
             print(f"\n{'='*80}")
