@@ -140,7 +140,7 @@ function AcademicSection({ user, isPublicView = false }) {
       }
       try {
         setSummaryLoading(true);
-        const yearParam = summaryYear === 'All' ? null : parseInt(summaryYear);
+        const yearParam = summaryYear === 'All' ? null : summaryYear;
         console.log('Fetching summary for year:', yearParam);
         const result = await fetchCumulativeStudentSummary(yearParam, token);
         console.log('Received summary result:', result);
@@ -240,184 +240,102 @@ function AcademicSection({ user, isPublicView = false }) {
 
         {error && <div className="error-message">{error}</div>}
 
-        {/* Summary Cards Section */}
-        <div style={{
-          backgroundColor: '#fff',
-          borderRadius: '16px',
-          padding: '20px',
-          boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
-          marginBottom: '30px'
-        }}>
+        {/* ══ Student Summary ══════════════════════════════════════════════ */}
+        <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+          Student Summary
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '20px', marginBottom: '30px' }}>
+
+          {/* Year Filter Card */}
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            gap: '15px'
+            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+            borderRadius: '16px', padding: '24px',
+            boxShadow: '0 10px 20px rgba(168,85,247,0.3)',
+            position: 'relative', overflow: 'hidden',
           }}>
-            <h3 style={{ margin: 0, color: '#333', fontSize: '18px' }}>Student Summary</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: '#555' }}>Filter by Year:</span>
+            <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📅</span>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '600' }}>Filter by Year</span>
+              </div>
               <select
                 value={summaryYear}
                 onChange={(e) => setSummaryYear(e.target.value)}
                 style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: '#fff',
-                  cursor: 'pointer',
-                  minWidth: '120px'
+                  width: '100%', padding: '8px 12px', borderRadius: '8px',
+                  border: 'none', fontSize: '14px', fontWeight: '500',
+                  background: 'rgba(255,255,255,0.2)', color: 'white',
+                  cursor: 'pointer', outline: 'none',
                 }}
               >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year === 'All' ? 'All Years' : year}</option>
+                {availableYears.map(y => (
+                  <option key={y} value={y} style={{ color: '#333', background: '#fff' }}>
+                    {y === 'All' ? 'All Years' : y}
+                  </option>
                 ))}
               </select>
-            </div>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '20px'
-          }}>
-            {/* Total Students Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-20px',
-                right: '-20px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%'
-              }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>👥</span>
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '500' }}>Total Students</span>
-                </div>
-                <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                  {summaryLoading ? '...' : cumulativeSummary.total_students}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
-                    {summaryYear === 'All' ? 'Cumulative students' : `Students admitted in ${summaryYear}`}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* UG Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-20px',
-                right: '-20px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%'
-              }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>📘</span>
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '500' }}>UG</span>
-                </div>
-                <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                  {summaryLoading ? '...' : cumulativeSummary.ug_total}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Undergraduate</span>
-                </div>
-              </div>
-            </div>
-
-            {/* PG Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 10px 20px rgba(249, 115, 22, 0.2)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-20px',
-                right: '-20px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%'
-              }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>🎓</span>
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '500' }}>PG</span>
-                </div>
-                <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                  {summaryLoading ? '...' : cumulativeSummary.pg_total}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Postgraduate</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Research Card */}
-            <div style={{
-              background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              boxShadow: '0 10px 20px rgba(168, 85, 247, 0.2)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute',
-                top: '-20px',
-                right: '-20px',
-                width: '100px',
-                height: '100px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%'
-              }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>📖</span>
-                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '500' }}>Research</span>
-                </div>
-                <div style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                  {summaryLoading ? '...' : cumulativeSummary.research_total}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>Doctoral programs</span>
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%', flexShrink: 0 }} />
+                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>Focus on a specific year</span>
               </div>
             </div>
           </div>
+
+          {/* Data Cards */}
+          {[
+            { label: 'Total Students', icon: '👥', value: cumulativeSummary.total_students,
+              grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)',
+              subtitle: summaryYear === 'All' ? 'Cumulative students' : `Admitted in ${summaryYear}` },
+            { label: 'UG',       icon: '📘', value: cumulativeSummary.ug_total,
+              grad: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)', shadow: 'rgba(79,70,229,0.2)',
+              subtitle: 'Undergraduate' },
+            { label: 'PG',       icon: '🎓', value: cumulativeSummary.pg_total,
+              grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)',
+              subtitle: 'Postgraduate' },
+            { label: 'Research', icon: '📖', value: cumulativeSummary.research_total,
+              grad: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', shadow: 'rgba(6,182,212,0.2)',
+              subtitle: 'Doctoral programs' },
+          ].map(({ label, icon, value, grad, shadow, subtitle }, idx) => {
+            // Fast exit, smooth decelerated entrance with per-card stagger
+            const delay = summaryLoading ? 0 : idx * 55;
+            const enterTransition = `opacity 0.45s cubic-bezier(0.2, 0, 0, 1) ${delay}ms, transform 0.45s cubic-bezier(0.2, 0, 0, 1) ${delay}ms`;
+            const exitTransition  = 'opacity 0.15s ease-in, transform 0.15s ease-in';
+            const t = summaryLoading ? exitTransition : enterTransition;
+            return (
+            <div key={label} style={{
+              background: grad, borderRadius: '16px', padding: '24px',
+              boxShadow: `0 10px 20px ${shadow}`, position: 'relative', overflow: 'hidden',
+            }}>
+              <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>{icon}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', fontWeight: '500' }}>{label}</span>
+                </div>
+                <div style={{
+                  fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '4px',
+                  opacity:   summaryLoading ? 0 : 1,
+                  transform: summaryLoading ? 'translateY(10px) scale(0.96)' : 'translateY(0) scale(1)',
+                  transition: t,
+                  willChange: 'opacity, transform',
+                }}>
+                  {value}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }} />
+                  <span style={{
+                    fontSize: '11px', color: 'rgba(255,255,255,0.7)',
+                    opacity:   summaryLoading ? 0 : 1,
+                    transform: summaryLoading ? 'translateY(4px)' : 'translateY(0)',
+                    transition: t,
+                    display: 'inline-block',
+                  }}>{subtitle}</span>
+                </div>
+              </div>
+            </div>
+            );
+          })}
         </div>
 
         <div className="chart-section">

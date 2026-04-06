@@ -448,3 +448,58 @@ def get_program_trends(current_user_id):
         if conn:
             cur.close()
             conn.close()
+
+
+@academic_bp.route('/stats/student-summary', methods=['GET'])
+@token_required
+def get_student_summary(current_user_id):
+    """
+    Returns UG / PG / Research counts using the academic_program_type column.
+    Optional ?year=YYYY filters to a specific admission year.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+
+        year = request.args.get('year', type=str)
+
+        if year:
+            where = "WHERE CAST(admission_year AS TEXT) = %s"
+            params = [year]
+        else:
+            where = ""
+            params = []
+
+        query = f"""
+            SELECT
+                COUNT(*)                                                         AS total_students,
+                COUNT(*) FILTER (WHERE academic_program_type = 'UG')             AS ug_total,
+                COUNT(*) FILTER (WHERE academic_program_type = 'PG')             AS pg_total,
+                COUNT(*) FILTER (WHERE academic_program_type = 'Research')       AS research_total
+            FROM {STUDENT_TABLE}
+            {where};
+        """
+
+        cur = conn.cursor()
+        cur.execute(query, params)
+        row = cur.fetchone()
+
+        return jsonify({
+            'total_students':  int(row['total_students']  or 0),
+            'ug_total':        int(row['ug_total']        or 0),
+            'pg_total':        int(row['pg_total']        or 0),
+            'research_total':  int(row['research_total']  or 0),
+        }), 200
+
+    except Exception as e:
+        import traceback
+        print(f"Error fetching student summary: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': 'An error occurred while fetching student summary.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

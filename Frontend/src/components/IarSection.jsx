@@ -60,27 +60,27 @@ function IarSection({ user, isPublicView = false }) {
   const [countryDistribution, setCountryDistribution] = useState([]);
   const [outcomeBreakdown, setOutcomeBreakdown] = useState([]);
 
-  // Sort outcome breakdown by total alumni in descending order
+  // Top 10 outcome departments sorted by total, capped at 10
   const sortedOutcomeBreakdown = useMemo(() => {
-    return [...outcomeBreakdown].sort((a, b) => (b.total || 0) - (a.total || 0));
+    return [...outcomeBreakdown]
+      .sort((a, b) => (b.total || 0) - (a.total || 0))
+      .slice(0, 10);
   }, [outcomeBreakdown]);
 
-  // Top 10 states + "Other" for pie chart
+  // Top 5 states, excluding 'Not Found'
   const stateTop10 = useMemo(() => {
-    const sorted = [...stateDistribution].sort((a, b) => b.count - a.count);
-    if (sorted.length <= 10) return sorted;
-    const top10 = sorted.slice(0, 10);
-    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
-    return [...top10, { state: 'Other', count: otherCount }];
+    return [...stateDistribution]
+      .filter(item => item.state !== 'Not Found')
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
   }, [stateDistribution]);
 
-  // Top 10 countries + "Other" for pie chart
+  // Top 5 countries, excluding 'Other'
   const countryTop10 = useMemo(() => {
-    const sorted = [...countryDistribution].sort((a, b) => b.count - a.count);
-    if (sorted.length <= 10) return sorted;
-    const top10 = sorted.slice(0, 10);
-    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
-    return [...top10, { country: 'Other', count: otherCount }];
+    return [...countryDistribution]
+      .filter(item => item.country !== 'Other')
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
   }, [countryDistribution]);
 
   const [loading, setLoading] = useState(false);
@@ -542,7 +542,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>🗺️</span> State-wise Alumni Distribution
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Alumni counts mapped to Indian states based on their registered home state.
+                      Top 5 states by alumni count
                     </p>
                   </div>
 
@@ -616,7 +616,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>🌍</span> Global Alumni Reach
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Breakdown of alumni locations across countries to understand international presence.
+                      Top 5 countries by alumni count
                     </p>
                   </div>
 
@@ -690,7 +690,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>📊</span> Outcome by Department
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Compare higher studies versus corporate career paths chosen by alumni from each department.
+                      Top 10 departments by alumni count — higher studies vs corporate career paths.
                     </p>
                   </div>
 
@@ -701,16 +701,31 @@ function IarSection({ user, isPublicView = false }) {
                     </div>
                   ) : (
                     <>
+                      {/* Custom legend — clean pill badges above the chart */}
+                      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'flex-end' }}>
+                        {[
+                          { color: HIGHER_BAR_COLOR,    label: 'Higher Studies' },
+                          { color: CORPORATE_BAR_COLOR, label: 'Corporate'      },
+                        ].map(({ color, label }) => (
+                          <div key={label} style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            background: '#f8f9fa', border: '1px solid #e0e0e0',
+                            borderRadius: '20px', padding: '4px 12px',
+                          }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{label}</span>
+                          </div>
+                        ))}
+                      </div>
                       <div className="chart-container">
                         <ResponsiveContainer width="100%" height={350}>
-                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 10, right: 20, left: 40, bottom: 60 }}>
+                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 10, right: 20, left: 40, bottom: 80 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                            <XAxis dataKey="department" angle={-30} textAnchor="end" height={70} tick={{ fontSize: 10 }} interval={0} />
+                            <XAxis dataKey="department" angle={-38} textAnchor="end" height={80} tick={{ fontSize: 10 }} interval={0} />
                             <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
-                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
+                            <Bar dataKey="higher"    name="Higher Studies" stackId="a" fill={HIGHER_BAR_COLOR}    radius={[0, 0, 0, 0]} barSize={24} />
+                            <Bar dataKey="corporate" name="Corporate"      stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={24} />
                           </BarChart>
                         </ResponsiveContainer>
 
