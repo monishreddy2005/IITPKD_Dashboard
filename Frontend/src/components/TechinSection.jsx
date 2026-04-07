@@ -17,6 +17,7 @@ import {
   fetchTechinStartups,
   fetchTechinFilterOptions
 } from '../services/techinStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './PeopleCampus.css';
@@ -24,6 +25,7 @@ import './PeopleCampus.css';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function TechinSection({ user }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -130,7 +132,7 @@ function TechinSection({ user }) {
       }
     };
     initialLoad();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load programs data
   useEffect(() => {
@@ -157,7 +159,7 @@ function TechinSection({ user }) {
       loadProgramsData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, programFilters]);
+  }, [token, viewType, programFilters, uploadVersion]);
 
   // Load skill development data
   useEffect(() => {
@@ -184,7 +186,7 @@ function TechinSection({ user }) {
       loadSkillDevData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, skillDevFilters]);
+  }, [token, viewType, skillDevFilters, uploadVersion]);
 
   // Load startups data
   useEffect(() => {
@@ -211,7 +213,7 @@ function TechinSection({ user }) {
       loadStartupsData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, startupFilters]);
+  }, [token, viewType, startupFilters, uploadVersion]);
 
   // Get loading state for current view
   const isLoading = () => {

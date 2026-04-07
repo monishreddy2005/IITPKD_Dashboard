@@ -27,6 +27,7 @@ import {
   fetchPlacementPackageTrend,
   fetchTopRecruiters
 } from '../services/placementStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import './Page.css';
 import './AcademicSection.css';
@@ -61,6 +62,7 @@ const formatPercentage = (value) => {
 };
 
 function PlacementSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -251,7 +253,7 @@ function PlacementSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load placement trend data
   useEffect(() => {
@@ -286,7 +288,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'placementTrend') {
       loadTrendData();
     }
-  }, [trendFilters, token, viewType]);
+  }, [trendFilters, token, viewType, uploadVersion]);
 
   // Load gender data
   useEffect(() => {
@@ -309,7 +311,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'genderWise') {
       loadGenderData();
     }
-  }, [genderFilters, token, viewType]);
+  }, [genderFilters, token, viewType, uploadVersion]);
 
   // Load program data
   useEffect(() => {
@@ -332,7 +334,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'programWise') {
       loadProgramData();
     }
-  }, [programFilters, token, viewType]);
+  }, [programFilters, token, viewType, uploadVersion]);
 
   // Load recruiters data
   useEffect(() => {
@@ -355,7 +357,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'recruiters') {
       loadRecruitersData();
     }
-  }, [recruitersFilters, token, viewType]);
+  }, [recruitersFilters, token, viewType, uploadVersion]);
 
   // Load sector data
   useEffect(() => {
@@ -378,7 +380,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'sectorWise') {
       loadSectorData();
     }
-  }, [sectorFilters, token, viewType]);
+  }, [sectorFilters, token, viewType, uploadVersion]);
 
   // Load package data
   useEffect(() => {
@@ -401,7 +403,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'packageTrend') {
       loadPackageData();
     }
-  }, [packageFilters, token, viewType]);
+  }, [packageFilters, token, viewType, uploadVersion]);
 
   // Load top recruiters data
   useEffect(() => {
@@ -424,7 +426,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'topRecruiters') {
       loadTopRecruitersData();
     }
-  }, [topRecruitersFilters, token, viewType]);
+  }, [topRecruitersFilters, token, viewType, uploadVersion]);
 
   const placementTrendChartData = useMemo(() => {
     if (!trendData.length) return [];

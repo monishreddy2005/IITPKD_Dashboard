@@ -22,6 +22,7 @@ import {
   fetchTypeDistribution,
   fetchFacultyEngagementList
 } from '../services/educationStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
@@ -39,6 +40,7 @@ const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
 
 function EducationAdministrativeSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     years: [],
@@ -198,7 +200,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Fetch summary data
   useEffect(() => {
@@ -231,7 +233,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'summary') {
       loadSummaryData();
     }
-  }, [summaryFilters, token, viewType]);
+  }, [summaryFilters, token, viewType, uploadVersion]);
 
   // Fetch department data
   useEffect(() => {
@@ -259,7 +261,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'department') {
       loadDepartmentData();
     }
-  }, [departmentFilters, token, viewType]);
+  }, [departmentFilters, token, viewType, uploadVersion]);
 
   // Fetch trend data
   useEffect(() => {
@@ -287,7 +289,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'trend') {
       loadTrendData();
     }
-  }, [trendFilters, token, viewType]);
+  }, [trendFilters, token, viewType, uploadVersion]);
 
   // Fetch distribution data
   useEffect(() => {
@@ -315,7 +317,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'distribution') {
       loadDistributionData();
     }
-  }, [distributionFilters, token, viewType]);
+  }, [distributionFilters, token, viewType, uploadVersion]);
 
   // Fetch details list data
   useEffect(() => {
@@ -343,7 +345,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'details' || viewType === 'honorary') {
       loadDetailsData();
     }
-  }, [detailsFilters, token, viewType]);
+  }, [detailsFilters, token, viewType, uploadVersion]);
 
   // Prepare summary cards data
   const summaryCards = useMemo(() => {

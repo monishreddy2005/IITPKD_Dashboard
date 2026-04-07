@@ -24,6 +24,7 @@ import {
   fetchPatentStats,
   fetchPatentList
 } from '../services/researchStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
@@ -109,6 +110,7 @@ const buildPatentBreakdown = (source = {}) => ({
 });
 
 function ResearchIcsrSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -189,7 +191,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -261,7 +263,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [filters, token]);
+  }, [filters, token, uploadVersion]);
 
   const projectTrendChartData = useMemo(() => {
     if (!projectTrend.length) return [];

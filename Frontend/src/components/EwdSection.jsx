@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   BarChart,
@@ -35,6 +36,7 @@ const formatNumber = (value) => numberFormatter.format(Math.round(value || 0));
 const formatDecimal = (value) => decimalFormatter.format(value || 0);
 
 function EwdSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null); // null means "Latest"
@@ -108,7 +110,7 @@ function EwdSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Get available years from yearlyData
   const availableYears = useMemo(() => {

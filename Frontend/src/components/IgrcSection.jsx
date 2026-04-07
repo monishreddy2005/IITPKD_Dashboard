@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   BarChart,
@@ -23,6 +24,7 @@ const BAR_COLORS = {
 };
 
 function IgrcSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState('All');
@@ -85,7 +87,7 @@ function IgrcSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   return (
     <div className={isPublicView ? "" : "page-container"}>

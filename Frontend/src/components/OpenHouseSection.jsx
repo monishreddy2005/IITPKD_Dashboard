@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   LineChart,
@@ -23,6 +24,7 @@ import DataUploadModal from './DataUploadModal';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function OpenHouseSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
@@ -67,7 +69,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load timeline data
   useEffect(() => {
@@ -81,7 +83,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadTimeline();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load events list
   useEffect(() => {
@@ -102,7 +104,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadEvents();
-  }, [token, pagination.page, pagination.per_page, filters.search, filters.year]);
+  }, [token, pagination.page, pagination.per_page, filters.search, filters.year, uploadVersion]);
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));

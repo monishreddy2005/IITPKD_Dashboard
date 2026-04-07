@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
   AreaChart, Area,
@@ -135,6 +136,7 @@ const PieTooltip = ({ active, payload, total }) => {
 // ── Main component ─────────────────────────────────────────────────────────
 
 function AdministrativeSection({ isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeView, setActiveView]               = useState('yearwise');
@@ -198,35 +200,35 @@ function AdministrativeSection({ isPublicView = false }) {
         setSelectedYear(String(allData[allData.length - 1].year));
       }
     }).catch(() => {});
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) { setError('Authentication token not found. Please log in again.'); return; }
     fetchFilterOptions(token)
       .then(opts => setFilterOptions(opts))
       .catch(() => setError('Failed to load filter options.'));
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'department') return;
     fetchFacultyFilterOptions(token)
       .then(opts => setFacultyFilterOptions(opts))
       .catch(() => {});
-  }, [token, activeView]);
+  }, [token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'department') return;
     fetchFacultyExpertiseMatrix(filters, token)
       .then(r => { setExpertiseData(r.data); setExpertiseTotal(r.total); })
       .catch(() => setError('Failed to load faculty expertise matrix data.'));
-  }, [filters, token, activeView]);
+  }, [filters, token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'yearwise') return;
     fetchYearwiseStrength(filters, token)
       .then(r => { setYearwiseData(r.data); })
       .catch(() => setError('Failed to load yearwise strength data.'))
-  }, [filters, token, activeView]);
+  }, [filters, token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'gender') return;
@@ -239,7 +241,7 @@ function AdministrativeSection({ isPublicView = false }) {
         setGenderTotal(r.total);
       })
       .catch(() => setError('Failed to load gender distribution data.'))
-  }, [filters, token, activeView]);
+  }, [filters, token, activeView, uploadVersion]);
 
   // ── handlers ────────────────────────────────────────────────────────────
 

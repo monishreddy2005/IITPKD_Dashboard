@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   BarChart,
@@ -32,6 +33,7 @@ const EVENT_TYPE_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7'
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function IcsrSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -85,7 +87,7 @@ function IcsrSection({ user, isPublicView = false }) {
     } finally {
       setLoading(false);
     }
-  }, [token, filters]);
+  }, [token, filters, uploadVersion]);
 
   const loadYearlyDistribution = useCallback(async () => {
     if (!token) return;
@@ -95,7 +97,7 @@ function IcsrSection({ user, isPublicView = false }) {
     } catch (err) {
       console.error('Error loading yearly distribution:', err);
     }
-  }, [token, filters]);
+  }, [token, filters, uploadVersion]);
 
   const loadEventTypes = useCallback(async () => {
     if (!token) return;
@@ -105,7 +107,7 @@ function IcsrSection({ user, isPublicView = false }) {
     } catch (err) {
       console.error('Error loading event types:', err);
     }
-  }, [token, filters]);
+  }, [token, filters, uploadVersion]);
 
   const loadEvents = useCallback(async () => {
     if (!token) return;
@@ -121,7 +123,7 @@ function IcsrSection({ user, isPublicView = false }) {
     } catch (err) {
       console.error('Error loading events:', err);
     }
-  }, [token, filters, pagination.page, pagination.per_page]);
+  }, [token, filters, pagination.page, pagination.per_page, uploadVersion]);
 
   const loadFilterOptions = useCallback(async () => {
     if (!token) return;
@@ -135,7 +137,7 @@ function IcsrSection({ user, isPublicView = false }) {
     } catch (err) {
       console.error('Error loading filter options:', err);
     }
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const refreshData = () => {
     loadSummary();

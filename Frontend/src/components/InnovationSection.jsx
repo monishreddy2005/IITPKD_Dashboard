@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import InnovationPublicView from './InnovationPublicView';
 import {
   ResponsiveContainer,
@@ -100,6 +101,7 @@ function InnovationSection({ user, isPublicView }) {
  * Inner content component for InnovationSection. Handles data fetching and chart rendering.
  */
 function InnovationSectionContent({ user, isPublicView }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
   const [viewType, setViewType] = useState('yearlyGrowth');
@@ -155,7 +157,7 @@ function InnovationSectionContent({ user, isPublicView }) {
       }
     };
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) return;
@@ -171,7 +173,7 @@ function InnovationSectionContent({ user, isPublicView }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) return;
@@ -184,7 +186,7 @@ function InnovationSectionContent({ user, isPublicView }) {
       }
     };
     loadYearlyGrowth();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) return;
@@ -197,7 +199,7 @@ function InnovationSectionContent({ user, isPublicView }) {
       }
     };
     loadSectorDistribution();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) return;
@@ -216,7 +218,7 @@ function InnovationSectionContent({ user, isPublicView }) {
       }
     };
     loadStartups();
-  }, [filters, pagination.page, token]);
+  }, [filters, pagination.page, token, uploadVersion]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({

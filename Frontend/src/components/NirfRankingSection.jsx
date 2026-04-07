@@ -3,10 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import './Page.css';
 import './EwdSection.css'; // Use EWD styles for cards
 import axios from 'axios';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
 const NirfRankingSection = ({ user }) => {
+    const uploadVersion = useUploadRefresh();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -28,7 +30,7 @@ const NirfRankingSection = ({ user }) => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [uploadVersion]);
 
     const canUpload = user && [2, 3, 4].includes(user.role_id);
     const token = localStorage.getItem('authToken');

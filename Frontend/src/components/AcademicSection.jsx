@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered, fetchGenderTrends, fetchProgramTrends, fetchCumulativeStudentSummary } from '../services/academicStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
@@ -67,6 +68,7 @@ const InlineLegend = ({ payload, totalLabel, totalValue }) => (
 );
 
 function AcademicSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     yearofadmission: [], program: [], batch: [], branch: [],
@@ -164,7 +166,7 @@ function AcademicSection({ user, isPublicView = false }) {
       }
     };
     loadCumulativeSummary();
-  }, [token, summaryYear]);
+  }, [token, summaryYear, uploadVersion]);
 
   useEffect(() => {
     const load = async () => {
@@ -181,7 +183,7 @@ function AcademicSection({ user, isPublicView = false }) {
       finally { setLoading(false); }
     };
     load();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const displayGenderTrendData = useMemo(() => {
     if (!genderTrendData || genderTrendData.length === 0) return [];
@@ -205,10 +207,10 @@ function AcademicSection({ user, isPublicView = false }) {
   const hasProgramTrendData = programTrendData.length > 0 && programTrendData.slice(-5).some(d => programTrendPrograms.some(p => (d[p]||0)>0));
   const hasStrengthData  = strengthTotal > 0 && studentStrengthData.some(d => (d.Male||0)>0||(d.Female||0)>0||(d.Transgender||0)>0);
 
-  useEffect(() => { const load = async () => { if (!token||filters.yearofadmission===null) return; try { setLoading(true); setError(null); const r=await fetchGenderDistributionFiltered(filters,token); setGenderData(r.data); setTotal(r.total); } catch { setError('Failed to load gender distribution data.'); } finally { setLoading(false); } }; load(); }, [filters,token]);
-  useEffect(() => { const load = async () => { if (!token||strengthFilters.yearofadmission===null) return; try { setStrengthLoading(true); setStrengthError(null); const r=await fetchStudentStrengthFiltered(strengthFilters,token); setStudentStrengthData(r.data); setStrengthTotal(r.total); } catch { setStrengthError('Failed to load student strength data.'); } finally { setStrengthLoading(false); } }; load(); }, [strengthFilters,token]);
-  useEffect(() => { const load = async () => { if (!token) return; try { setGenderTrendLoading(true); const r=await fetchGenderTrends(genderTrendFilters,token); setGenderTrendData(r.data); } catch(err){console.error(err);} finally { setGenderTrendLoading(false); } }; load(); }, [genderTrendFilters,token]);
-  useEffect(() => { const load = async () => { if (!token) return; try { setProgramTrendLoading(true); const r=await fetchProgramTrends(programTrendFilters,token); setProgramTrendData(r.data); setProgramTrendPrograms(r.programs); } catch(err){console.error(err);} finally { setProgramTrendLoading(false); } }; load(); }, [programTrendFilters,token]);
+  useEffect(() => { const load = async () => { if (!token||filters.yearofadmission===null) return; try { setLoading(true); setError(null); const r=await fetchGenderDistributionFiltered(filters,token); setGenderData(r.data); setTotal(r.total); } catch { setError('Failed to load gender distribution data.'); } finally { setLoading(false); } }; load(); }, [filters,token,uploadVersion]);
+  useEffect(() => { const load = async () => { if (!token||strengthFilters.yearofadmission===null) return; try { setStrengthLoading(true); setStrengthError(null); const r=await fetchStudentStrengthFiltered(strengthFilters,token); setStudentStrengthData(r.data); setStrengthTotal(r.total); } catch { setStrengthError('Failed to load student strength data.'); } finally { setStrengthLoading(false); } }; load(); }, [strengthFilters,token,uploadVersion]);
+  useEffect(() => { const load = async () => { if (!token) return; try { setGenderTrendLoading(true); const r=await fetchGenderTrends(genderTrendFilters,token); setGenderTrendData(r.data); } catch(err){console.error(err);} finally { setGenderTrendLoading(false); } }; load(); }, [genderTrendFilters,token,uploadVersion]);
+  useEffect(() => { const load = async () => { if (!token) return; try { setProgramTrendLoading(true); const r=await fetchProgramTrends(programTrendFilters,token); setProgramTrendData(r.data); setProgramTrendPrograms(r.programs); } catch(err){console.error(err);} finally { setProgramTrendLoading(false); } }; load(); }, [programTrendFilters,token,uploadVersion]);
 
   const handleGenderTrendFilterChange  = (n, v) => setGenderTrendFilters(prev => ({ ...prev, [n]: v==='All'?null:v }));
   const handleClearGenderTrendFilters  = () => { setGenderTrendFilters({program:null,batch:null,department:null,category:null,pwd:null}); setTrendYears(5); setSelectedGender('Total'); setChartType('Trend'); };

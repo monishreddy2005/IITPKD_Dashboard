@@ -22,6 +22,7 @@ import {
   fetchCountryDistribution,
   fetchOutcomeBreakdown
 } from '../services/iarStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
@@ -39,6 +40,7 @@ const TREND_HIGHER_COLOR = '#22d3ee';
 const TREND_CORPORATE_COLOR = '#f97316';
 
 function IarSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     departments: [],
@@ -109,7 +111,7 @@ function IarSection({ user, isPublicView = false }) {
       }
     };
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const loadData = async () => {
     if (!token) return;
@@ -136,7 +138,7 @@ function IarSection({ user, isPublicView = false }) {
 
   useEffect(() => {
     loadData();
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters, uploadVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({

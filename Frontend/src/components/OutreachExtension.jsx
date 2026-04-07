@@ -28,12 +28,40 @@ const OUTREACH_EXTENSION_SECTIONS = [
     allowedRoles: [3]
   },
   {
-    code: '🌐',
-    title: 'Outreach Programs',
-    description: 'Science Quest, Math Circle, Pale Blue Dot, Institute Visits & NSS',
-    route: '/outreach-extension/outreach',
+    code: '🔬',
+    title: 'Science Quest',
+    description: 'Science outreach and laboratory programmes for school students',
+    route: '/outreach-extension/outreach?program=science_quest',
     allowedRoles: [3]
-  }
+  },
+  {
+    code: '📐',
+    title: 'Palakkad Math Circle',
+    description: 'Mathematics enrichment sessions for school students',
+    route: '/outreach-extension/outreach?program=palakkad_math_circle',
+    allowedRoles: [3]
+  },
+  {
+    code: '🌠',
+    title: 'Pale Blue Dot',
+    description: 'Astronomy and space science public lecture series',
+    route: '/outreach-extension/outreach?program=pale_blue_dot',
+    allowedRoles: [3]
+  },
+  {
+    code: '🏫',
+    title: 'Institute Visits',
+    description: 'Organised visits by institutions to the IIT Palakkad campus',
+    route: '/outreach-extension/outreach?program=institute_visits',
+    allowedRoles: [3]
+  },
+  {
+    code: '🤝',
+    title: 'NSS Activities',
+    description: 'National Service Scheme community service initiatives',
+    route: '/outreach-extension/outreach?program=nss_activities',
+    allowedRoles: [3]
+  },
 ];
 
 function OutreachExtension({ user }) {
@@ -66,12 +94,6 @@ function OutreachExtension({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Outreach & Extension Examples</h1>
-        <p>
-          Discover how IIT Palakkad connects with the community and extends knowledge beyond the campus.
-          Select a module to view detailed activities and impact metrics.
-        </p>
-
         {/* Public view button for non-public users */}
         <div style={{ marginBottom: '1rem' }}>
           <button

@@ -4,6 +4,7 @@ import {
   fetchNptelTrend,
   fetchNptelList
 } from '../services/outreachExtensionStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   LineChart,
@@ -21,6 +22,7 @@ import DataUploadModal from './DataUploadModal';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function NptelSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
   const token = localStorage.getItem('authToken');
@@ -58,7 +60,7 @@ function NptelSection({ user, isPublicView = false }) {
       }
     };
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   if (loading) {
     return isPublicView ? (

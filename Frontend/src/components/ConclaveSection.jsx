@@ -4,6 +4,7 @@ import {
   fetchConclaveSummary,
   fetchConclaveList
 } from '../services/industryConnectStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
@@ -11,6 +12,7 @@ import DataUploadModal from './DataUploadModal';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function ConclaveSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
@@ -39,7 +41,7 @@ function ConclaveSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load conclaves list
   useEffect(() => {
@@ -53,7 +55,7 @@ function ConclaveSection({ user, isPublicView = false }) {
       }
     };
     loadConclaves();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   return (
     <div className={isPublicView ? "" : "page-container"}>

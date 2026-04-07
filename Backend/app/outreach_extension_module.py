@@ -398,20 +398,17 @@ def get_uba_projects(current_user_id):
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
         
         cur.execute(f"""
-            SELECT 
-                p.project_id,
-                p.project_title,
-                p.coordinator_name,
-                p.intervention_description,
-                p.project_status,
-                p.start_date,
-                p.end_date,
-                p.collaboration_partners,
-                COUNT(e.event_id) as event_count
-            FROM {UBA_PROJECTS_TABLE} p
-            LEFT JOIN {UBA_EVENTS_TABLE} e ON p.project_id = e.project_id
-            GROUP BY p.project_id
-            ORDER BY p.start_date DESC NULLS LAST, p.project_id DESC;
+            SELECT
+                project_id,
+                project_title,
+                coordinator_name,
+                intervention_description,
+                project_status,
+                start_date,
+                end_date,
+                collaboration_partners
+            FROM {UBA_PROJECTS_TABLE}
+            ORDER BY start_date DESC NULLS LAST, project_id DESC;
         """)
         projects = cur.fetchall()
         
@@ -482,45 +479,55 @@ def get_outreach_list(current_user_id):
             conn.close()
 
 
-@outreach_extension_bp.route('/uba/events/<int:project_id>', methods=['GET'])
+@outreach_extension_bp.route('/uba/events', methods=['GET'])
 @token_required
-def get_uba_project_events(current_user_id, project_id):
-    """Get events for a specific UBA project."""
-    if not _data_available():
-        return jsonify({'message': 'Outreach extension tables are missing.'}), 500
-
+def get_uba_events(current_user_id):
+    """Get all UBA events, optionally filtered by year."""
     conn = None
     cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
+        if not _table_exists(conn, UBA_EVENTS_TABLE):
+            return jsonify({'events': []}), 200
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
+
+        year_filter = request.args.get('year', '', type=str).strip()
+        where_clause = ''
+        params = []
+        if year_filter:
+            where_clause = 'WHERE year = %s'
+            params.append(year_filter)
+
         cur.execute(f"""
-            SELECT 
-                event_id,
-                event_title,
-                event_type,
-                event_date,
-                location,
-                description,
-                photos_url,
-                brochure_url
+            SELECT
+                id,
+                year,
+                program_name,
+                program_type,
+                association,
+                start_date,
+                end_date,
+                targeted_audience,
+                num_attendees,
+                num_schools,
+                num_colleges,
+                geographic_reach,
+                remarks
             FROM {UBA_EVENTS_TABLE}
-            WHERE project_id = %s
-            ORDER BY event_date DESC;
-        """, (project_id,))
+            {where_clause}
+            ORDER BY start_date DESC NULLS LAST, id ASC;
+        """, params)
         events = cur.fetchall()
-        
-        return jsonify({
-            'events': [dict(event) for event in events]
-        }), 200
-        
+
+        return jsonify({'events': [dict(e) for e in events]}), 200
+
     except Exception as e:
-        print(f"UBA project events error: {e}")
-        return jsonify({'message': 'Failed to fetch UBA project events.'}), 500
+        print(f"UBA events error: {e}")
+        return jsonify({'message': 'Failed to fetch UBA events.'}), 500
     finally:
         if cur:
             cur.close()

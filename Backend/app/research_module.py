@@ -1163,7 +1163,7 @@ def publication_list(current_user_id):
         where_clause, params = _build_publication_filters(department, publication_year, publication_type)
 
         query = f"""
-            SELECT publication_id,
+            SELECT id,
                    publication_title,
                    journal_name,
                    department,
@@ -1178,7 +1178,7 @@ def publication_list(current_user_id):
         data = []
         for row in cur.fetchall():
             data.append({
-                'publication_id': row['publication_id'],
+                'publication_id': row['id'],
                 'publication_title': row['publication_title'],
                 'journal_name': row['journal_name'],
                 'department': row['department'],

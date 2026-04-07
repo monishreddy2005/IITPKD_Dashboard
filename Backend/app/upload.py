@@ -43,7 +43,7 @@ UPDATABLE_TABLES = {
     'icsr_csr':                     ['csr_id'],
     'research_mous':                ['mou_id'],
     'research_patents':             ['patent_id'],
-    'research_publications':        ['publication_id'],
+    'research_publications':        ['id'],
     # Innovation
     'innovation_projects':          ['project_title', 'year_started'],
     'iptif_startup_table':          ['id'],
@@ -59,8 +59,13 @@ UPDATABLE_TABLES = {
     # Outreach
     'open_house':                   ['event_year', 'event_date'],
     'uba_projects':                 ['project_id'],
-    'uba_events':                   ['event_id'],
+    'uba_events':                   ['id'],
     'outreach':                     ['id'],
+    'outreach_science_quest':       ['id'],
+    'outreach_math_circle':         ['id'],
+    'outreach_pale_blue_dot':       ['id'],
+    'outreach_institute_visits':    ['id'],
+    'outreach_nss_activities':      ['id'],
     'nptel_courses':                ['id'],
     # Rankings
     'nirf_ranking':                 ['year'],
@@ -194,38 +199,40 @@ def _preprocess_student_table(reader, csv_headers):
     return _rebuild_stream(new_headers, processed)
 
 
-def _preprocess_uba_events(reader, csv_headers, conn):
+def _preprocess_uba_events(reader, csv_headers):
     """
     For the 'uba_events' table:
-    Accepts 'project_title' in CSV and resolves it to 'project_id' via DB lookup.
+    Converts start_date / end_date from DD-MM-YYYY or DD/MM/YYYY to YYYY-MM-DD.
     """
-    if 'project_title' not in csv_headers:
-        return reader, csv_headers, None
+    from datetime import datetime
+
+    DATE_COLS = {'start_date', 'end_date'}
+    DATE_FMTS = ('%d-%m-%Y', '%d/%m/%Y', '%Y-%m-%d', '%m/%d/%Y')
+
+    def _parse_date(val):
+        if not val or not str(val).strip():
+            return val
+        s = str(val).strip()
+        for fmt in DATE_FMTS:
+            try:
+                return datetime.strptime(s, fmt).strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        return s  # return as-is if unparseable; DB will raise a proper error
 
     rows = list(reader)
     if not rows:
         return None, None, 'CSV file is empty.'
 
-    titles = {r.get('project_title', '').strip() for r in rows if r.get('project_title')}
-    if not titles:
-        return None, None, 'No project_title values found in CSV.'
+    processed = []
+    for row in rows:
+        new_row = dict(row)
+        for col in DATE_COLS:
+            if col in new_row:
+                new_row[col] = _parse_date(new_row[col])
+        processed.append(new_row)
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    try:
-        cur.execute(
-            "SELECT project_title, project_id FROM uba_projects WHERE LOWER(project_title) = ANY(%s)",
-            ([t.lower() for t in titles],)
-        )
-        title_to_id = {r['project_title'].lower(): r['project_id'] for r in cur.fetchall()}
-    finally:
-        cur.close()
-
-    missing = [t for t in titles if t.lower() not in title_to_id]
-    if missing:
-        return None, None, (
-            f"Project titles not found in database: {', '.join(missing)}. "
-            "Ensure strings match exactly."
-        )
+    return _rebuild_stream(csv_headers, processed)
 
 
 
@@ -284,41 +291,40 @@ def _preprocess_nptel_enrollments(reader, csv_headers, conn):
 def _preprocess_research_publications(reader, csv_headers):
     """
     For the 'research_publications' table:
-    Auto-generates a deterministic `publication_id` as the MD5 hash of
-    (publication_title + publication_year + faculty_name), ensuring
-    natural deduplication across uploads.
-
-    Drops any existing 'publication_id' column from the CSV — the ID is
-    always recomputed so users never need to supply it.
+    Auto-generates a deterministic `id` (MD5 hex, 32 chars) from the
+    concatenation of:
+        publication_title | journal_name | department |
+        faculty_name | publication_year | publication_type
+    This ensures natural deduplication across uploads — users never supply `id`.
     """
     rows = list(reader)
     if not rows:
         return None, None, 'CSV file is empty.'
 
-    # Ensure the three source columns are present
     lower_headers = [h.lower() for h in csv_headers]
-    for required in ('publication_title', 'publication_year', 'faculty_name'):
-        if required not in lower_headers:
+    required_cols = ('publication_title', 'publication_year', 'faculty_name', 'publication_type')
+    for col in required_cols:
+        if col not in lower_headers:
             return None, None, (
-                f"CSV is missing '{required}' column, which is required "
-                "to generate publication_id."
+                f"CSV is missing '{col}' column, which is required to generate the record id."
             )
 
-    # Build new header list: prepend publication_id, drop it if already present
-    new_headers = ['publication_id'] + [
-        h for h in csv_headers if h.lower() != 'publication_id'
-    ]
+    # Prepend id, strip any user-supplied id column
+    new_headers = ['id'] + [h for h in csv_headers if h.lower() != 'id']
 
     processed = []
     for row in rows:
-        new_row = {k: v for k, v in row.items() if k.lower() != 'publication_id'}
+        new_row = {k: v for k, v in row.items() if k.lower() != 'id'}
 
-        title = (new_row.get('publication_title') or '').strip().lower()
-        year  = (new_row.get('publication_year') or '').strip()
-        fac   = (new_row.get('faculty_name') or '').strip().lower()
+        title   = (new_row.get('publication_title') or '').strip().lower()
+        journal = (new_row.get('journal_name')      or '').strip().lower()
+        dept    = (new_row.get('department')         or '').strip().lower()
+        fac     = (new_row.get('faculty_name')       or '').strip().lower()
+        year    = (new_row.get('publication_year')   or '').strip()
+        ptype   = (new_row.get('publication_type')   or '').strip().lower()
 
-        hash_input = f"{title}|{year}|{fac}"
-        new_row['publication_id'] = hashlib.md5(hash_input.encode('utf-8')).hexdigest()
+        hash_input = f"{title}|{journal}|{dept}|{fac}|{year}|{ptype}"
+        new_row['id'] = hashlib.md5(hash_input.encode('utf-8')).hexdigest()
         processed.append(new_row)
 
     return _rebuild_stream(new_headers, processed)
@@ -333,6 +339,37 @@ def _rebuild_stream(headers, rows):
     buf.seek(0)
     reader = csv.DictReader(buf)
     return reader, reader.fieldnames, None
+
+
+# Maps outreach alias table names → the canonical program_name to inject
+_OUTREACH_PROGRAM_NAMES = {
+    'outreach_science_quest':    'Science Quest',
+    'outreach_math_circle':      'Palakkad Math Circle',
+    'outreach_pale_blue_dot':    'Pale Blue Dot',
+    'outreach_institute_visits': 'Institute Visits',
+    'outreach_nss_activities':   'NSS Activities',
+}
+
+
+def _preprocess_outreach_typed(reader, csv_headers, program_name):
+    """
+    Inject `program_name` into every row (overriding any user-supplied value)
+    and redirect the logical table name to the physical `outreach` table.
+    Returns the same (reader, csv_headers, error) tuple convention.
+    """
+    rows = list(reader)
+    if not rows:
+        return None, None, 'CSV file is empty.'
+
+    # Ensure program_name column exists in headers
+    lower_headers = [h.lower() for h in csv_headers]
+    if 'program_name' not in lower_headers:
+        csv_headers = list(csv_headers) + ['program_name']
+
+    for row in rows:
+        row['program_name'] = program_name
+
+    return _rebuild_stream(csv_headers, rows)
 
 
 # ---------------------------------------------------------------------------
@@ -413,12 +450,18 @@ def upload_csv(current_user_id):
             reader, csv_headers, error = _preprocess_employees(reader, csv_headers)
         elif table_name == 'student_table':
             reader, csv_headers, error = _preprocess_student_table(reader, csv_headers)
-        elif table_name == 'uba_events' and 'project_title' in csv_headers:
-            reader, csv_headers, error = _preprocess_uba_events(reader, csv_headers, conn)
+        elif table_name == 'uba_events':
+            reader, csv_headers, error = _preprocess_uba_events(reader, csv_headers)
         elif table_name == 'nptel_enrollments' and 'course_code' in csv_headers:
             reader, csv_headers, error = _preprocess_nptel_enrollments(reader, csv_headers, conn)
         elif table_name == 'research_publications':
             reader, csv_headers, error = _preprocess_research_publications(reader, csv_headers)
+        elif table_name in _OUTREACH_PROGRAM_NAMES:
+            reader, csv_headers, error = _preprocess_outreach_typed(
+                reader, csv_headers, _OUTREACH_PROGRAM_NAMES[table_name]
+            )
+            if not error:
+                table_name = 'outreach'   # redirect to physical table
 
         if error:
             print(f"\n{'='*80}")

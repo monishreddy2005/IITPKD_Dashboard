@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { fetchOutreachList } from '../services/outreachExtensionStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './OutreachMinimal.css';
@@ -34,6 +36,7 @@ const NSS_FIELDS = [
 const PROGRAM_CONFIGS = [
   {
     key: 'science_quest',
+    tableKey: 'outreach_science_quest',
     title: 'Science Quest',
     icon: '🔬',
     description: 'Science outreach and laboratory programmes for school students',
@@ -47,6 +50,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'palakkad_math_circle',
+    tableKey: 'outreach_math_circle',
     title: 'Palakkad Math Circle',
     icon: '📐',
     description: 'Mathematics enrichment sessions for school students',
@@ -55,12 +59,13 @@ const PROGRAM_CONFIGS = [
       name?.toLowerCase().includes('palakkad math'),
     specificFields: [
       { key: 'pmc_target_class',      label: 'Target Class' },
-      { key: 'pmc_mathematician_led', label: 'Mathematician Led' },
+      { key: 'pmc_mathematician_led', label: 'Mathematicians' },
       { key: 'pmc_num_sessions',      label: 'No. of Sessions' },
     ],
   },
   {
     key: 'pale_blue_dot',
+    tableKey: 'outreach_pale_blue_dot',
     title: 'Pale Blue Dot',
     icon: '🌍',
     description: 'Astronomy and space science public lecture series',
@@ -73,6 +78,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'institute_visits',
+    tableKey: 'outreach_institute_visits',
     title: 'Institute Visits',
     icon: '🏛️',
     description: 'Organised visits by institutions to the IIT Palakkad campus',
@@ -85,6 +91,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'nss_activities',
+    tableKey: 'outreach_nss_activities',
     title: 'NSS Activities',
     icon: '🤝',
     description: 'National Service Scheme community service initiatives',
@@ -267,15 +274,17 @@ function RecordCard({ record, slNo, programConfig }) {
   );
 }
 
-function ProgramDetailView({ programConfig, records, onBack }) {
+function ProgramDetailView({ programConfig, records, user, token }) {
+  const navigate = useNavigate();
   const matching = records.filter((r) => programConfig.match(r.program_name));
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   return (
     <div className="outreach-expanded-view">
       <div className="outreach-expanded-container">
         {/* Top bar */}
         <div className="outreach-top-bar">
-          <button className="outreach-back-button" onClick={onBack}>
+          <button className="outreach-back-button" onClick={() => navigate('/outreach-extension')}>
             <span className="outreach-back-arrow">←</span>
             Back
           </button>
@@ -297,6 +306,15 @@ function ProgramDetailView({ programConfig, records, onBack }) {
           }}>
             {matching.length} {matching.length === 1 ? 'record' : 'records'}
           </span>
+          {user?.role_id >= 2 && (
+            <button
+              className="upload-data-btn"
+              style={{ flexShrink: 0 }}
+              onClick={() => setIsUploadOpen(true)}
+            >
+              📤 Upload Data
+            </button>
+          )}
         </div>
 
         {/* Records */}
@@ -305,9 +323,11 @@ function ProgramDetailView({ programConfig, records, onBack }) {
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6e6e73' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
               <p style={{ margin: 0 }}>No records found for <strong>{programConfig.title}</strong>.</p>
-              <p style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
-                Upload data using the Upload Data button on the overview page.
-              </p>
+              {user?.role_id >= 2 && (
+                <p style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
+                  Use the <strong>Upload Data</strong> button above to add records.
+                </p>
+              )}
             </div>
           ) : (
             matching.map((record, idx) => (
@@ -321,6 +341,13 @@ function ProgramDetailView({ programConfig, records, onBack }) {
           )}
         </div>
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        tableName={programConfig.tableKey}
+        token={token}
+      />
     </div>
   );
 }
@@ -328,12 +355,22 @@ function ProgramDetailView({ programConfig, records, onBack }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 function OutreachSection({ user }) {
+  const uploadVersion = useUploadRefresh();
   const token = localStorage.getItem('authToken');
+  const [searchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Auto-select program from URL query param (?program=science_quest)
+  useEffect(() => {
+    const programKey = searchParams.get('program');
+    if (programKey) {
+      const found = PROGRAM_CONFIGS.find((c) => c.key === programKey);
+      if (found) setSelectedProgram(found);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!token) return;
@@ -342,7 +379,7 @@ function OutreachSection({ user }) {
       .then((data) => setRecords(data?.records ?? []))
       .catch((err) => setError(err.message || 'Failed to load outreach data'))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const getCount = (config) => records.filter((r) => config.match(r.program_name)).length;
 
@@ -353,7 +390,8 @@ function OutreachSection({ user }) {
           <ProgramDetailView
             programConfig={selectedProgram}
             records={records}
-            onBack={() => setSelectedProgram(null)}
+            user={user}
+            token={token}
           />
         </div>
       </div>
@@ -370,17 +408,6 @@ function OutreachSection({ user }) {
             Select a programme to explore its records.
           </p>
         </div>
-
-        {user?.role_id >= 2 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-            >
-              Upload Data
-            </button>
-          </div>
-        )}
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#6e6e73' }}>
@@ -418,12 +445,7 @@ function OutreachSection({ user }) {
                   <h3 className="outreach-card-title">{config.title}</h3>
                   <p className="outreach-card-subtitle">{config.description}</p>
                   {count > 0 && (
-                    <div style={{
-                      marginTop: '0.875rem',
-                      fontSize: '0.78rem',
-                      fontWeight: '600',
-                      color: '#f7a600',
-                    }}>
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.78rem', fontWeight: '600', color: '#f7a600' }}>
                       {count} {count === 1 ? 'record' : 'records'}
                     </div>
                   )}
@@ -433,13 +455,6 @@ function OutreachSection({ user }) {
             })}
           </div>
         )}
-
-        <DataUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          tableName="outreach"
-          token={token}
-        />
       </div>
     </div>
   );

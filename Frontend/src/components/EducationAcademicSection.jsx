@@ -23,6 +23,7 @@ import {
   fetchProgrammeBreakdown,
   fetchCourses
 } from '../services/academicModuleStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import './Page.css';
 import './AcademicSection.css';
@@ -34,6 +35,7 @@ const PROGRAM_COLORS = ['#6366f1', '#22d3ee', '#f97316', '#a855f7', '#14b8a6', '
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function EducationAcademicSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -161,7 +163,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Fetch summary data
   useEffect(() => {
@@ -195,7 +197,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     if (viewType === 'categoryBreakdown') {
       loadSummaryData();
     }
-  }, [categoryFilters, token, viewType]);
+  }, [categoryFilters, token, viewType, uploadVersion]);
 
   // Fetch programme breakdown data
   useEffect(() => {
@@ -224,7 +226,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     if (viewType === 'programmeBreakdown') {
       loadProgrammeData();
     }
-  }, [programmeFilters, token, viewType]);
+  }, [programmeFilters, token, viewType, uploadVersion]);
 
   // Fetch course catalogue data
   useEffect(() => {
@@ -253,7 +255,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
     if (viewType === 'courseCatalogue') {
       loadCatalogueData();
     }
-  }, [catalogueFilters, token, viewType]);
+  }, [catalogueFilters, token, viewType, uploadVersion]);
 
   const courseTrendChartData = useMemo(() => {
     if (!courseTrend.length) return [];

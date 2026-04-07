@@ -21,9 +21,6 @@ function InnovationEntrepreneurship({ user, isPublicView }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Innovation & Entrepreneurship</h1>
-        <p>Explore innovation initiatives and startup incubation programs at IIT Palakkad.</p>
-
         <div className="people-campus-grid" style={{ marginTop: '2rem' }}>
           {sections.map((section, index) => {
             return (

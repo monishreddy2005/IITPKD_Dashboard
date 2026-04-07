@@ -102,6 +102,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             const successMsg = response.data.message || `Successfully updated table ${tableName}`;
             setMessage({ type: 'success', text: successMsg });
             setUploadSuccess(true);
+            window.dispatchEvent(new CustomEvent('iitpkd:upload-success', { detail: { tableName } }));
 
             if (onUploadSuccess) {
                 onUploadSuccess();
@@ -208,8 +209,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 };
             case 'research_publications':
                 return {
-                    headers: ["publication_title", "journal_name", "department", "faculty_name", "publication_year", "publication_type", "created_at"],
-                    sample: ["Sample publication_title", "Sample journal_name", "Sample department", "Sample faculty_name", "1", "Sample publication_type", "2023-01-01"]
+                    headers: ["publication_title", "journal_name", "department", "faculty_name", "publication_year", "publication_type"],
+                    sample: ["Sample Title", "Sample Journal", "Computer Science and Engineering", "Dr. Sample Name", "2024", "Journal Article"]
                 };
             case 'student_table':
                 return {
@@ -218,8 +219,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 };
             case 'uba_events':
                 return {
-                    headers: ["project_id", "event_title", "event_type", "event_date", "location", "description", "photos_url", "brochure_url", "created_at"],
-                    sample: ["1", "Sample event_title", "Sample event_type", "2023-01-01", "Sample location", "Sample description", "Sample photos_url", "Sample brochure_url", "2023-01-01"]
+                    headers: ["year", "program_name", "program_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks"],
+                    sample: ["2024 - 2025", "Sample Program Name", "Visit", "Sample Association", "2024-06-01", "2024-06-01", "Students", "50", "2", "0", "Palakkad", "Sample remarks"]
                 };
             case 'uba_projects':
                 return {
@@ -290,6 +291,32 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 return {
                     headers: ["academic_year", "created_by", "created_at", "program_name", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "sq_stipend_provided", "sq_travel_allowance", "sq_num_lab_sessions", "sq_districts_covered", "pmc_target_class", "pmc_mathematician_led", "pmc_num_sessions", "pbd_lecture_topic", "pbd_speaker_name", "pbd_speaker_affiliation", "iv_visiting_institution", "iv_visiting_institution_type", "iv_num_groups", "nss_activity_type", "nss_volunteer_count", "nss_community_reached", "extra_data"],
                     sample: ["Sample academic_year", "Sample created_by", "2023-01-01", "Sample program_name", "Sample program_type", "Sample engagement_type", "Sample association", "2023-01-01", "2023-01-01", "Sample targeted_audience", "1", "1", "1", "Sample geographic_reach", "Sample remarks", "TRUE", "TRUE", "1", "Sample sq_districts_covered", "Sample pmc_target_class", "TRUE", "1", "Sample pbd_lecture_topic", "Sample pbd_speaker_name", "Sample pbd_speaker_affiliation", "Sample iv_visiting_institution", "Sample iv_visiting_institution_type", "1", "Sample nss_activity_type", "1", "Sample nss_community_reached", "Sample extra_data"]
+                };
+            // ── Outreach: per-program templates (program_name injected by backend) ──
+            case 'outreach_science_quest':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "sq_stipend_provided", "sq_travel_allowance", "sq_num_lab_sessions", "sq_districts_covered"],
+                    sample:  ["2024-2025", "John Doe", "Camp", "Student", "Sample association", "2024-06-01", "2024-06-05", "School Students", "120", "5", "0", "Palakkad, Thrissur", "Sample remarks", "TRUE", "TRUE", "6", "Palakkad, Malappuram"]
+                };
+            case 'outreach_math_circle':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "pmc_target_class", "pmc_mathematician_led", "pmc_num_sessions"],
+                    sample:  ["2024-2025", "John Doe", "Workshop", "Student", "Sample association", "2024-07-10", "2024-07-10", "Class 8-10 Students", "60", "3", "0", "Palakkad", "Sample remarks", "Class 8-9", "Jasine, Jayasree, Krithika", "4"]
+                };
+            case 'outreach_pale_blue_dot':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "pbd_lecture_topic", "pbd_speaker_name", "pbd_speaker_affiliation"],
+                    sample:  ["2024-2025", "John Doe", "Public Lecture", "Social", "Sample association", "2024-08-15", "2024-08-15", "General Public", "200", "0", "2", "Kerala", "Sample remarks", "Life in the Universe", "Dr. Sample Name", "IISc Bangalore"]
+                };
+            case 'outreach_institute_visits':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "iv_visiting_institution", "iv_visiting_institution_type", "iv_num_groups"],
+                    sample:  ["2024-2025", "John Doe", "Visit", "Student", "Sample association", "2024-09-20", "2024-09-20", "School Students", "80", "1", "0", "Palakkad", "Sample remarks", "Sample School Name", "School", "2"]
+                };
+            case 'outreach_nss_activities':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "nss_activity_type", "nss_volunteer_count", "nss_community_reached"],
+                    sample:  ["2024-2025", "John Doe", "Activity", "Social", "Sample association", "2024-10-02", "2024-10-02", "Local Community", "50", "0", "0", "Palakkad", "Sample remarks", "Blood Donation Camp", "30", "Kalmandapam Village"]
                 };
             case 'department':
                 return {

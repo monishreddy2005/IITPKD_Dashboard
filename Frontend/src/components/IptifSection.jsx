@@ -18,6 +18,7 @@ import {
   fetchIptifFacilities,
   fetchIptifFilterOptions
 } from '../services/iptifStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './PeopleCampus.css';
@@ -25,6 +26,7 @@ import './PeopleCampus.css';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function IptifSection({ user }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -77,7 +79,7 @@ function IptifSection({ user }) {
       }
     };
     initialLoad();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load specific view data
   useEffect(() => {
@@ -112,7 +114,7 @@ function IptifSection({ user }) {
 
     loadViewData();
     return () => { isMounted = false; };
-  }, [token, viewType, projectFilters, programFilters, startupFilters, facilityFilters]);
+  }, [token, viewType, projectFilters, programFilters, startupFilters, facilityFilters, uploadVersion]);
 
   // Handlers
   const handleFilterChange = (setter) => (field, value) => {

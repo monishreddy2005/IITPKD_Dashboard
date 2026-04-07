@@ -87,9 +87,6 @@ function PeopleCampus({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>People and Campus</h1>
-        <p>Explore different sections of IIT Palakkad's People and Campus.</p>
-
         {/* 🔹 ADDITION: Public view button for non-public users */}
         <div style={{ marginBottom: '1rem' }}>
           <button

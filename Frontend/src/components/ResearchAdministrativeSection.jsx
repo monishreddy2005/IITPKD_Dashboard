@@ -18,6 +18,7 @@ import {
   fetchExternshipSummary,
   fetchExternshipList
 } from '../services/researchStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
@@ -56,6 +57,7 @@ const formatDuration = (days) => {
 };
 
 function ResearchAdministrativeSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -108,7 +110,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     const loadExternshipData = async () => {
@@ -138,7 +140,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
 
     loadExternshipData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, token]);
+  }, [filters, token, uploadVersion]);
 
   const externshipTypeKeys = useMemo(() => {
     const keys = new Set();

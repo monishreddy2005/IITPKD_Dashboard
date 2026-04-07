@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -23,6 +24,7 @@ const AREA_COLORS = {
 };
 
 function IccSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [visibleMetrics, setVisibleMetrics] = useState({
@@ -83,7 +85,7 @@ function IccSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Calculate resolution rate
   // const resolutionRate = summary.total > 0 

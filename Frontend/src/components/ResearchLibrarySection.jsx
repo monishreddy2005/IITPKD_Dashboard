@@ -23,6 +23,7 @@ import {
   fetchPublicationTypeDistribution,
   fetchPublicationList
 } from '../services/researchStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
@@ -41,6 +42,7 @@ const formatDateYear = (year) => {
 };
 
 function ResearchLibrarySection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const [filterOptions, setFilterOptions] = useState({
@@ -103,7 +105,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     const loadLibraryData = async () => {
@@ -141,7 +143,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
     loadLibraryData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, token]);
+  }, [filters, token, uploadVersion]);
 
   const trendChartData = useMemo(() => {
     if (!trendData.length) return [];
