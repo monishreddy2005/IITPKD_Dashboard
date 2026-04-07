@@ -30,6 +30,7 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './IarSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const PIE_COLORS = ['#667eea', '#764ba2', '#f093fb', '#43e97b', '#fa709a', '#00f2fe', '#f59e0b', '#a78bfa'];
 const STATE_BAR_COLOR = '#67e8f9';
@@ -40,6 +41,8 @@ const TREND_HIGHER_COLOR = '#22d3ee';
 const TREND_CORPORATE_COLOR = '#f97316';
 
 function IarSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
@@ -179,6 +182,11 @@ function IarSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>International and Alumni Relations</h1>}
         <p style={{ color: '#666', marginBottom: '20px' }}>
           Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by

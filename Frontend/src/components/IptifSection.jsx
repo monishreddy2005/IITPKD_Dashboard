@@ -25,7 +25,7 @@ import './PeopleCampus.css';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function IptifSection({ user }) {
+function IptifSection({ user, isPublicView = false }) {
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
@@ -43,7 +43,7 @@ function IptifSection({ user }) {
 
   const [trendData, setTrendData] = useState([]);
   const [tableData, setTableData] = useState([]);
-  
+
   const [filterOptions, setFilterOptions] = useState({
     projects: { schemes: [], statuses: [], years: [] },
     programs: { types: [], associations: [] },
@@ -85,7 +85,7 @@ function IptifSection({ user }) {
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    
+
     const loadViewData = async () => {
       setLoading(true);
       setError(null);
@@ -151,53 +151,23 @@ function IptifSection({ user }) {
     return null;
   };
 
-  // Handle back navigation
-  const handleGoBack = () => {
-    navigate(-1);
-  };
 
   return (
-    <div className="page-container" style={{ backgroundColor: 'transparent' }}>
-      <div className="page-content" style={{ backgroundColor: '#ffffff' }}>
-        {/* Back Button */}
-        <div style={{ marginBottom: '20px' }}>
-          <button
-            onClick={handleGoBack}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 16px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5a6268';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#6c757d';
-            }}
-          >
-            <span>←</span> Back
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/innovation-entrepreneurship')}>
+            ← Back to Innovation & Entrepreneurship
           </button>
-        </div>
+        )}
 
         <h1 style={{ marginBottom: '5px' }}>IPTIF</h1>
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Overview of IIT Palakkad Technology IHub Foundation initiatives.
-        </p>
 
         {/* Upload Buttons - Moved to Top */}
         {user && user.role_id === 3 && (
-          <div style={{ 
-            display: 'flex', 
-            gap: '1rem', 
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
             marginBottom: '20px',
             flexWrap: 'wrap',
             justifyContent: 'flex-end'
@@ -229,8 +199,8 @@ function IptifSection({ user }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Summary Cards - Keeping original colors */}
@@ -264,9 +234,9 @@ function IptifSection({ user }) {
         </div>
 
         {/* Radio Buttons - Keeping original styling */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           gap: '20px',
           marginBottom: '30px',
           padding: '20px',
@@ -274,7 +244,7 @@ function IptifSection({ user }) {
           backgroundColor: 'transparent',
           flexWrap: 'wrap'
         }}>
-          <button 
+          <button
             onClick={() => setViewType('projects')}
             style={{
               padding: '12px 28px',
@@ -295,7 +265,7 @@ function IptifSection({ user }) {
             <span style={{ fontSize: '18px' }}>📊</span>
             Projects Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('programs')}
             style={{
               padding: '12px 28px',
@@ -316,7 +286,7 @@ function IptifSection({ user }) {
             <span style={{ fontSize: '18px' }}>🎓</span>
             Programs Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('startups')}
             style={{
               padding: '12px 28px',
@@ -337,7 +307,7 @@ function IptifSection({ user }) {
             <span style={{ fontSize: '18px' }}>🚀</span>
             Startups Growth
           </button>
-          <button 
+          <button
             onClick={() => setViewType('facilities')}
             style={{
               padding: '12px 28px',
@@ -382,28 +352,28 @@ function IptifSection({ user }) {
                   </div>
 
                   {/* Filters inside projects view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -411,11 +381,11 @@ function IptifSection({ user }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(3, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Scheme</label>
@@ -453,10 +423,10 @@ function IptifSection({ user }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
@@ -464,7 +434,7 @@ function IptifSection({ user }) {
                       {projectFilters.scheme !== 'All' && <span style={{ marginRight: '8px' }}>📌 {projectFilters.scheme}</span>}
                       {projectFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {projectFilters.status}</span>}
                       {projectFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {projectFilters.year}</span>}
-                      {projectFilters.scheme === 'All' && projectFilters.status === 'All' && projectFilters.year === 'All' && 
+                      {projectFilters.scheme === 'All' && projectFilters.status === 'All' && projectFilters.year === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -480,14 +450,14 @@ function IptifSection({ user }) {
                           <YAxis stroke="#666" />
                           <Tooltip content={<CustomTooltip />} />
                           <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            name="Projects Count" 
-                            stroke="#667eea" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }} 
-                            activeDot={{ r: 8 }} 
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            name="Projects Count"
+                            stroke="#667eea"
+                            strokeWidth={3}
+                            dot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 8 }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -578,28 +548,28 @@ function IptifSection({ user }) {
                   </div>
 
                   {/* Filters inside programs view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -607,11 +577,11 @@ function IptifSection({ user }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Type</label>
@@ -638,17 +608,17 @@ function IptifSection({ user }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {programFilters.type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {programFilters.type}</span>}
                       {programFilters.association !== 'All' && <span style={{ marginRight: '8px' }}>🤝 {programFilters.association}</span>}
-                      {programFilters.type === 'All' && programFilters.association === 'All' && 
+                      {programFilters.type === 'All' && programFilters.association === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -664,14 +634,14 @@ function IptifSection({ user }) {
                           <YAxis stroke="#666" />
                           <Tooltip content={<CustomTooltip />} />
                           <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            name="Programs Count" 
-                            stroke="#f093fb" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#f093fb', strokeWidth: 2, stroke: '#fff' }} 
-                            activeDot={{ r: 8 }} 
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            name="Programs Count"
+                            stroke="#f093fb"
+                            strokeWidth={3}
+                            dot={{ r: 6, fill: '#f093fb', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 8 }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -753,28 +723,28 @@ function IptifSection({ user }) {
                   </div>
 
                   {/* Filters inside startups view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -782,11 +752,11 @@ function IptifSection({ user }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Domain</label>
@@ -813,17 +783,17 @@ function IptifSection({ user }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {startupFilters.domain !== 'All' && <span style={{ marginRight: '8px' }}>🌐 {startupFilters.domain}</span>}
                       {startupFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {startupFilters.status}</span>}
-                      {startupFilters.domain === 'All' && startupFilters.status === 'All' && 
+                      {startupFilters.domain === 'All' && startupFilters.status === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -839,14 +809,14 @@ function IptifSection({ user }) {
                           <YAxis stroke="#666" />
                           <Tooltip content={<CustomTooltip />} />
                           <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            name="Startups Count" 
-                            stroke="#43e97b" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#43e97b', strokeWidth: 2, stroke: '#fff' }} 
-                            activeDot={{ r: 8 }} 
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            name="Startups Count"
+                            stroke="#43e97b"
+                            strokeWidth={3}
+                            dot={{ r: 6, fill: '#43e97b', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 8 }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -928,28 +898,28 @@ function IptifSection({ user }) {
                   </div>
 
                   {/* Filters inside facilities view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -957,11 +927,11 @@ function IptifSection({ user }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '1fr', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Facility Type</label>
@@ -977,16 +947,16 @@ function IptifSection({ user }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {facilityFilters.facility_type !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {facilityFilters.facility_type}</span>}
-                      {facilityFilters.facility_type === 'All' && 
+                      {facilityFilters.facility_type === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -1002,14 +972,14 @@ function IptifSection({ user }) {
                           <YAxis stroke="#666" />
                           <Tooltip content={<CustomTooltip />} />
                           <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            name="Revenue (₹)" 
-                            stroke="#f97316" 
-                            strokeWidth={3} 
-                            dot={{ r: 6, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }} 
-                            activeDot={{ r: 8 }} 
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            name="Revenue (₹)"
+                            stroke="#f97316"
+                            strokeWidth={3}
+                            dot={{ r: 6, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
+                            activeDot={{ r: 8 }}
                           />
                         </LineChart>
                       </ResponsiveContainer>

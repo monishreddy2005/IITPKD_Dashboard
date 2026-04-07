@@ -34,6 +34,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     if (!isOpen) return null;
 
     const handleClose = () => {
+        const wasSuccess = uploadSuccess;
         setSelectedFile(null);
         setPreviewData(null);
         setMessage(null);
@@ -41,6 +42,13 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
         setIsLoading(false);
         setFailingRow(null);
         onClose();
+
+        if (wasSuccess) {
+            window.dispatchEvent(new CustomEvent('iitpkd:upload-success', { detail: { tableName } }));
+            if (onUploadSuccess) {
+                onUploadSuccess();
+            }
+        }
     };
 
     const parseCSVPreview = (csvText) => {
@@ -102,12 +110,11 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             const successMsg = response.data.message || `Successfully updated table ${tableName}`;
             setMessage({ type: 'success', text: successMsg });
             setUploadSuccess(true);
-            window.dispatchEvent(new CustomEvent('iitpkd:upload-success', { detail: { tableName } }));
-
-            if (onUploadSuccess) {
-                onUploadSuccess();
-            }
-
+            
+            // Note: window.dispatchEvent and onUploadSuccess() are now handled
+            // inside handleClose() so the parent components don't immediately refresh data,
+            // unmount/re-render the modal, and cause the success message to instantly "flash".
+            
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'An error occurred during upload.';
             const errorDetails = error.response?.data?.details;
@@ -350,11 +357,11 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     const templateInfo = getTemplateData(tableName);
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={handleClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Upload Data: {tableName}</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
+                    <button className="close-btn" onClick={handleClose}>&times;</button>
                 </div>
 
                 <div className="modal-body">
@@ -454,7 +461,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                             )}
 
                             <div className="upload-actions">
-                                <button className="cancel-btn" onClick={onClose} disabled={isLoading}>
+                                <button className="cancel-btn" onClick={handleClose} disabled={isLoading}>
                                     Cancel
                                 </button>
                                 <button

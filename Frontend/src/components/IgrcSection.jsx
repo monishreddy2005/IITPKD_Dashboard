@@ -16,6 +16,7 @@ import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const BAR_COLORS = {
   filed: '#667eea',
@@ -24,6 +25,8 @@ const BAR_COLORS = {
 };
 
 function IgrcSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
@@ -92,6 +95,11 @@ function IgrcSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Internal Grievance Resolution Cell (IGRC)</h1>}
         <p>
           Track how grievances have been filed, resolved, and remain pending across the years for the Institute

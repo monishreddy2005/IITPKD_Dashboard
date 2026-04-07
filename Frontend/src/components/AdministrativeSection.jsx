@@ -35,23 +35,23 @@ const GENDER_COLORS = {
 
 // Same colour scheme as ICC for visual parity
 const SERIES_META = [
-  { key: 'Total',  color: '#667eea', gradientId: 'colorEmpTotal',  label: 'Total'  },
-  { key: 'Male',   color: '#43e97b', gradientId: 'colorEmpMale',   label: 'Male'   },
+  { key: 'Total', color: '#667eea', gradientId: 'colorEmpTotal', label: 'Total' },
+  { key: 'Male', color: '#43e97b', gradientId: 'colorEmpMale', label: 'Male' },
   { key: 'Female', color: '#fa709a', gradientId: 'colorEmpFemale', label: 'Female' },
-  { key: 'Other',  color: '#f093fb', gradientId: 'colorEmpOther',  label: 'Other'  },
+  { key: 'Other', color: '#f093fb', gradientId: 'colorEmpOther', label: 'Other' },
 ];
 
 const VIEWS = [
-  { value: 'yearwise',   label: 'Yearwise Strength',       icon: '📈' },
+  { value: 'yearwise', label: 'Yearwise Strength', icon: '📈' },
   { value: 'department', label: 'Faculty Expertise Matrix', icon: '📊' },
-  { value: 'gender',     label: 'Gender Ratio',             icon: '🥧' },
+  { value: 'gender', label: 'Gender Ratio', icon: '🥧' },
 ];
 
 const NUM_YEARS_OPTIONS = [
-  { value: 1,  label: 'Last 1 Yr'  },
-  { value: 2,  label: 'Last 2 Yrs' },
-  { value: 3,  label: 'Last 3 Yrs' },
-  { value: 5,  label: 'Last 5 Yrs' },
+  { value: 1, label: 'Last 1 Yr' },
+  { value: 2, label: 'Last 2 Yrs' },
+  { value: 3, label: 'Last 3 Yrs' },
+  { value: 5, label: 'Last 5 Yrs' },
   { value: 10, label: 'Last 10 Yrs' },
 ];
 
@@ -139,7 +139,7 @@ function AdministrativeSection({ isPublicView = false }) {
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [activeView, setActiveView]               = useState('yearwise');
+  const [activeView, setActiveView] = useState('yearwise');
 
   const [filterOptions, setFilterOptions] = useState({
     department: [], designation: [], gender: [], emp_type: [], group_name: [], appointed_category: []
@@ -160,12 +160,12 @@ function AdministrativeSection({ isPublicView = false }) {
     Object.fromEntries(SERIES_META.map(s => [s.key, true]))
   );
 
-  const [genderData, setGenderData]   = useState([]);
+  const [genderData, setGenderData] = useState([]);
   const [genderTotal, setGenderTotal] = useState(0);
 
   // Summary card state (independent of filters)
   const [summaryTotals, setSummaryTotals] = useState({ all: 0, teaching: 0, nonTeaching: 0 });
-  const [allYearwise, setAllYearwise]           = useState([]);
+  const [allYearwise, setAllYearwise] = useState([]);
   const [teachingYearwise, setTeachingYearwise] = useState([]);
   const [nonTeachingYearwise, setNonTeachingYearwise] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
@@ -199,7 +199,7 @@ function AdministrativeSection({ isPublicView = false }) {
       if (allData.length > 0) {
         setSelectedYear(String(allData[allData.length - 1].year));
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, [token, uploadVersion]);
 
   useEffect(() => {
@@ -213,7 +213,7 @@ function AdministrativeSection({ isPublicView = false }) {
     if (!token || activeView !== 'department') return;
     fetchFacultyFilterOptions(token)
       .then(opts => setFacultyFilterOptions(opts))
-      .catch(() => {});
+      .catch(() => { });
   }, [token, activeView, uploadVersion]);
 
   useEffect(() => {
@@ -287,13 +287,13 @@ function AdministrativeSection({ isPublicView = false }) {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${activeView === 'yearwise' ? 7 : 6}, 1fr)`, gap: '0.6rem' }}>
         {[
-          { id: 'emp-type-filter',    label: 'Employee Type', key: 'emp_type',           options: filterOptions.emp_type,                                                                      views: ['yearwise', 'gender'] },
-          { id: 'department-filter',  label: 'Department',    key: 'department',         options: activeView === 'department' ? facultyFilterOptions.department  : filterOptions.department,  views: ['yearwise', 'department', 'gender'] },
-          { id: 'designation-filter', label: 'Designation',   key: 'designation',        options: activeView === 'department' ? facultyFilterOptions.designation : filterOptions.designation, views: ['yearwise', 'department', 'gender'] },
-          { id: 'gender-filter',      label: 'Gender',        key: 'gender',             options: filterOptions.gender,                                                                        views: ['yearwise', 'department'] },
-          { id: 'group-filter',       label: 'Group',         key: 'group_name',         options: activeView === 'department' ? facultyFilterOptions.group_name  : filterOptions.group_name,  views: ['yearwise', 'department', 'gender'] },
-          { id: 'category-filter',    label: 'Category',      key: 'appointed_category', options: filterOptions.appointed_category,                                                            views: ['yearwise', 'department', 'gender'] },
-          { id: 'num-years-filter',   label: 'No. of Years',  key: 'num_years',          customOptions: NUM_YEARS_OPTIONS,                                                                     views: ['yearwise'] },
+          { id: 'emp-type-filter', label: 'Employee Type', key: 'emp_type', options: filterOptions.emp_type, views: ['yearwise', 'gender'] },
+          { id: 'department-filter', label: 'Department', key: 'department', options: activeView === 'department' ? facultyFilterOptions.department : filterOptions.department, views: ['yearwise', 'department', 'gender'] },
+          { id: 'designation-filter', label: 'Designation', key: 'designation', options: activeView === 'department' ? facultyFilterOptions.designation : filterOptions.designation, views: ['yearwise', 'department', 'gender'] },
+          { id: 'gender-filter', label: 'Gender', key: 'gender', options: filterOptions.gender, views: ['yearwise', 'department'] },
+          { id: 'group-filter', label: 'Group', key: 'group_name', options: activeView === 'department' ? facultyFilterOptions.group_name : filterOptions.group_name, views: ['yearwise', 'department', 'gender'] },
+          { id: 'category-filter', label: 'Category', key: 'appointed_category', options: filterOptions.appointed_category, views: ['yearwise', 'department', 'gender'] },
+          { id: 'num-years-filter', label: 'No. of Years', key: 'num_years', customOptions: NUM_YEARS_OPTIONS, views: ['yearwise'] },
         ].filter(({ views }) => views.includes(activeView)).map(({ id, label, key, options, customOptions }) => (
           <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
@@ -305,9 +305,9 @@ function AdministrativeSection({ isPublicView = false }) {
               {customOptions
                 ? customOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)
                 : (<>
-                    <option value="All">All</option>
-                    {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </>)
+                  <option value="All">All</option>
+                  {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </>)
               }
             </select>
           </div>
@@ -330,7 +330,6 @@ function AdministrativeSection({ isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>Employee Overview</h1>
-                <p>Monitor employee strength trends, department-wise distribution, and gender ratio across IIT Palakkad.</p>
               </div>
               <div className="page-header-actions">
                 <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
@@ -338,7 +337,7 @@ function AdministrativeSection({ isPublicView = false }) {
                 </button>
               </div>
             </div>
-          </>  
+          </>
         )}
 
         {error && (
@@ -389,9 +388,9 @@ function AdministrativeSection({ isPublicView = false }) {
 
           {/* Data cards */}
           {[
-            { label: 'Total Employees', icon: '👥', data: allYearwise,         grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
-            { label: 'Faculty',         icon: '🎓', data: teachingYearwise,    grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
-            { label: 'Staff',           icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'rgba(16,185,129,0.2)' },
+            { label: 'Total Employees', icon: '👥', data: allYearwise, grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
+            { label: 'Faculty', icon: '🎓', data: teachingYearwise, grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
+            { label: 'Staff', icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'rgba(16,185,129,0.2)' },
           ].map(({ label, icon, data, grad, shadow }) => {
             const val = selectedYear === 'All'
               ? data.reduce((sum, r) => sum + (r.Total || 0), 0)
@@ -524,8 +523,8 @@ function AdministrativeSection({ isPublicView = false }) {
                   <defs>
                     {SERIES_META.map(({ gradientId, color }) => (
                       <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor={color} stopOpacity={0.8} />
-                        <stop offset="95%" stopColor={color} stopOpacity={0}   />
+                        <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={color} stopOpacity={0} />
                       </linearGradient>
                     ))}
                   </defs>

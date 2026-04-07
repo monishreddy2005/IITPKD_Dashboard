@@ -31,6 +31,7 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './ResearchSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const TYPE_COLORS = ['#6366f1', '#22d3ee', '#f97316', '#a855f7', '#14b8a6', '#facc15'];
 
@@ -42,6 +43,8 @@ const formatDateYear = (year) => {
 };
 
 function ResearchLibrarySection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -219,6 +222,11 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/research')}>
+            ← Back to Research
+          </button>
+        )}
         {!isPublicView && <h1>Research · Library & Scholarly Outputs</h1>}
         <p style={{ color: '#666', marginBottom: '20px' }}>
           Explore the institute&apos;s research publications across journals, conferences, and scholarly formats with

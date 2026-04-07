@@ -96,7 +96,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
   // Get current filters based on view type
   const getCurrentFilters = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'categoryBreakdown': return categoryFilters;
       case 'programmeBreakdown': return programmeFilters;
       case 'courseCatalogue': return catalogueFilters;
@@ -106,7 +106,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
   // Handle filter change for current view
   const handleFilterChange = (field, value) => {
-    switch(viewType) {
+    switch (viewType) {
       case 'categoryBreakdown':
         setCategoryFilters(prev => ({ ...prev, [field]: value }));
         break;
@@ -127,8 +127,8 @@ function EducationAcademicSection({ user, isPublicView = false }) {
       status: 'All',
       proposal_type: 'All'
     };
-    
-    switch(viewType) {
+
+    switch (viewType) {
       case 'categoryBreakdown':
         setCategoryFilters(defaultFilters);
         break;
@@ -298,7 +298,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
   // Get loading state for current view
   const isLoading = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'categoryBreakdown': return loading.category;
       case 'programmeBreakdown': return loading.programme;
       case 'courseCatalogue': return loading.catalogue;
@@ -308,8 +308,8 @@ function EducationAcademicSection({ user, isPublicView = false }) {
 
   // Radio button configurations
   const radioButtons = [
-    { id: 'categoryBreakdown', label: 'Category Breakdown', color: '#6366f1'},
-    { id: 'programmeBreakdown', label: 'Programme Breakdown', color: '#f97316'},
+    { id: 'categoryBreakdown', label: 'Category Breakdown', color: '#6366f1' },
+    { id: 'programmeBreakdown', label: 'Programme Breakdown', color: '#f97316' },
     { id: 'courseCatalogue', label: 'Course Catalogue', color: '#22d3ee' }
   ];
 
@@ -324,9 +324,6 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>Academic Section · Industry Collaboration Courses</h1>
-                <p>
-                  Explore specialised courses developed in collaboration with industry partners across various academic programmes at IIT Palakkad.
-                </p>
               </div>
               {user && user.role_id === 3 && (
                 <div className="page-header-actions">
@@ -339,12 +336,12 @@ function EducationAcademicSection({ user, isPublicView = false }) {
           </>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Summary Cards */}
@@ -584,29 +581,29 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             {viewType === 'categoryBreakdown' && (
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Category View */}
-                <div className="filter-panel" style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e9ecef' 
+                <div className="filter-panel" style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
                 }}>
-                  <div className="filter-header" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div className="filter-header" style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: '0', color: '#333' }}>Filters for Category Breakdown</h4>
-                    <button 
-                      className="clear-filters-btn" 
+                    <button
+                      className="clear-filters-btn"
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -674,10 +671,10 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -686,7 +683,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     {categoryFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {categoryFilters.programme}</span>}
                     {categoryFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {categoryFilters.status}</span>}
                     {categoryFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {categoryFilters.proposal_type}</span>}
-                    {categoryFilters.category === 'All' && categoryFilters.programme === 'All' && categoryFilters.status === 'All' && categoryFilters.proposal_type === 'All' && 
+                    {categoryFilters.category === 'All' && categoryFilters.programme === 'All' && categoryFilters.status === 'All' && categoryFilters.proposal_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -722,7 +719,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                             <Cell key={`cell-${index}`} fill={PROGRAM_COLORS[index % PROGRAM_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [value, 'Courses']}
                           contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                         />
@@ -731,10 +728,10 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     </ResponsiveContainer>
 
                     {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
                       borderRadius: '8px',
                       border: '1px solid #e0e0e0',
                       display: 'grid',
@@ -755,7 +752,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                          {courseTrendChartData.length > 0 
+                          {courseTrendChartData.length > 0
                             ? courseTrendChartData.reduce((prev, current) => (prev.value > current.value) ? prev : current).name
                             : 'N/A'}
                         </div>
@@ -771,29 +768,29 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             {viewType === 'programmeBreakdown' && (
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Programme View */}
-                <div className="filter-panel" style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e9ecef' 
+                <div className="filter-panel" style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
                 }}>
-                  <div className="filter-header" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div className="filter-header" style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: '0', color: '#333' }}>Filters for Programme Breakdown</h4>
-                    <button 
-                      className="clear-filters-btn" 
+                    <button
+                      className="clear-filters-btn"
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -861,10 +858,10 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -873,7 +870,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     {programmeFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {programmeFilters.programme}</span>}
                     {programmeFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {programmeFilters.status}</span>}
                     {programmeFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {programmeFilters.proposal_type}</span>}
-                    {programmeFilters.category === 'All' && programmeFilters.programme === 'All' && programmeFilters.status === 'All' && programmeFilters.proposal_type === 'All' && 
+                    {programmeFilters.category === 'All' && programmeFilters.programme === 'All' && programmeFilters.status === 'All' && programmeFilters.proposal_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -896,8 +893,8 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     <ResponsiveContainer width="100%" height={400}>
                       <BarChart data={programmeBreakdownChartData} margin={{ top: 20, right: 30, left: 40, bottom: 80 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis 
-                          dataKey="name" 
+                        <XAxis
+                          dataKey="name"
                           stroke="#666"
                           tick={{ fill: '#666', fontSize: 10 }}
                           interval={0}
@@ -905,29 +902,29 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                           textAnchor="end"
                           height={80}
                         />
-                        <YAxis 
+                        <YAxis
                           stroke="#666"
                           tick={{ fill: '#666', fontSize: 12 }}
                           allowDecimals={false}
                         />
-                        <Tooltip 
+                        <Tooltip
                           formatter={(value) => [value, 'Courses']}
                           contentStyle={{ borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
                         />
-                        <Bar 
-                          dataKey="value" 
-                          name="Courses" 
-                          fill="#f97316" 
-                          radius={[6, 6, 0, 0]} 
+                        <Bar
+                          dataKey="value"
+                          name="Courses"
+                          fill="#f97316"
+                          radius={[6, 6, 0, 0]}
                         />
                       </BarChart>
                     </ResponsiveContainer>
 
                     {/* Chart Statistics */}
-                    <div style={{ 
-                      marginTop: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
                       borderRadius: '8px',
                       border: '1px solid #e0e0e0',
                       display: 'grid',
@@ -948,7 +945,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
-                          {programmeBreakdownChartData.length > 0 
+                          {programmeBreakdownChartData.length > 0
                             ? Math.max(...programmeBreakdownChartData.map(d => d.value))
                             : 0}
                         </div>
@@ -964,29 +961,29 @@ function EducationAcademicSection({ user, isPublicView = false }) {
             {viewType === 'courseCatalogue' && (
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Catalogue View */}
-                <div className="filter-panel" style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e9ecef' 
+                <div className="filter-panel" style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef'
                 }}>
-                  <div className="filter-header" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div className="filter-header" style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: '0', color: '#333' }}>Filters for Course Catalogue</h4>
-                    <button 
-                      className="clear-filters-btn" 
+                    <button
+                      className="clear-filters-btn"
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -1054,10 +1051,10 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -1066,7 +1063,7 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                     {catalogueFilters.programme !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {catalogueFilters.programme}</span>}
                     {catalogueFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>✅ {catalogueFilters.status}</span>}
                     {catalogueFilters.proposal_type !== 'All' && <span style={{ marginRight: '8px' }}>📝 {catalogueFilters.proposal_type}</span>}
-                    {catalogueFilters.category === 'All' && catalogueFilters.programme === 'All' && catalogueFilters.status === 'All' && catalogueFilters.proposal_type === 'All' && 
+                    {catalogueFilters.category === 'All' && catalogueFilters.programme === 'All' && catalogueFilters.status === 'All' && catalogueFilters.proposal_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -1087,17 +1084,17 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                 ) : (
                   <div>
                     {/* Fixed height scrollable table */}
-                    <div style={{ 
-                      maxHeight: '500px', 
-                      overflowY: 'auto', 
+                    <div style={{
+                      maxHeight: '500px',
+                      overflowY: 'auto',
                       overflowX: 'auto',
                       border: '1px solid #e0e0e0',
                       borderRadius: '12px',
                       backgroundColor: '#fff',
                       position: 'relative'
                     }}>
-                      <table className="grievance-table" style={{ 
-                        width: '100%', 
+                      <table className="grievance-table" style={{
+                        width: '100%',
                         borderCollapse: 'collapse',
                         backgroundColor: '#fff',
                         minWidth: '800px'
@@ -1110,96 +1107,96 @@ function EducationAcademicSection({ user, isPublicView = false }) {
                             <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Industry Partner</th>
                             <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Coordinator</th>
                             <th style={{ padding: '14px 12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#22d3ee', zIndex: 11 }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {courseList.map((course, index) => (
+                            <tr
+                              key={course.course_id}
+                              style={{
+                                backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                borderBottom: '1px solid #e0e0e0'
+                              }}
+                            >
+                              <td style={{ padding: '12px', fontWeight: '500' }}>{course.course_name}</td>
+                              <td style={{ padding: '12px' }}>
+                                <span style={{
+                                  backgroundColor: '#e0e7ff',
+                                  color: '#4f46e5',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: '500'
+                                }}>
+                                  {course.course_category}
+                                </span>
+                              </td>
+                              <td style={{ padding: '12px' }}>{course.target_programme}</td>
+                              <td style={{ padding: '12px' }}>{course.industry_partner || '—'}</td>
+                              <td style={{ padding: '12px' }}>{course.industry_coordinator_name || '—'}</td>
+                              <td style={{ padding: '12px' }}>
+                                <span style={{
+                                  backgroundColor: course.status === 'Active' ? '#dcfce7' : '#fee2e2',
+                                  color: course.status === 'Active' ? '#166534' : '#991b1b',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {course.status}
+                                </span>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {courseList.map((course, index) => (
-                              <tr 
-                                key={course.course_id}
-                                style={{ 
-                                  backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                                  borderBottom: '1px solid #e0e0e0'
-                                }}
-                              >
-                                <td style={{ padding: '12px', fontWeight: '500' }}>{course.course_name}</td>
-                                <td style={{ padding: '12px' }}>
-                                  <span style={{
-                                    backgroundColor: '#e0e7ff',
-                                    color: '#4f46e5',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: '500'
-                                  }}>
-                                    {course.course_category}
-                                  </span>
-                                </td>
-                                <td style={{ padding: '12px' }}>{course.target_programme}</td>
-                                <td style={{ padding: '12px' }}>{course.industry_partner || '—'}</td>
-                                <td style={{ padding: '12px' }}>{course.industry_coordinator_name || '—'}</td>
-                                <td style={{ padding: '12px' }}>
-                                  <span style={{ 
-                                    backgroundColor: course.status === 'Active' ? '#dcfce7' : '#fee2e2',
-                                    color: course.status === 'Active' ? '#166534' : '#991b1b',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '12px',
-                                    fontWeight: 'bold'
-                                  }}>
-                                    {course.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                      {/* Table Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseList.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                    {/* Table Statistics */}
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '15px'
+                    }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '24px' }}>
+                          {courseList.length}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
-                            {new Set(courseList.map(c => c.course_category)).size}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Total Courses</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '24px' }}>
+                          {new Set(courseList.map(c => c.course_category)).size}
                         </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {courseList.filter(c => c.status === 'Active').length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Active Courses</div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Categories</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
+                          {courseList.filter(c => c.status === 'Active').length}
                         </div>
+                        <div style={{ color: '#666', fontSize: '12px' }}>Active Courses</div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
-        <DataUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          tableName={activeUploadTable}
-          token={token}
-        />
-      </div>   
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
+    </div>
   );
 }
 

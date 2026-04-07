@@ -16,6 +16,7 @@ import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const AREA_COLORS = {
   total: '#667eea',
@@ -24,6 +25,8 @@ const AREA_COLORS = {
 };
 
 function IccSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
@@ -95,6 +98,11 @@ function IccSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Internal Complaints Committee (ICC)</h1>}
         <p style={{ color: '#666', marginBottom: '20px' }}>
           Monitor the yearly trend of sexual harassment complaints received by the ICC and track their resolution

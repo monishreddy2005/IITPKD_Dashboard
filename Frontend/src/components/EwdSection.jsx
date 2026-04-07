@@ -21,6 +21,7 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './EwdSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const ENERGY_BAR_COLOR = '#667eea';
 const ELECTRICITY_LINE_COLOR = '#f59e0b';
@@ -36,6 +37,8 @@ const formatNumber = (value) => numberFormatter.format(Math.round(value || 0));
 const formatDecimal = (value) => decimalFormatter.format(value || 0);
 
 function EwdSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
@@ -172,6 +175,11 @@ function EwdSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Engineering and Works Division (EWD)</h1>}
         <p style={{ color: '#666', marginBottom: '20px' }}>
           Monitor institute-wide energy and water usage trends along with per capita consumption indicators and green

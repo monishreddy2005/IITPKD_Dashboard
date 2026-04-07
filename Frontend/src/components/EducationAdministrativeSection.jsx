@@ -26,6 +26,7 @@ import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const ENGAGEMENT_COLORS = {
   Adjunct: '#667eea',
@@ -40,6 +41,8 @@ const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
 
 function EducationAdministrativeSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
@@ -430,6 +433,11 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/education')}>
+            ← Back to Education
+          </button>
+        )}
         {!isPublicView && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h1>Administrative Section - External Academic Engagement</h1>

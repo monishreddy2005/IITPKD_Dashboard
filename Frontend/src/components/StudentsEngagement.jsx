@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Page.css';
 import './AcademicSection.css';
 
 function StudentsEngagementSection({ isPublicView = false }) {
+  const navigate = useNavigate();
+
   const content = (
     <>
       <div style={{ marginBottom: '2rem' }}>
@@ -78,7 +80,11 @@ function StudentsEngagementSection({ isPublicView = false }) {
 
   return (
     <div className="page-container">
-      <div className="page-content">{content}</div>
+      <div className="page-content">{!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+            ← Back to Outreach Extension
+          </button>
+        )}{content}</div>
     </div>
   );
 }

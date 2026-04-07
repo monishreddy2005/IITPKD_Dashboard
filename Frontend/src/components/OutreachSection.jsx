@@ -274,7 +274,7 @@ function RecordCard({ record, slNo, programConfig }) {
   );
 }
 
-function ProgramDetailView({ programConfig, records, user, token }) {
+function ProgramDetailView({ programConfig, records, user, token, loading }) {
   const navigate = useNavigate();
   const matching = records.filter((r) => programConfig.match(r.program_name));
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -284,10 +284,6 @@ function ProgramDetailView({ programConfig, records, user, token }) {
       <div className="outreach-expanded-container">
         {/* Top bar */}
         <div className="outreach-top-bar">
-          <button className="outreach-back-button" onClick={() => navigate('/outreach-extension')}>
-            <span className="outreach-back-arrow">←</span>
-            Back
-          </button>
           <div className="outreach-icon-header">{programConfig.icon}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="outreach-overview-text">{programConfig.title}</p>
@@ -319,7 +315,11 @@ function ProgramDetailView({ programConfig, records, user, token }) {
 
         {/* Records */}
         <div style={{ padding: '1.5rem' }}>
-          {matching.length === 0 ? (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6e6e73' }}>
+              <p style={{ margin: 0 }}>Loading records...</p>
+            </div>
+          ) : matching.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6e6e73' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
               <p style={{ margin: 0 }}>No records found for <strong>{programConfig.title}</strong>.</p>
@@ -354,7 +354,8 @@ function ProgramDetailView({ programConfig, records, user, token }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-function OutreachSection({ user }) {
+function OutreachSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
   const uploadVersion = useUploadRefresh();
   const token = localStorage.getItem('authToken');
   const [searchParams] = useSearchParams();
@@ -387,11 +388,17 @@ function OutreachSection({ user }) {
     return (
       <div className="page-container">
         <div className="page-content">
+          {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+            ← Back to Outreach Extension
+          </button>
+        )}
           <ProgramDetailView
             programConfig={selectedProgram}
             records={records}
             user={user}
             token={token}
+            loading={loading}
           />
         </div>
       </div>
@@ -401,6 +408,11 @@ function OutreachSection({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+            ← Back to Outreach Extension
+          </button>
+        )}
         <div className="outreach-page-header">
           <h1>Outreach Programs</h1>
           <p>

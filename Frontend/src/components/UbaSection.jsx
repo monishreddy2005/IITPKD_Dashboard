@@ -8,10 +8,13 @@ import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
+import { useNavigate } from 'react-router-dom';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function UbaSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
   const uploadVersion = useUploadRefresh();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -73,18 +76,6 @@ function UbaSection({ user, isPublicView = false }) {
     loadEvents();
   }, [token, uploadVersion]);
 
-  if (loading && projects.length === 0) {
-    return isPublicView ? (
-      <p>Loading...</p>
-    ) : (
-      <div className="page-container">
-        <div className="page-content">
-          <h1>UBA (Unnat Bharat Abhiyan)</h1>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return isPublicView ? (
@@ -101,6 +92,11 @@ function UbaSection({ user, isPublicView = false }) {
 
   const content = (
     <>
+      {!isPublicView && (
+        <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+          ← Back to Outreach Extension
+        </button>
+      )}
       {!isPublicView && <h1>UBA (Unnat Bharat Abhiyan)</h1>}
 
       {isPublicView ? null : (user && user.role_id === 3 && (
