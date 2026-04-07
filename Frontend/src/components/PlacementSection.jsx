@@ -1340,12 +1340,13 @@ function PlacementSection({ user, isPublicView = false }) {
                           backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(3, 1fr)',
-                          gap: '15px'
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
+                          gap: '30px'
                         }}>
                           {programStatusChartData.map((item) => (
-                            <div key={item.program} style={{ textAlign: 'center' }}>
+                            <div key={item.program} style={{ textAlign: 'center', minWidth: '80px' }}>
                               <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '18px' }}>
                                 {formatPercentage(item.percentage)}
                               </div>

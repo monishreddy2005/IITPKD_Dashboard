@@ -471,7 +471,8 @@ def upload_csv(current_user_id):
     try:
         csv_text = io.StringIO(file.stream.read().decode('utf-8'))
         reader   = csv.DictReader(csv_text)
-        csv_headers = reader.fieldnames or []
+        csv_headers = [h.strip() for h in reader.fieldnames] if reader.fieldnames else []
+        reader.fieldnames = csv_headers
         
         # Strip BOM from the first column name if present
         if csv_headers and csv_headers[0].startswith('\ufeff'):

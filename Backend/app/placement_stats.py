@@ -356,32 +356,24 @@ def get_program_status(current_user_id):
             FROM {PLACEMENT_SUMMARY_TABLE}
             {where_clause}
             GROUP BY program
-            ORDER BY program
+            ORDER BY SUM(registered) DESC
+            LIMIT 10
             """,
             params
         )
         rows = cur.fetchall() or []
-        aggregates: Dict[str, Dict[str, float]] = defaultdict(lambda: {'registered': 0, 'placed': 0})
-        for row in rows:
-            program = row.get('program')
-            category = map_program_to_category(program)
-            aggregates[category]['registered'] += row.get('registered') or 0
-            aggregates[category]['placed'] += row.get('placed') or 0
-
         data = []
-        for category, values in aggregates.items():
-            registered = values['registered']
-            placed = values['placed']
+        for row in rows:
+            program = row.get('program') or 'Unknown'
+            registered = row.get('registered') or 0
+            placed = row.get('placed') or 0
             data.append({
-                'program_category': category,
+                'program_category': program,
                 'registered': int(registered),
                 'placed': int(placed),
                 'placement_percentage': safe_percentage(placed, registered)
             })
 
-        # Preserve deterministic order UG, PG, PhD, Other
-        category_order = ['UG', 'PG', 'PhD', 'Other']
-        data.sort(key=lambda item: category_order.index(item['program_category']) if item['program_category'] in category_order else len(category_order))
         return jsonify({'data': data}), 200
     except UndefinedTable:
         return jsonify({'message': 'Placement tables are missing.'}), 500
