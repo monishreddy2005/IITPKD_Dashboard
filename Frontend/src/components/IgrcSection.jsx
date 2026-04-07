@@ -123,6 +123,9 @@ function IgrcSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
+            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+              Internal Grievance Resolution Cell (IGRC)
+            </h2>
             {/* Modern Gradient Summary Cards */}
             <div style={{
               display: 'grid',
@@ -286,6 +289,9 @@ function IgrcSection({ user, isPublicView = false }) {
             </div>
 
             <div className="chart-section">
+              <h2 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '20px' }}>
+                Internal Grievance Resolution Cell (IGRC)
+              </h2>
               <div className="chart-header">
                 <div>
                   <p className="chart-description">

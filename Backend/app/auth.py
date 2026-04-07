@@ -25,7 +25,7 @@ def encode_auth_token(user_id, role_id):
             'sub': str(user_id),
             'role': role_id,
             'iat': int(now.timestamp()),
-            'exp': int((now + datetime.timedelta(days=1)).timestamp()),
+            'exp': int((now + datetime.timedelta(days=30)).timestamp()),
         }
         return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
     except Exception as e:

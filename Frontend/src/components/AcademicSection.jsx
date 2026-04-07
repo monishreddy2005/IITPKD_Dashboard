@@ -122,18 +122,13 @@ function AcademicSection({ user, isPublicView = false }) {
   const token = localStorage.getItem('authToken');
   const showUploadBtn = !isPublicView && user && (user.role_id === 3 || user.role_id === 4);
 
-  // Get available years for dropdown (last 10 years)
+  // Get available years for dropdown from database
   const availableYears = useMemo(() => {
     if (!filterOptions.yearofadmission || filterOptions.yearofadmission.length === 0) {
-      const currentYear = new Date().getFullYear();
-      const years = [];
-      for (let i = 0; i < 10; i++) {
-        years.push(String(currentYear - i));
-      }
-      return ['All', ...years];
+      return ['All'];
     }
     const years = [...filterOptions.yearofadmission].sort((a, b) => b - a);
-    return ['All', ...years.slice(0, 10)];
+    return ['All', ...years.map(String)];
   }, [filterOptions.yearofadmission]);
 
   // Fetch cumulative summary data

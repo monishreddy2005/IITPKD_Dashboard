@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
 import './App.css';
 import ScrollToTop from './components/ScrollToTop';
 import Login from './components/Login';
@@ -71,6 +72,24 @@ function App() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
   };
+
+  // Axios interceptor to catch 401 errors (e.g. token expiration) and auto-logout
+  useEffect(() => {
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          // Unauthorised or token expired - log the user out to redirect to login
+          handleLogout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, []);
 
   // Protected Route wrapper
   const ProtectedRoute = ({ children }) => {

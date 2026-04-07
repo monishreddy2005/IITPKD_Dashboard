@@ -376,8 +376,8 @@ function AdministrativeSection({ isPublicView = false }) {
                 }}
               >
                 <option value="All" style={{ color: '#333', background: '#fff' }}>All Years</option>
-                {[...allYearwise].reverse().map((row) => (
-                  <option key={row.year} value={String(row.year)} style={{ color: '#333', background: '#fff' }}>{row.year}</option>
+                {(filterOptions.years || []).map((yr) => (
+                  <option key={yr} value={String(yr)} style={{ color: '#333', background: '#fff' }}>{yr}</option>
                 ))}
               </select>
               <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '10px', marginBottom: 0 }}>
