@@ -36,6 +36,14 @@ const ENGAGEMENT_COLORS = {
   PoP: '#00f2fe'
 };
 
+const ENGAGEMENT_LABELS = {
+  Adjunct: 'Adjunct',
+  Honorary: 'Honorary',
+  Visiting: 'Visiting',
+  FacultyFellow: 'Faculty Fellow',
+  PoP: 'PoP'
+};
+
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
@@ -331,9 +339,18 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
         setError(null);
 
         const filterParams = {};
-        if (detailsFilters.year !== 'All') filterParams.year = detailsFilters.year;
-        if (detailsFilters.department !== 'All') filterParams.department = detailsFilters.department;
-        if (detailsFilters.engagement_type !== 'All') filterParams.engagement_type = detailsFilters.engagement_type;
+        // Use the appropriate filters based on view
+        const currentFilters = viewType === 'honorary' ? honoraryFilters : detailsFilters;
+
+        if (currentFilters.year !== 'All') filterParams.year = currentFilters.year;
+        if (currentFilters.department !== 'All') filterParams.department = currentFilters.department;
+        
+        // Force Honorary if in honorary view and type is All
+        if (viewType === 'honorary') {
+          filterParams.engagement_type = currentFilters.engagement_type === 'All' ? 'Honorary' : currentFilters.engagement_type;
+        } else if (currentFilters.engagement_type !== 'All') {
+          filterParams.engagement_type = currentFilters.engagement_type;
+        }
 
         const listResp = await fetchFacultyEngagementList(filterParams, token);
         setEngagementList(Array.isArray(listResp?.data) ? listResp.data : []);
@@ -348,7 +365,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'details' || viewType === 'honorary') {
       loadDetailsData();
     }
-  }, [detailsFilters, token, viewType, uploadVersion]);
+  }, [detailsFilters, honoraryFilters, token, viewType, uploadVersion]);
 
   // Prepare summary cards data
   const summaryCards = useMemo(() => {
@@ -619,15 +636,31 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
           </label>
         </div>
 
-        {isLoading() ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading data...</p>
-          </div>
-        ) : (
-          <>
-            {/* Summary Indicators View */}
-            {viewType === 'summary' && (
+        <div style={{ position: 'relative', minHeight: '400px' }}>
+          {isLoading() && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              zIndex: 100,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: '12px',
+              backdropFilter: 'blur(2px)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div className="loading-spinner"></div>
+              <p style={{ marginTop: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Updating data...</p>
+            </div>
+          )}
+
+          {/* Summary Indicators View */}
+          <div style={{ display: viewType === 'summary' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Summary View */}
                 <div className="filter-panel" style={{ 
@@ -754,7 +787,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                         marginBottom: '0.5rem',
                         fontWeight: '600'
                       }}>
-                        {card.type}
+                        {ENGAGEMENT_LABELS[card.type] || card.type}
                       </div>
                       <div style={{
                         fontSize: '2rem',
@@ -799,10 +832,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Department-wise Breakdown View */}
-            {viewType === 'department' && (
+          {/* Department-wise Breakdown View */}
+          <div style={{ display: viewType === 'department' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Department View */}
                 <div className="filter-panel" style={{ 
@@ -935,6 +968,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                             <Bar
                               key={type}
                               dataKey={type}
+                              name={ENGAGEMENT_LABELS[type] || type}
                               stackId="a"
                               fill={ENGAGEMENT_COLORS[type] || COLORS[index % COLORS.length]}
                               radius={index === summary.summary.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
@@ -950,10 +984,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Year-wise Trends View */}
-            {viewType === 'trend' && (
+          {/* Year-wise Trends View */}
+          <div style={{ display: viewType === 'trend' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Trend View */}
                 <div className="filter-panel" style={{ 
@@ -1100,10 +1134,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Type Distribution View */}
-            {viewType === 'distribution' && (
+          {/* Type Distribution View */}
+          <div style={{ display: viewType === 'distribution' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Distribution View */}
                 <div className="filter-panel" style={{ 
@@ -1175,7 +1209,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                       >
                         <option value="All">All Types</option>
                         {filterOptions.engagement_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
+                          <option key={type} value={type}>{ENGAGEMENT_LABELS[type] || type}</option>
                         ))}
                       </select>
                     </div>
@@ -1215,7 +1249,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                          label={({ name, percent }) => `${ENGAGEMENT_LABELS[name] || name}: ${(percent * 100).toFixed(1)}%`}
                           outerRadius={120}
                           fill="#8884d8"
                           dataKey="value"
@@ -1228,7 +1262,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend />
+                        <Legend formatter={(value) => ENGAGEMENT_LABELS[value] || value} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -1238,10 +1272,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Engagement Details View */}
-            {viewType === 'details' && (
+          {/* Engagement Details View */}
+          <div style={{ display: viewType === 'details' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Details View */}
                 <div className="filter-panel" style={{ 
@@ -1374,9 +1408,9 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                       </thead>
                       <tbody>
                         {engagementList.map((item, index) => {
-                          const isAcademia = ['Honorary', 'Adjunct', 'FacultyFellow'].includes(item.engagement_type);
+                          const isAcademia = ['Honorary', 'Adjunct', 'FacultyFellow'].includes(item.std_type);
                           const sector = isAcademia ? 'Academia' : 'Industry';
-                          const organisationName = item.remarks || `${item.engagement_type} Faculty`;
+                          const organisationName = item.remarks || `${ENGAGEMENT_LABELS[item.std_type] || item.engagement_type} Faculty`;
                           
                           return (
                             <tr key={item.engagement_code} style={{
@@ -1400,10 +1434,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Honorary Professors View */}
-            {viewType === 'honorary' && (
+          {/* Honorary Professors View */}
+          <div style={{ display: viewType === 'honorary' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Honorary View */}
                 <div className="filter-panel" style={{ 
@@ -1506,7 +1540,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </p>
                 </div>
 
-                {engagementList.filter(item => item.engagement_type === 'Honorary').length > 0 ? (
+                {engagementList.filter(item => item.std_type === 'Honorary').length > 0 ? (
                   <div className="table-responsive" style={{
                     height: '400px',
                     maxHeight: '400px',
@@ -1535,7 +1569,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                       </thead>
                       <tbody>
                         {engagementList
-                          .filter(item => item.engagement_type === 'Honorary')
+                          .filter(item => item.std_type === 'Honorary')
                           .map((item, index) => (
                             <tr key={item.engagement_code} style={{
                               borderBottom: '1px solid #f0f0f0',
@@ -1556,9 +1590,8 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
-          </>
-        )}
+          </div>
+        </div>
 
         {/* Upload Modal */}
         {!isPublicView && user && user.role_id === 3 && (
