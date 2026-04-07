@@ -24,7 +24,7 @@ function CreateUser({ user, token }) {
   }, [user, navigate]);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/auth/roles', {
+    axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/roles`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(res => setRoles(res.data))
@@ -42,7 +42,7 @@ function CreateUser({ user, token }) {
 
     try {
       await axios.post(
-        'http://127.0.0.1:5000/auth/create-user',
+        `${import.meta.env.VITE_API_BASE_URL}/auth/create-user`,
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       );

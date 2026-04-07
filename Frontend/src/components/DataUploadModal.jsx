@@ -99,7 +99,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
         try {
             const response = await axios.post(
-                'http://127.0.0.1:5000/api/upload-csv',
+                `${import.meta.env.VITE_API_BASE_URL}/api/upload-csv`,
                 formData,
                 {
                     headers: {

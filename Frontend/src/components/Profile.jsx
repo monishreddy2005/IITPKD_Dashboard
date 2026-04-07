@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Page.css';
 import './Profile.css';
 
-const API_AUTH_URL = 'http://127.0.0.1:5000/auth';
+const API_AUTH_URL = `${import.meta.env.VITE_API_BASE_URL}/auth`;
 
 function Profile({ user }) {
   const navigate = useNavigate();

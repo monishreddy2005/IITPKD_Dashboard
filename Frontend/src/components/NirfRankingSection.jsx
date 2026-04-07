@@ -16,7 +16,7 @@ const NirfRankingSection = ({ user }) => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/nirf/nirf_metrics');
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/nirf/nirf_metrics`);
             // Ensure data is sorted by year
             const sortedData = response.data.sort((a, b) => a.year - b.year);
             setData(sortedData);

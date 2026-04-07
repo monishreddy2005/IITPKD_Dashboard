@@ -28,8 +28,8 @@ function Login({ onLoginSuccess }) {
     setIsLoading(true);
 
     const url = isLoginView
-      ? 'http://127.0.0.1:5000/auth/login'
-      : 'http://127.0.0.1:5000/auth/signup';
+      ? `${import.meta.env.VITE_API_BASE_URL}/auth/login`
+      : `${import.meta.env.VITE_API_BASE_URL}/auth/signup`;
 
     const payload = isLoginView
       ? { email, password }
