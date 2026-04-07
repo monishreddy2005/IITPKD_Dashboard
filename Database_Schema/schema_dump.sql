@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict mYfNkY0AGvnKED83Q8lbiqidcD5W2YKshZjT7KoIYBPa9oGUFHvhkpBu7KH5GSh
+\restrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
 
 -- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 -- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
@@ -1065,7 +1065,7 @@ ALTER TABLE public.placement_packages OWNER TO postgres;
 
 CREATE TABLE public.placement_summary (
     placement_year character varying(20) NOT NULL,
-    program public.program_type NOT NULL,
+    program character varying(100) NOT NULL,
     gender public.gender_type NOT NULL,
     registered integer NOT NULL,
     placed integer NOT NULL,
@@ -1957,5 +1957,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mYfNkY0AGvnKED83Q8lbiqidcD5W2YKshZjT7KoIYBPa9oGUFHvhkpBu7KH5GSh
+\unrestrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
 
