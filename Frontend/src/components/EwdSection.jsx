@@ -140,11 +140,11 @@ function EwdSection({ user, isPublicView = false }) {
         greenCoverage: summary.latest.greenCoverage
       } : null;
     }
-    
+
     // Find selected year data from yearlyData
     const yearData = yearlyData.find(row => row.year === selectedYear);
     if (!yearData) return null;
-    
+
     return {
       year: yearData.year,
       perCapitaElectricity: yearData.perCapitaElectricity,
@@ -181,17 +181,12 @@ function EwdSection({ user, isPublicView = false }) {
           </button>
         )}
         {!isPublicView && <h1>Engineering and Works Division (EWD)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor institute-wide energy and water usage trends along with per capita consumption indicators and green
-          coverage metrics maintained by the Engineering and Works Division.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -212,12 +207,12 @@ function EwdSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (

@@ -198,21 +198,21 @@ function IcsrSection({ user, isPublicView = false }) {
     const sortedData = [...eventTypes].sort((a, b) => b.count - a.count);
     const top5 = sortedData.slice(0, 5);
     const others = sortedData.slice(5);
-    
+
     const othersCount = others.reduce((sum, item) => sum + (item.count || 0), 0);
-    
+
     const pieData = top5.map(row => ({
       name: row.event_type,
       value: row.count || 0
     }));
-    
+
     if (othersCount > 0) {
       pieData.push({
         name: 'Others',
         value: othersCount
       });
     }
-    
+
     return pieData;
   }, [eventTypes]);
 
@@ -250,10 +250,6 @@ function IcsrSection({ user, isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>ICSR Section - Industry Interaction Events</h1>
-                <p>
-                  Track and analyze industry engagement events, workshops, seminars, and networking activities
-                  coordinated by the Industrial Consultancy & Sponsored Research (ICSR) section.
-                </p>
               </div>
               {user && user.role_id === 3 && (
                 <div className="page-header-actions">
@@ -310,7 +306,7 @@ function IcsrSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -391,7 +387,7 @@ function IcsrSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -445,15 +441,15 @@ function IcsrSection({ user, isPublicView = false }) {
         </div>
 
         {/* Radio Buttons */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           gap: '20px',
           marginBottom: '30px',
           padding: '20px',
           borderRadius: '12px'
         }}>
-          <button 
+          <button
             onClick={() => setViewType('yearly')}
             style={{
               padding: '12px 24px',
@@ -469,7 +465,7 @@ function IcsrSection({ user, isPublicView = false }) {
           >
             📊 Year-wise Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('eventTypes')}
             style={{
               padding: '12px 24px',
@@ -485,7 +481,7 @@ function IcsrSection({ user, isPublicView = false }) {
           >
             🥧 Event Type Distribution
           </button>
-          <button 
+          <button
             onClick={() => setViewType('eventsDirectory')}
             style={{
               padding: '12px 24px',
@@ -524,28 +520,28 @@ function IcsrSection({ user, isPublicView = false }) {
               </div>
 
               {/* Filters inside the yearly view */}
-              <div style={{ 
-                marginBottom: '20px', 
-                padding: '15px', 
-                backgroundColor: '#f8f9fa', 
+              <div style={{
+                marginBottom: '20px',
+                padding: '15px',
+                backgroundColor: '#f8f9fa',
                 borderRadius: '8px',
                 border: '1px solid #e9ecef'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '15px' 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
                 }}>
                   <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button 
+                  <button
                     onClick={handleClearFilters}
-                    style={{ 
-                      padding: '6px 12px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: '12px'
                     }}
@@ -553,11 +549,11 @@ function IcsrSection({ user, isPublicView = false }) {
                     Clear Filters
                   </button>
                 </div>
-                
-                <div className="filter-grid" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: '12px' 
+
+                <div className="filter-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px'
                 }}>
                   <div className="filter-group">
                     <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Event Type</label>
@@ -600,10 +596,10 @@ function IcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Active Filters Summary */}
-                <div style={{ 
-                  marginTop: '12px', 
-                  padding: '8px', 
-                  backgroundColor: '#e9ecef', 
+                <div style={{
+                  marginTop: '12px',
+                  padding: '8px',
+                  backgroundColor: '#e9ecef',
                   borderRadius: '4px',
                   fontSize: '12px'
                 }}>
@@ -611,7 +607,7 @@ function IcsrSection({ user, isPublicView = false }) {
                   {filters.event_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.event_type}</span>}
                   {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
                   {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search && 
+                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
                     <span>No filters applied</span>
                   }
                 </div>
@@ -722,33 +718,33 @@ function IcsrSection({ user, isPublicView = false }) {
                   <span style={{ fontSize: '24px' }}>🥧</span> Event Type Distribution
                 </h2>
                 <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                  Distribution of different types of industry interaction events 
+                  Distribution of different types of industry interaction events
                 </p>
               </div>
 
               {/* Filters inside the event types view */}
-              <div style={{ 
-                marginBottom: '20px', 
-                padding: '15px', 
-                backgroundColor: '#f8f9fa', 
+              <div style={{
+                marginBottom: '20px',
+                padding: '15px',
+                backgroundColor: '#f8f9fa',
                 borderRadius: '8px',
                 border: '1px solid #e9ecef'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '15px' 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
                 }}>
                   <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button 
+                  <button
                     onClick={handleClearFilters}
-                    style={{ 
-                      padding: '6px 12px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: '12px'
                     }}
@@ -756,11 +752,11 @@ function IcsrSection({ user, isPublicView = false }) {
                     Clear Filters
                   </button>
                 </div>
-                
-                <div className="filter-grid" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
-                  gap: '12px' 
+
+                <div className="filter-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px'
                 }}>
                   <div className="filter-group">
                     <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
@@ -789,17 +785,17 @@ function IcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Active Filters Summary */}
-                <div style={{ 
-                  marginTop: '12px', 
-                  padding: '8px', 
-                  backgroundColor: '#e9ecef', 
+                <div style={{
+                  marginTop: '12px',
+                  padding: '8px',
+                  backgroundColor: '#e9ecef',
                   borderRadius: '4px',
                   fontSize: '12px'
                 }}>
                   <strong>Active Filters:</strong>{' '}
                   {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
                   {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.year === 'All' && !filters.search && 
+                  {filters.year === 'All' && !filters.search &&
                     <span>No filters applied</span>
                   }
                 </div>
@@ -923,28 +919,28 @@ function IcsrSection({ user, isPublicView = false }) {
               </div>
 
               {/* Filters inside the events directory view */}
-              <div style={{ 
-                marginBottom: '20px', 
-                padding: '15px', 
-                backgroundColor: '#f8f9fa', 
+              <div style={{
+                marginBottom: '20px',
+                padding: '15px',
+                backgroundColor: '#f8f9fa',
                 borderRadius: '8px',
                 border: '1px solid #e9ecef'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '15px' 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '15px'
                 }}>
                   <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button 
+                  <button
                     onClick={handleClearFilters}
-                    style={{ 
-                      padding: '6px 12px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '4px', 
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       fontSize: '12px'
                     }}
@@ -952,11 +948,11 @@ function IcsrSection({ user, isPublicView = false }) {
                     Clear Filters
                   </button>
                 </div>
-                
-                <div className="filter-grid" style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(3, 1fr)', 
-                  gap: '12px' 
+
+                <div className="filter-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px'
                 }}>
                   <div className="filter-group">
                     <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Event Type</label>
@@ -999,10 +995,10 @@ function IcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Active Filters Summary */}
-                <div style={{ 
-                  marginTop: '12px', 
-                  padding: '8px', 
-                  backgroundColor: '#e9ecef', 
+                <div style={{
+                  marginTop: '12px',
+                  padding: '8px',
+                  backgroundColor: '#e9ecef',
                   borderRadius: '4px',
                   fontSize: '12px'
                 }}>
@@ -1010,7 +1006,7 @@ function IcsrSection({ user, isPublicView = false }) {
                   {filters.event_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.event_type}</span>}
                   {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
                   {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search && 
+                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
                     <span>No filters applied</span>
                   }
                 </div>

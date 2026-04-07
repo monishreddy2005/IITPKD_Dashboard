@@ -68,10 +68,6 @@ function ConclaveSection({ user, isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>Industry-Academia Conclave</h1>
-                <p>
-                  Explore the annual Industry-Academia Conclave events, themes, participating companies,
-                  and key highlights from each edition.
-                </p>
               </div>
               {user && user.role_id === 3 && (
                 <div className="page-header-actions">
@@ -84,12 +80,12 @@ function ConclaveSection({ user, isPublicView = false }) {
           </>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Summary Cards - Modern Design */}
@@ -133,7 +129,7 @@ function ConclaveSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -218,7 +214,7 @@ function ConclaveSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -586,10 +582,10 @@ function ConclaveSection({ user, isPublicView = false }) {
             ))}
           </div>
         ) : (
-          <div className="no-data" style={{ 
-            textAlign: 'center', 
-            padding: '60px', 
-            backgroundColor: '#f8f9fa', 
+          <div className="no-data" style={{
+            textAlign: 'center',
+            padding: '60px',
+            backgroundColor: '#f8f9fa',
             borderRadius: '12px',
             marginTop: '20px'
           }}>

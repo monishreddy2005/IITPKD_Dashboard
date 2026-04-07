@@ -188,17 +188,12 @@ function IarSection({ user, isPublicView = false }) {
           </button>
         )}
         {!isPublicView && <h1>International and Alumni Relations</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
-          year, department, program, gender, and category.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -219,12 +214,12 @@ function IarSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (
@@ -456,8 +451,8 @@ function IarSection({ user, isPublicView = false }) {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
                   {[
-                    { id: 'iar-dept',    label: 'Department',   key: 'department',  options: filterOptions.departments },
-                    { id: 'iar-program', label: 'Course Type',  key: 'course_type', options: filterOptions.course_types },
+                    { id: 'iar-dept', label: 'Department', key: 'department', options: filterOptions.departments },
+                    { id: 'iar-program', label: 'Course Type', key: 'course_type', options: filterOptions.course_types },
                   ].map(({ id, label, key, options }) => (
                     <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
@@ -505,10 +500,10 @@ function IarSection({ user, isPublicView = false }) {
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
@@ -659,10 +654,10 @@ function IarSection({ user, isPublicView = false }) {
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
@@ -714,8 +709,8 @@ function IarSection({ user, isPublicView = false }) {
                       {/* Custom legend — clean pill badges above the chart */}
                       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'flex-end' }}>
                         {[
-                          { color: HIGHER_BAR_COLOR,    label: 'Higher Studies' },
-                          { color: CORPORATE_BAR_COLOR, label: 'Corporate'      },
+                          { color: HIGHER_BAR_COLOR, label: 'Higher Studies' },
+                          { color: CORPORATE_BAR_COLOR, label: 'Corporate' },
                         ].map(({ color, label }) => (
                           <div key={label} style={{
                             display: 'flex', alignItems: 'center', gap: '6px',
@@ -734,16 +729,16 @@ function IarSection({ user, isPublicView = false }) {
                             <XAxis dataKey="department" angle={-38} textAnchor="end" height={80} tick={{ fontSize: 10 }} interval={0} />
                             <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="higher"    name="Higher Studies" stackId="a" fill={HIGHER_BAR_COLOR}    radius={[0, 0, 0, 0]} barSize={24} />
-                            <Bar dataKey="corporate" name="Corporate"      stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={24} />
+                            <Bar dataKey="higher" name="Higher Studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[0, 0, 0, 0]} barSize={24} />
+                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={24} />
                           </BarChart>
                         </ResponsiveContainer>
 
                         {/* Chart Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -787,8 +782,8 @@ function IarSection({ user, isPublicView = false }) {
                         </div>
 
                         <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '300px', overflowY: 'auto' }}>
-                          <table style={{ 
-                            width: '100%', 
+                          <table style={{
+                            width: '100%',
                             borderCollapse: 'collapse',
                             fontSize: '13px'
                           }}>

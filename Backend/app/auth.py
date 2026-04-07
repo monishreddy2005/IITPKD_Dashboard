@@ -180,6 +180,99 @@ def get_roles(current_user_id):
         conn.close()
 
 
+@auth_bp.route('/roles/<int:role_id>', methods=['PUT'])
+@token_required
+def update_role(current_user_id, role_id):
+    """Updates the name of an existing role. Admin only."""
+    data = request.get_json()
+    if not data or not data.get('name'):
+        return jsonify({'message': 'Role name is required'}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if not _require_admin(cur, current_user_id):
+            return jsonify({'message': 'Admin access required'}), 403
+        cur.execute(
+            "UPDATE roles SET name = %s WHERE id = %s RETURNING id, name;",
+            (data['name'].strip(), role_id)
+        )
+        updated = cur.fetchone()
+        if not updated:
+            return jsonify({'message': 'Role not found'}), 404
+        conn.commit()
+        return jsonify(updated), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+@auth_bp.route('/roles', methods=['POST'])
+@token_required
+def create_role(current_user_id):
+    """Creates a new role with an explicit id. Admin only."""
+    data = request.get_json()
+    if not data or not data.get('name'):
+        return jsonify({'message': 'Role name is required'}), 400
+    if data.get('id') is None:
+        return jsonify({'message': 'Role id is required'}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if not _require_admin(cur, current_user_id):
+            return jsonify({'message': 'Admin access required'}), 403
+        cur.execute(
+            "INSERT INTO roles (id, name) VALUES (%s, %s) RETURNING id, name;",
+            (int(data['id']), data['name'].strip())
+        )
+        new_role = cur.fetchone()
+        conn.commit()
+        return jsonify(new_role), 201
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        return jsonify({'message': 'A role with that id or name already exists'}), 409
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+@auth_bp.route('/roles/<int:role_id>', methods=['DELETE'])
+@token_required
+def delete_role(current_user_id, role_id):
+    """Deletes a role. Refuses if any users are still assigned to it. Admin only."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if not _require_admin(cur, current_user_id):
+            return jsonify({'message': 'Admin access required'}), 403
+
+        # Safety check: don't delete roles that are in use
+        cur.execute("SELECT COUNT(*) AS cnt FROM users WHERE role_id = %s;", (role_id,))
+        count = cur.fetchone()['cnt']
+        if count > 0:
+            return jsonify({'message': f'Cannot delete: {count} user(s) still assigned to this role'}), 409
+
+        cur.execute("DELETE FROM roles WHERE id = %s RETURNING id;", (role_id,))
+        deleted = cur.fetchone()
+        if not deleted:
+            return jsonify({'message': 'Role not found'}), 404
+        conn.commit()
+        return jsonify({'message': 'Role deleted successfully'}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
 @auth_bp.route('/create-user', methods=['POST'])
 @token_required
 def create_user(current_user_id):

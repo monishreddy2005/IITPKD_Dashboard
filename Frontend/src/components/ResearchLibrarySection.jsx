@@ -227,18 +227,37 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
             ← Back to Research
           </button>
         )}
+        {/* Upload Button */}
+        {!isPublicView && user && user.role_id === 3 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginBottom: '0px'
+          }}>
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              📤 Upload Publications
+            </button>
+          </div>
+        )}
         {!isPublicView && <h1>Research · Library & Scholarly Outputs</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Explore the institute&apos;s research publications across journals, conferences, and scholarly formats with
-          granular filters by department and year.
-        </p>
-
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Modern Summary Cards */}
@@ -382,16 +401,16 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
         </div>
 
         {/* Radio Buttons - Moved Outside with White Background and White Text */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           gap: '20px',
           marginBottom: '30px',
           padding: '20px',
           borderRadius: '12px',
           backgroundColor: '#f8f9fa'
         }}>
-          <button 
+          <button
             onClick={() => setViewType('trend')}
             style={{
               padding: '12px 24px',
@@ -407,7 +426,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
           >
             📈 Publication Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('department')}
             style={{
               padding: '12px 24px',
@@ -423,7 +442,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
           >
             🏢 Department-wise
           </button>
-          <button 
+          <button
             onClick={() => setViewType('type')}
             style={{
               padding: '12px 24px',
@@ -439,7 +458,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
           >
             📊 Type Distribution
           </button>
-          <button 
+          <button
             onClick={() => setViewType('publicationsTable')}
             style={{
               padding: '12px 24px',
@@ -457,30 +476,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
           </button>
         </div>
 
-        {/* Upload Button */}
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'flex-end',
-            marginBottom: '20px'
-          }}>
-            <button
-              onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: '#28a745', 
-                color: '#fff', 
-                border: 'none', 
-                borderRadius: '8px', 
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
-              📤 Upload Publications
-            </button>
-          </div>
-        )}
+
 
         {loading && (
           <div className="loading-state">
@@ -493,12 +489,12 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
           <>
             {/* Publication Trend Section */}
             {viewType === 'trend' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -510,28 +506,28 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside trend view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -539,11 +535,11 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -589,10 +585,10 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -600,7 +596,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                     {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                     {filters.publication_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.publication_year}</span>}
                     {filters.publication_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.publication_type}</span>}
-                    {filters.department === 'All' && filters.publication_year === 'All' && filters.publication_type === 'All' && 
+                    {filters.department === 'All' && filters.publication_year === 'All' && filters.publication_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -623,12 +619,12 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
             {/* Department-wise Publications Section */}
             {viewType === 'department' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -640,28 +636,28 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside department view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -669,11 +665,11 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(2, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Publication Year</label>
@@ -705,17 +701,17 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
                     <strong>Active Filters:</strong>{' '}
                     {filters.publication_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.publication_year}</span>}
                     {filters.publication_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.publication_type}</span>}
-                    {filters.publication_year === 'All' && filters.publication_type === 'All' && 
+                    {filters.publication_year === 'All' && filters.publication_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -737,12 +733,12 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
             {/* Publication Type Distribution Section */}
             {viewType === 'type' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -754,28 +750,28 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside type distribution view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -783,11 +779,11 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(2, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -819,17 +815,17 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
                     <strong>Active Filters:</strong>{' '}
                     {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                     {filters.publication_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.publication_year}</span>}
-                    {filters.department === 'All' && filters.publication_year === 'All' && 
+                    {filters.department === 'All' && filters.publication_year === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -838,14 +834,14 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                 <div className="chart-container">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie 
-                        data={typePieData} 
-                        dataKey="value" 
-                        nameKey="name" 
-                        cx="50%" 
-                        cy="50%" 
-                        outerRadius={100} 
-                        label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} 
+                      <Pie
+                        data={typePieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         labelLine={false}
                       >
                         {typePieData.map((e, i) => <Cell key={e.name} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />)}
@@ -860,12 +856,12 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
             {/* Publications Directory Table Section */}
             {viewType === 'publicationsTable' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '15px' }}>
                   <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -877,28 +873,28 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside publications table view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -906,11 +902,11 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -956,10 +952,10 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -967,7 +963,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                     {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                     {filters.publication_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.publication_year}</span>}
                     {filters.publication_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.publication_type}</span>}
-                    {filters.department === 'All' && filters.publication_year === 'All' && filters.publication_type === 'All' && 
+                    {filters.department === 'All' && filters.publication_year === 'All' && filters.publication_type === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>

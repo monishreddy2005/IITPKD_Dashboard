@@ -59,10 +59,10 @@ const formatScaledCurrency = (value) => {
   if (!Number.isFinite(numeric) || numeric === 0) {
     return { value: '0', unit: '' };
   }
-  
+
   const crore = 10000000;
   const lakh = 100000;
-  
+
   if (numeric >= crore) {
     const crores = numeric / crore;
     return {
@@ -356,10 +356,6 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>
-                <p>
-                  Track externally funded and consultancy projects, partnership MoUs, and innovation outcomes through patents
-                  filed and granted under IIT Palakkad&apos;s ICSR portfolio.
-                </p>
               </div>
               {user && user.role_id === 3 && (
                 <div className="page-header-actions">
@@ -381,12 +377,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           </>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Modern Summary Cards */}
@@ -604,15 +600,15 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
         </div>
 
         {/* Radio Buttons - Moved Outside */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           gap: '20px',
           marginBottom: '30px',
           padding: '20px',
           borderRadius: '12px'
         }}>
-          <button 
+          <button
             onClick={() => setViewType('projects')}
             style={{
               padding: '12px 24px',
@@ -628,7 +624,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           >
             📊 Projects Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('mous')}
             style={{
               padding: '12px 24px',
@@ -644,7 +640,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           >
             🤝 MoUs Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('patents')}
             style={{
               padding: '12px 24px',
@@ -660,7 +656,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           >
             📝 Patents Trend
           </button>
-          <button 
+          <button
             onClick={() => setViewType('projectsTable')}
             style={{
               padding: '12px 24px',
@@ -676,7 +672,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           >
             📋 Projects Directory
           </button>
-          <button 
+          <button
             onClick={() => setViewType('mousTable')}
             style={{
               padding: '12px 24px',
@@ -707,12 +703,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           <>
             {/* Projects Trend Section */}
             {viewType === 'projects' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -724,28 +720,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside projects view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -753,11 +749,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -817,10 +813,10 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -829,7 +825,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
                     {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
                     {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
-                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' && 
+                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -843,20 +839,20 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                      <Bar 
-                        dataKey="funded" 
-                        name="Sponsored Projects" 
-                        stackId="a" 
-                        fill="#6366f1" 
-                        radius={[0, 0, 4, 4]} 
+                      <Bar
+                        dataKey="funded"
+                        name="Sponsored Projects"
+                        stackId="a"
+                        fill="#6366f1"
+                        radius={[0, 0, 4, 4]}
                         barSize={40}
                       />
-                      <Bar 
-                        dataKey="consultancy" 
-                        name="Consultancy Projects" 
-                        stackId="a" 
-                        fill="#22c55e" 
-                        radius={[4, 4, 0, 0]} 
+                      <Bar
+                        dataKey="consultancy"
+                        name="Consultancy Projects"
+                        stackId="a"
+                        fill="#22c55e"
+                        radius={[4, 4, 0, 0]}
                         barSize={40}
                       />
                     </BarChart>
@@ -867,12 +863,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
             {/* MoUs Trend Section */}
             {viewType === 'mous' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -884,28 +880,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside MoUs view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -913,11 +909,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
@@ -935,16 +931,16 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
                     <strong>Active Filters:</strong>{' '}
                     {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
-                    {filters.mou_year === 'All' && 
+                    {filters.mou_year === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -958,11 +954,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="total" 
+                      <Line
+                        type="monotone"
+                        dataKey="total"
                         name="MoUs Signed"
-                        stroke="#a855f7" 
+                        stroke="#a855f7"
                         strokeWidth={3}
                         dot={{ r: 6, fill: '#a855f7' }}
                         activeDot={{ r: 8 }}
@@ -975,12 +971,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
             {/* Patents Trend Section */}
             {viewType === 'patents' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '20px' }}>
                   <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -992,28 +988,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside patents view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -1021,11 +1017,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(2, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Year</label>
@@ -1057,17 +1053,17 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
                     <strong>Active Filters:</strong>{' '}
                     {filters.patent_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.patent_year}</span>}
                     {filters.patent_status !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.patent_status}</span>}
-                    {filters.patent_year === 'All' && filters.patent_status === 'All' && 
+                    {filters.patent_year === 'All' && filters.patent_status === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -1101,12 +1097,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
             {/* Projects Directory Table */}
             {viewType === 'projectsTable' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '15px' }}>
                   <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1118,28 +1114,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside projects table view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -1147,11 +1143,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(4, 1fr)', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -1211,10 +1207,10 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
@@ -1223,7 +1219,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                     {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
                     {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
                     {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
-                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' && 
+                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>
@@ -1260,12 +1256,12 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
 
             {/* MoUs Directory Table */}
             {viewType === 'mousTable' && (
-              <section className="chart-section" style={{ 
-                marginBottom: '30px', 
-                padding: '20px', 
-                backgroundColor: '#fff', 
-                borderRadius: '10px', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+              <section className="chart-section" style={{
+                marginBottom: '30px',
+                padding: '20px',
+                backgroundColor: '#fff',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <div className="chart-header" style={{ marginBottom: '15px' }}>
                   <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1277,28 +1273,28 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 </div>
 
                 {/* Filters inside MoUs table view */}
-                <div style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#f8f9fa',
                   borderRadius: '8px',
                   border: '1px solid #e9ecef'
                 }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '15px'
                   }}>
                     <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button 
+                    <button
                       onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '12px'
                       }}
@@ -1306,11 +1302,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                       Clear Filters
                     </button>
                   </div>
-                  
-                  <div className="filter-grid" style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr', 
-                    gap: '12px' 
+
+                  <div className="filter-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr',
+                    gap: '12px'
                   }}>
                     <div className="filter-group">
                       <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
@@ -1328,16 +1324,16 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
 
                   {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '8px',
+                    backgroundColor: '#e9ecef',
                     borderRadius: '4px',
                     fontSize: '12px'
                   }}>
                     <strong>Active Filters:</strong>{' '}
                     {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
-                    {filters.mou_year === 'All' && 
+                    {filters.mou_year === 'All' &&
                       <span>No filters applied</span>
                     }
                   </div>

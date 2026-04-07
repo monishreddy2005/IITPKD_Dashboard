@@ -244,13 +244,12 @@ function AcademicSection({ user, isPublicView = false }) {
 
         {showUploadBtn && (
           <div className="section-header">
+            <h1>Student Overview</h1>
             <div className="header-left" />
+
             <button className="upload-data-btn" onClick={() => setIsUploadModalOpen(true)}>Upload Data</button>
           </div>
         )}
-        <div className="page-header-left">
-          <h1>Employee Overview</h1>
-        </div>
         {error && <div className="error-message">{error}</div>}
 
         {/* ══ Student Summary ══════════════════════════════════════════════ */}

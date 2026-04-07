@@ -104,17 +104,12 @@ function IccSection({ user, isPublicView = false }) {
           </button>
         )}
         {!isPublicView && <h1>Internal Complaints Committee (ICC)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor the yearly trend of sexual harassment complaints received by the ICC and track their resolution
-          status.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -135,12 +130,12 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (
@@ -416,8 +411,8 @@ function IccSection({ user, isPublicView = false }) {
                         <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
                         <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -548,7 +543,7 @@ function IccSection({ user, isPublicView = false }) {
                             );
 
                           return (
-                            <tr key={row.year} style={{ 
+                            <tr key={row.year} style={{
                               backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
                               borderBottom: '1px solid #e0e0e0'
                             }}>

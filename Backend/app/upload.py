@@ -353,23 +353,74 @@ _OUTREACH_PROGRAM_NAMES = {
 
 def _preprocess_outreach_typed(reader, csv_headers, program_name):
     """
-    Inject `program_name` into every row (overriding any user-supplied value)
-    and redirect the logical table name to the physical `outreach` table.
-    Returns the same (reader, csv_headers, error) tuple convention.
+    Inject `program_name` into every row, ensure mandatory ID fields exist,
+    and generate a deterministic composite `id`.
     """
     rows = list(reader)
     if not rows:
         return None, None, 'CSV file is empty.'
 
-    # Ensure program_name column exists in headers
+    # Normalize headers
     lower_headers = [h.lower() for h in csv_headers]
+    
+    # 1. Inject program_name if not already present or needs overriding
     if 'program_name' not in lower_headers:
         csv_headers = list(csv_headers) + ['program_name']
+        lower_headers.append('program_name')
 
+    # 2. Check for required ID fields
+    # Note: program_name is now guaranteed.
+    # User mentioned 'createdby' - we'll look for both created_by and createdby.
+    id_fields = ['academic_year', 'program_type', 'start_date', 'end_date']
+    for f in id_fields:
+        if f not in lower_headers:
+            return None, None, f"Missing required column for ID generation: {f}"
+    
+    # Check for created_by / createdby
+    has_created_by = 'created_by' in lower_headers or 'createdby' in lower_headers
+    if not has_created_by:
+        return None, None, "Missing required column for ID generation: created_by"
+
+    # Add id to headers if not present
+    if 'id' not in lower_headers:
+        csv_headers = ['id'] + list(csv_headers)
+    elif csv_headers[0].lower() != 'id':
+        # Move id to front for consistency
+        csv_headers = ['id'] + [h for h in csv_headers if h.lower() != 'id']
+
+    processed = []
     for row in rows:
-        row['program_name'] = program_name
+        # Normalize keys in the row dict to access them easily
+        norm_row = {k.lower(): v for k, v in row.items()}
+        
+        # Override program_name if we are in a 'typed' upload
+        if program_name:
+            row['program_name'] = program_name
+            norm_row['program_name'] = program_name
 
-    return _rebuild_stream(csv_headers, rows)
+        ay    = (norm_row.get('academic_year') or '').strip()
+        cb    = (norm_row.get('created_by') or norm_row.get('createdby') or '').strip()
+        pn    = (norm_row.get('program_name') or '').strip()
+        pt    = (norm_row.get('program_type') or '').strip()
+        sd    = (norm_row.get('start_date') or '').strip()
+        ed    = (norm_row.get('end_date') or '').strip()
+
+        if not all([ay, cb, pn, pt, sd, ed]):
+            missing = [f for f, v in [('academic_year', ay), ('created_by', cb), ('program_name', pn), 
+                                      ('program_type', pt), ('start_date', sd), ('end_date', ed)] if not v]
+            return None, None, f"Row with missing ID components ({', '.join(missing)}): {row}"
+
+        # Generate ID: Concatenation (using pipe to avoid ambiguity)
+        # academic_year | created_by | program_name | program_type | start_date | end_date
+        row['id'] = f"{ay}|{cb}|{pn}|{pt}|{sd}|{ed}"
+        
+        # Ensure 'created_by' key exists (normalize 'createdby' if it was used)
+        if 'createdby' in row and 'created_by' not in row:
+            row['created_by'] = row.pop('createdby')
+
+        processed.append(row)
+
+    return _rebuild_stream(csv_headers, processed)
 
 
 # ---------------------------------------------------------------------------
@@ -456,12 +507,11 @@ def upload_csv(current_user_id):
             reader, csv_headers, error = _preprocess_nptel_enrollments(reader, csv_headers, conn)
         elif table_name == 'research_publications':
             reader, csv_headers, error = _preprocess_research_publications(reader, csv_headers)
-        elif table_name in _OUTREACH_PROGRAM_NAMES:
-            reader, csv_headers, error = _preprocess_outreach_typed(
-                reader, csv_headers, _OUTREACH_PROGRAM_NAMES[table_name]
-            )
+        elif table_name == 'outreach' or table_name in _OUTREACH_PROGRAM_NAMES:
+            p_name = _OUTREACH_PROGRAM_NAMES.get(table_name) # None if table_name is exactly 'outreach'
+            reader, csv_headers, error = _preprocess_outreach_typed(reader, csv_headers, p_name)
             if not error:
-                table_name = 'outreach'   # redirect to physical table
+                table_name = 'outreach'   # redirect typed aliases to physical table
 
         if error:
             print(f"\n{'='*80}")

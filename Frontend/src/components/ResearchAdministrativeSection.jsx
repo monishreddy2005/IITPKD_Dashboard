@@ -168,7 +168,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
   // Process data for department-wise yearly trend line graph
   const departmentYearlyTrendData = useMemo(() => {
     if (!summary.yearly.length) return { trendData: [], departments: [] };
-    
+
     // Get all departments from the data
     const departments = new Set();
     summary.yearly.forEach((yearData) => {
@@ -178,7 +178,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
         }
       });
     });
-    
+
     // Transform data for line chart
     const trendData = summary.yearly.map((yearData) => {
       const yearItem = { year: yearData.year };
@@ -187,7 +187,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
       });
       return yearItem;
     });
-    
+
     return { trendData, departments: Array.from(departments) };
   }, [summary.yearly]);
 
@@ -268,10 +268,6 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
             <div className="page-header-row">
               <div className="page-header-left">
                 <h1>Research · Administrative (Industry Externships)</h1>
-                <p>
-                  Monitor faculty participation in industry externship programmes and collaborations, segmented by department,
-                  engagement type, and year.
-                </p>
               </div>
               {user && user.role_id === 3 && (
                 <div className="page-header-actions">
@@ -284,12 +280,12 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           </>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {/* Modern Summary Cards */}
@@ -433,15 +429,15 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
         </div>
 
         {/* Radio Buttons */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           gap: '20px',
           marginBottom: '30px',
           padding: '20px',
           borderRadius: '12px'
         }}>
-          <button 
+          <button
             onClick={() => setViewType('yearly')}
             style={{
               padding: '12px 24px',
@@ -457,7 +453,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           >
             📊 Year-wise Externships
           </button>
-          <button 
+          <button
             onClick={() => setViewType('department')}
             style={{
               padding: '12px 24px',
@@ -473,7 +469,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
           >
             🏢 Department-wise
           </button>
-          <button 
+          <button
             onClick={() => setViewType('externshipTable')}
             style={{
               padding: '12px 24px',
@@ -501,12 +497,12 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
         {!loading && (
           <>
             {/* Single View Section based on radio selection */}
-            <section className="chart-section" style={{ 
-              marginBottom: '30px', 
-              padding: '20px', 
-              backgroundColor: '#fff', 
-              borderRadius: '10px', 
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+            <section className="chart-section" style={{
+              marginBottom: '30px',
+              padding: '20px',
+              backgroundColor: '#fff',
+              borderRadius: '10px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}>
               {/* Year-wise Externships Chart */}
               {viewType === 'yearly' && (
@@ -519,30 +515,30 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                       Distribution by type over time
                     </p>
                   </div>
-                  
+
                   {/* Filters inside the yearly view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -550,11 +546,11 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -588,17 +584,17 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                       {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
-                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                      {filters.department === 'All' && filters.externship_year === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -613,7 +609,7 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ fontSize: '11px' }} />
                         {externshipTypeKeys.map((type, index) => (
-                          <Bar key={type} dataKey={type} stackId="a" fill={TYPE_COLORS[index % TYPE_COLORS.length]} radius={index === externshipTypeKeys.length - 1 ? [4,4,0,0] : [0,0,0,0]} />
+                          <Bar key={type} dataKey={type} stackId="a" fill={TYPE_COLORS[index % TYPE_COLORS.length]} radius={index === externshipTypeKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
@@ -632,30 +628,30 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                       Yearly trend of externships by department
                     </p>
                   </div>
-                  
+
                   {/* Filters inside the department view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -663,11 +659,11 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -701,17 +697,17 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                       {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
-                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                      {filters.department === 'All' && filters.externship_year === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>
@@ -756,30 +752,30 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                       {externshipList.length} records found
                     </p>
                   </div>
-                  
+
                   {/* Filters inside the table view */}
-                  <div style={{ 
-                    marginBottom: '20px', 
-                    padding: '15px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '8px',
                     border: '1px solid #e9ecef'
                   }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center', 
-                      marginBottom: '15px' 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '15px'
                     }}>
                       <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
-                        style={{ 
-                          padding: '6px 12px', 
-                          backgroundColor: '#dc3545', 
-                          color: '#fff', 
-                          border: 'none', 
-                          borderRadius: '4px', 
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#dc3545',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '12px'
                         }}
@@ -787,11 +783,11 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                         Clear Filters
                       </button>
                     </div>
-                    
-                    <div className="filter-grid" style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '12px' 
+
+                    <div className="filter-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '12px'
                     }}>
                       <div className="filter-group">
                         <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
@@ -825,17 +821,17 @@ function ResearchAdministrativeSection({ user, isPublicView = false }) {
                     </div>
 
                     {/* Active Filters Summary */}
-                    <div style={{ 
-                      marginTop: '12px', 
-                      padding: '8px', 
-                      backgroundColor: '#e9ecef', 
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      backgroundColor: '#e9ecef',
                       borderRadius: '4px',
                       fontSize: '12px'
                     }}>
                       <strong>Active Filters:</strong>{' '}
                       {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
                       {filters.externship_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.externship_year}</span>}
-                      {filters.department === 'All' && filters.externship_year === 'All' && 
+                      {filters.department === 'All' && filters.externship_year === 'All' &&
                         <span>No filters applied</span>
                       }
                     </div>

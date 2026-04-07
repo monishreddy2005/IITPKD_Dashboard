@@ -126,7 +126,7 @@ function Header({ user, onLogout }) {
                                 </div>
                                 <div className="dropdown-divider"></div>
                                 <button className="dropdown-item" onClick={handleProfileClick}>
-                                    Check Profile
+                                    Profile & Admin Actions
                                 </button>
                                 <button className="dropdown-item" onClick={onLogout}>
                                     Logout
