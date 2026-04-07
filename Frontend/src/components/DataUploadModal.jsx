@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import './DataUploadModal.css';
 
@@ -356,7 +357,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
     const templateInfo = getTemplateData(tableName);
 
-    return (
+    const modalContent = (
         <div className="modal-overlay" onClick={handleClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
@@ -504,6 +505,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }
 
 export default DataUploadModal;

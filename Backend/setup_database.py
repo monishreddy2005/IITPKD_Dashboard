@@ -55,6 +55,7 @@ def main():
     # --no-owner: skips OWNER TO statements (avoids role-not-found errors).
     cmd = [
         'psql',
+        '-v', 'ON_ERROR_STOP=1',
         '--single-transaction',
         '--file', str(DUMP_FILE.resolve()),
         db_url,
