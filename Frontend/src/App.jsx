@@ -53,8 +53,12 @@ function App() {
 
     if (storedToken) {
       setToken(storedToken);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      if (storedUser && storedUser !== 'undefined') {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          localStorage.removeItem('authUser');
+        }
       }
     }
   }, []);
