@@ -7,6 +7,18 @@ function SocialEngagementsSection({ isPublicView = false }) {
 
   const SECTIONS = [
     {
+      to: '/outreach-extension/uba',
+      icon: '🌾',
+      title: 'Unnat Bharat Abhiyan',
+      subtitle: 'Rural Development Initiatives',
+      description:
+        'Track UBA projects, community engagement events, village adoption programs, and the impact of rural development initiatives.',
+      grad: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      shadow: 'rgba(240,147,251,0.3)',
+      shadowHover: 'rgba(240,147,251,0.45)',
+      label: 'View UBA Dashboard',
+    },
+    {
       to: '/outreach-extension/open-house',
       icon: '🏛️',
       title: 'Open House',
@@ -19,16 +31,28 @@ function SocialEngagementsSection({ isPublicView = false }) {
       label: 'View Open House Dashboard',
     },
     {
-      to: '/outreach-extension/uba',
-      icon: '🌾',
-      title: 'Unnat Bharat Abhiyan',
-      subtitle: 'Rural Development Initiatives',
+      to: '/outreach-extension/outreach?program=institute_visits',
+      icon: '🏫',
+      title: 'Institute Visits',
+      subtitle: 'Organised institution visits',
       description:
-        'Track UBA projects, community engagement events, village adoption programs, and the impact of rural development initiatives.',
-      grad: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      shadow: 'rgba(240,147,251,0.3)',
-      shadowHover: 'rgba(240,147,251,0.45)',
-      label: 'View UBA Dashboard',
+        'Organised visits by institutions to the IIT Palakkad campus.',
+      grad: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      shadow: 'rgba(67,233,123,0.3)',
+      shadowHover: 'rgba(67,233,123,0.45)',
+      label: 'View Institute Visits',
+    },
+    {
+      to: '/outreach-extension/outreach?program=nss_activities',
+      icon: '🤝',
+      title: 'NSS Activities',
+      subtitle: 'Community service initiatives',
+      description:
+        'National Service Scheme community service initiatives.',
+      grad: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      shadow: 'rgba(250,112,154,0.3)',
+      shadowHover: 'rgba(250,112,154,0.45)',
+      label: 'View NSS Activities',
     },
   ];
 

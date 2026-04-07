@@ -150,6 +150,10 @@ def get_filter_options(current_user_id):
         cur.execute("SELECT DISTINCT appointed_category FROM employees WHERE appointed_category IS NOT NULL ORDER BY appointed_category;")
         filter_options['appointed_category'] = [row['appointed_category'] for row in cur.fetchall()]
 
+        # Years of Joining (doj)
+        cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM doj)::int as year FROM employees WHERE doj IS NOT NULL ORDER BY year DESC;")
+        filter_options['years'] = [row['year'] for row in cur.fetchall()]
+
         return jsonify(filter_options), 200
 
     except Exception as e:

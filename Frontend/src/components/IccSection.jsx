@@ -145,6 +145,9 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
+            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+              Internal Complaints Committee (ICC)
+            </h2>
             {/* Modern Summary Cards */}
             <div style={{
               display: 'grid',
@@ -322,10 +325,10 @@ function IccSection({ user, isPublicView = false }) {
                 }}>
                   <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
-                      Year-wise Complaint Trend
+                      Internal Complaints Committee (ICC)
                     </h2>
                     <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                      Overview of total complaints vis-à-vis resolved and pending cases.
+                      Year-wise Complaint Trend
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>

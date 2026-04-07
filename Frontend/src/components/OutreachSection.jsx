@@ -180,96 +180,143 @@ function ExtraDataSection({ data }) {
   );
 }
 
-function RecordCard({ record, slNo, programConfig }) {
-  const [expanded, setExpanded] = useState(false);
+function GridRecordCard({ record, slNo, onClick }) {
+  return (
+    <div 
+        onClick={onClick}
+        style={{
+          background: '#f5f5f7',
+          border: '1px solid rgba(0,0,0,0.05)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 8px rgba(0,0,0,0.8)',
+          padding: '1.5rem',
+          cursor: 'pointer',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          height: '100%',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+        onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-6px)';
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.8)';
+            e.currentTarget.style.borderColor = 'rgba(64, 61, 248, 0.73)';
+        }}
+        onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.background = '#f5f5f7';
+            e.currentTarget.style.boxShadow = '0 8px 8px rgba(0,0,0,0.8)';
+            e.currentTarget.style.borderColor = 'rgba(0,0,0,0.05)';
+        }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{
+                width: '36px', height: '36px', borderRadius: '10px',
+                background: 'rgba(247,166,0,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.85rem', fontWeight: '700', color: '#f7a600',
+            }}>
+                {slNo}
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: '500', background: '#f5f5f7', padding: '0.2rem 0.6rem', borderRadius: '20px' }}>
+                {record.academic_year || 'N/A'}
+            </span>
+        </div>
+        
+        <div style={{ flexGrow: 1 }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '600', color: '#1d1d1f', margin: '0 0 0.5rem 0', lineHeight: '1.3' }}>
+                {record.program_name || 'Outreach Record'}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#6e6e73', margin: 0, lineHeight: '1.4' }}>
+                {[record.engagement_type, record.program_type].filter(Boolean).join(' · ')}
+            </p>
+        </div>
 
+        {(record.start_date || record.end_date) && (
+            <div style={{ fontSize: '0.85rem', color: '#555', marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1rem' }}>📅</span> 
+                {record.start_date ? new Date(record.start_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                {record.end_date && record.start_date !== record.end_date && ` - ${new Date(record.end_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`}
+            </div>
+        )}
+    </div>
+  );
+}
+
+function RecordExpandedView({ record, programConfig, onBack }) {
   const hasSpecificData = programConfig.specificFields.some(({ key }) => isNonNull(record[key]));
   const hasNssData =
     programConfig.key !== 'nss_activities' &&
     NSS_FIELDS.some(({ key }) => isNonNull(record[key]));
 
   return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid rgba(0,0,0,0.06)',
-      borderRadius: '14px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-      marginBottom: '0.875rem',
+    <div style={{ 
+      background: '#fff', 
+      borderRadius: '20px', 
+      border: '1px solid rgba(0,0,0,0.08)', 
       overflow: 'hidden',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+      animation: 'cardFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
     }}>
-      {/* Row header */}
-      <div
-        onClick={() => setExpanded(!expanded)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && setExpanded(!expanded)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '1.1rem 1.4rem',
-          cursor: 'pointer',
-          background: expanded ? 'rgba(247,166,0,0.03)' : '#fff',
-          borderBottom: expanded ? '1px solid rgba(247,166,0,0.1)' : 'none',
-          transition: 'background 0.2s',
-          userSelect: 'none',
-        }}
-      >
-        <div style={{
-          width: '30px', height: '30px', borderRadius: '8px',
-          background: 'rgba(247,166,0,0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.72rem', fontWeight: '700', color: '#f7a600',
-          flexShrink: 0,
-        }}>
-          {slNo}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.92rem', fontWeight: '600', color: '#1d1d1f', marginBottom: '0.1rem' }}>
-            {record.program_name || 'Outreach Record'}
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#6e6e73' }}>
-            {[record.academic_year, record.engagement_type, record.program_type]
-              .filter(Boolean).join(' · ')}
-          </div>
-        </div>
-        <span style={{
-          fontSize: '1.3rem', color: '#f7a600',
-          transform: expanded ? 'rotate(90deg)' : 'none',
-          transition: 'transform 0.2s',
-          flexShrink: 0,
-        }}>›</span>
+      <div style={{ 
+        padding: '1.2rem 2rem', 
+        borderBottom: '1px solid rgba(0,0,0,0.06)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        background: '#fafafa',
+        gap: '1.5rem'
+      }}>
+         <button onClick={onBack} style={{
+             background: '#fff', border: '1px solid #e0e0e0', borderRadius: '100px',
+             padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.9rem',
+             display: 'flex', alignItems: 'center', gap: '0.5rem',
+             fontWeight: '500', color: '#1d1d1f', transition: 'all 0.2s',
+             boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+         }}
+         onMouseEnter={(e) => { e.currentTarget.style.background = '#f0f0f0'; }}
+         onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+         >
+             <span style={{ fontSize: '1.1rem' }}>←</span> Back 
+         </button>
+         <div>
+            <h2 style={{ margin: '0 0 0.2rem 0', fontSize: '1.3rem', color: '#1d1d1f' }}>
+                {record.program_name || 'Record Details'}
+            </h2>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#6e6e73' }}>
+                {record.academic_year} · {record.engagement_type}
+            </p>
+         </div>
       </div>
 
-      {/* Expanded detail */}
-      {expanded && (
-        <div style={{ padding: '1.25rem 1.5rem 1.5rem' }}>
-          <SectionHeading>General Information</SectionHeading>
-          {COMMON_FIELDS.map(({ key, label }) => (
-            <FieldRow key={key} label={label} value={record[key]} />
-          ))}
+      <div style={{ padding: '2rem' }}>
+        <SectionHeading>General Information</SectionHeading>
+        {COMMON_FIELDS.map(({ key, label }) => (
+          <FieldRow key={key} label={label} value={record[key]} />
+        ))}
 
-          {hasSpecificData && (
-            <>
-              <SectionHeading>{programConfig.title} Details</SectionHeading>
-              {programConfig.specificFields.map(({ key, label }) => (
-                <FieldRow key={key} label={label} value={record[key]} />
-              ))}
-            </>
-          )}
+        {hasSpecificData && (
+          <>
+            <SectionHeading>{programConfig.title} Details</SectionHeading>
+            {programConfig.specificFields.map(({ key, label }) => (
+              <FieldRow key={key} label={label} value={record[key]} />
+            ))}
+          </>
+        )}
 
-          {hasNssData && (
-            <>
-              <SectionHeading>NSS Activities</SectionHeading>
-              {NSS_FIELDS.map(({ key, label }) => (
-                <FieldRow key={key} label={label} value={record[key]} />
-              ))}
-            </>
-          )}
+        {hasNssData && (
+          <>
+            <SectionHeading>NSS Activities</SectionHeading>
+            {NSS_FIELDS.map(({ key, label }) => (
+              <FieldRow key={key} label={label} value={record[key]} />
+            ))}
+          </>
+        )}
 
-          <ExtraDataSection data={record.extra_data} />
-        </div>
-      )}
+        <ExtraDataSection data={record.extra_data} />
+      </div>
     </div>
   );
 }
@@ -278,6 +325,12 @@ function ProgramDetailView({ programConfig, records, user, token, loading }) {
   const navigate = useNavigate();
   const matching = records.filter((r) => programConfig.match(r.program_name));
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // If a new program is selected from outside, reset selectedRecord
+  useEffect(() => {
+    setSelectedRecord(null);
+  }, [programConfig]);
 
   return (
     <div className="outreach-expanded-view">
@@ -329,15 +382,27 @@ function ProgramDetailView({ programConfig, records, user, token, loading }) {
                 </p>
               )}
             </div>
+          ) : selectedRecord ? (
+            <RecordExpandedView 
+              record={selectedRecord}
+              programConfig={programConfig}
+              onBack={() => setSelectedRecord(null)}
+            />
           ) : (
-            matching.map((record, idx) => (
-              <RecordCard
-                key={record.id ?? idx}
-                record={record}
-                slNo={idx + 1}
-                programConfig={programConfig}
-              />
-            ))
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                gap: '1.5rem' 
+            }}>
+              {matching.map((record, idx) => (
+                <GridRecordCard
+                  key={record.id ?? idx}
+                  record={record}
+                  slNo={idx + 1}
+                  onClick={() => setSelectedRecord(record)}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>

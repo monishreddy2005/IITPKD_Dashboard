@@ -56,19 +56,22 @@ function OutreachPublicView({ user }) {
         {/* Card Grid View */}
         {!activeSection && (
           <div className="outreach-sections-grid">
-            {sections.map((section, index) => (
-              <div
-                key={section.id}
-                className="outreach-section-card"
-                onClick={() => handleCardClick(section.id)}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="outreach-card-icon">{section.icon}</div>
-                <h3 className="outreach-card-title">{section.title}</h3>
-                <p className="outreach-card-subtitle">{section.subtitle}</p>
-                <div className="outreach-card-arrow">→</div>
-              </div>
-            ))}
+            {sections.map((section, index) => {
+              if (section.id === 'research-engagements') return null;
+              return (
+                <div
+                  key={section.id}
+                  className="outreach-section-card"
+                  onClick={() => handleCardClick(section.id)}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="outreach-card-icon">{section.icon}</div>
+                  <h3 className="outreach-card-title">{section.title}</h3>
+                  <p className="outreach-card-subtitle">{section.subtitle}</p>
+                  <div className="outreach-card-arrow">→</div>
+                </div>
+              );
+            })}
           </div>
         )}
 
