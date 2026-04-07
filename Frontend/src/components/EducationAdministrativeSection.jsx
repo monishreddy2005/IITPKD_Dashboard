@@ -599,7 +599,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
           }}>
             <input
               type="radio"
-              name="viewType"
+              name="viewType" 
               value="details"
               checked={viewType === 'details'}
               onChange={(e) => setViewType(e.target.value)}
@@ -610,30 +610,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
             </span>
           </label>
 
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            padding: '8px 16px',
-            backgroundColor: viewType === 'honorary' ? '#ec4899' : '#f8f9fa',
-            color: viewType === 'honorary' ? 'white' : '#333',
-            borderRadius: '30px',
-            transition: 'all 0.3s ease',
-            border: viewType === 'honorary' ? '2px solid #ec4899' : '2px solid #e0e0e0'
-          }}>
-            <input
-              type="radio"
-              name="viewType"
-              value="honorary"
-              checked={viewType === 'honorary'}
-              onChange={(e) => setViewType(e.target.value)}
-              style={{ accentColor: '#ec4899', width: '16px', height: '16px', cursor: 'pointer' }}
-            />
-            <span style={{ fontWeight: viewType === 'honorary' ? 'bold' : 'normal', fontSize: '14px' }}>
-              👑 Honorary Professors
-            </span>
-          </label>
+
         </div>
 
         <div style={{ position: 'relative', minHeight: '400px' }}>
@@ -1436,161 +1413,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
               </div>
           </div>
 
-          {/* Honorary Professors View */}
-          <div style={{ display: viewType === 'honorary' ? 'block' : 'none' }}>
-              <div className="chart-section" style={{ marginTop: '0' }}>
-                {/* Filters for Honorary View */}
-                <div className="filter-panel" style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e9ecef' 
-                }}>
-                  <div className="filter-header" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
-                  }}>
-                    <h4 style={{ margin: '0', color: '#333' }}>Filters for Honorary Professors</h4>
-                    <button 
-                      className="clear-filters-btn" 
-                      onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
 
-                  <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
-                      <select
-                        value={honoraryFilters.year}
-                        onChange={(e) => handleFilterChange('year', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-                      <select
-                        value={honoraryFilters.department}
-                        onChange={(e) => handleFilterChange('department', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Departments</option>
-                        {filterOptions.departments.map((dept) => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Engagement Type</label>
-                      <select
-                        value={honoraryFilters.engagement_type}
-                        onChange={(e) => handleFilterChange('engagement_type', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Types</option>
-                        {filterOptions.engagement_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {honoraryFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {honoraryFilters.year}</span>}
-                    {honoraryFilters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {honoraryFilters.department}</span>}
-                    {honoraryFilters.engagement_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {honoraryFilters.engagement_type}</span>}
-                    {honoraryFilters.year === 'All' && honoraryFilters.department === 'All' && honoraryFilters.engagement_type === 'All' && 
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
-
-                <div className="chart-header">
-                  <h2 style={{ color: '#f97316' }}>Honorary Professor Details</h2>
-                  <p className="chart-description">
-                    List of honorary professors
-                  </p>
-                </div>
-
-                {engagementList.filter(item => item.std_type === 'Honorary').length > 0 ? (
-                  <div className="table-responsive" style={{
-                    height: '400px',
-                    maxHeight: '400px',
-                    overflowY: 'auto',
-                    overflowX: 'auto',
-                    border: '1px solid var(--border-light)',
-                    borderRadius: '8px',
-                    backgroundColor: '#fff'
-                  }}>
-                    <table style={{
-                      width: '100%',
-                      borderCollapse: 'collapse'
-                    }}>
-                      <thead style={{
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 10,
-                        backgroundColor: '#f8f9fa'
-                      }}>
-                        <tr>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Sl No</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Name</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Designation</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Department</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {engagementList
-                          .filter(item => item.std_type === 'Honorary')
-                          .map((item, index) => (
-                            <tr key={item.engagement_code} style={{
-                              borderBottom: '1px solid #f0f0f0',
-                              backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa'
-                            }}>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>{index + 1}</td>
-                              <td style={{ padding: '10px', fontSize: '13px', fontWeight: '500' }}>{item.faculty_name || '—'}</td>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>Professor</td>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>{item.department || '—'}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="no-data">
-                    <p>No honorary professor data available for the selected filters.</p>
-                  </div>
-                )}
-              </div>
-          </div>
         </div>
 
         {/* Upload Modal */}

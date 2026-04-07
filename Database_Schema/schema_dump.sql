@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict fpL1MEZn7xSTdP9uec2kpPJs49Z9Y9FucIGiyktIdUbzEe4C5Zdl2cG6eNufJ27
+\restrict mYfNkY0AGvnKED83Q8lbiqidcD5W2YKshZjT7KoIYBPa9oGUFHvhkpBu7KH5GSh
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
+-- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1064,7 +1064,7 @@ ALTER TABLE public.placement_packages OWNER TO postgres;
 --
 
 CREATE TABLE public.placement_summary (
-    placement_year integer NOT NULL,
+    placement_year character varying(20) NOT NULL,
     program public.program_type NOT NULL,
     gender public.gender_type NOT NULL,
     registered integer NOT NULL,
@@ -1957,5 +1957,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fpL1MEZn7xSTdP9uec2kpPJs49Z9Y9FucIGiyktIdUbzEe4C5Zdl2cG6eNufJ27
+\unrestrict mYfNkY0AGvnKED83Q8lbiqidcD5W2YKshZjT7KoIYBPa9oGUFHvhkpBu7KH5GSh
 
