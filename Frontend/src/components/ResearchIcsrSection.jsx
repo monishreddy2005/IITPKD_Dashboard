@@ -240,7 +240,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
           total_projects: summaryResp?.total_projects ?? summaryResp?.sanctioned_projects ?? 0,
           total_mous: summaryResp?.total_mous || 0,
           total_patents: summaryResp?.total_patents || 0,
-          consultancy_revenue: summaryResp?.consultancy_revenue || 0,
+          consultancy_revenue: summaryResp?.total_sanctioned_revenue || summaryResp?.consultancy_revenue || 0,
           patent_breakdown: buildPatentBreakdown(summaryResp?.patent_breakdown)
         });
 
