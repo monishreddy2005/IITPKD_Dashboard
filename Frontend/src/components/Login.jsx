@@ -113,7 +113,7 @@ function Login({ onLoginSuccess }) {
           {error && <p className="login-error">{error}</p>}
         </form>
 
-        <button
+        {/* <button
         className="login-toggle"
         onClick={() => {
           setIsLoginView(!isLoginView);
@@ -121,7 +121,7 @@ function Login({ onLoginSuccess }) {
         }}
       >
         {isLoginView ? 'Need an account? Sign Up' : 'Already have an account? Login'}
-      </button>
+      </button> */}
       </div>
     </div>
   );
