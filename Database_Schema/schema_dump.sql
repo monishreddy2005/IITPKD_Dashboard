@@ -389,7 +389,7 @@ CREATE TABLE public.courses_table (
     date_of_proposal date,
     proposal_type text,
     bac_number integer,
-    senate_number integer,
+    senate_number character varying(50) NOT NULL,
     course_proposal_pdf character varying(255),
     is_industry_course character varying(10),
     industry_partner character varying(100),
@@ -1579,7 +1579,7 @@ ALTER TABLE ONLY public.alumni
 --
 
 ALTER TABLE ONLY public.courses_table
-    ADD CONSTRAINT courses_table_pkey PRIMARY KEY (course_code);
+    ADD CONSTRAINT courses_table_pkey PRIMARY KEY (course_code, senate_number);
 
 
 --

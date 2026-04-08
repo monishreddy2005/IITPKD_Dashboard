@@ -25,7 +25,7 @@ UPDATABLE_TABLES = {
     'department':                   ['deptcode'],
     'alumni':                       ['sl_no'],
     'employees':                    ['id'],
-    'courses_table':                ['course_code'],
+    'courses_table':                ['course_code', 'senate_number'],
     'student_table':                ['roll_no_current'],
     # Grievance / Welfare
     'externship_info':              ['externid'],

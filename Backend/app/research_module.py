@@ -305,7 +305,7 @@ def get_summary(current_user_id):
 
         funded_total = 0
         consultancy_total = 0
-        consultancy_revenue = 0.0
+        total_sanctioned_revenue = 0.0
         total_projects = 0
 
         # Count funded (sponsored) projects
@@ -314,13 +314,16 @@ def get_summary(current_user_id):
                 department, project_year, status, dept_column='principal_investigator_department'
             )
             cur.execute(
-                f"SELECT COUNT(*) AS total, COALESCE(SUM(amount_sanctioned), 0) AS amount FROM icsr_sponsered_projects {where_clause}",
+                f"SELECT COUNT(*) AS total, SUM(amount_sanctioned) AS amount FROM icsr_sponsered_projects {where_clause}",
                 params,
             )
             row = cur.fetchone()
-            funded_total = int(row['total'])
-            total_projects += funded_total
-            consultancy_revenue = _decimal_to_float(row['amount'])
+            if row:
+                funded_total = int(row['total'] or 0)
+                total_projects += funded_total
+                amount_value = row.get('amount')
+                if amount_value is not None:
+                    total_sanctioned_revenue += _decimal_to_float(amount_value)
 
 
         # Count consultancy projects
@@ -329,13 +332,16 @@ def get_summary(current_user_id):
                 department, project_year, status, dept_column='department'
             )
             cur.execute(
-                f"SELECT COUNT(*) AS total, COALESCE(SUM(amount_sanctioned), 0) AS amount FROM icsr_consultancy_projects {where_clause}",
+                f"SELECT COUNT(*) AS total, SUM(amount_sanctioned) AS amount FROM icsr_consultancy_projects {where_clause}",
                 params,
             )
             row = cur.fetchone()
-            consultancy_total = int(row['total'])
-            consultancy_revenue +=_decimal_to_float(row['amount'])
-            total_projects += consultancy_total
+            if row:
+                consultancy_total = int(row['total'] or 0)
+                amount_value = row.get('amount')
+                if amount_value is not None:
+                    total_sanctioned_revenue += _decimal_to_float(amount_value)
+                total_projects += consultancy_total
 
         total_mous = 0
         if _table_exists(conn, 'research_mous'):
@@ -374,7 +380,7 @@ def get_summary(current_user_id):
             'total_mous': total_mous,
             'total_patents': total_patents,
             'patent_breakdown': patent_breakdown,
-            'consultancy_revenue': consultancy_revenue,
+            'total_sanctioned_revenue': total_sanctioned_revenue,
         }
         return jsonify(summary)
     except Exception as exc:
@@ -1196,5 +1202,3 @@ def publication_list(current_user_id):
             cur.close()
         if conn:
             conn.close()
-
-
