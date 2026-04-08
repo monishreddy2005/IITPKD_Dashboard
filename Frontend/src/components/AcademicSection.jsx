@@ -309,7 +309,7 @@ function AcademicSection({ user, isPublicView = false }) {
             {
               label: 'Research', icon: '📖', value: cumulativeSummary.research_total,
               grad: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', shadow: 'rgba(6,182,212,0.2)',
-              subtitle: 'Doctoral programs'
+              subtitle: 'MS and PHD'
             },
           ].map(({ label, icon, value, grad, shadow, subtitle }, idx) => {
             // Fast exit, smooth decelerated entrance with per-card stagger

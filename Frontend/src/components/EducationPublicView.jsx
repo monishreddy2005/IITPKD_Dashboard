@@ -12,7 +12,7 @@ function EducationPublicView({ user }) {
   const sections = [
     {
       id: 'placements',
-      title: 'Opportunity Horizon',
+      title: 'Placement Statistics',
       subtitle: '',
       expandedTitle: 'Empowering careers through industry-leading placement opportunities.',
       icon: '💼',
@@ -20,7 +20,7 @@ function EducationPublicView({ user }) {
     },
     {
       id: 'administrative',
-      title: 'Elite Mentors',
+      title: 'Adjunt/ Honarary/ Visiting/ PoP',
       subtitle: '',
       expandedTitle: 'Mentorship that inspires Excellence through Experience.',
       icon: '📋',
@@ -28,7 +28,7 @@ function EducationPublicView({ user }) {
     },
     {
       id: 'academic',
-      title: 'Knowledge Paths',
+      title: 'Courses Details',
       subtitle: '',
       expandedTitle: 'Advancing academic excellence through innovative programs.',
       icon: '🎓',

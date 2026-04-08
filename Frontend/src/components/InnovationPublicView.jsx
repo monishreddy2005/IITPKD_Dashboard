@@ -11,7 +11,7 @@ function InnovationPublicView({ user }) {
   const sections = [
     {
       id: 'startups',
-      title: 'Startup Ecosystem',
+      title: 'IPTIF',
       subtitle: 'Innovation & Entrepreneurship',
       expandedTitle: 'Nurturing startups and innovation projects at TECHIN and IPTIF',
       icon: '💡',
@@ -19,7 +19,7 @@ function InnovationPublicView({ user }) {
     },
     {
       id: 'innovation-hub',
-      title: 'Tech Innovation Hub',
+      title: 'TechIn',
       subtitle: 'Research & Development',
       expandedTitle: 'Driving innovation through cutting-edge research and development',
       icon: '🚀',

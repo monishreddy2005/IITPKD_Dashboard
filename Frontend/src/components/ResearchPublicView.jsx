@@ -12,7 +12,7 @@ function ResearchPublicView({ user }) {
   const sections = [
     {
       id: 'icsr',
-      title: 'Transforming Ideas into Impact',
+      title: 'Sponsored and Consultancy Projects',
       subtitle: '',
       expandedTitle: 'Driving innovation through industry partnerships and funded research',
       icon: '🔬',
@@ -20,7 +20,7 @@ function ResearchPublicView({ user }) {
     },
     {
       id: 'administrative',
-      title: 'Knowledge Exchange',
+      title: 'Externships',
       subtitle: '',
       expandedTitle: 'Bridging academia and industry through practical learning experiences',
       icon: '🏢',
@@ -28,7 +28,7 @@ function ResearchPublicView({ user }) {
     },
     {
       id: 'library',
-      title: 'Wisdom Center',
+      title: 'Research Publications',
       subtitle: '',
       expandedTitle: 'Advancing knowledge through publications and research contributions',
       icon: '📚',

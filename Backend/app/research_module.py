@@ -320,6 +320,8 @@ def get_summary(current_user_id):
             row = cur.fetchone()
             funded_total = int(row['total'])
             total_projects += funded_total
+            consultancy_revenue = _decimal_to_float(row['amount'])
+
 
         # Count consultancy projects
         if _table_exists(conn, 'icsr_consultancy_projects') and project_type in (None, '', 'All', 'Consultancy'):
@@ -332,7 +334,7 @@ def get_summary(current_user_id):
             )
             row = cur.fetchone()
             consultancy_total = int(row['total'])
-            consultancy_revenue = _decimal_to_float(row['amount'])
+            consultancy_revenue +=_decimal_to_float(row['amount'])
             total_projects += consultancy_total
 
         total_mous = 0

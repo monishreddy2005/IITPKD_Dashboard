@@ -16,7 +16,7 @@ function PeopleCampusPublicView({ user }) {
   const sections = [
     {
       id: 'academic',
-      title: 'Student Archive',
+      title: 'Student Overview',
       subtitle: '',
       expandedTitle: 'Meet the minds shaping tomorrow.',
       icon: '👩‍🎓',
@@ -40,7 +40,7 @@ function PeopleCampusPublicView({ user }) {
     },
     {
       id: 'ewd',
-      title: 'Campus',
+      title: 'Infrastructure',
       subtitle: '',
       expandedTitle: 'Sustaining Today. Developing for Tomorrow.',
       icon: '🏗️',
@@ -48,7 +48,7 @@ function PeopleCampusPublicView({ user }) {
     },
     {
       id: 'iar',
-      title: 'Our Global Community',
+      title: 'Our Alumni',
       subtitle: '',
       expandedTitle: 'Fostering global partnerships and maintaining strong alumni connections',
       icon: '🌍',
@@ -99,11 +99,11 @@ function PeopleCampusPublicView({ user }) {
                           <span className="back-arrow">←</span>
                           <span>Back</span>
                         </button>
-                        
+
                         <div className="section-icon-header">{section.icon}</div>
                         <p className="section-overview-text">{section.expandedTitle}</p>
                       </div>
-                      
+
                       {/* Section Content */}
                       <div className="expanded-card-content">
                         {section.isGrievances ? (

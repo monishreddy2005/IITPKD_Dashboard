@@ -11,7 +11,7 @@ function IndustryConnectPublicView({ user }) {
   const sections = [
     {
       id: 'icsr',
-      title: 'Collaborative Innovation Nexus',
+      title: 'Industry Events',
       subtitle: '',
       expandedTitle: 'Fostering innovation through dynamic industry-academia collaboration.',
       icon: '🤝',
