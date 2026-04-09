@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   LineChart,
@@ -19,10 +20,14 @@ import {
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
+import { useNavigate } from 'react-router-dom';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function OpenHouseSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
@@ -67,7 +72,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load timeline data
   useEffect(() => {
@@ -81,7 +86,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadTimeline();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load events list
   useEffect(() => {
@@ -102,7 +107,7 @@ function OpenHouseSection({ user, isPublicView = false }) {
       }
     };
     loadEvents();
-  }, [token, pagination.page, pagination.per_page, filters.search, filters.year]);
+  }, [token, pagination.page, pagination.per_page, filters.search, filters.year, uploadVersion]);
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
@@ -118,18 +123,6 @@ function OpenHouseSection({ user, isPublicView = false }) {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  if (loading && eventsList.length === 0) {
-    return isPublicView ? (
-      <p>Loading...</p>
-    ) : (
-      <div className="page-container">
-        <div className="page-content">
-          <h1>Open House</h1>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return isPublicView ? (
@@ -146,6 +139,11 @@ function OpenHouseSection({ user, isPublicView = false }) {
 
   const content = (
     <>
+      {!isPublicView && (
+        <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+          ← Back to Outreach Extension
+        </button>
+      )}
       {!isPublicView && <h1>Open House</h1>}
 
       {isPublicView ? null : (user && user.role_id === 3 && (

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import './Page.css';
 import './InnovationMinimal.css';
 
-import InnovationSection from './InnovationSection';
-import InnovationEntrepreneurship from './InnovationEntrepreneurship';
+import IptifSection from './IptifSection';
+import TechinSection from './TechinSection';
 
 function InnovationPublicView({ user }) {
   const [activeSection, setActiveSection] = useState(null);
@@ -11,19 +11,19 @@ function InnovationPublicView({ user }) {
   const sections = [
     {
       id: 'startups',
-      title: 'Startup Ecosystem',
+      title: 'IPTIF',
       subtitle: 'Innovation & Entrepreneurship',
       expandedTitle: 'Nurturing startups and innovation projects at TECHIN and IPTIF',
       icon: '💡',
-      component: InnovationSection
+      component: IptifSection
     },
     {
       id: 'innovation-hub',
-      title: 'Innovation Hub',
+      title: 'TechIn',
       subtitle: 'Research & Development',
       expandedTitle: 'Driving innovation through cutting-edge research and development',
       icon: '🚀',
-      component: InnovationEntrepreneurship
+      component: TechinSection
     }
   ];
 

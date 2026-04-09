@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import InnovationPublicView from './InnovationPublicView';
 import './Page.css';
 import './PeopleCampus.css';
 
@@ -17,12 +19,43 @@ function InnovationEntrepreneurship({ user, isPublicView }) {
       description: 'Entrepreneurship'
     }
   ];
+  const [showPublicView, setShowPublicView] = useState(false);
+
+  // If public user → always show public view
+  if (roleId === 1) {
+    return <InnovationPublicView user={user} />;
+  }
+
+  // If non-public user explicitly chooses public view
+  if (showPublicView) {
+    return (
+      <div className="page-container">
+        <div className="page-content">
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(false)}
+            style={{ marginBottom: '1rem' }}
+          >
+            ← Back to Admin View
+          </button>
+          <InnovationPublicView user={user} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Innovation & Entrepreneurship</h1>
-        <p>Explore innovation initiatives and startup incubation programs at IIT Palakkad.</p>
+        {/* Public view button for non-public users */}
+        <div style={{ marginBottom: '1rem' }}>
+          <button
+            className="upload-data-btn"
+            onClick={() => setShowPublicView(true)}
+          >
+            View Public Page
+          </button>
+        </div>
 
         <div className="people-campus-grid" style={{ marginTop: '2rem' }}>
           {sections.map((section, index) => {

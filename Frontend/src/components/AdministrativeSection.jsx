@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend,
   AreaChart, Area,
@@ -6,7 +8,8 @@ import {
 } from 'recharts';
 import {
   fetchFilterOptions,
-  fetchEmployeeOverview,
+  fetchFacultyFilterOptions,
+  fetchFacultyExpertiseMatrix,
   fetchYearwiseStrength,
   fetchGenderDistribution,
 } from '../services/administrativeStats';
@@ -32,23 +35,23 @@ const GENDER_COLORS = {
 
 // Same colour scheme as ICC for visual parity
 const SERIES_META = [
-  { key: 'Total',  color: '#667eea', gradientId: 'colorEmpTotal',  label: 'Total'  },
-  { key: 'Male',   color: '#43e97b', gradientId: 'colorEmpMale',   label: 'Male'   },
+  { key: 'Total', color: '#667eea', gradientId: 'colorEmpTotal', label: 'Total' },
+  { key: 'Male', color: '#43e97b', gradientId: 'colorEmpMale', label: 'Male' },
   { key: 'Female', color: '#fa709a', gradientId: 'colorEmpFemale', label: 'Female' },
-  { key: 'Other',  color: '#f093fb', gradientId: 'colorEmpOther',  label: 'Other'  },
+  { key: 'Other', color: '#f093fb', gradientId: 'colorEmpOther', label: 'Other' },
 ];
 
 const VIEWS = [
-  { value: 'yearwise',   label: 'Yearwise Strength',  icon: '📈' },
-  { value: 'department', label: 'Department Strength', icon: '📊' },
-  { value: 'gender',     label: 'Gender Ratio',        icon: '🥧' },
+  { value: 'yearwise', label: 'Yearwise Strength', icon: '📈' },
+  { value: 'department', label: 'Faculty Expertise Matrix', icon: '📊' },
+  { value: 'gender', label: 'Gender Ratio', icon: '🥧' },
 ];
 
 const NUM_YEARS_OPTIONS = [
-  { value: 1,  label: 'Last 1 Yr'  },
-  { value: 2,  label: 'Last 2 Yrs' },
-  { value: 3,  label: 'Last 3 Yrs' },
-  { value: 5,  label: 'Last 5 Yrs' },
+  { value: 1, label: 'Last 1 Yr' },
+  { value: 2, label: 'Last 2 Yrs' },
+  { value: 3, label: 'Last 3 Yrs' },
+  { value: 5, label: 'Last 5 Yrs' },
   { value: 10, label: 'Last 10 Yrs' },
 ];
 
@@ -133,31 +136,36 @@ const PieTooltip = ({ active, payload, total }) => {
 // ── Main component ─────────────────────────────────────────────────────────
 
 function AdministrativeSection({ isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [activeView, setActiveView]               = useState('yearwise');
+  const [activeView, setActiveView] = useState('yearwise');
 
   const [filterOptions, setFilterOptions] = useState({
     department: [], designation: [], gender: [], emp_type: [], group_name: [], appointed_category: []
+  });
+  const [facultyFilterOptions, setFacultyFilterOptions] = useState({
+    department: [], designation: [], group_name: []
   });
   const [filters, setFilters] = useState({
     department: null, designation: null, gender: null,
     emp_type: null, group_name: null, appointed_category: null, num_years: 5
   });
 
-  const [employeeData, setEmployeeData] = useState([]);
-  const [total, setTotal]               = useState(0);
+  const [expertiseData, setExpertiseData] = useState([]);
+  const [expertiseTotal, setExpertiseTotal] = useState(0);
 
   const [yearwiseData, setYearwiseData] = useState([]);
   const [visibleSeries, setVisibleSeries] = useState(
     Object.fromEntries(SERIES_META.map(s => [s.key, true]))
   );
 
-  const [genderData, setGenderData]   = useState([]);
+  const [genderData, setGenderData] = useState([]);
   const [genderTotal, setGenderTotal] = useState(0);
 
   // Summary card state (independent of filters)
   const [summaryTotals, setSummaryTotals] = useState({ all: 0, teaching: 0, nonTeaching: 0 });
-  const [allYearwise, setAllYearwise]           = useState([]);
+  const [allYearwise, setAllYearwise] = useState([]);
   const [teachingYearwise, setTeachingYearwise] = useState([]);
   const [nonTeachingYearwise, setNonTeachingYearwise] = useState([]);
   const [selectedYear, setSelectedYear] = useState('');
@@ -172,9 +180,9 @@ function AdministrativeSection({ isPublicView = false }) {
   useEffect(() => {
     if (!token) return;
     Promise.all([
-      fetchYearwiseStrength({}, token),
-      fetchYearwiseStrength({ emp_type: 'Teaching' }, token),
-      fetchYearwiseStrength({ emp_type: 'Non Teaching' }, token),
+      fetchYearwiseStrength({ num_years: 100 }, token),
+      fetchYearwiseStrength({ emp_type: 'Teaching', num_years: 100 }, token),
+      fetchYearwiseStrength({ emp_type: 'Non Teaching', num_years: 100 }, token),
     ]).then(([rAll, rTeaching, rNonTeaching]) => {
       const data = (r) => r.data || [];
       // Use the latest year's active headcount for summary cards
@@ -191,29 +199,36 @@ function AdministrativeSection({ isPublicView = false }) {
       if (allData.length > 0) {
         setSelectedYear(String(allData[allData.length - 1].year));
       }
-    }).catch(() => {});
-  }, [token]);
+    }).catch(() => { });
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token) { setError('Authentication token not found. Please log in again.'); return; }
     fetchFilterOptions(token)
       .then(opts => setFilterOptions(opts))
       .catch(() => setError('Failed to load filter options.'));
-  }, [token]);
+  }, [token, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'department') return;
-    fetchEmployeeOverview(filters, token)
-      .then(r => { setEmployeeData(r.data); setTotal(r.total); })
-      .catch(() => setError('Failed to load employee overview data.'))
-  }, [filters, token, activeView]);
+    fetchFacultyFilterOptions(token)
+      .then(opts => setFacultyFilterOptions(opts))
+      .catch(() => { });
+  }, [token, activeView, uploadVersion]);
+
+  useEffect(() => {
+    if (!token || activeView !== 'department') return;
+    fetchFacultyExpertiseMatrix(filters, token)
+      .then(r => { setExpertiseData(r.data); setExpertiseTotal(r.total); })
+      .catch(() => setError('Failed to load faculty expertise matrix data.'));
+  }, [filters, token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'yearwise') return;
     fetchYearwiseStrength(filters, token)
       .then(r => { setYearwiseData(r.data); })
       .catch(() => setError('Failed to load yearwise strength data.'))
-  }, [filters, token, activeView]);
+  }, [filters, token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'gender') return;
@@ -226,7 +241,7 @@ function AdministrativeSection({ isPublicView = false }) {
         setGenderTotal(r.total);
       })
       .catch(() => setError('Failed to load gender distribution data.'))
-  }, [filters, token, activeView]);
+  }, [filters, token, activeView, uploadVersion]);
 
   // ── handlers ────────────────────────────────────────────────────────────
 
@@ -251,9 +266,7 @@ function AdministrativeSection({ isPublicView = false }) {
 
   // ── derived ──────────────────────────────────────────────────────────────
 
-  const hasDeptData = total > 0 && employeeData.some(
-    d => (d.Male || 0) + (d.Female || 0) + (d.Transgender || 0) + (d.Other || 0) > 0
-  );
+  const hasDeptData = expertiseTotal > 0 && expertiseData.length > 0;
 
   // ── shared filter panel (inlined to avoid remount issues) ─────────────
 
@@ -272,16 +285,16 @@ function AdministrativeSection({ isPublicView = false }) {
           Clear All Filters
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.6rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${activeView === 'yearwise' ? 7 : 6}, 1fr)`, gap: '0.6rem' }}>
         {[
-          { id: 'emp-type-filter',    label: 'Employee Type', key: 'emp_type',           options: filterOptions.emp_type },
-          { id: 'department-filter',  label: 'Department',    key: 'department',         options: filterOptions.department },
-          { id: 'designation-filter', label: 'Designation',   key: 'designation',        options: filterOptions.designation },
-          { id: 'gender-filter',      label: 'Gender',        key: 'gender',             options: filterOptions.gender },
-          { id: 'group-filter',       label: 'Group',         key: 'group_name',         options: filterOptions.group_name },
-          { id: 'category-filter',    label: 'Category',      key: 'appointed_category', options: filterOptions.appointed_category },
-          { id: 'num-years-filter',   label: 'No. of Years',  key: 'num_years',          customOptions: NUM_YEARS_OPTIONS },
-        ].map(({ id, label, key, options, customOptions }) => (
+          { id: 'emp-type-filter', label: 'Employee Type', key: 'emp_type', options: filterOptions.emp_type, views: ['yearwise', 'gender'] },
+          { id: 'department-filter', label: 'Department', key: 'department', options: activeView === 'department' ? facultyFilterOptions.department : filterOptions.department, views: ['yearwise', 'department', 'gender'] },
+          { id: 'designation-filter', label: 'Designation', key: 'designation', options: activeView === 'department' ? facultyFilterOptions.designation : filterOptions.designation, views: ['yearwise', 'department', 'gender'] },
+          { id: 'gender-filter', label: 'Gender', key: 'gender', options: filterOptions.gender, views: ['yearwise', 'department'] },
+          { id: 'group-filter', label: 'Group', key: 'group_name', options: activeView === 'department' ? facultyFilterOptions.group_name : filterOptions.group_name, views: ['yearwise', 'department', 'gender'] },
+          { id: 'category-filter', label: 'Category', key: 'appointed_category', options: filterOptions.appointed_category, views: ['yearwise', 'department', 'gender'] },
+          { id: 'num-years-filter', label: 'No. of Years', key: 'num_years', customOptions: NUM_YEARS_OPTIONS, views: ['yearwise'] },
+        ].filter(({ views }) => views.includes(activeView)).map(({ id, label, key, options, customOptions }) => (
           <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
             <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
             <select id={id}
@@ -292,9 +305,9 @@ function AdministrativeSection({ isPublicView = false }) {
               {customOptions
                 ? customOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)
                 : (<>
-                    <option value="All">All</option>
-                    {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </>)
+                  <option value="All">All</option>
+                  {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </>)
               }
             </select>
           </div>
@@ -309,37 +322,22 @@ function AdministrativeSection({ isPublicView = false }) {
     <div className={isPublicView ? '' : 'page-container'}>
       <div className={isPublicView ? '' : 'page-content'}>
 
-        {/* Page title + description — matches ICC structure */}
-        {!isPublicView && <h1>Employee Overview</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor employee strength trends, department-wise distribution, and gender ratio across IIT Palakkad.
-        </p>
-
-        {/* Upload button — styled like ICC */}
         {!isPublicView && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📤</span> Upload Employee Data
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+              ← Back to People & Campus
             </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Employee Overview</h1>
+              </div>
+              <div className="page-header-actions">
+                <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
+                  <span>📤</span> Upload Employee Data
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {error && (
@@ -350,44 +348,49 @@ function AdministrativeSection({ isPublicView = false }) {
         )}
 
 
-        {/* ══ Separator + Title: Check Employee Overview by Year ═══════════ */}
-        <div  />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-          <h2 style={{
-            display: 'inline-block',
-            padding: '6px 12px',
-            borderRadius: '12px',
-            // background: 'rgba(0, 110, 255, 0.5)',
-            // backdropFilter: 'blur(10px)',
-            // WebkitBackdropFilter: 'blur(20px)',
-            // border: '1px solid rgba(0, 183, 255, 1)',
-            textDecoration:'underline', 
-            color: '#000000ff'
-          }}>
-            Check Employee Overview by Year
-          </h2>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            style={{
-              padding: '8px 14px', borderRadius: '8px', border: '1px solid #d0d0d0',
-              fontSize: '14px', fontWeight: '500', color: '#333', background: '#fff',
-              cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-            }}
-          >
-            <option value="All">All</option>
-            {[...allYearwise].reverse().map((row) => (
-              <option key={row.year} value={String(row.year)}>{row.year}</option>
-            ))}
-          </select>
-        </div>
+        {/* ══ Row 1: Filter card + Year-filtered data cards ════════════════ */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '30px' }}>
 
-        {/* ══ Row 1: Year-filtered cards ═══════════════════════════════════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '30px' }}>
+          {/* Purple "Filter by Year" card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '16px', padding: '24px',
+            boxShadow: '0 10px 20px rgba(102,126,234,0.3)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <span style={{ fontSize: '24px', background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '8px' }}>📅</span>
+                <span style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>Filter by Year</span>
+              </div>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  background: 'rgba(255,255,255,0.15)', color: 'white',
+                  fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+                  outline: 'none', backdropFilter: 'blur(10px)',
+                }}
+              >
+                <option value="All" style={{ color: '#333', background: '#fff' }}>All Years</option>
+                {(filterOptions.years || []).map((yr) => (
+                  <option key={yr} value={String(yr)} style={{ color: '#333', background: '#fff' }}>{yr}</option>
+                ))}
+              </select>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '10px', marginBottom: 0 }}>
+                Focus on a specific year
+              </p>
+            </div>
+          </div>
+
+          {/* Data cards */}
           {[
-            { label: 'Total Employees', icon: '👥', data: allYearwise,         grad: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102,126,234,0.2)' },
-            { label: 'Faculty',         icon: '🎓', data: teachingYearwise,    grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
-            { label: 'Staff',           icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
+            { label: 'Total Employees', icon: '👥', data: allYearwise, grad: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)', shadow: 'rgba(34,211,238,0.2)' },
+            { label: 'Faculty', icon: '🎓', data: teachingYearwise, grad: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', shadow: 'rgba(249,115,22,0.2)' },
+            { label: 'Staff', icon: '🏢', data: nonTeachingYearwise, grad: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', shadow: 'rgba(16,185,129,0.2)' },
           ].map(({ label, icon, data, grad, shadow }) => {
             const val = selectedYear === 'All'
               ? data.reduce((sum, r) => sum + (r.Total || 0), 0)
@@ -500,62 +503,55 @@ function AdministrativeSection({ isPublicView = false }) {
               </div>
             </div>
 
-            {yearwiseData.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                <p style={{ color: '#666', fontSize: '16px' }}>No employee records available.</p>
-              </div>
-            ) : (
+            <div style={{ position: 'relative' }}>
+              {yearwiseData.length === 0 && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 10,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(4px)',
+                  borderRadius: '8px', pointerEvents: 'none',
+                }}>
+                  <span style={{ fontSize: '40px', marginBottom: '10px' }}>📊</span>
+                  <p style={{ color: '#888', fontSize: '15px', fontWeight: 500, margin: 0 }}>No employee records match the current filters.</p>
+                </div>
+              )}
               <ResponsiveContainer width="100%" height={350}>
                 <AreaChart
                   data={yearwiseData}
                   margin={{ top: 10, right: 20, left: 40, bottom: 30 }}
                 >
-                  {/* Gradients — identical structure to ICC (5 % → 0.8, 95 % → 0) */}
                   <defs>
                     {SERIES_META.map(({ gradientId, color }) => (
                       <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor={color} stopOpacity={0.8} />
-                        <stop offset="95%" stopColor={color} stopOpacity={0}   />
+                        <stop offset="5%" stopColor={color} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={color} stopOpacity={0} />
                       </linearGradient>
                     ))}
                   </defs>
-
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
                   <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                      backgroundColor: '#fff', border: '1px solid #ccc',
+                      borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                     }}
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-
-                  {/* Conditionally rendered Areas — same pattern as ICC */}
                   {SERIES_META.map(({ key, color, gradientId, label }) =>
                     visibleSeries[key] ? (
-                      <Area
-                        key={key}
-                        type="monotone"
-                        dataKey={key}
-                        name={label}
-                        stroke={color}
-                        fill={`url(#${gradientId})`}
-                        strokeWidth={2}
-                      />
+                      <Area key={key} type="monotone" dataKey={key} name={label}
+                        stroke={color} fill={`url(#${gradientId})`} strokeWidth={2} />
                     ) : null
                   )}
                 </AreaChart>
               </ResponsiveContainer>
-            )}
+            </div>
           </div>
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
-            Department Strength — stacked bar chart
+            Faculty Expertise Matrix — bar chart (Teaching, current year hires)
         ══════════════════════════════════════════════════════════════════ */}
         {activeView === 'department' && (
           <div style={CHART_BOX}>
@@ -563,34 +559,38 @@ function AdministrativeSection({ isPublicView = false }) {
 
             <div style={{ marginBottom: '20px' }}>
               <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
-                Department-wise Employee Strength
+                Faculty Expertise Matrix
               </h2>
               <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                Gender-wise employee distribution across departments.
+                Currently active teaching faculty (non-Director) grouped by department. Total: <strong>{expertiseTotal}</strong>
               </p>
             </div>
 
-            {!hasDeptData ? (
-              <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                <p style={{ color: '#666', fontSize: '16px' }}>No department data available.</p>
-              </div>
-            ) : (
+            <div style={{ position: 'relative' }}>
+              {!hasDeptData && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 10,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(4px)',
+                  borderRadius: '8px', pointerEvents: 'none',
+                }}>
+                  <span style={{ fontSize: '40px', marginBottom: '10px' }}>📊</span>
+                  <p style={{ color: '#888', fontSize: '15px', fontWeight: 500, margin: 0 }}>No active faculty match the current filters.</p>
+                </div>
+              )}
               <ResponsiveContainer width="100%" height={420}>
-                <BarChart data={employeeData} margin={{ top: 5, right: 16, left: 0, bottom: 130 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <BarChart data={expertiseData} margin={{ top: 5, right: 20, left: 0, bottom: 130 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                   <XAxis dataKey="name" tick={<CustomXAxisTick />} interval={0} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<StackedBarTooltip total={total} />} />
-                  <Legend verticalAlign="top" align="center"
-                    content={(props) => <CustomLegend {...props} total={total} />} />
-                  <Bar dataKey="Male"        stackId="a" fill="#667eea" {...BAR_ANIMATION} />
-                  <Bar dataKey="Female"      stackId="a" fill="#764ba2" {...BAR_ANIMATION} />
-                  <Bar dataKey="Transgender" stackId="a" fill="#43e97b" {...BAR_ANIMATION} />
-                  <Bar dataKey="Other"       stackId="a" fill="#f093fb" {...BAR_ANIMATION} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value) => [value, 'Faculty Count']}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                  <Bar dataKey="count" name="Faculty" fill="#667eea" radius={[4, 4, 0, 0]} {...BAR_ANIMATION} />
                 </BarChart>
               </ResponsiveContainer>
-            )}
+            </div>
           </div>
         )}
 
@@ -606,34 +606,40 @@ function AdministrativeSection({ isPublicView = false }) {
                 Gender Distribution
               </h2>
               <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                Gender ratio among employees at IIT Palakkad.
+                Gender distribution of currently active employees at IIT Palakkad.
               </p>
             </div>
 
-            {genderData.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                <p style={{ color: '#666', fontSize: '16px' }}>No gender data available.</p>
-              </div>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={420}>
-                  <PieChart>
-                    <Pie
-                      data={genderData} cx="50%" cy="48%" outerRadius={150}
-                      dataKey="value"
-                      label={({ name, value, percent }) =>
-                        `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
-                      }
-                      labelLine={true}
-                      isAnimationActive={true}
-                      animationDuration={700}
-                    >
-                      {genderData.map((entry) => (
-                        <Cell key={entry.name} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<PieTooltip total={genderTotal} />} />
+            <div style={{ position: 'relative' }}>
+              {genderData.length === 0 && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 10,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(4px)',
+                  borderRadius: '8px', pointerEvents: 'none',
+                }}>
+                  <span style={{ fontSize: '40px', marginBottom: '10px' }}>📊</span>
+                  <p style={{ color: '#888', fontSize: '15px', fontWeight: 500, margin: 0 }}>No gender data matches the current filters.</p>
+                </div>
+              )}
+              <ResponsiveContainer width="100%" height={420}>
+                <PieChart>
+                  <Pie
+                    data={genderData.length > 0 ? genderData : [{ name: '', value: 1, fill: '#f0f0f0' }]}
+                    cx="50%" cy="48%" outerRadius={150}
+                    dataKey="value"
+                    label={genderData.length > 0 ? ({ name, value, percent }) =>
+                      `${name}: ${value} (${(percent * 100).toFixed(1)}%)` : false}
+                    labelLine={genderData.length > 0}
+                    isAnimationActive={true}
+                    animationDuration={700}
+                  >
+                    {(genderData.length > 0 ? genderData : [{ name: '', fill: '#f0f0f0' }]).map((entry) => (
+                      <Cell key={entry.name} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  {genderData.length > 0 && <Tooltip content={<PieTooltip total={genderTotal} />} />}
+                  {genderData.length > 0 && (
                     <Legend verticalAlign="bottom" align="center"
                       formatter={(value) => (
                         <span style={{ color: GENDER_COLORS[value] || '#555', fontWeight: 600, fontSize: '0.82rem' }}>
@@ -641,13 +647,13 @@ function AdministrativeSection({ isPublicView = false }) {
                         </span>
                       )}
                     />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ textAlign: 'center', marginTop: '0.25rem', fontSize: '0.82rem', fontWeight: 700, color: '#1a1a1a' }}>
-                  Total Employees: {genderTotal}
-                </div>
-              </>
-            )}
+                  )}
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ textAlign: 'center', marginTop: '0.25rem', fontSize: '0.82rem', fontWeight: 700, color: '#1a1a1a' }}>
+                {genderData.length > 0 ? `Total Employees: ${genderTotal}` : ''}
+              </div>
+            </div>
           </div>
         )}
 

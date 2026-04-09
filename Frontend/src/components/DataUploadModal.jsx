@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import './DataUploadModal.css';
 
@@ -34,6 +35,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
     if (!isOpen) return null;
 
     const handleClose = () => {
+        const wasSuccess = uploadSuccess;
         setSelectedFile(null);
         setPreviewData(null);
         setMessage(null);
@@ -41,6 +43,13 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
         setIsLoading(false);
         setFailingRow(null);
         onClose();
+
+        if (wasSuccess) {
+            window.dispatchEvent(new CustomEvent('iitpkd:upload-success', { detail: { tableName } }));
+            if (onUploadSuccess) {
+                onUploadSuccess();
+            }
+        }
     };
 
     const parseCSVPreview = (csvText) => {
@@ -90,7 +99,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
         try {
             const response = await axios.post(
-                'http://127.0.0.1:5000/api/upload-csv',
+                `${import.meta.env.VITE_API_BASE_URL}/api/upload-csv`,
                 formData,
                 {
                     headers: {
@@ -102,11 +111,11 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             const successMsg = response.data.message || `Successfully updated table ${tableName}`;
             setMessage({ type: 'success', text: successMsg });
             setUploadSuccess(true);
-
-            if (onUploadSuccess) {
-                onUploadSuccess();
-            }
-
+            
+            // Note: window.dispatchEvent and onUploadSuccess() are now handled
+            // inside handleClose() so the parent components don't immediately refresh data,
+            // unmount/re-render the modal, and cause the success message to instantly "flash".
+            
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || 'An error occurred during upload.';
             const errorDetails = error.response?.data?.details;
@@ -208,18 +217,18 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                 };
             case 'research_publications':
                 return {
-                    headers: ["publication_title", "journal_name", "department", "faculty_name", "publication_year", "publication_type", "created_at"],
-                    sample: ["Sample publication_title", "Sample journal_name", "Sample department", "Sample faculty_name", "1", "Sample publication_type", "2023-01-01"]
+                    headers: ["publication_title", "journal_name", "department", "faculty_name", "publication_year", "publication_type"],
+                    sample: ["Sample Title", "Sample Journal", "Computer Science and Engineering", "Dr. Sample Name", "2024", "Journal Article"]
                 };
             case 'student_table':
                 return {
-                    headers: ["roll_no_admission", "roll_no_current", "name_of_student", "programme_admission", "programme_current", "admission_year", "admission_cycle", "admission_batch", "date_of_joining", "date_of_validity", "department_admission", "department_current", "stream_admission", "stream_current", "current_semester", "gender", "original_category", "admission_category", "hosteller_day_scholar", "date_of_birth", "residential_address", "nationality", "state", "pwd_status", "disability_type", "blood_group", "apaar_id", "qualifying_exam", "qualifying_exam_score", "student_contact_no", "institute_email", "personal_email", "parent_name", "parent_contact_no", "parent_email", "faculty_advisor", "institute_scholarship", "nsp_scholarship_recipient", "preparatory", "branch_change", "branch_change_remarks", "slowpaced", "upgraded", "date_of_upgradation", "idc_current", "number_of_total_idcs", "idc_history", "break_type", "break_from_date", "break_to_date", "break_history", "student_status", "student_status_date", "student_status_remarks", "fellowship_status_admission", "fellowship_status_current", "dc_chairperson", "dc_members", "thesis_submission_date", "viva_voice_date"],
-                    sample: ["1", "1", "Sample name_of_student", "Sample programme_admission", "Sample programme_current", "1", "Sample admission_cycle", "1", "2023-01-01", "2023-01-01", "Sample department_admission", "Sample department_current", "Sample stream_admission", "Sample stream_current", "1", "Sample gender", "Sample original_category", "Sample admission_category", "Sample hosteller_day_scholar", "2023-01-01", "Sample residential_address", "Sample nationality", "Sample state", "Sample pwd_status", "Sample disability_type", "Sample blood_group", "Sample apaar_id", "Sample qualifying_exam", "1", "1", "Sample institute_email", "Sample personal_email", "Sample parent_name", "1", "Sample parent_email", "Sample faculty_advisor", "Sample institute_scholarship", "Sample nsp_scholarship_recipient", "Sample preparatory", "Sample branch_change", "Sample branch_change_remarks", "Sample slowpaced", "Sample upgraded", "2023-01-01", "Sample idc_current", "1", "Sample idc_history", "Sample break_type", "2023-01-01", "2023-01-01", "Sample break_history", "Sample student_status", "2023-01-01", "Sample student_status_remarks", "Sample fellowship_status_admission", "Sample fellowship_status_current", "Sample dc_chairperson", "Sample dc_members", "2023-01-01", "2023-01-01"]
+                    headers: ["roll_no_admission", "roll_no_current", "name_of_student", "programme_admission", "programme_current", "admission_year", "admission_cycle", "admission_batch", "date_of_joining", "date_of_validity", "department_admission", "department_current", "stream_admission", "stream_current", "current_semester", "gender", "original_category", "admission_category", "hosteller_day_scholar", "date_of_birth", "residential_address", "nationality", "state", "pwd_status", "disability_type", "blood_group", "apaar_id", "qualifying_exam", "qualifying_exam_score", "student_contact_no", "institute_email", "personal_email", "parent_name", "parent_contact_no", "parent_email", "faculty_advisor", "institute_scholarship", "nsp_scholarship_recipient", "preparatory", "branch_change", "branch_change_remarks", "slowpaced", "upgraded", "date_of_upgradation", "idc_current", "number_of_total_idcs", "idc_history", "break_type", "break_from_date", "break_to_date", "break_history", "student_status", "student_status_date", "student_status_remarks", "fellowship_status_admission", "fellowship_status_current", "dc_chairperson", "dc_members", "thesis_submission_date", "viva_voice_date", "academic_program_type"],
+                    sample: ["1", "1", "Sample name_of_student", "Sample programme_admission", "Sample programme_current", "1", "Sample admission_cycle", "1", "2023-01-01", "2023-01-01", "Sample department_admission", "Sample department_current", "Sample stream_admission", "Sample stream_current", "1", "Sample gender", "Sample original_category", "Sample admission_category", "Sample hosteller_day_scholar", "2023-01-01", "Sample residential_address", "Sample nationality", "Sample state", "Sample pwd_status", "Sample disability_type", "Sample blood_group", "Sample apaar_id", "Sample qualifying_exam", "1", "1", "Sample institute_email", "Sample personal_email", "Sample parent_name", "1", "Sample parent_email", "Sample faculty_advisor", "Sample institute_scholarship", "Sample nsp_scholarship_recipient", "Sample preparatory", "Sample branch_change", "Sample branch_change_remarks", "Sample slowpaced", "Sample upgraded", "2023-01-01", "Sample idc_current", "1", "Sample idc_history", "Sample break_type", "2023-01-01", "2023-01-01", "Sample break_history", "Sample student_status", "2023-01-01", "Sample student_status_remarks", "Sample fellowship_status_admission", "Sample fellowship_status_current", "Sample dc_chairperson", "Sample dc_members", "2023-01-01", "2023-01-01", "UG"]
                 };
             case 'uba_events':
                 return {
-                    headers: ["project_id", "event_title", "event_type", "event_date", "location", "description", "photos_url", "brochure_url", "created_at"],
-                    sample: ["1", "Sample event_title", "Sample event_type", "2023-01-01", "Sample location", "Sample description", "Sample photos_url", "Sample brochure_url", "2023-01-01"]
+                    headers: ["year", "program_name", "program_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks"],
+                    sample: ["2024 - 2025", "Sample Program Name", "Visit", "Sample Association", "2024-06-01", "2024-06-01", "Students", "50", "2", "0", "Palakkad", "Sample remarks"]
                 };
             case 'uba_projects':
                 return {
@@ -291,6 +300,32 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                     headers: ["academic_year", "created_by", "created_at", "program_name", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "sq_stipend_provided", "sq_travel_allowance", "sq_num_lab_sessions", "sq_districts_covered", "pmc_target_class", "pmc_mathematician_led", "pmc_num_sessions", "pbd_lecture_topic", "pbd_speaker_name", "pbd_speaker_affiliation", "iv_visiting_institution", "iv_visiting_institution_type", "iv_num_groups", "nss_activity_type", "nss_volunteer_count", "nss_community_reached", "extra_data"],
                     sample: ["Sample academic_year", "Sample created_by", "2023-01-01", "Sample program_name", "Sample program_type", "Sample engagement_type", "Sample association", "2023-01-01", "2023-01-01", "Sample targeted_audience", "1", "1", "1", "Sample geographic_reach", "Sample remarks", "TRUE", "TRUE", "1", "Sample sq_districts_covered", "Sample pmc_target_class", "TRUE", "1", "Sample pbd_lecture_topic", "Sample pbd_speaker_name", "Sample pbd_speaker_affiliation", "Sample iv_visiting_institution", "Sample iv_visiting_institution_type", "1", "Sample nss_activity_type", "1", "Sample nss_community_reached", "Sample extra_data"]
                 };
+            // ── Outreach: per-program templates (program_name injected by backend) ──
+            case 'outreach_science_quest':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "sq_stipend_provided", "sq_travel_allowance", "sq_num_lab_sessions", "sq_districts_covered"],
+                    sample:  ["2024-2025", "John Doe", "Camp", "Student", "Sample association", "2024-06-01", "2024-06-05", "School Students", "120", "5", "0", "Palakkad, Thrissur", "Sample remarks", "TRUE", "TRUE", "6", "Palakkad, Malappuram"]
+                };
+            case 'outreach_math_circle':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "pmc_target_class", "pmc_mathematician_led", "pmc_num_sessions"],
+                    sample:  ["2024-2025", "John Doe", "Workshop", "Student", "Sample association", "2024-07-10", "2024-07-10", "Class 8-10 Students", "60", "3", "0", "Palakkad", "Sample remarks", "Class 8-9", "Jasine, Jayasree, Krithika", "4"]
+                };
+            case 'outreach_pale_blue_dot':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "pbd_lecture_topic", "pbd_speaker_name", "pbd_speaker_affiliation"],
+                    sample:  ["2024-2025", "John Doe", "Public Lecture", "Social", "Sample association", "2024-08-15", "2024-08-15", "General Public", "200", "0", "2", "Kerala", "Sample remarks", "Life in the Universe", "Dr. Sample Name", "IISc Bangalore"]
+                };
+            case 'outreach_institute_visits':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "iv_visiting_institution", "iv_visiting_institution_type", "iv_num_groups"],
+                    sample:  ["2024-2025", "John Doe", "Visit", "Student", "Sample association", "2024-09-20", "2024-09-20", "School Students", "80", "1", "0", "Palakkad", "Sample remarks", "Sample School Name", "School", "2"]
+                };
+            case 'outreach_nss_activities':
+                return {
+                    headers: ["academic_year", "created_by", "program_type", "engagement_type", "association", "start_date", "end_date", "targeted_audience", "num_attendees", "num_schools", "num_colleges", "geographic_reach", "remarks", "nss_activity_type", "nss_volunteer_count", "nss_community_reached"],
+                    sample:  ["2024-2025", "John Doe", "Activity", "Social", "Sample association", "2024-10-02", "2024-10-02", "Local Community", "50", "0", "0", "Palakkad", "Sample remarks", "Blood Donation Camp", "30", "Kalmandapam Village"]
+                };
             case 'department':
                 return {
                     headers: ["deptcode", "deptname", "coursesoffered", "faculty", "courselist"],
@@ -322,12 +357,12 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
 
     const templateInfo = getTemplateData(tableName);
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
+    const modalContent = (
+        <div className="modal-overlay" onClick={handleClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Upload Data: {tableName}</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
+                    <button className="close-btn" onClick={handleClose}>&times;</button>
                 </div>
 
                 <div className="modal-body">
@@ -427,7 +462,7 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
                             )}
 
                             <div className="upload-actions">
-                                <button className="cancel-btn" onClick={onClose} disabled={isLoading}>
+                                <button className="cancel-btn" onClick={handleClose} disabled={isLoading}>
                                     Cancel
                                 </button>
                                 <button
@@ -470,6 +505,8 @@ function DataUploadModal({ isOpen, onClose, tableName, token, onUploadSuccess })
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }
 
 export default DataUploadModal;

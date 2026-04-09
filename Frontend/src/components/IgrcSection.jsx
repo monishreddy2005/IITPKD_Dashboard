@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   BarChart,
@@ -15,6 +16,7 @@ import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const BAR_COLORS = {
   filed: '#667eea',
@@ -23,6 +25,9 @@ const BAR_COLORS = {
 };
 
 function IgrcSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState('All');
@@ -85,16 +90,17 @@ function IgrcSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Internal Grievance Resolution Cell (IGRC)</h1>}
-        <p>
-          Track how grievances have been filed, resolved, and remain pending across the years for the Institute
-          Grievance Resolution Cell.
-        </p>
 
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
@@ -117,6 +123,9 @@ function IgrcSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
+            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+              Internal Grievance Resolution Cell (IGRC)
+            </h2>
             {/* Modern Gradient Summary Cards */}
             <div style={{
               display: 'grid',
@@ -280,6 +289,9 @@ function IgrcSection({ user, isPublicView = false }) {
             </div>
 
             <div className="chart-section">
+              <h2 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '20px' }}>
+                Internal Grievance Resolution Cell (IGRC)
+              </h2>
               <div className="chart-header">
                 <div>
                   <p className="chart-description">
@@ -350,13 +362,13 @@ function IgrcSection({ user, isPublicView = false }) {
                       margin={{ top: 20, right: 30, left: 60, bottom: 60 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                      <XAxis 
-                        dataKey="year" 
+                      <XAxis
+                        dataKey="year"
                         stroke="#000000"
                         tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
                         label={{ value: 'Year', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
                       />
-                      <YAxis 
+                      <YAxis
                         stroke="#000000"
                         tick={{ fill: '#000000', fontSize: 14, fontWeight: 'bold' }}
                         label={{ value: 'Number of Grievances', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000000', fontSize: 16, fontWeight: 'bold' } }}
@@ -365,9 +377,9 @@ function IgrcSection({ user, isPublicView = false }) {
                         contentStyle={{ backgroundColor: '#2a2a2a', borderColor: '#555' }}
                         cursor={{ fill: 'rgba(102, 126, 234, 0.1)' }}
                       />
-                      <Legend 
-                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} 
-                        iconType="rect" 
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
+                        iconType="rect"
                       />
                       {visibleMetrics.filed && (
                         <Bar dataKey="filed" name="Filed" fill={BAR_COLORS.filed} />

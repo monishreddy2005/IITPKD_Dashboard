@@ -2,15 +2,20 @@ import { useState, useEffect } from 'react';
 import {
   fetchUbaSummary,
   fetchUbaProjects,
-  fetchUbaProjectEvents
+  fetchUbaEvents
 } from '../services/outreachExtensionStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
+import { useNavigate } from 'react-router-dom';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function UbaSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
@@ -21,8 +26,7 @@ function UbaSection({ user, isPublicView = false }) {
   });
 
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [projectEvents, setProjectEvents] = useState([]);
+  const [events, setEvents] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,7 +46,7 @@ function UbaSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load projects
   useEffect(() => {
@@ -56,38 +60,22 @@ function UbaSection({ user, isPublicView = false }) {
       }
     };
     loadProjects();
-  }, [token]);
+  }, [token, uploadVersion]);
 
-  // Load events for selected project
+  // Load all events
   useEffect(() => {
     const loadEvents = async () => {
-      if (!token || !selectedProject) return;
+      if (!token) return;
       try {
-        const result = await fetchUbaProjectEvents(token, selectedProject);
-        setProjectEvents(result.events || []);
+        const result = await fetchUbaEvents(token);
+        setEvents(result.events || []);
       } catch (err) {
-        console.error('Error loading project events:', err);
+        console.error('Error loading events:', err);
       }
     };
     loadEvents();
-  }, [token, selectedProject]);
+  }, [token, uploadVersion]);
 
-  const handleProjectClick = (projectId) => {
-    setSelectedProject(selectedProject === projectId ? null : projectId);
-  };
-
-  if (loading && projects.length === 0) {
-    return isPublicView ? (
-      <p>Loading...</p>
-    ) : (
-      <div className="page-container">
-        <div className="page-content">
-          <h1>UBA (Unnat Bharat Abhiyan)</h1>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return isPublicView ? (
@@ -104,6 +92,11 @@ function UbaSection({ user, isPublicView = false }) {
 
   const content = (
     <>
+      {!isPublicView && (
+        <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+          ← Back to Outreach Extension
+        </button>
+      )}
       {!isPublicView && <h1>UBA (Unnat Bharat Abhiyan)</h1>}
 
       {isPublicView ? null : (user && user.role_id === 3 && (
@@ -338,359 +331,100 @@ function UbaSection({ user, isPublicView = false }) {
         boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
         marginBottom: '30px'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px'
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>UBA Projects</h2>
-          <span style={{
-            backgroundColor: '#667eea',
-            color: 'white',
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
+          <span style={{ backgroundColor: '#667eea', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: '500' }}>
             {projects.length} Projects
           </span>
         </div>
 
         {projects.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '12px',
-            color: '#666'
-          }}>
+          <div style={{ textAlign: 'center', padding: '60px', backgroundColor: '#f8f9fa', borderRadius: '12px', color: '#666' }}>
             <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📋</span>
             <p style={{ fontSize: '16px' }}>No projects found</p>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-            gap: '20px'
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
             {projects.map((project) => (
-              <div
-                key={project.project_id}
-                style={{
-                  backgroundColor: '#fff',
-                  borderRadius: '16px',
-                  border: '1px solid #e9ecef',
-                  overflow: 'hidden',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                  cursor: 'pointer',
-                  boxShadow: selectedProject === project.project_id 
-                    ? '0 10px 30px rgba(102, 126, 234, 0.2)' 
-                    : '0 2px 10px rgba(0,0,0,0.05)',
-                  transform: selectedProject === project.project_id ? 'translateY(-2px)' : 'none'
-                }}
-              >
-                {/* Project Header */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  padding: '20px',
-                  color: 'white'
-                }}>
-                  <h3 style={{
-                    margin: '0 0 8px 0',
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    lineHeight: '1.4'
-                  }}>{project.project_title}</h3>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <span style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      {project.project_status}
-                    </span>
-                  </div>
+              <div key={project.project_id} style={{
+                backgroundColor: '#fff', borderRadius: '16px', border: '1px solid #e9ecef',
+                overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
+              }}>
+                <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '20px', color: 'white' }}>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', lineHeight: '1.4' }}>{project.project_title}</h3>
+                  <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: '4px', fontSize: '12px' }}>
+                    {project.project_status}
+                  </span>
                 </div>
-
-                {/* Project Details */}
-                <div style={{ padding: '20px' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '12px'
-                  }}>
-                    <span style={{
-                      width: '32px',
-                      height: '32px',
-                      background: '#f0f0f0',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#667eea'
-                    }}>👤</span>
-                    <div>
-                      <div style={{ fontSize: '12px', color: '#999' }}>Coordinator</div>
-                      <div style={{ fontWeight: '500', color: '#333' }}>{project.coordinator_name}</div>
-                    </div>
-                  </div>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '12px',
-                    marginBottom: '16px'
-                  }}>
-                    {project.start_date && (
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>Start Date</div>
-                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>
-                          {new Date(project.start_date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    )}
-                    {project.end_date && (
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>End Date</div>
-                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#333' }}>
-                          {new Date(project.end_date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '16px',
-                    padding: '12px',
-                    background: '#f8f9fa',
-                    borderRadius: '8px'
-                  }}>
-                    <span style={{
-                      fontSize: '24px',
-                      color: '#667eea'
-                    }}>📊</span>
-                    <div>
-                      <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#667eea' }}>
-                        {project.event_count || 0}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#999' }}>Total Events</div>
-                    </div>
-                  </div>
-
-                  {project.intervention_description && (
-                    <div style={{
-                      marginBottom: '16px',
-                      padding: '12px',
-                      background: '#f8f9fa',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#666',
-                      lineHeight: '1.5'
-                    }}>
-                      {project.intervention_description}
+                <div style={{ padding: '16px' }}>
+                  {project.coordinator_name && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '14px', color: '#555' }}>
+                      <span>👤</span><span><strong>Coordinator:</strong> {project.coordinator_name}</span>
                     </div>
                   )}
-
                   {project.collaboration_partners && (
-                    <div style={{
-                      marginBottom: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '14px',
-                      color: '#666'
-                    }}>
-                      <span>🤝</span>
-                      <span><strong>Partners:</strong> {project.collaboration_partners}</span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: '#666' }}>
+                      <span>🤝</span><span><strong>Partners:</strong> {project.collaboration_partners}</span>
                     </div>
                   )}
-
-                  <button
-                    onClick={() => handleProjectClick(project.project_id)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: 'none',
-                      borderRadius: '8px',
-                      background: selectedProject === project.project_id ? '#dc3545' : '#667eea',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    <span>{selectedProject === project.project_id ? '👆' : '👁️'}</span>
-                    {selectedProject === project.project_id ? 'Hide Events' : 'View Events'}
-                  </button>
                 </div>
-
-                {/* Events for this project */}
-                {selectedProject === project.project_id && (
-                  <div style={{
-                    borderTop: '1px solid #e9ecef',
-                    padding: '20px',
-                    background: '#f8f9fa'
-                  }}>
-                    <h4 style={{
-                      margin: '0 0 16px 0',
-                      color: '#333',
-                      fontSize: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <span>📅</span> Events
-                    </h4>
-                    
-                    {projectEvents.length === 0 ? (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '20px',
-                        background: 'white',
-                        borderRadius: '8px',
-                        color: '#999'
-                      }}>
-                        No events found for this project
-                      </div>
-                    ) : (
-                      <div style={{
-                        display: 'grid',
-                        gap: '12px'
-                      }}>
-                        {projectEvents.map((event) => (
-                          <div
-                            key={event.event_id}
-                            style={{
-                              background: 'white',
-                              borderRadius: '12px',
-                              padding: '16px',
-                              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                            }}
-                          >
-                            <h5 style={{
-                              margin: '0 0 12px 0',
-                              color: '#333',
-                              fontSize: '15px',
-                              fontWeight: '600'
-                            }}>{event.event_title}</h5>
-                            
-                            <div style={{
-                              display: 'grid',
-                              gap: '8px',
-                              marginBottom: '12px'
-                            }}>
-                              {event.event_type && (
-                                <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '8px',
-                                  fontSize: '13px'
-                                }}>
-                                  <span style={{ color: '#667eea' }}>📌</span>
-                                  <span><strong>Type:</strong> {event.event_type}</span>
-                                </div>
-                              )}
-                              
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                fontSize: '13px'
-                              }}>
-                                <span style={{ color: '#667eea' }}>📅</span>
-                                <span><strong>Date:</strong> {new Date(event.event_date).toLocaleDateString()}</span>
-                              </div>
-                              
-                              {event.location && (
-                                <div style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '8px',
-                                  fontSize: '13px'
-                                }}>
-                                  <span style={{ color: '#667eea' }}>📍</span>
-                                  <span><strong>Location:</strong> {event.location}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {event.description && (
-                              <p style={{
-                                fontSize: '13px',
-                                color: '#666',
-                                lineHeight: '1.5',
-                                margin: '0 0 12px 0',
-                                padding: '8px',
-                                background: '#f8f9fa',
-                                borderRadius: '6px'
-                              }}>
-                                {event.description}
-                              </p>
-                            )}
-
-                            <div style={{
-                              display: 'flex',
-                              gap: '12px',
-                              marginTop: '8px'
-                            }}>
-                              {event.photos_url && (
-                                <a
-                                  href={event.photos_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    color: '#667eea',
-                                    textDecoration: 'none',
-                                    fontSize: '13px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                >
-                                  📸 Photos
-                                </a>
-                              )}
-                              {event.brochure_url && (
-                                <a
-                                  href={event.brochure_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    color: '#667eea',
-                                    textDecoration: 'none',
-                                    fontSize: '13px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                  }}
-                                >
-                                  📄 Brochure
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Events Section */}
+      <div className="chart-section" style={{
+        backgroundColor: '#fff',
+        borderRadius: '20px',
+        padding: '24px',
+        boxShadow: '0 5px 20px rgba(0,0,0,0.05)',
+        marginBottom: '30px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0, color: '#333', fontSize: '24px' }}>UBA Events</h2>
+          <span style={{ backgroundColor: '#f093fb', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: '500' }}>
+            {events.length} Events
+          </span>
+        </div>
+
+        {events.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px', backgroundColor: '#f8f9fa', borderRadius: '12px', color: '#666' }}>
+            <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📅</span>
+            <p style={{ fontSize: '16px' }}>No events found</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #e9ecef' }}>
+                  {['Year', 'Program Name', 'Type', 'Association', 'Dates', 'Audience', 'Attendees', 'Schools', 'Colleges', 'Reach', 'Remarks'].map(h => (
+                    <th key={h} style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', color: '#555', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((ev, idx) => (
+                  <tr key={ev.id} style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
+                    <td style={{ padding: '10px', whiteSpace: 'nowrap', color: '#667eea', fontWeight: '500' }}>{ev.year || '—'}</td>
+                    <td style={{ padding: '10px', maxWidth: '260px', lineHeight: '1.4' }}>{ev.program_name || '—'}</td>
+                    <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{ev.program_type || '—'}</td>
+                    <td style={{ padding: '10px', maxWidth: '160px' }}>{ev.association || '—'}</td>
+                    <td style={{ padding: '10px', whiteSpace: 'nowrap', fontSize: '13px', color: '#666' }}>
+                      {ev.start_date ? new Date(ev.start_date).toLocaleDateString() : '—'}
+                      {ev.end_date && ev.end_date !== ev.start_date ? ` – ${new Date(ev.end_date).toLocaleDateString()}` : ''}
+                    </td>
+                    <td style={{ padding: '10px', maxWidth: '160px', fontSize: '13px' }}>{ev.targeted_audience || '—'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>{ev.num_attendees ?? '—'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>{ev.num_schools ?? '—'}</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>{ev.num_colleges ?? '—'}</td>
+                    <td style={{ padding: '10px', maxWidth: '140px', fontSize: '13px' }}>{ev.geographic_reach || '—'}</td>
+                    <td style={{ padding: '10px', maxWidth: '160px', fontSize: '13px', color: '#888' }}>{ev.remarks || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

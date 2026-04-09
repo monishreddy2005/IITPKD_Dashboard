@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api/outreach-extension';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/outreach-extension`;
 
 const authHeaders = (token) => ({
   headers: {
@@ -97,12 +97,13 @@ export const fetchUbaProjects = async (token) => {
   }
 };
 
-export const fetchUbaProjectEvents = async (token, projectId) => {
+export const fetchUbaEvents = async (token, year = '') => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/uba/events/${projectId}`, authHeaders(token));
+    const params = year ? { year } : {};
+    const response = await axios.get(`${API_BASE_URL}/uba/events`, { ...authHeaders(token), params });
     return response.data;
   } catch (error) {
-    handleError(error, 'Failed to fetch UBA project events');
+    handleError(error, 'Failed to fetch UBA events');
   }
 };
 

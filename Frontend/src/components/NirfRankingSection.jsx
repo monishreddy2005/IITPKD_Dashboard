@@ -3,10 +3,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import './Page.css';
 import './EwdSection.css'; // Use EWD styles for cards
 import axios from 'axios';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
 const NirfRankingSection = ({ user }) => {
+    const uploadVersion = useUploadRefresh();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -14,7 +16,7 @@ const NirfRankingSection = ({ user }) => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/nirf/nirf_metrics');
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/nirf/nirf_metrics`);
             // Ensure data is sorted by year
             const sortedData = response.data.sort((a, b) => a.year - b.year);
             setData(sortedData);
@@ -28,7 +30,7 @@ const NirfRankingSection = ({ user }) => {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [uploadVersion]);
 
     const canUpload = user && [2, 3, 4].includes(user.role_id);
     const token = localStorage.getItem('authToken');

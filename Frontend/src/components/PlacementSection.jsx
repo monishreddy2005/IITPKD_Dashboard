@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -26,6 +27,7 @@ import {
   fetchPlacementPackageTrend,
   fetchTopRecruiters
 } from '../services/placementStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import './Page.css';
 import './AcademicSection.css';
@@ -60,6 +62,8 @@ const formatPercentage = (value) => {
 };
 
 function PlacementSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -155,7 +159,7 @@ function PlacementSection({ user, isPublicView = false }) {
 
   // Get current filters based on view type
   const getCurrentFilters = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'placementTrend': return trendFilters;
       case 'genderWise': return genderFilters;
       case 'programWise': return programFilters;
@@ -169,7 +173,7 @@ function PlacementSection({ user, isPublicView = false }) {
 
   // Handle filter change for current view
   const handleFilterChange = (field, value) => {
-    switch(viewType) {
+    switch (viewType) {
       case 'placementTrend':
         setTrendFilters(prev => ({ ...prev, [field]: value }));
         break;
@@ -202,8 +206,8 @@ function PlacementSection({ user, isPublicView = false }) {
       gender: 'All',
       sector: 'All'
     };
-    
-    switch(viewType) {
+
+    switch (viewType) {
       case 'placementTrend':
         setTrendFilters(defaultFilters);
         break;
@@ -249,7 +253,7 @@ function PlacementSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load placement trend data
   useEffect(() => {
@@ -258,7 +262,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, trend: true }));
         setError(null);
-        
+
         const [summaryResp, trendResp] = await Promise.all([
           fetchPlacementSummary(trendFilters, token),
           fetchPlacementTrend(trendFilters, token)
@@ -284,7 +288,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'placementTrend') {
       loadTrendData();
     }
-  }, [trendFilters, token, viewType]);
+  }, [trendFilters, token, viewType, uploadVersion]);
 
   // Load gender data
   useEffect(() => {
@@ -293,7 +297,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, gender: true }));
         setError(null);
-        
+
         const genderResp = await fetchPlacementGenderBreakdown(genderFilters, token);
         setGenderData(genderResp?.data || []);
       } catch (err) {
@@ -307,7 +311,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'genderWise') {
       loadGenderData();
     }
-  }, [genderFilters, token, viewType]);
+  }, [genderFilters, token, viewType, uploadVersion]);
 
   // Load program data
   useEffect(() => {
@@ -316,7 +320,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, program: true }));
         setError(null);
-        
+
         const programResp = await fetchPlacementProgramStatus(programFilters, token);
         setProgramStatus(programResp?.data || []);
       } catch (err) {
@@ -330,7 +334,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'programWise') {
       loadProgramData();
     }
-  }, [programFilters, token, viewType]);
+  }, [programFilters, token, viewType, uploadVersion]);
 
   // Load recruiters data
   useEffect(() => {
@@ -339,7 +343,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, recruiters: true }));
         setError(null);
-        
+
         const recruiterResp = await fetchPlacementRecruiters(recruitersFilters, token);
         setRecruiterStats(recruiterResp?.data || []);
       } catch (err) {
@@ -353,7 +357,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'recruiters') {
       loadRecruitersData();
     }
-  }, [recruitersFilters, token, viewType]);
+  }, [recruitersFilters, token, viewType, uploadVersion]);
 
   // Load sector data
   useEffect(() => {
@@ -362,7 +366,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, sector: true }));
         setError(null);
-        
+
         const sectorResp = await fetchPlacementSectorDistribution(sectorFilters, token);
         setSectorDistribution(sectorResp?.data || []);
       } catch (err) {
@@ -376,7 +380,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'sectorWise') {
       loadSectorData();
     }
-  }, [sectorFilters, token, viewType]);
+  }, [sectorFilters, token, viewType, uploadVersion]);
 
   // Load package data
   useEffect(() => {
@@ -385,7 +389,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, package: true }));
         setError(null);
-        
+
         const packageResp = await fetchPlacementPackageTrend(packageFilters, token);
         setPackageTrend(packageResp?.data || []);
       } catch (err) {
@@ -399,7 +403,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'packageTrend') {
       loadPackageData();
     }
-  }, [packageFilters, token, viewType]);
+  }, [packageFilters, token, viewType, uploadVersion]);
 
   // Load top recruiters data
   useEffect(() => {
@@ -408,7 +412,7 @@ function PlacementSection({ user, isPublicView = false }) {
       try {
         setLoading(prev => ({ ...prev, topRecruiters: true }));
         setError(null);
-        
+
         const topRecruitersResp = await fetchTopRecruiters(topRecruitersFilters, token);
         setTopRecruiters(topRecruitersResp?.data || []);
       } catch (err) {
@@ -422,7 +426,7 @@ function PlacementSection({ user, isPublicView = false }) {
     if (viewType === 'topRecruiters') {
       loadTopRecruitersData();
     }
-  }, [topRecruitersFilters, token, viewType]);
+  }, [topRecruitersFilters, token, viewType, uploadVersion]);
 
   const placementTrendChartData = useMemo(() => {
     if (!trendData.length) return [];
@@ -496,9 +500,9 @@ function PlacementSection({ user, isPublicView = false }) {
           {payload.map((entry, index) => (
             <p key={index} style={{ margin: '0', color: entry.color }}>
               {entry.name}: {
-                entry.name.includes('Package') || entry.name.includes('package') 
-                  ? formatCurrency(entry.value) 
-                  : entry.name.includes('%') 
+                entry.name.includes('Package') || entry.name.includes('package')
+                  ? formatCurrency(entry.value)
+                  : entry.name.includes('%')
                     ? formatPercentage(entry.value)
                     : formatNumber(entry.value)
               }
@@ -512,7 +516,7 @@ function PlacementSection({ user, isPublicView = false }) {
 
   // Get loading state for current view
   const isLoading = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'placementTrend': return loading.trend;
       case 'genderWise': return loading.gender;
       case 'programWise': return loading.program;
@@ -526,30 +530,50 @@ function PlacementSection({ user, isPublicView = false }) {
 
   // Radio button configurations
   const radioButtons = [
-    { id: 'placementTrend', label: 'Placement Trend', color: '#6366f1'},
+    { id: 'placementTrend', label: 'Placement Trend', color: '#6366f1' },
     { id: 'genderWise', label: 'Gender-wise', color: '#ec4899' },
     { id: 'programWise', label: 'Program-wise', color: '#f97316' },
     { id: 'recruiters', label: 'Recruiters', color: '#f59e0b' },
     { id: 'sectorWise', label: 'Sector-wise', color: '#4f46e5' },
-    { id: 'packageTrend', label: 'Package Trends', color: '#10b981'},
-    { id: 'topRecruiters', label: 'Top Recruiters', color: '#8b5cf6'}
+    { id: 'packageTrend', label: 'Package Trends', color: '#10b981' },
+    { id: 'topRecruiters', label: 'Top Recruiters', color: '#8b5cf6' }
   ];
 
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Placements & Career Outcomes</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Analyse multi-year placement performance, cohort-wise conversion rates, visiting recruiters, and package
-          benchmarks to understand student career trajectories at IIT Palakkad.
-        </p>
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/education')}>
+              ← Back to Education
+            </button>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Placements & Career Outcomes</h1>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_summary'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Summary
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_companies'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Companies
+                  </button>
+                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('placement_packages'); setIsUploadModalOpen(true); }}>
+                    <span>📤</span> Upload Packages
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading.trend && viewType === 'placementTrend' ? (
@@ -829,29 +853,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'placementTrend' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Placement Trend View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Placement Trend</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -919,10 +943,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -931,7 +955,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {trendFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {trendFilters.program}</span>}
                         {trendFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {trendFilters.gender}</span>}
                         {trendFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {trendFilters.sector}</span>}
-                        {trendFilters.year === 'All' && trendFilters.program === 'All' && trendFilters.gender === 'All' && trendFilters.sector === 'All' && 
+                        {trendFilters.year === 'All' && trendFilters.program === 'All' && trendFilters.gender === 'All' && trendFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -965,10 +989,10 @@ function PlacementSection({ user, isPublicView = false }) {
                         </ResponsiveContainer>
 
                         {/* Chart Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -1003,29 +1027,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'genderWise' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Gender-wise View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Gender-wise View</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1093,10 +1117,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1105,7 +1129,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {genderFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {genderFilters.program}</span>}
                         {genderFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {genderFilters.gender}</span>}
                         {genderFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {genderFilters.sector}</span>}
-                        {genderFilters.year === 'All' && genderFilters.program === 'All' && genderFilters.gender === 'All' && genderFilters.sector === 'All' && 
+                        {genderFilters.year === 'All' && genderFilters.program === 'All' && genderFilters.gender === 'All' && genderFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -1146,10 +1170,10 @@ function PlacementSection({ user, isPublicView = false }) {
                         </ResponsiveContainer>
 
                         {/* Gender Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -1176,29 +1200,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'programWise' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Program-wise View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Program-wise View</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1266,10 +1290,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1278,7 +1302,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {programFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {programFilters.program}</span>}
                         {programFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {programFilters.gender}</span>}
                         {programFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {programFilters.sector}</span>}
-                        {programFilters.year === 'All' && programFilters.program === 'All' && programFilters.gender === 'All' && programFilters.sector === 'All' && 
+                        {programFilters.year === 'All' && programFilters.program === 'All' && programFilters.gender === 'All' && programFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -1310,18 +1334,19 @@ function PlacementSection({ user, isPublicView = false }) {
                         </ResponsiveContainer>
 
                         {/* Program Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(3, 1fr)',
-                          gap: '15px'
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
+                          gap: '30px'
                         }}>
                           {programStatusChartData.map((item) => (
-                            <div key={item.program} style={{ textAlign: 'center' }}>
+                            <div key={item.program} style={{ textAlign: 'center', minWidth: '80px' }}>
                               <div style={{ color: '#6366f1', fontWeight: 'bold', fontSize: '18px' }}>
                                 {formatPercentage(item.percentage)}
                               </div>
@@ -1340,29 +1365,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'recruiters' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Recruiters View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Recruiters View</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1430,10 +1455,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1442,7 +1467,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {recruitersFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {recruitersFilters.program}</span>}
                         {recruitersFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {recruitersFilters.gender}</span>}
                         {recruitersFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {recruitersFilters.sector}</span>}
-                        {recruitersFilters.year === 'All' && recruitersFilters.program === 'All' && recruitersFilters.gender === 'All' && recruitersFilters.sector === 'All' && 
+                        {recruitersFilters.year === 'All' && recruitersFilters.program === 'All' && recruitersFilters.gender === 'All' && recruitersFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -1474,10 +1499,10 @@ function PlacementSection({ user, isPublicView = false }) {
                         </ResponsiveContainer>
 
                         {/* Recruiter Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -1512,29 +1537,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'sectorWise' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Sector-wise View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Sector-wise View</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1602,10 +1627,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1614,7 +1639,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {sectorFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {sectorFilters.program}</span>}
                         {sectorFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {sectorFilters.gender}</span>}
                         {sectorFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {sectorFilters.sector}</span>}
-                        {sectorFilters.year === 'All' && sectorFilters.program === 'All' && sectorFilters.gender === 'All' && sectorFilters.sector === 'All' && 
+                        {sectorFilters.year === 'All' && sectorFilters.program === 'All' && sectorFilters.gender === 'All' && sectorFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -1641,12 +1666,12 @@ function PlacementSection({ user, isPublicView = false }) {
                             .slice(0, 5);
                           const otherSectors = sectorPieData.slice(5);
                           const otherTotal = otherSectors.reduce((sum, s) => sum + s.companies, 0);
-                          
+
                           const pieData = [...top5Sectors];
                           if (otherTotal > 0) {
                             pieData.push({ sector: 'Others', companies: otherTotal, offers: otherTotal });
                           }
-                          
+
                           return (
                             <ResponsiveContainer width="100%" height={350}>
                               <PieChart>
@@ -1661,16 +1686,16 @@ function PlacementSection({ user, isPublicView = false }) {
                                   labelLine={false}
                                 >
                                   {pieData.map((entry, index) => (
-                                    <Cell 
-                                      key={entry.sector} 
-                                      fill={index < SECTOR_COLORS.length ? SECTOR_COLORS[index % SECTOR_COLORS.length] : '#a0a0a0'} 
+                                    <Cell
+                                      key={entry.sector}
+                                      fill={index < SECTOR_COLORS.length ? SECTOR_COLORS[index % SECTOR_COLORS.length] : '#a0a0a0'}
                                     />
                                   ))}
                                 </Pie>
                                 <Tooltip formatter={(value) => formatNumber(value)} />
-                                <Legend 
-                                  layout="vertical" 
-                                  align="right" 
+                                <Legend
+                                  layout="vertical"
+                                  align="right"
                                   verticalAlign="middle"
                                   wrapperStyle={{ fontSize: '12px' }}
                                 />
@@ -1680,10 +1705,10 @@ function PlacementSection({ user, isPublicView = false }) {
                         })()}
 
                         {/* Sector Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -1718,29 +1743,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'packageTrend' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Package Trends View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Package Trends</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1808,10 +1833,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1820,7 +1845,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {packageFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {packageFilters.program}</span>}
                         {packageFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {packageFilters.gender}</span>}
                         {packageFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {packageFilters.sector}</span>}
-                        {packageFilters.year === 'All' && packageFilters.program === 'All' && packageFilters.gender === 'All' && packageFilters.sector === 'All' && 
+                        {packageFilters.year === 'All' && packageFilters.program === 'All' && packageFilters.gender === 'All' && packageFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -1853,10 +1878,10 @@ function PlacementSection({ user, isPublicView = false }) {
                         </ResponsiveContainer>
 
                         {/* Package Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -1891,29 +1916,29 @@ function PlacementSection({ user, isPublicView = false }) {
                 {viewType === 'topRecruiters' && (
                   <div className="chart-section" style={{ marginTop: '0' }}>
                     {/* Filters for Top Recruiters View */}
-                    <div className="filter-panel" style={{ 
-                      marginBottom: '20px', 
-                      padding: '15px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderRadius: '8px', 
-                      border: '1px solid #e9ecef' 
+                    <div className="filter-panel" style={{
+                      marginBottom: '20px',
+                      padding: '15px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
                     }}>
-                      <div className="filter-header" style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        marginBottom: '15px' 
+                      <div className="filter-header" style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '15px'
                       }}>
                         <h4 style={{ margin: '0', color: '#333' }}>Filters for Top Recruiters</h4>
-                        <button 
-                          className="clear-filters-btn" 
+                        <button
+                          className="clear-filters-btn"
                           onClick={handleClearFilters}
-                          style={{ 
-                            padding: '6px 12px', 
-                            backgroundColor: '#dc3545', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '4px', 
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
                             fontSize: '12px'
                           }}
@@ -1981,10 +2006,10 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
 
                       {/* Active Filters Summary */}
-                      <div style={{ 
-                        marginTop: '12px', 
-                        padding: '8px', 
-                        backgroundColor: '#e9ecef', 
+                      <div style={{
+                        marginTop: '12px',
+                        padding: '8px',
+                        backgroundColor: '#e9ecef',
                         borderRadius: '4px',
                         fontSize: '12px'
                       }}>
@@ -1993,7 +2018,7 @@ function PlacementSection({ user, isPublicView = false }) {
                         {topRecruitersFilters.program !== 'All' && <span style={{ marginRight: '8px' }}>🎓 {topRecruitersFilters.program}</span>}
                         {topRecruitersFilters.gender !== 'All' && <span style={{ marginRight: '8px' }}>👤 {topRecruitersFilters.gender}</span>}
                         {topRecruitersFilters.sector !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {topRecruitersFilters.sector}</span>}
-                        {topRecruitersFilters.year === 'All' && topRecruitersFilters.program === 'All' && topRecruitersFilters.gender === 'All' && topRecruitersFilters.sector === 'All' && 
+                        {topRecruitersFilters.year === 'All' && topRecruitersFilters.program === 'All' && topRecruitersFilters.gender === 'All' && topRecruitersFilters.sector === 'All' &&
                           <span>No filters applied</span>
                         }
                       </div>
@@ -2014,8 +2039,8 @@ function PlacementSection({ user, isPublicView = false }) {
                     ) : (
                       <div>
                         <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                          <table className="grievance-table" style={{ 
-                            width: '100%', 
+                          <table className="grievance-table" style={{
+                            width: '100%',
                             borderCollapse: 'collapse',
                             backgroundColor: '#fff',
                             borderRadius: '8px',
@@ -2031,103 +2056,103 @@ function PlacementSection({ user, isPublicView = false }) {
                                 <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Offers</th>
                                 <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Hires</th>
                                 <th style={{ padding: '12px', textAlign: 'left', position: 'sticky', top: 0, backgroundColor: '#8b5cf6' }}>Flagged</th>
-                               </tr>
-                              </thead>
-                              <tbody>
-                                {topRecruiters.map((row, index) => (
-                                  <tr 
-                                    key={`${row.year}-${row.company_name}`}
-                                    style={{ 
-                                      backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                                      borderBottom: '1px solid #e0e0e0'
-                                    }}
-                                  >
-                                    <td style={{ padding: '10px', fontSize: '13px' }}>{row.year}</td>
-                                    <td style={{ padding: '10px', fontSize: '13px', fontWeight: '500' }}>{row.company_name}</td>
-                                    <td style={{ padding: '10px', fontSize: '13px' }}>
-                                      {row.sector && (
-                                        <span style={{ 
-                                          backgroundColor: '#e0e7ff',
-                                          color: '#3730a3',
-                                          padding: '4px 8px',
-                                          borderRadius: '4px',
-                                          fontSize: '11px',
-                                          fontWeight: '500'
-                                        }}>
-                                          {row.sector}
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.offers)}</td>
-                                    <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.hires)}</td>
-                                    <td style={{ padding: '10px', fontSize: '13px' }}>
-                                      <span style={{ 
-                                        backgroundColor: row.is_top_recruiter ? '#dcfce7' : '#fee2e2',
-                                        color: row.is_top_recruiter ? '#166534' : '#991b1b',
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {topRecruiters.map((row, index) => (
+                                <tr
+                                  key={`${row.year}-${row.company_name}`}
+                                  style={{
+                                    backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
+                                    borderBottom: '1px solid #e0e0e0'
+                                  }}
+                                >
+                                  <td style={{ padding: '10px', fontSize: '13px' }}>{row.year}</td>
+                                  <td style={{ padding: '10px', fontSize: '13px', fontWeight: '500' }}>{row.company_name}</td>
+                                  <td style={{ padding: '10px', fontSize: '13px' }}>
+                                    {row.sector && (
+                                      <span style={{
+                                        backgroundColor: '#e0e7ff',
+                                        color: '#3730a3',
                                         padding: '4px 8px',
                                         borderRadius: '4px',
                                         fontSize: '11px',
                                         fontWeight: '500'
                                       }}>
-                                        {row.is_top_recruiter ? 'Yes' : 'No'}
+                                        {row.sector}
                                       </span>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-
-                          {/* Recruiter Statistics */}
-                          {topRecruiters.length > 0 && (
-                            <div style={{ 
-                              marginTop: '20px', 
-                              padding: '15px', 
-                              backgroundColor: '#f8f9fa', 
-                              borderRadius: '8px',
-                              border: '1px solid #e0e0e0',
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(3, 1fr)',
-                              gap: '15px'
-                            }}>
-                              <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
-                                  {topRecruiters.length}
-                                </div>
-                                <div style={{ color: '#666', fontSize: '12px' }}>Total Entries</div>
-                              </div>
-                              <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
-                                  {new Set(topRecruiters.map(r => r.company_name)).size}
-                                </div>
-                                <div style={{ color: '#666', fontSize: '12px' }}>Unique Companies</div>
-                              </div>
-                              <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                                  {topRecruiters.reduce((sum, r) => sum + (r.offers || 0), 0)}
-                                </div>
-                                <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
-                              </div>
-                            </div>
-                          )}
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.offers)}</td>
+                                  <td style={{ padding: '10px', fontSize: '13px' }}>{formatNumber(row.hires)}</td>
+                                  <td style={{ padding: '10px', fontSize: '13px' }}>
+                                    <span style={{
+                                      backgroundColor: row.is_top_recruiter ? '#dcfce7' : '#fee2e2',
+                                      color: row.is_top_recruiter ? '#166534' : '#991b1b',
+                                      padding: '4px 8px',
+                                      borderRadius: '4px',
+                                      fontSize: '11px',
+                                      fontWeight: '500'
+                                    }}>
+                                      {row.is_top_recruiter ? 'Yes' : 'No'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </div>
 
-        <DataUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          tableName={activeUploadTable}
-          token={token}
-        />
+                        {/* Recruiter Statistics */}
+                        {topRecruiters.length > 0 && (
+                          <div style={{
+                            marginTop: '20px',
+                            padding: '15px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e0',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: '15px'
+                          }}>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontSize: '24px' }}>
+                                {topRecruiters.length}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '12px' }}>Total Entries</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ color: '#f59e0b', fontWeight: 'bold', fontSize: '24px' }}>
+                                {new Set(topRecruiters.map(r => r.company_name)).size}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '12px' }}>Unique Companies</div>
+                            </div>
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
+                                {topRecruiters.reduce((sum, r) => sum + (r.offers || 0), 0)}
+                              </div>
+                              <div style={{ color: '#666', fontSize: '12px' }}>Total Offers</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
-    
+
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName={activeUploadTable}
+        token={token}
+      />
+    </div>
+
   );
 }
 

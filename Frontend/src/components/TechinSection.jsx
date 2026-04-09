@@ -17,13 +17,15 @@ import {
   fetchTechinStartups,
   fetchTechinFilterOptions
 } from '../services/techinStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './PeopleCampus.css';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-function TechinSection({ user }) {
+function TechinSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -64,7 +66,7 @@ function TechinSection({ user }) {
 
   // Get current filters based on view type
   const getCurrentFilters = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'programs': return programFilters;
       case 'skillDev': return skillDevFilters;
       case 'startups': return startupFilters;
@@ -74,7 +76,7 @@ function TechinSection({ user }) {
 
   // Handle filter change for current view
   const handleFilterChange = (field, value) => {
-    switch(viewType) {
+    switch (viewType) {
       case 'programs':
         setProgramFilters(prev => ({ ...prev, [field]: value }));
         break;
@@ -92,8 +94,8 @@ function TechinSection({ user }) {
     const defaultFilters = { type: 'All', association: 'All' };
     const defaultSkillFilters = { category: 'All', association: 'All' };
     const defaultStartupFilters = { domain: 'All', status: 'All' };
-    
-    switch(viewType) {
+
+    switch (viewType) {
       case 'programs':
         setProgramFilters(defaultFilters);
         break;
@@ -107,9 +109,6 @@ function TechinSection({ user }) {
   };
 
   // Handle back navigation
-  const handleGoBack = () => {
-    navigate(-1);
-  };
 
   // Initial Data Load
   useEffect(() => {
@@ -130,13 +129,13 @@ function TechinSection({ user }) {
       }
     };
     initialLoad();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load programs data
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    
+
     const loadProgramsData = async () => {
       setLoading(prev => ({ ...prev, programs: true }));
       setError(null);
@@ -157,13 +156,13 @@ function TechinSection({ user }) {
       loadProgramsData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, programFilters]);
+  }, [token, viewType, programFilters, uploadVersion]);
 
   // Load skill development data
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    
+
     const loadSkillDevData = async () => {
       setLoading(prev => ({ ...prev, skillDev: true }));
       setError(null);
@@ -184,13 +183,13 @@ function TechinSection({ user }) {
       loadSkillDevData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, skillDevFilters]);
+  }, [token, viewType, skillDevFilters, uploadVersion]);
 
   // Load startups data
   useEffect(() => {
     if (!token) return;
     let isMounted = true;
-    
+
     const loadStartupsData = async () => {
       setLoading(prev => ({ ...prev, startups: true }));
       setError(null);
@@ -211,11 +210,11 @@ function TechinSection({ user }) {
       loadStartupsData();
     }
     return () => { isMounted = false; };
-  }, [token, viewType, startupFilters]);
+  }, [token, viewType, startupFilters, uploadVersion]);
 
   // Get loading state for current view
   const isLoading = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'programs': return loading.programs;
       case 'skillDev': return loading.skillDev;
       case 'startups': return loading.startups;
@@ -227,7 +226,7 @@ function TechinSection({ user }) {
   const radioButtons = [
     { id: 'programs', label: 'Programs Trend', color: '#667eea' },
     { id: 'skillDev', label: 'Skill Dev Trend', color: '#f093fb' },
-    { id: 'startups', label: 'Startups Trend', color: '#43e97b'}
+    { id: 'startups', label: 'Startups Trend', color: '#43e97b' }
   ];
 
   // Custom Line Chart Tooltip
@@ -255,7 +254,7 @@ function TechinSection({ user }) {
 
   // Get current view color for charts
   const getViewColor = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'programs': return '#667eea';
       case 'skillDev': return '#f093fb';
       case 'startups': return '#43e97b';
@@ -265,7 +264,7 @@ function TechinSection({ user }) {
 
   // Get current view label
   const getViewLabel = () => {
-    switch(viewType) {
+    switch (viewType) {
       case 'programs': return 'Programs Trend';
       case 'skillDev': return 'Skill Development Trend';
       case 'startups': return 'Startups Growth';
@@ -274,45 +273,19 @@ function TechinSection({ user }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-content">
-        {/* Back Button */}
-        <div style={{ marginBottom: '20px' }}>
-          <button
-            onClick={handleGoBack}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '8px 16px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'all 0.3s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5a6268';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#6c757d';
-            }}
-          >
-            <span>←</span> Back
+    <div className={isPublicView ? "" : "page-container"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/innovation-entrepreneurship')}>
+            ← Back to Innovation & Entrepreneurship
           </button>
-        </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h1 style={{ margin: '0 0 5px 0' }}>TechIn</h1>
-            <p style={{ color: '#666', margin: 0 }}>
-              Overview of TechIn Entrepreneurship and Skill Development initiatives.
-            </p>
+            {!isPublicView && <h1 style={{ margin: 0 }}>TechIn</h1>}
           </div>
-          
+
           {/* Upload Buttons - At the Top */}
           {user && user.role_id === 3 && (
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -341,11 +314,11 @@ function TechinSection({ user }) {
           )}
         </div>
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px'
         }}>{error}</div>}
 
-        {/* First Row of Summary Cards - Larger Size */}
+        {/* First Row of Summary Cards - Larger Size - Keeping original colors */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -449,7 +422,7 @@ function TechinSection({ user }) {
           </div>
         </div>
 
-        {/* Revenue Summary Cards - Larger Size */}
+        {/* Revenue Summary Cards - Larger Size - Keeping original colors */}
         <h3 style={{ marginTop: '0', marginBottom: '20px', color: '#333', fontSize: '18px', fontWeight: '600' }}>Startup Revenue Metrics</h3>
         <div style={{
           display: 'grid',
@@ -600,39 +573,39 @@ function TechinSection({ user }) {
         ) : (
           <>
             {/* Dynamic View with Filters Inside */}
-            <div style={{ 
-              marginBottom: '30px', 
-              padding: '24px', 
-              backgroundColor: '#fff', 
-              borderRadius: '16px', 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)' 
+            <div style={{
+              marginBottom: '30px',
+              padding: '24px',
+              backgroundColor: '#fff',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
             }}>
               {/* Filters for Current View */}
-              <div className="filter-panel" style={{ 
-                marginBottom: '24px', 
-                padding: '20px', 
-                backgroundColor: '#f8f9fa', 
-                borderRadius: '12px', 
-                border: '1px solid #e9ecef' 
+              <div className="filter-panel" style={{
+                marginBottom: '24px',
+                padding: '20px',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '12px',
+                border: '1px solid #e9ecef'
               }}>
-                <div className="filter-header" style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '16px' 
+                <div className="filter-header" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px'
                 }}>
                   <h4 style={{ margin: '0', color: '#333', fontSize: '16px', fontWeight: '600' }}>
                     Filters for {viewType === 'programs' ? 'Programs' : viewType === 'skillDev' ? 'Skill Development' : 'Startups'} View
                   </h4>
-                  <button 
-                    className="clear-filters-btn" 
+                  <button
+                    className="clear-filters-btn"
                     onClick={handleClearFilters}
-                    style={{ 
-                      padding: '8px 16px', 
-                      backgroundColor: '#dc3545', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '6px', 
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
                       cursor: 'pointer',
                       fontSize: '13px',
                       fontWeight: '500'
@@ -726,10 +699,10 @@ function TechinSection({ user }) {
                 </div>
 
                 {/* Active Filters Summary */}
-                <div style={{ 
-                  marginTop: '16px', 
-                  padding: '12px', 
-                  backgroundColor: '#e9ecef', 
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  backgroundColor: '#e9ecef',
                   borderRadius: '8px',
                   fontSize: '13px'
                 }}>
@@ -779,23 +752,23 @@ function TechinSection({ user }) {
                       <YAxis stroke="#666" tick={{ fontSize: 12 }} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="count" 
-                        name="Count" 
-                        stroke={getViewColor()} 
-                        strokeWidth={3} 
-                        dot={{ r: 6, fill: getViewColor(), strokeWidth: 2, stroke: '#fff' }} 
-                        activeDot={{ r: 8 }} 
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        name="Count"
+                        stroke={getViewColor()}
+                        strokeWidth={3}
+                        dot={{ r: 6, fill: getViewColor(), strokeWidth: 2, stroke: '#fff' }}
+                        activeDot={{ r: 8 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
 
                   {/* Chart Statistics */}
-                  <div style={{ 
-                    marginTop: '24px', 
-                    padding: '20px', 
-                    backgroundColor: '#f8f9fa', 
+                  <div style={{
+                    marginTop: '24px',
+                    padding: '20px',
+                    backgroundColor: '#f8f9fa',
                     borderRadius: '12px',
                     border: '1px solid #e0e0e0',
                     display: 'grid',
@@ -838,9 +811,9 @@ function TechinSection({ user }) {
                   </p>
                 </div>
                 {tableData.length > 0 ? (
-                  <div style={{ 
-                    maxHeight: '550px', 
-                    overflowY: 'auto', 
+                  <div style={{
+                    maxHeight: '550px',
+                    overflowY: 'auto',
                     overflowX: 'auto',
                     border: '1px solid #e0e0e0',
                     borderRadius: '12px',
@@ -916,7 +889,7 @@ function TechinSection({ user }) {
                                 <td style={{ padding: '12px', fontSize: '14px', fontWeight: '500' }}>{row.startup_name}</td>
                                 <td style={{ padding: '12px', fontSize: '14px' }}>{row.domain}</td>
                                 <td style={{ padding: '12px', fontSize: '14px' }}>
-                                  <span style={{ 
+                                  <span style={{
                                     backgroundColor: row.status === 'Active' ? '#dcfce7' : '#fef3c7',
                                     color: row.status === 'Active' ? '#166534' : '#92400e',
                                     padding: '4px 12px',

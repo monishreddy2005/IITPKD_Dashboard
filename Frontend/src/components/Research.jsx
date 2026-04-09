@@ -66,9 +66,6 @@ function Research({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Research</h1>
-        <p>Explore different research modules of IIT Palakkad.</p>
-
         {/* 🔹 ADDITION: Public view button for non-public users */}
         <div style={{ marginBottom: '1rem' }}>
           <button

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   fetchConclaveSummary,
   fetchConclaveList
 } from '../services/industryConnectStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
@@ -10,6 +12,8 @@ import DataUploadModal from './DataUploadModal';
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function ConclaveSection({ user, isPublicView = false }) {
+  const uploadVersion = useUploadRefresh();
+  const navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const token = localStorage.getItem('authToken');
 
@@ -37,7 +41,7 @@ function ConclaveSection({ user, isPublicView = false }) {
       }
     };
     loadSummary();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Load conclaves list
   useEffect(() => {
@@ -51,55 +55,38 @@ function ConclaveSection({ user, isPublicView = false }) {
       }
     };
     loadConclaves();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && <h1>Industry-Academia Conclave</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Explore the annual Industry-Academia Conclave events, themes, participating companies,
-          and key highlights from each edition.
-        </p>
-
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
-        }}>{error}</div>}
-
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ 
-            display: 'flex', 
-            gap: '1rem', 
-            marginBottom: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📤</span> Upload Conclave Data
+        {!isPublicView && (
+          <>
+            <button className="page-back-btn" onClick={() => navigate('/industry-connect')}>
+              ← Back to Industry Connect
             </button>
-          </div>
+            <div className="page-header-row">
+              <div className="page-header-left">
+                <h1>Industry-Academia Conclave</h1>
+              </div>
+              {user && user.role_id === 3 && (
+                <div className="page-header-actions">
+                  <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
+                    <span>📤</span> Upload Conclave Data
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
+
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
+        }}>{error}</div>}
 
         {/* Summary Cards - Modern Design */}
         <div style={{
@@ -142,7 +129,7 @@ function ConclaveSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -227,7 +214,7 @@ function ConclaveSection({ user, isPublicView = false }) {
               background: 'rgba(255, 255, 255, 0.05)',
               borderRadius: '50%'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -595,10 +582,10 @@ function ConclaveSection({ user, isPublicView = false }) {
             ))}
           </div>
         ) : (
-          <div className="no-data" style={{ 
-            textAlign: 'center', 
-            padding: '60px', 
-            backgroundColor: '#f8f9fa', 
+          <div className="no-data" style={{
+            textAlign: 'center',
+            padding: '60px',
+            backgroundColor: '#f8f9fa',
             borderRadius: '12px',
             marginTop: '20px'
           }}>

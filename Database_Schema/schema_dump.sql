@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
+\restrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
+-- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -389,7 +389,7 @@ CREATE TABLE public.courses_table (
     date_of_proposal date,
     proposal_type text,
     bac_number integer,
-    senate_number integer,
+    senate_number character varying(50) NOT NULL,
     course_proposal_pdf character varying(255),
     is_industry_course character varying(10),
     industry_partner character varying(100),
@@ -527,7 +527,7 @@ ALTER SEQUENCE public.externship_info_externid_seq OWNED BY public.externship_in
 CREATE TABLE public.faculty_engagement (
     engagement_code character varying(40) NOT NULL,
     faculty_name character varying(150),
-    engagement_type public.faculty_engagement_type NOT NULL,
+    engagement_type character varying(50) NOT NULL,
     department character varying(100) NOT NULL,
     startdate date,
     enddate date,
@@ -545,7 +545,7 @@ ALTER TABLE public.faculty_engagement OWNER TO postgres;
 --
 
 CREATE TABLE public.icc_yearwise (
-    complaints_year integer NOT NULL,
+    complaints_year character varying(10) NOT NULL,
     total_complaints integer NOT NULL,
     complaints_resolved integer NOT NULL,
     complaints_pending integer NOT NULL,
@@ -942,7 +942,7 @@ ALTER SEQUENCE public.open_house_event_id_seq OWNED BY public.open_house.event_i
 --
 
 CREATE TABLE public.outreach (
-    id integer NOT NULL,
+    id text NOT NULL,
     academic_year character varying(9),
     created_by character varying(100),
     created_at timestamp with time zone DEFAULT now(),
@@ -963,7 +963,7 @@ CREATE TABLE public.outreach (
     sq_num_lab_sessions integer,
     sq_districts_covered text,
     pmc_target_class character varying(20),
-    pmc_mathematician_led boolean,
+    pmc_mathematician_led text,
     pmc_num_sessions integer,
     pbd_lecture_topic text,
     pbd_speaker_name character varying(255),
@@ -1008,7 +1008,7 @@ ALTER SEQUENCE public.outreach_id_seq OWNED BY public.outreach.id;
 
 CREATE TABLE public.placement_companies (
     company_id integer NOT NULL,
-    placement_year integer NOT NULL,
+    placement_year character varying(20) NOT NULL,
     company_name character varying(150) NOT NULL,
     sector character varying(100),
     offers integer DEFAULT 0 NOT NULL,
@@ -1049,7 +1049,7 @@ ALTER SEQUENCE public.placement_companies_company_id_seq OWNED BY public.placeme
 
 CREATE TABLE public.placement_packages (
     placement_year character varying(10) NOT NULL,
-    program public.program_type NOT NULL,
+    program character varying(255) NOT NULL,
     highest_package numeric(10,2),
     lowest_package numeric(10,2),
     average_package numeric(10,2),
@@ -1064,8 +1064,8 @@ ALTER TABLE public.placement_packages OWNER TO postgres;
 --
 
 CREATE TABLE public.placement_summary (
-    placement_year integer NOT NULL,
-    program public.program_type NOT NULL,
+    placement_year character varying(20) NOT NULL,
+    program character varying(100) NOT NULL,
     gender public.gender_type NOT NULL,
     registered integer NOT NULL,
     placed integer NOT NULL,
@@ -1166,40 +1166,18 @@ ALTER SEQUENCE public.research_patents_patent_id_seq OWNED BY public.research_pa
 --
 
 CREATE TABLE public.research_publications (
-    publication_id integer NOT NULL,
     publication_title character varying(500) NOT NULL,
     journal_name character varying(500),
     department character varying(100),
     faculty_name character varying(150),
     publication_year integer NOT NULL,
     publication_type character varying(300) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    id character varying(32) NOT NULL
 );
 
 
 ALTER TABLE public.research_publications OWNER TO postgres;
-
---
--- Name: research_publications_publication_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.research_publications_publication_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.research_publications_publication_id_seq OWNER TO postgres;
-
---
--- Name: research_publications_publication_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.research_publications_publication_id_seq OWNED BY public.research_publications.publication_id;
-
 
 --
 -- Name: roles; Type: TABLE; Schema: public; Owner: postgres
@@ -1305,7 +1283,8 @@ CREATE TABLE public.student_table (
     withdrawn_terminated character varying(20),
     date_of_withdrawal_termination date,
     ay_of_withdrawal_termination character varying(10),
-    reason_for_withdrawal_termination text
+    reason_for_withdrawal_termination text,
+    academic_program_type character varying(15)
 );
 
 
@@ -1373,25 +1352,29 @@ ALTER TABLE public.techin_startup_table OWNER TO postgres;
 --
 
 CREATE TABLE public.uba_events (
-    event_id integer NOT NULL,
-    event_title character varying(250) NOT NULL,
-    event_type character varying(100),
-    event_date date NOT NULL,
-    location character varying(200),
-    description text,
-    photos_url text,
-    brochure_url character varying(500),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    id integer NOT NULL,
+    year text,
+    program_name text,
+    program_type text,
+    association text,
+    start_date date,
+    end_date date,
+    targeted_audience text,
+    num_attendees integer,
+    num_schools integer,
+    num_colleges integer,
+    geographic_reach text,
+    remarks text
 );
 
 
 ALTER TABLE public.uba_events OWNER TO postgres;
 
 --
--- Name: uba_events_event_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: uba_events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.uba_events_event_id_seq
+CREATE SEQUENCE public.uba_events_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -1400,13 +1383,13 @@ CREATE SEQUENCE public.uba_events_event_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.uba_events_event_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.uba_events_id_seq OWNER TO postgres;
 
 --
--- Name: uba_events_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: uba_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.uba_events_event_id_seq OWNED BY public.uba_events.event_id;
+ALTER SEQUENCE public.uba_events_id_seq OWNED BY public.uba_events.id;
 
 
 --
@@ -1535,13 +1518,6 @@ ALTER TABLE ONLY public.open_house ALTER COLUMN event_id SET DEFAULT nextval('pu
 
 
 --
--- Name: outreach id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.outreach ALTER COLUMN id SET DEFAULT nextval('public.outreach_id_seq'::regclass);
-
-
---
 -- Name: placement_companies company_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1563,13 +1539,6 @@ ALTER TABLE ONLY public.research_patents ALTER COLUMN patent_id SET DEFAULT next
 
 
 --
--- Name: research_publications publication_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.research_publications ALTER COLUMN publication_id SET DEFAULT nextval('public.research_publications_publication_id_seq'::regclass);
-
-
---
 -- Name: roles id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -1577,10 +1546,10 @@ ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_
 
 
 --
--- Name: uba_events event_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: uba_events id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.uba_events ALTER COLUMN event_id SET DEFAULT nextval('public.uba_events_event_id_seq'::regclass);
+ALTER TABLE ONLY public.uba_events ALTER COLUMN id SET DEFAULT nextval('public.uba_events_id_seq'::regclass);
 
 
 --
@@ -1610,7 +1579,7 @@ ALTER TABLE ONLY public.alumni
 --
 
 ALTER TABLE ONLY public.courses_table
-    ADD CONSTRAINT courses_table_pkey PRIMARY KEY (course_code);
+    ADD CONSTRAINT courses_table_pkey PRIMARY KEY (course_code, senate_number);
 
 
 --
@@ -1850,7 +1819,7 @@ ALTER TABLE ONLY public.research_patents
 --
 
 ALTER TABLE ONLY public.research_publications
-    ADD CONSTRAINT research_publications_pkey PRIMARY KEY (publication_title);
+    ADD CONSTRAINT research_publications_pkey PRIMARY KEY (id);
 
 
 --
@@ -1906,7 +1875,7 @@ ALTER TABLE ONLY public.techin_startup_table
 --
 
 ALTER TABLE ONLY public.uba_events
-    ADD CONSTRAINT uba_events_pkey PRIMARY KEY (event_id);
+    ADD CONSTRAINT uba_events_pkey PRIMARY KEY (id);
 
 
 --
@@ -1970,13 +1939,6 @@ CREATE INDEX idx_open_house_year ON public.open_house USING btree (event_year);
 
 
 --
--- Name: idx_uba_events_date; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE INDEX idx_uba_events_date ON public.uba_events USING btree (event_date);
-
-
---
 -- Name: idx_uba_projects_status; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1995,5 +1957,5 @@ ALTER TABLE ONLY public.users
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QXfVofsbwTaVtKm9bD6qtE7QnDBn8MwKeYnDdsYLVtlzFe9eF0tqBtUpQB6Nzmz
+\unrestrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
 

@@ -4,6 +4,7 @@ import {
   fetchNptelTrend,
   fetchNptelList
 } from '../services/outreachExtensionStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   LineChart,
@@ -17,10 +18,14 @@ import {
 import './Page.css';
 import './AcademicSection.css';
 import DataUploadModal from './DataUploadModal';
+import { useNavigate } from 'react-router-dom';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function NptelSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
   const token = localStorage.getItem('authToken');
@@ -58,20 +63,8 @@ function NptelSection({ user, isPublicView = false }) {
       }
     };
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
-  if (loading) {
-    return isPublicView ? (
-      <p>Loading...</p>
-    ) : (
-      <div className="page-container">
-        <div className="page-content">
-          <h1>NPTEL – CCE</h1>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return isPublicView ? (
@@ -88,6 +81,11 @@ function NptelSection({ user, isPublicView = false }) {
 
   const content = (
     <>
+      {!isPublicView && (
+        <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+          ← Back to Outreach Extension
+        </button>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         {!isPublicView && <h1 style={{ margin: 0 }}>NPTEL – CCE (Centre for Continuing Education)</h1>}
 

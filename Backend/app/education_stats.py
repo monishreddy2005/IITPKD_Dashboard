@@ -9,6 +9,38 @@ from .db import get_db_connection
 education_bp = Blueprint('education', __name__)
 
 ENGAGEMENT_TYPES = ['Adjunct', 'Honorary', 'Visiting', 'FacultyFellow', 'PoP']
+CATEGORY_KEYWORDS = {
+    'Adjunct': ['Adjunct'],
+    'Honorary': ['Honorary'],
+    'Visiting': ['Visiting'],
+    'FacultyFellow': ['Faculty Fellow', 'FacultyFellow'],
+    'PoP': ['PoP', 'Professor of Practice', 'Practice']
+}
+
+def get_standardized_type_sql():
+    """Returns a SQL CASE expression to standardize engagement_type based on keywords."""
+    return """
+        CASE
+            WHEN engagement_type ILIKE '%%Adjunct%%' THEN 'Adjunct'
+            WHEN engagement_type ILIKE '%%Honorary%%' THEN 'Honorary'
+            WHEN engagement_type ILIKE '%%Visiting%%' THEN 'Visiting'
+            WHEN engagement_type ILIKE '%%Faculty Fellow%%' OR engagement_type ILIKE '%%FacultyFellow%%' THEN 'FacultyFellow'
+            WHEN engagement_type ILIKE '%%PoP%%' OR engagement_type ILIKE '%%Professor of Practice%%' OR engagement_type ILIKE '%%Practice%%' THEN 'PoP'
+            ELSE NULL
+        END
+    """
+
+def get_standardized_type_python(raw_type):
+    """Returns the standardized engagement category for a raw string in Python."""
+    if not raw_type:
+        return None
+    raw_type_lower = raw_type.lower()
+    for cat, keywords in CATEGORY_KEYWORDS.items():
+        for kw in keywords:
+            if kw.lower() in raw_type_lower:
+                return cat
+    return None
+
 ENGAGEMENT_TABLE_NAME = 'faculty_engagement'
 
 
@@ -26,8 +58,20 @@ def build_filter_query(filters):
         value = filters.get(key)
         if value in (None, '', 'All'):
             continue
-        conditions.append(f"{column} = %s")
-        params.append(value)
+        if key == 'engagement_type':
+            # For standardized filtering, match by keywords
+            if value == 'FacultyFellow':
+                conditions.append("(engagement_type ILIKE %s OR engagement_type ILIKE %s)")
+                params.extend(["%Faculty Fellow%", "%FacultyFellow%"])
+            elif value == 'PoP':
+                conditions.append("(engagement_type ILIKE %s OR engagement_type ILIKE %s OR engagement_type ILIKE %s)")
+                params.extend(["%PoP%", "%Professor of Practice%", "%Practice%"])
+            else:
+                conditions.append(f"{column} ILIKE %s")
+                params.append(f"%{value}%")
+        else:
+            conditions.append(f"{column} = %s")
+            params.append(value)
 
     where_clause = ''
     if conditions:
@@ -106,7 +150,12 @@ def compute_summary(rows):
     today = date.today()
     summary_map = {eng_type: {'total': 0, 'active': 0} for eng_type in ENGAGEMENT_TYPES}
     for row in rows:
-        engagement_type = row.get('engagement_type')
+        engagement_type_raw = row.get('engagement_type')
+        engagement_type = get_standardized_type_python(engagement_type_raw)
+        
+        if not engagement_type:
+            continue
+
         if engagement_type not in summary_map:
             summary_map[engagement_type] = {'total': 0, 'active': 0}
         summary_map[engagement_type]['total'] += 1
@@ -163,7 +212,7 @@ def get_filter_options(current_user_id):
         return jsonify({
             'years': row['years'] if row and row['years'] else [],
             'departments': row['departments'] if row and row['departments'] else [],
-            'engagement_types': row['engagement_types'] if row and row['engagement_types'] else ENGAGEMENT_TYPES
+            'engagement_types': ENGAGEMENT_TYPES
         }), 200
     except Exception as exc:
         print(f"Education filter options error: {exc}")
@@ -245,7 +294,7 @@ def get_department_breakdown(current_user_id):
         cur.execute(
             f"""
             SELECT department,
-                   engagement_type,
+                   {get_standardized_type_sql()} AS std_type,
                    COUNT(*) AS total,
                    SUM(
                        CASE
@@ -255,8 +304,9 @@ def get_department_breakdown(current_user_id):
                    ) AS active
             FROM faculty_engagement
             {where_clause}
-            GROUP BY department, engagement_type
-            ORDER BY department, engagement_type
+            GROUP BY department, std_type
+            HAVING {get_standardized_type_sql()} IS NOT NULL
+            ORDER BY department, std_type
             """,
             params
         )
@@ -270,7 +320,7 @@ def get_department_breakdown(current_user_id):
                     'department': dept,
                     'details': {eng_type: {'total': 0, 'active': 0} for eng_type in ENGAGEMENT_TYPES}
                 }
-            breakdown_map[dept]['details'][row['engagement_type']] = {
+            breakdown_map[dept]['details'][row['std_type']] = {
                 'total': row['total'],
                 'active': row['active']
             }
@@ -335,12 +385,13 @@ def get_year_trend(current_user_id):
         cur.execute(
             f"""
             SELECT year,
-                   engagement_type,
+                   {get_standardized_type_sql()} AS std_type,
                    COUNT(*) AS total
             FROM faculty_engagement
             {where_clause}
-            GROUP BY year, engagement_type
-            ORDER BY year ASC, engagement_type
+            GROUP BY year, std_type
+            HAVING {get_standardized_type_sql()} IS NOT NULL
+            ORDER BY year ASC, std_type
             """,
             params
         )
@@ -354,7 +405,7 @@ def get_year_trend(current_user_id):
             if year not in trend_map:
                 trend_map[year] = {eng_type: 0 for eng_type in ENGAGEMENT_TYPES}
                 trend_map[year]['year'] = year
-            trend_map[year][row['engagement_type']] = row['total']
+            trend_map[year][row['std_type']] = row['total']
 
         trend_list = [trend_map[year] for year in sorted(trend_map.keys())]
         return jsonify({'data': trend_list}), 200
@@ -402,17 +453,18 @@ def get_type_distribution(current_user_id):
         cur = conn.cursor()
         cur.execute(
             f"""
-            SELECT engagement_type,
+            SELECT {get_standardized_type_sql()} AS std_type,
                    COUNT(*) AS total
             FROM faculty_engagement
             {where_clause}
-            GROUP BY engagement_type
-            ORDER BY engagement_type
+            GROUP BY std_type
+            HAVING {get_standardized_type_sql()} IS NOT NULL
+            ORDER BY std_type
             """,
             params
         )
         rows = cur.fetchall()
-        distribution = [{'engagement_type': row['engagement_type'], 'total': row['total']} for row in rows]
+        distribution = [{'engagement_type': row['std_type'], 'total': row['total']} for row in rows]
         return jsonify({'data': distribution}), 200
     except UndefinedTable:
         return jsonify({
@@ -462,6 +514,7 @@ def get_faculty_engagement_list(current_user_id):
                 engagement_code,
                 faculty_name,
                 engagement_type,
+                {get_standardized_type_sql()} AS std_type,
                 department,
                 startdate,
                 enddate,

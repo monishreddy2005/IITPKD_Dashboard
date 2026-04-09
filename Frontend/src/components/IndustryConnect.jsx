@@ -59,10 +59,7 @@ function IndustryConnect({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Industry Connect</h1>
-        <p>Explore different sections of IIT Palakkad's Industry Connect.</p>
-
-        {/* 🔹 ADDITION: Public view button for non-public users */}
+       {/* 🔹 ADDITION: Public view button for non-public users */}
         <div style={{ marginBottom: '1rem' }}>
           <button
             className="upload-data-btn"

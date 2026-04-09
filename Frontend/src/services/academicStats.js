@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:5000/api/academic';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/academic`;
 
 /**
  * Fetches filter options including distinct values for each filter field
@@ -27,20 +27,12 @@ export const fetchFilterOptions = async (token) => {
 
 /**
  * Fetches gender distribution data based on provided filters.
- * @param {Object} filters - Filter object with optional fields:
- *   - yearofadmission: number
- *   - program: string
- *   - batch: string ('Jan' or 'Jul')
- *   - branch: string
- *   - department: string
- *   - category: string
- *   - pwd: boolean | null
+ * @param {Object} filters - Filter object with optional fields
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Gender distribution data with total and filters_applied
  */
 export const fetchGenderDistributionFiltered = async (filters, token) => {
   try {
-    // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
 
     Object.keys(filters).forEach(key => {
@@ -49,7 +41,6 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
         if (key === 'pwd' && typeof value === 'boolean') {
           params.append(key, value.toString());
         } else if (key === 'yearofadmission' && value === 'All') {
-          // Send 'All' as string for yearofadmission
           params.append(key, 'All');
         } else {
           params.append(key, value);
@@ -77,24 +68,18 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
 
 /**
  * Fetches student strength data grouped by program based on provided filters.
- * @param {Object} filters - Filter object with required/optional fields:
- *   - yearofadmission: number (required, defaults to latest year)
- *   - gender: string (optional: 'Male', 'Female', 'Transgender')
- *   - category: string (optional: 'Gen', 'EWS', 'OBC', 'SC', 'ST')
- *   - state: string (optional)
+ * @param {Object} filters - Filter object
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Student strength data with total and filters_applied
  */
 export const fetchStudentStrengthFiltered = async (filters, token) => {
   try {
-    // Build query parameters, excluding null/undefined values, but including 'All'
     const params = new URLSearchParams();
 
     Object.keys(filters).forEach(key => {
       const value = filters[key];
       if (value !== null && value !== undefined && value !== '') {
         if (key === 'yearofadmission' && value === 'All') {
-          // Send 'All' as string for yearofadmission
           params.append(key, 'All');
         } else {
           params.append(key, value);
@@ -110,6 +95,10 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
         }
       }
     );
+    
+    // Log the response to see what data is coming back
+    console.log('Student Strength API Response:', JSON.stringify(response.data, null, 2));
+    
     return response.data;
   } catch (error) {
     console.error('Error fetching student strength:', error);
@@ -194,3 +183,25 @@ export const fetchProgramTrends = async (filters, token) => {
   }
 };
 
+/**
+ * Fetches student summary counts (Total / UG / PG / Research) from the
+ * academic_program_type column.
+ * @param {number|null} year - Admission year to filter by (null = all years)
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} { total_students, ug_total, pg_total, research_total }
+ */
+export const fetchCumulativeStudentSummary = async (year, token) => {
+  try {
+    const params = new URLSearchParams();
+    if (year && year !== 'All') params.append('year', year);
+
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/student-summary${params.toString() ? `?${params}` : ''}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student summary:', error);
+    return { total_students: 0, ug_total: 0, pg_total: 0, research_total: 0 };
+  }
+};

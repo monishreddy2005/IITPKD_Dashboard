@@ -16,7 +16,7 @@ function PeopleCampusPublicView({ user }) {
   const sections = [
     {
       id: 'academic',
-      title: 'Student Archive',
+      title: 'Student Overview',
       subtitle: '',
       expandedTitle: 'Meet the minds shaping tomorrow.',
       icon: '👩‍🎓',
@@ -40,7 +40,7 @@ function PeopleCampusPublicView({ user }) {
     },
     {
       id: 'ewd',
-      title: 'Campus',
+      title: 'Infrastructure',
       subtitle: '',
       expandedTitle: 'Sustaining Today. Developing for Tomorrow.',
       icon: '🏗️',
@@ -48,7 +48,7 @@ function PeopleCampusPublicView({ user }) {
     },
     {
       id: 'iar',
-      title: 'Our Global Community',
+      title: 'Our Alumni',
       subtitle: '',
       expandedTitle: 'Fostering global partnerships and maintaining strong alumni connections',
       icon: '🌍',
@@ -99,11 +99,11 @@ function PeopleCampusPublicView({ user }) {
                           <span className="back-arrow">←</span>
                           <span>Back</span>
                         </button>
-                        
+
                         <div className="section-icon-header">{section.icon}</div>
                         <p className="section-overview-text">{section.expandedTitle}</p>
                       </div>
-                      
+
                       {/* Section Content */}
                       <div className="expanded-card-content">
                         {section.isGrievances ? (
@@ -111,13 +111,19 @@ function PeopleCampusPublicView({ user }) {
                           <div className="grievances-combined-section">
                             {/* IGRC Section */}
                             <div className="grievance-subsection">
+                              <h2 style={{ marginBottom: '1.5rem', fontWeight: '700', color: '#1a1a1a', fontSize: '1.5rem' }}>
+                                Internal Grievance Resolution Cell (IGRC)
+                              </h2>
                               <div className="subsection-content">
                                 <IgrcSection user={user} isPublicView={true} />
                               </div>
                             </div>
 
                             {/* ICC Section */}
-                            <div className="grievance-subsection">
+                            <div className="grievance-subsection" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid #eee' }}>
+                              <h2 style={{ marginBottom: '1.5rem', fontWeight: '700', color: '#1a1a1a', fontSize: '1.5rem' }}>
+                                Internal Complaints Committee (ICC)
+                              </h2>
                               <div className="subsection-content">
                                 <IccSection user={user} isPublicView={true} />
                               </div>

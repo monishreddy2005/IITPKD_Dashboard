@@ -60,12 +60,6 @@ function Education({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        <h1>Education Modules</h1>
-        <p>
-          Explore key sections of IIT Palakkad&apos;s education ecosystem. Choose a module to dive into detailed dashboards,
-          analytics, and operational insights.
-        </p>
-
         {roleId === 3 && (
           <div style={{ marginBottom: '2rem' }}>
             <button className="upload-data-btn" onClick={() => setShowPublicView(true)}>

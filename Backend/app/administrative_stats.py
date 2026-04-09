@@ -84,6 +84,7 @@ def _read_common_filters():
         'emp_type': request.args.get('emp_type', type=str),
         'empstatus': request.args.get('empstatus', type=str),
         'group_name': request.args.get('group_name', type=str),
+        'appointed_category': request.args.get('appointed_category', type=str),
     }
 
 
@@ -95,7 +96,11 @@ def _read_common_filters():
 @administrative_bp.route('/stats/filter-options', methods=['GET'])
 @token_required
 def get_filter_options(current_user_id):
-    """Fetches distinct values for each filter field from the employees table."""
+    """
+    Fetches distinct values for each filter field from the employees table.
+    If ?faculty_only=true, Department / Designation / Group are scoped to
+    active teaching faculty (emp_type='Teaching', designation!='Director').
+    """
     conn = None
     cur = None
     try:
@@ -104,15 +109,24 @@ def get_filter_options(current_user_id):
             return jsonify({'message': 'Database connection failed!'}), 500
 
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        faculty_only = request.args.get('faculty_only', '').lower() == 'true'
+
+        # Scope clause for department / designation / group_name when faculty_only
+        faculty_scope = (
+            "emp_type = 'Teaching' AND designation != 'Director' "
+            "AND doj <= CURRENT_DATE AND (dor IS NULL OR dor > CURRENT_DATE)"
+        ) if faculty_only else None
 
         filter_options = {}
 
         # Department
-        cur.execute("SELECT DISTINCT department FROM employees WHERE department IS NOT NULL ORDER BY department;")
+        dept_where = f"WHERE department IS NOT NULL AND {faculty_scope}" if faculty_scope else "WHERE department IS NOT NULL"
+        cur.execute(f"SELECT DISTINCT department FROM employees {dept_where} ORDER BY department;")
         filter_options['department'] = [row['department'] for row in cur.fetchall()]
 
         # Designation
-        cur.execute("SELECT DISTINCT designation FROM employees WHERE designation IS NOT NULL ORDER BY designation;")
+        desig_where = f"WHERE designation IS NOT NULL AND {faculty_scope}" if faculty_scope else "WHERE designation IS NOT NULL"
+        cur.execute(f"SELECT DISTINCT designation FROM employees {desig_where} ORDER BY designation;")
         filter_options['designation'] = [row['designation'] for row in cur.fetchall()]
 
         # Gender
@@ -128,12 +142,17 @@ def get_filter_options(current_user_id):
         filter_options['empstatus'] = [row['empstatus'] for row in cur.fetchall()]
 
         # Group Name
-        cur.execute("SELECT DISTINCT group_name FROM employees WHERE group_name IS NOT NULL ORDER BY group_name;")
+        group_where = f"WHERE group_name IS NOT NULL AND {faculty_scope}" if faculty_scope else "WHERE group_name IS NOT NULL"
+        cur.execute(f"SELECT DISTINCT group_name FROM employees {group_where} ORDER BY group_name;")
         filter_options['group_name'] = [row['group_name'] for row in cur.fetchall()]
 
         # Appointed Category
         cur.execute("SELECT DISTINCT appointed_category FROM employees WHERE appointed_category IS NOT NULL ORDER BY appointed_category;")
         filter_options['appointed_category'] = [row['appointed_category'] for row in cur.fetchall()]
+
+        # Years of Joining (doj)
+        cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM doj)::int as year FROM employees WHERE doj IS NOT NULL ORDER BY year DESC;")
+        filter_options['years'] = [row['year'] for row in cur.fetchall()]
 
         return jsonify(filter_options), 200
 
@@ -427,7 +446,7 @@ def get_staff_count(current_user_id):
 @administrative_bp.route('/stats/gender-distribution', methods=['GET'])
 @token_required
 def get_gender_distribution(current_user_id):
-    """Gender-wise distribution with optional emp_type filtering."""
+    """Gender-wise distribution for employees who joined in the current year."""
     conn = None
     cur = None
     try:
@@ -437,9 +456,15 @@ def get_gender_distribution(current_user_id):
 
         filters = _read_common_filters()
         employee_type = filters.pop('emp_type', None)
+        filters.pop('empstatus', None)  # not used; active window handles this
 
         where_clause, params = build_filter_query(filters)
-        where_clause, params = _append_active_default(where_clause, params, filters.get('empstatus'))
+        # Filter: currently active (doj <= today AND (dor IS NULL OR dor > today))
+        active_condition = "doj <= CURRENT_DATE AND (dor IS NULL OR dor > CURRENT_DATE)"
+        if where_clause:
+            where_clause += f" AND {active_condition}"
+        else:
+            where_clause = f"WHERE {active_condition}"
         where_clause, params = _append_emp_type(where_clause, params, employee_type)
 
         query = f"""
@@ -795,6 +820,94 @@ def get_yearwise_strength(current_user_id):
         import traceback
         print(f"Error fetching yearwise strength: {e}\n{traceback.format_exc()}")
         return jsonify({'message': f'An error occurred while fetching yearwise strength: {e}'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+@administrative_bp.route('/stats/faculty-expertise-matrix', methods=['GET'])
+@token_required
+def get_faculty_expertise_matrix(current_user_id):
+    """
+    Faculty (Teaching, non-Director) who joined in the current calendar year,
+    grouped by department.
+
+    SQL equivalent:
+        SELECT department, COUNT(*) FROM employees
+        WHERE emp_type = 'Teaching'
+          AND designation != 'Director'
+          AND doj <= CURRENT_DATE
+          AND (dor IS NULL OR dor > CURRENT_DATE)
+        GROUP BY department;
+
+    Optional additional filters: department, designation, gender,
+                                  group_name, appointed_category.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+
+        department         = request.args.get('department',         type=str)
+        designation        = request.args.get('designation',        type=str)
+        gender             = request.args.get('gender',             type=str)
+        group_name         = request.args.get('group_name',         type=str)
+        appointed_category = request.args.get('appointed_category', type=str)
+
+        extra_conditions = []
+        params = []
+
+        if department:
+            extra_conditions.append("department = %s")
+            params.append(department)
+        if designation:
+            extra_conditions.append("designation = %s")
+            params.append(designation)
+        if gender:
+            extra_conditions.append("gender = %s")
+            params.append(gender)
+        if group_name:
+            extra_conditions.append("group_name = %s")
+            params.append(group_name)
+        if appointed_category:
+            extra_conditions.append("appointed_category = %s")
+            params.append(appointed_category)
+
+        extra_sql = ""
+        if extra_conditions:
+            extra_sql = " AND " + " AND ".join(extra_conditions)
+
+        query = f"""
+            SELECT
+                COALESCE(department, 'Unknown') AS department,
+                COUNT(*) AS count
+            FROM employees
+            WHERE emp_type = 'Teaching'
+              AND designation != 'Director'
+              AND doj <= CURRENT_DATE
+              AND (dor IS NULL OR dor > CURRENT_DATE)
+              {extra_sql}
+            GROUP BY department
+            ORDER BY count DESC, department;
+        """
+
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(query, params)
+        results = cur.fetchall()
+
+        data = [{'name': row['department'], 'count': int(row['count'])} for row in results]
+        total = sum(d['count'] for d in data)
+
+        return jsonify({'data': data, 'total': total}), 200
+
+    except Exception as e:
+        import traceback
+        print(f"Error fetching faculty expertise matrix: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': f'An error occurred while fetching faculty expertise matrix: {e}'}), 500
     finally:
         if cur:
             cur.close()

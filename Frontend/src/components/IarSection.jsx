@@ -22,6 +22,7 @@ import {
   fetchCountryDistribution,
   fetchOutcomeBreakdown
 } from '../services/iarStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 
 import DataUploadModal from './DataUploadModal';
 
@@ -29,6 +30,7 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './IarSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const PIE_COLORS = ['#667eea', '#764ba2', '#f093fb', '#43e97b', '#fa709a', '#00f2fe', '#f59e0b', '#a78bfa'];
 const STATE_BAR_COLOR = '#67e8f9';
@@ -39,6 +41,9 @@ const TREND_HIGHER_COLOR = '#22d3ee';
 const TREND_CORPORATE_COLOR = '#f97316';
 
 function IarSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     departments: [],
@@ -60,27 +65,27 @@ function IarSection({ user, isPublicView = false }) {
   const [countryDistribution, setCountryDistribution] = useState([]);
   const [outcomeBreakdown, setOutcomeBreakdown] = useState([]);
 
-  // Sort outcome breakdown by total alumni in descending order
+  // Top 10 outcome departments sorted by total, capped at 10
   const sortedOutcomeBreakdown = useMemo(() => {
-    return [...outcomeBreakdown].sort((a, b) => (b.total || 0) - (a.total || 0));
+    return [...outcomeBreakdown]
+      .sort((a, b) => (b.total || 0) - (a.total || 0))
+      .slice(0, 10);
   }, [outcomeBreakdown]);
 
-  // Top 10 states + "Other" for pie chart
+  // Top 5 states, excluding 'Not Found'
   const stateTop10 = useMemo(() => {
-    const sorted = [...stateDistribution].sort((a, b) => b.count - a.count);
-    if (sorted.length <= 10) return sorted;
-    const top10 = sorted.slice(0, 10);
-    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
-    return [...top10, { state: 'Other', count: otherCount }];
+    return [...stateDistribution]
+      .filter(item => item.state !== 'Not Found')
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
   }, [stateDistribution]);
 
-  // Top 10 countries + "Other" for pie chart
+  // Top 5 countries, excluding 'Other'
   const countryTop10 = useMemo(() => {
-    const sorted = [...countryDistribution].sort((a, b) => b.count - a.count);
-    if (sorted.length <= 10) return sorted;
-    const top10 = sorted.slice(0, 10);
-    const otherCount = sorted.slice(10).reduce((sum, item) => sum + item.count, 0);
-    return [...top10, { country: 'Other', count: otherCount }];
+    return [...countryDistribution]
+      .filter(item => item.country !== 'Other')
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
   }, [countryDistribution]);
 
   const [loading, setLoading] = useState(false);
@@ -109,7 +114,7 @@ function IarSection({ user, isPublicView = false }) {
       }
     };
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const loadData = async () => {
     if (!token) return;
@@ -136,7 +141,7 @@ function IarSection({ user, isPublicView = false }) {
 
   useEffect(() => {
     loadData();
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters, uploadVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -177,18 +182,18 @@ function IarSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>International and Alumni Relations</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Explore global alumni reach, outcome trends, and state-wise engagement insights with comprehensive filtering by
-          year, department, program, gender, and category.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -209,12 +214,12 @@ function IarSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (
@@ -446,8 +451,8 @@ function IarSection({ user, isPublicView = false }) {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem' }}>
                   {[
-                    { id: 'iar-dept',    label: 'Department',   key: 'department',  options: filterOptions.departments },
-                    { id: 'iar-program', label: 'Course Type',  key: 'course_type', options: filterOptions.course_types },
+                    { id: 'iar-dept', label: 'Department', key: 'department', options: filterOptions.departments },
+                    { id: 'iar-program', label: 'Course Type', key: 'course_type', options: filterOptions.course_types },
                   ].map(({ id, label, key, options }) => (
                     <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <label htmlFor={id} style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
@@ -495,10 +500,10 @@ function IarSection({ user, isPublicView = false }) {
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
@@ -542,7 +547,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>🗺️</span> State-wise Alumni Distribution
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Alumni counts mapped to Indian states based on their registered home state.
+                      Top 5 states by alumni count
                     </p>
                   </div>
 
@@ -616,7 +621,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>🌍</span> Global Alumni Reach
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Breakdown of alumni locations across countries to understand international presence.
+                      Top 5 countries by alumni count
                     </p>
                   </div>
 
@@ -649,10 +654,10 @@ function IarSection({ user, isPublicView = false }) {
                       </ResponsiveContainer>
 
                       {/* Chart Statistics */}
-                      <div style={{ 
-                        marginTop: '20px', 
-                        padding: '15px', 
-                        backgroundColor: '#f8f9fa', 
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        backgroundColor: '#f8f9fa',
                         borderRadius: '8px',
                         border: '1px solid #e0e0e0',
                         display: 'grid',
@@ -690,7 +695,7 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '24px' }}>📊</span> Outcome by Department
                     </h2>
                     <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Compare higher studies versus corporate career paths chosen by alumni from each department.
+                      Top 10 departments by alumni count — higher studies vs corporate career paths.
                     </p>
                   </div>
 
@@ -701,24 +706,39 @@ function IarSection({ user, isPublicView = false }) {
                     </div>
                   ) : (
                     <>
+                      {/* Custom legend — clean pill badges above the chart */}
+                      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', justifyContent: 'flex-end' }}>
+                        {[
+                          { color: HIGHER_BAR_COLOR, label: 'Higher Studies' },
+                          { color: CORPORATE_BAR_COLOR, label: 'Corporate' },
+                        ].map(({ color, label }) => (
+                          <div key={label} style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            background: '#f8f9fa', border: '1px solid #e0e0e0',
+                            borderRadius: '20px', padding: '4px 12px',
+                          }}>
+                            <span style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#444' }}>{label}</span>
+                          </div>
+                        ))}
+                      </div>
                       <div className="chart-container">
                         <ResponsiveContainer width="100%" height={350}>
-                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 10, right: 20, left: 40, bottom: 60 }}>
+                          <BarChart data={sortedOutcomeBreakdown} margin={{ top: 10, right: 20, left: 40, bottom: 80 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                            <XAxis dataKey="department" angle={-30} textAnchor="end" height={70} tick={{ fontSize: 10 }} interval={0} />
+                            <XAxis dataKey="department" angle={-38} textAnchor="end" height={80} tick={{ fontSize: 10 }} interval={0} />
                             <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            <Bar dataKey="higher" name="Higher studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
-                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={20} />
+                            <Bar dataKey="higher" name="Higher Studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[0, 0, 0, 0]} barSize={24} />
+                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={24} />
                           </BarChart>
                         </ResponsiveContainer>
 
                         {/* Chart Statistics */}
-                        <div style={{ 
-                          marginTop: '20px', 
-                          padding: '15px', 
-                          backgroundColor: '#f8f9fa', 
+                        <div style={{
+                          marginTop: '20px',
+                          padding: '15px',
+                          backgroundColor: '#f8f9fa',
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
@@ -762,8 +782,8 @@ function IarSection({ user, isPublicView = false }) {
                         </div>
 
                         <div className="table-responsive" style={{ overflowX: 'auto', maxHeight: '300px', overflowY: 'auto' }}>
-                          <table style={{ 
-                            width: '100%', 
+                          <table style={{
+                            width: '100%',
                             borderCollapse: 'collapse',
                             fontSize: '13px'
                           }}>

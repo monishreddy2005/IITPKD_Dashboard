@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   BarChart,
@@ -20,6 +21,7 @@ import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './EwdSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const ENERGY_BAR_COLOR = '#667eea';
 const ELECTRICITY_LINE_COLOR = '#f59e0b';
@@ -35,6 +37,9 @@ const formatNumber = (value) => numberFormatter.format(Math.round(value || 0));
 const formatDecimal = (value) => decimalFormatter.format(value || 0);
 
 function EwdSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(null); // null means "Latest"
@@ -108,7 +113,7 @@ function EwdSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Get available years from yearlyData
   const availableYears = useMemo(() => {
@@ -135,11 +140,11 @@ function EwdSection({ user, isPublicView = false }) {
         greenCoverage: summary.latest.greenCoverage
       } : null;
     }
-    
+
     // Find selected year data from yearlyData
     const yearData = yearlyData.find(row => row.year === selectedYear);
     if (!yearData) return null;
-    
+
     return {
       year: yearData.year,
       perCapitaElectricity: yearData.perCapitaElectricity,
@@ -170,18 +175,18 @@ function EwdSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Engineering and Works Division (EWD)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor institute-wide energy and water usage trends along with per capita consumption indicators and green
-          coverage metrics maintained by the Engineering and Works Division.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -202,12 +207,12 @@ function EwdSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (

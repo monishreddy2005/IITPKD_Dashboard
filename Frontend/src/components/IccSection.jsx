@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -15,6 +16,7 @@ import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const AREA_COLORS = {
   total: '#667eea',
@@ -23,6 +25,9 @@ const AREA_COLORS = {
 };
 
 function IccSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
   const [visibleMetrics, setVisibleMetrics] = useState({
@@ -83,7 +88,7 @@ function IccSection({ user, isPublicView = false }) {
     };
 
     loadData();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Calculate resolution rate
   // const resolutionRate = summary.total > 0 
@@ -93,18 +98,18 @@ function IccSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/people-campus')}>
+            ← Back to People & Campus
+          </button>
+        )}
         {!isPublicView && <h1>Internal Complaints Committee (ICC)</h1>}
-        <p style={{ color: '#666', marginBottom: '20px' }}>
-          Monitor the yearly trend of sexual harassment complaints received by the ICC and track their resolution
-          status.
-        </p>
-
         {isPublicView ? null : user && user.role_id === 3 && (
           <div style={{ marginBottom: '1.5rem' }}>
             <button
               className="upload-data-btn"
               onClick={() => setIsUploadModalOpen(true)}
-              style={{ 
+              style={{
                 padding: '10px 20px',
                 backgroundColor: '#28a745',
                 color: 'white',
@@ -125,12 +130,12 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         )}
 
-        {error && <div className="error-message" style={{ 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          color: '#721c24', 
-          borderRadius: '4px', 
-          marginBottom: '20px' 
+        {error && <div className="error-message" style={{
+          padding: '10px',
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          borderRadius: '4px',
+          marginBottom: '20px'
         }}>{error}</div>}
 
         {loading ? (
@@ -140,6 +145,9 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
+            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+              Internal Complaints Committee (ICC)
+            </h2>
             {/* Modern Summary Cards */}
             <div style={{
               display: 'grid',
@@ -317,10 +325,10 @@ function IccSection({ user, isPublicView = false }) {
                 }}>
                   <div>
                     <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
-                      Year-wise Complaint Trend
+                      Internal Complaints Committee (ICC)
                     </h2>
                     <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                      Overview of total complaints vis-à-vis resolved and pending cases.
+                      Year-wise Complaint Trend
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -406,8 +414,8 @@ function IccSection({ user, isPublicView = false }) {
                         <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
                         <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                         <Tooltip
-                          contentStyle={{ 
-                            backgroundColor: '#fff', 
+                          contentStyle={{
+                            backgroundColor: '#fff',
                             border: '1px solid #ccc',
                             borderRadius: '4px',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -538,7 +546,7 @@ function IccSection({ user, isPublicView = false }) {
                             );
 
                           return (
-                            <tr key={row.year} style={{ 
+                            <tr key={row.year} style={{
                               backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
                               borderBottom: '1px solid #e0e0e0'
                             }}>

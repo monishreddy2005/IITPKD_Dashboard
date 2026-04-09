@@ -22,9 +22,11 @@ import {
   fetchTypeDistribution,
   fetchFacultyEngagementList
 } from '../services/educationStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './AcademicSection.css';
+import { useNavigate } from 'react-router-dom';
 
 const ENGAGEMENT_COLORS = {
   Adjunct: '#667eea',
@@ -34,11 +36,22 @@ const ENGAGEMENT_COLORS = {
   PoP: '#00f2fe'
 };
 
+const ENGAGEMENT_LABELS = {
+  Adjunct: 'Adjunct',
+  Honorary: 'Honorary',
+  Visiting: 'Visiting',
+  FacultyFellow: 'Faculty Fellow',
+  PoP: 'PoP'
+};
+
 const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
 
 function EducationAdministrativeSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+
+  const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     years: [],
@@ -198,7 +211,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     };
 
     loadFilterOptions();
-  }, [token]);
+  }, [token, uploadVersion]);
 
   // Fetch summary data
   useEffect(() => {
@@ -231,7 +244,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'summary') {
       loadSummaryData();
     }
-  }, [summaryFilters, token, viewType]);
+  }, [summaryFilters, token, viewType, uploadVersion]);
 
   // Fetch department data
   useEffect(() => {
@@ -259,7 +272,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'department') {
       loadDepartmentData();
     }
-  }, [departmentFilters, token, viewType]);
+  }, [departmentFilters, token, viewType, uploadVersion]);
 
   // Fetch trend data
   useEffect(() => {
@@ -287,7 +300,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'trend') {
       loadTrendData();
     }
-  }, [trendFilters, token, viewType]);
+  }, [trendFilters, token, viewType, uploadVersion]);
 
   // Fetch distribution data
   useEffect(() => {
@@ -315,7 +328,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'distribution') {
       loadDistributionData();
     }
-  }, [distributionFilters, token, viewType]);
+  }, [distributionFilters, token, viewType, uploadVersion]);
 
   // Fetch details list data
   useEffect(() => {
@@ -326,9 +339,18 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
         setError(null);
 
         const filterParams = {};
-        if (detailsFilters.year !== 'All') filterParams.year = detailsFilters.year;
-        if (detailsFilters.department !== 'All') filterParams.department = detailsFilters.department;
-        if (detailsFilters.engagement_type !== 'All') filterParams.engagement_type = detailsFilters.engagement_type;
+        // Use the appropriate filters based on view
+        const currentFilters = viewType === 'honorary' ? honoraryFilters : detailsFilters;
+
+        if (currentFilters.year !== 'All') filterParams.year = currentFilters.year;
+        if (currentFilters.department !== 'All') filterParams.department = currentFilters.department;
+        
+        // Force Honorary if in honorary view and type is All
+        if (viewType === 'honorary') {
+          filterParams.engagement_type = currentFilters.engagement_type === 'All' ? 'Honorary' : currentFilters.engagement_type;
+        } else if (currentFilters.engagement_type !== 'All') {
+          filterParams.engagement_type = currentFilters.engagement_type;
+        }
 
         const listResp = await fetchFacultyEngagementList(filterParams, token);
         setEngagementList(Array.isArray(listResp?.data) ? listResp.data : []);
@@ -343,7 +365,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
     if (viewType === 'details' || viewType === 'honorary') {
       loadDetailsData();
     }
-  }, [detailsFilters, token, viewType]);
+  }, [detailsFilters, honoraryFilters, token, viewType, uploadVersion]);
 
   // Prepare summary cards data
   const summaryCards = useMemo(() => {
@@ -428,6 +450,11 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/education')}>
+            ← Back to Education
+          </button>
+        )}
         {!isPublicView && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h1>Administrative Section - External Academic Engagement</h1>
@@ -572,7 +599,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
           }}>
             <input
               type="radio"
-              name="viewType"
+              name="viewType" 
               value="details"
               checked={viewType === 'details'}
               onChange={(e) => setViewType(e.target.value)}
@@ -583,41 +610,34 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
             </span>
           </label>
 
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            padding: '8px 16px',
-            backgroundColor: viewType === 'honorary' ? '#ec4899' : '#f8f9fa',
-            color: viewType === 'honorary' ? 'white' : '#333',
-            borderRadius: '30px',
-            transition: 'all 0.3s ease',
-            border: viewType === 'honorary' ? '2px solid #ec4899' : '2px solid #e0e0e0'
-          }}>
-            <input
-              type="radio"
-              name="viewType"
-              value="honorary"
-              checked={viewType === 'honorary'}
-              onChange={(e) => setViewType(e.target.value)}
-              style={{ accentColor: '#ec4899', width: '16px', height: '16px', cursor: 'pointer' }}
-            />
-            <span style={{ fontWeight: viewType === 'honorary' ? 'bold' : 'normal', fontSize: '14px' }}>
-              👑 Honorary Professors
-            </span>
-          </label>
+
         </div>
 
-        {isLoading() ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading data...</p>
-          </div>
-        ) : (
-          <>
-            {/* Summary Indicators View */}
-            {viewType === 'summary' && (
+        <div style={{ position: 'relative', minHeight: '400px' }}>
+          {isLoading() && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              zIndex: 100,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: '12px',
+              backdropFilter: 'blur(2px)',
+              transition: 'all 0.3s ease'
+            }}>
+              <div className="loading-spinner"></div>
+              <p style={{ marginTop: '1rem', fontWeight: '600', color: 'var(--text-main)' }}>Updating data...</p>
+            </div>
+          )}
+
+          {/* Summary Indicators View */}
+          <div style={{ display: viewType === 'summary' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Summary View */}
                 <div className="filter-panel" style={{ 
@@ -744,7 +764,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                         marginBottom: '0.5rem',
                         fontWeight: '600'
                       }}>
-                        {card.type}
+                        {ENGAGEMENT_LABELS[card.type] || card.type}
                       </div>
                       <div style={{
                         fontSize: '2rem',
@@ -789,10 +809,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Department-wise Breakdown View */}
-            {viewType === 'department' && (
+          {/* Department-wise Breakdown View */}
+          <div style={{ display: viewType === 'department' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Department View */}
                 <div className="filter-panel" style={{ 
@@ -925,6 +945,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                             <Bar
                               key={type}
                               dataKey={type}
+                              name={ENGAGEMENT_LABELS[type] || type}
                               stackId="a"
                               fill={ENGAGEMENT_COLORS[type] || COLORS[index % COLORS.length]}
                               radius={index === summary.summary.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]}
@@ -940,10 +961,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Year-wise Trends View */}
-            {viewType === 'trend' && (
+          {/* Year-wise Trends View */}
+          <div style={{ display: viewType === 'trend' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Trend View */}
                 <div className="filter-panel" style={{ 
@@ -1090,10 +1111,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Type Distribution View */}
-            {viewType === 'distribution' && (
+          {/* Type Distribution View */}
+          <div style={{ display: viewType === 'distribution' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Distribution View */}
                 <div className="filter-panel" style={{ 
@@ -1165,7 +1186,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                       >
                         <option value="All">All Types</option>
                         {filterOptions.engagement_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
+                          <option key={type} value={type}>{ENGAGEMENT_LABELS[type] || type}</option>
                         ))}
                       </select>
                     </div>
@@ -1205,7 +1226,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                          label={({ name, percent }) => `${ENGAGEMENT_LABELS[name] || name}: ${(percent * 100).toFixed(1)}%`}
                           outerRadius={120}
                           fill="#8884d8"
                           dataKey="value"
@@ -1218,7 +1239,7 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend />
+                        <Legend formatter={(value) => ENGAGEMENT_LABELS[value] || value} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -1228,10 +1249,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Engagement Details View */}
-            {viewType === 'details' && (
+          {/* Engagement Details View */}
+          <div style={{ display: viewType === 'details' ? 'block' : 'none' }}>
               <div className="chart-section" style={{ marginTop: '0' }}>
                 {/* Filters for Details View */}
                 <div className="filter-panel" style={{ 
@@ -1364,9 +1385,9 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                       </thead>
                       <tbody>
                         {engagementList.map((item, index) => {
-                          const isAcademia = ['Honorary', 'Adjunct', 'FacultyFellow'].includes(item.engagement_type);
+                          const isAcademia = ['Honorary', 'Adjunct', 'FacultyFellow'].includes(item.std_type);
                           const sector = isAcademia ? 'Academia' : 'Industry';
-                          const organisationName = item.remarks || `${item.engagement_type} Faculty`;
+                          const organisationName = item.remarks || `${ENGAGEMENT_LABELS[item.std_type] || item.engagement_type} Faculty`;
                           
                           return (
                             <tr key={item.engagement_code} style={{
@@ -1390,165 +1411,10 @@ function EducationAdministrativeSection({ user, isPublicView = false }) {
                   </div>
                 )}
               </div>
-            )}
+          </div>
 
-            {/* Honorary Professors View */}
-            {viewType === 'honorary' && (
-              <div className="chart-section" style={{ marginTop: '0' }}>
-                {/* Filters for Honorary View */}
-                <div className="filter-panel" style={{ 
-                  marginBottom: '20px', 
-                  padding: '15px', 
-                  backgroundColor: '#f8f9fa', 
-                  borderRadius: '8px', 
-                  border: '1px solid #e9ecef' 
-                }}>
-                  <div className="filter-header" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '15px' 
-                  }}>
-                    <h4 style={{ margin: '0', color: '#333' }}>Filters for Honorary Professors</h4>
-                    <button 
-                      className="clear-filters-btn" 
-                      onClick={handleClearFilters}
-                      style={{ 
-                        padding: '6px 12px', 
-                        backgroundColor: '#dc3545', 
-                        color: '#fff', 
-                        border: 'none', 
-                        borderRadius: '4px', 
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
 
-                  <div className="filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
-                      <select
-                        value={honoraryFilters.year}
-                        onChange={(e) => handleFilterChange('year', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-                      <select
-                        value={honoraryFilters.department}
-                        onChange={(e) => handleFilterChange('department', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Departments</option>
-                        {filterOptions.departments.map((dept) => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Engagement Type</label>
-                      <select
-                        value={honoraryFilters.engagement_type}
-                        onChange={(e) => handleFilterChange('engagement_type', e.target.value)}
-                        style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
-                      >
-                        <option value="All">All Types</option>
-                        {filterOptions.engagement_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '8px', 
-                    backgroundColor: '#e9ecef', 
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {honoraryFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {honoraryFilters.year}</span>}
-                    {honoraryFilters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {honoraryFilters.department}</span>}
-                    {honoraryFilters.engagement_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {honoraryFilters.engagement_type}</span>}
-                    {honoraryFilters.year === 'All' && honoraryFilters.department === 'All' && honoraryFilters.engagement_type === 'All' && 
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
-
-                <div className="chart-header">
-                  <h2 style={{ color: '#f97316' }}>Honorary Professor Details</h2>
-                  <p className="chart-description">
-                    List of honorary professors
-                  </p>
-                </div>
-
-                {engagementList.filter(item => item.engagement_type === 'Honorary').length > 0 ? (
-                  <div className="table-responsive" style={{
-                    height: '400px',
-                    maxHeight: '400px',
-                    overflowY: 'auto',
-                    overflowX: 'auto',
-                    border: '1px solid var(--border-light)',
-                    borderRadius: '8px',
-                    backgroundColor: '#fff'
-                  }}>
-                    <table style={{
-                      width: '100%',
-                      borderCollapse: 'collapse'
-                    }}>
-                      <thead style={{
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 10,
-                        backgroundColor: '#f8f9fa'
-                      }}>
-                        <tr>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Sl No</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Name</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Designation</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #e0e0e0', color: '#555', fontSize: '13px', fontWeight: '600' }}>Department</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {engagementList
-                          .filter(item => item.engagement_type === 'Honorary')
-                          .map((item, index) => (
-                            <tr key={item.engagement_code} style={{
-                              borderBottom: '1px solid #f0f0f0',
-                              backgroundColor: index % 2 === 0 ? '#fff' : '#fafafa'
-                            }}>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>{index + 1}</td>
-                              <td style={{ padding: '10px', fontSize: '13px', fontWeight: '500' }}>{item.faculty_name || '—'}</td>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>Professor</td>
-                              <td style={{ padding: '10px', fontSize: '13px' }}>{item.department || '—'}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="no-data">
-                    <p>No honorary professor data available for the selected filters.</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
+        </div>
 
         {/* Upload Modal */}
         {!isPublicView && user && user.role_id === 3 && (

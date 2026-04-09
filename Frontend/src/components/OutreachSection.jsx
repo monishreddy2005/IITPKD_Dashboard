@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { fetchOutreachList } from '../services/outreachExtensionStats';
+import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
 import './OutreachMinimal.css';
@@ -34,6 +36,7 @@ const NSS_FIELDS = [
 const PROGRAM_CONFIGS = [
   {
     key: 'science_quest',
+    tableKey: 'outreach_science_quest',
     title: 'Science Quest',
     icon: '🔬',
     description: 'Science outreach and laboratory programmes for school students',
@@ -47,6 +50,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'palakkad_math_circle',
+    tableKey: 'outreach_math_circle',
     title: 'Palakkad Math Circle',
     icon: '📐',
     description: 'Mathematics enrichment sessions for school students',
@@ -55,12 +59,13 @@ const PROGRAM_CONFIGS = [
       name?.toLowerCase().includes('palakkad math'),
     specificFields: [
       { key: 'pmc_target_class',      label: 'Target Class' },
-      { key: 'pmc_mathematician_led', label: 'Mathematician Led' },
+      { key: 'pmc_mathematician_led', label: 'Mathematicians' },
       { key: 'pmc_num_sessions',      label: 'No. of Sessions' },
     ],
   },
   {
     key: 'pale_blue_dot',
+    tableKey: 'outreach_pale_blue_dot',
     title: 'Pale Blue Dot',
     icon: '🌍',
     description: 'Astronomy and space science public lecture series',
@@ -73,6 +78,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'institute_visits',
+    tableKey: 'outreach_institute_visits',
     title: 'Institute Visits',
     icon: '🏛️',
     description: 'Organised visits by institutions to the IIT Palakkad campus',
@@ -85,6 +91,7 @@ const PROGRAM_CONFIGS = [
   },
   {
     key: 'nss_activities',
+    tableKey: 'outreach_nss_activities',
     title: 'NSS Activities',
     icon: '🤝',
     description: 'National Service Scheme community service initiatives',
@@ -173,112 +180,163 @@ function ExtraDataSection({ data }) {
   );
 }
 
-function RecordCard({ record, slNo, programConfig }) {
-  const [expanded, setExpanded] = useState(false);
+function GridRecordCard({ record, slNo, onClick }) {
+  return (
+    <div 
+        onClick={onClick}
+        style={{
+          background: '#f5f5f7',
+          border: '1px solid rgba(0,0,0,0.05)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 8px rgba(0,0,0,0.8)',
+          padding: '1.5rem',
+          cursor: 'pointer',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          height: '100%',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+        onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-6px)';
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.8)';
+            e.currentTarget.style.borderColor = 'rgba(64, 61, 248, 0.73)';
+        }}
+        onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.background = '#f5f5f7';
+            e.currentTarget.style.boxShadow = '0 8px 8px rgba(0,0,0,0.8)';
+            e.currentTarget.style.borderColor = 'rgba(0,0,0,0.05)';
+        }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{
+                width: '36px', height: '36px', borderRadius: '10px',
+                background: 'rgba(247,166,0,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.85rem', fontWeight: '700', color: '#f7a600',
+            }}>
+                {slNo}
+            </div>
+            <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: '500', background: '#f5f5f7', padding: '0.2rem 0.6rem', borderRadius: '20px' }}>
+                {record.academic_year || 'N/A'}
+            </span>
+        </div>
+        
+        <div style={{ flexGrow: 1 }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '600', color: '#1d1d1f', margin: '0 0 0.5rem 0', lineHeight: '1.3' }}>
+                {record.program_name || 'Outreach Record'}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#6e6e73', margin: 0, lineHeight: '1.4' }}>
+                {[record.engagement_type, record.program_type].filter(Boolean).join(' · ')}
+            </p>
+        </div>
 
+        {(record.start_date || record.end_date) && (
+            <div style={{ fontSize: '0.85rem', color: '#555', marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1rem' }}>📅</span> 
+                {record.start_date ? new Date(record.start_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                {record.end_date && record.start_date !== record.end_date && ` - ${new Date(record.end_date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`}
+            </div>
+        )}
+    </div>
+  );
+}
+
+function RecordExpandedView({ record, programConfig, onBack }) {
   const hasSpecificData = programConfig.specificFields.some(({ key }) => isNonNull(record[key]));
   const hasNssData =
     programConfig.key !== 'nss_activities' &&
     NSS_FIELDS.some(({ key }) => isNonNull(record[key]));
 
   return (
-    <div style={{
-      background: '#fff',
-      border: '1px solid rgba(0,0,0,0.06)',
-      borderRadius: '14px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-      marginBottom: '0.875rem',
+    <div style={{ 
+      background: '#fff', 
+      borderRadius: '20px', 
+      border: '1px solid rgba(0,0,0,0.08)', 
       overflow: 'hidden',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+      animation: 'cardFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
     }}>
-      {/* Row header */}
-      <div
-        onClick={() => setExpanded(!expanded)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === 'Enter' && setExpanded(!expanded)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          padding: '1.1rem 1.4rem',
-          cursor: 'pointer',
-          background: expanded ? 'rgba(247,166,0,0.03)' : '#fff',
-          borderBottom: expanded ? '1px solid rgba(247,166,0,0.1)' : 'none',
-          transition: 'background 0.2s',
-          userSelect: 'none',
-        }}
-      >
-        <div style={{
-          width: '30px', height: '30px', borderRadius: '8px',
-          background: 'rgba(247,166,0,0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '0.72rem', fontWeight: '700', color: '#f7a600',
-          flexShrink: 0,
-        }}>
-          {slNo}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '0.92rem', fontWeight: '600', color: '#1d1d1f', marginBottom: '0.1rem' }}>
-            {record.program_name || 'Outreach Record'}
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#6e6e73' }}>
-            {[record.academic_year, record.engagement_type, record.program_type]
-              .filter(Boolean).join(' · ')}
-          </div>
-        </div>
-        <span style={{
-          fontSize: '1.3rem', color: '#f7a600',
-          transform: expanded ? 'rotate(90deg)' : 'none',
-          transition: 'transform 0.2s',
-          flexShrink: 0,
-        }}>›</span>
+      <div style={{ 
+        padding: '1.2rem 2rem', 
+        borderBottom: '1px solid rgba(0,0,0,0.06)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        background: '#fafafa',
+        gap: '1.5rem'
+      }}>
+         <button onClick={onBack} style={{
+             background: '#fff', border: '1px solid #e0e0e0', borderRadius: '100px',
+             padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.9rem',
+             display: 'flex', alignItems: 'center', gap: '0.5rem',
+             fontWeight: '500', color: '#1d1d1f', transition: 'all 0.2s',
+             boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+         }}
+         onMouseEnter={(e) => { e.currentTarget.style.background = '#f0f0f0'; }}
+         onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+         >
+             <span style={{ fontSize: '1.1rem' }}>←</span> Back 
+         </button>
+         <div>
+            <h2 style={{ margin: '0 0 0.2rem 0', fontSize: '1.3rem', color: '#1d1d1f' }}>
+                {record.program_name || 'Record Details'}
+            </h2>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#6e6e73' }}>
+                {record.academic_year} · {record.engagement_type}
+            </p>
+         </div>
       </div>
 
-      {/* Expanded detail */}
-      {expanded && (
-        <div style={{ padding: '1.25rem 1.5rem 1.5rem' }}>
-          <SectionHeading>General Information</SectionHeading>
-          {COMMON_FIELDS.map(({ key, label }) => (
-            <FieldRow key={key} label={label} value={record[key]} />
-          ))}
+      <div style={{ padding: '2rem' }}>
+        <SectionHeading>General Information</SectionHeading>
+        {COMMON_FIELDS.map(({ key, label }) => (
+          <FieldRow key={key} label={label} value={record[key]} />
+        ))}
 
-          {hasSpecificData && (
-            <>
-              <SectionHeading>{programConfig.title} Details</SectionHeading>
-              {programConfig.specificFields.map(({ key, label }) => (
-                <FieldRow key={key} label={label} value={record[key]} />
-              ))}
-            </>
-          )}
+        {hasSpecificData && (
+          <>
+            <SectionHeading>{programConfig.title} Details</SectionHeading>
+            {programConfig.specificFields.map(({ key, label }) => (
+              <FieldRow key={key} label={label} value={record[key]} />
+            ))}
+          </>
+        )}
 
-          {hasNssData && (
-            <>
-              <SectionHeading>NSS Activities</SectionHeading>
-              {NSS_FIELDS.map(({ key, label }) => (
-                <FieldRow key={key} label={label} value={record[key]} />
-              ))}
-            </>
-          )}
+        {hasNssData && (
+          <>
+            <SectionHeading>NSS Activities</SectionHeading>
+            {NSS_FIELDS.map(({ key, label }) => (
+              <FieldRow key={key} label={label} value={record[key]} />
+            ))}
+          </>
+        )}
 
-          <ExtraDataSection data={record.extra_data} />
-        </div>
-      )}
+        <ExtraDataSection data={record.extra_data} />
+      </div>
     </div>
   );
 }
 
-function ProgramDetailView({ programConfig, records, onBack }) {
+function ProgramDetailView({ programConfig, records, user, token, loading }) {
+  const navigate = useNavigate();
   const matching = records.filter((r) => programConfig.match(r.program_name));
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  // If a new program is selected from outside, reset selectedRecord
+  useEffect(() => {
+    setSelectedRecord(null);
+  }, [programConfig]);
 
   return (
     <div className="outreach-expanded-view">
       <div className="outreach-expanded-container">
         {/* Top bar */}
         <div className="outreach-top-bar">
-          <button className="outreach-back-button" onClick={onBack}>
-            <span className="outreach-back-arrow">←</span>
-            Back
-          </button>
           <div className="outreach-icon-header">{programConfig.icon}</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="outreach-overview-text">{programConfig.title}</p>
@@ -297,43 +355,88 @@ function ProgramDetailView({ programConfig, records, onBack }) {
           }}>
             {matching.length} {matching.length === 1 ? 'record' : 'records'}
           </span>
+          {user?.role_id >= 2 && (
+            <button
+              className="upload-data-btn"
+              style={{ flexShrink: 0 }}
+              onClick={() => setIsUploadOpen(true)}
+            >
+              📤 Upload Data
+            </button>
+          )}
         </div>
 
         {/* Records */}
         <div style={{ padding: '1.5rem' }}>
-          {matching.length === 0 ? (
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6e6e73' }}>
+              <p style={{ margin: 0 }}>Loading records...</p>
+            </div>
+          ) : matching.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6e6e73' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📭</div>
               <p style={{ margin: 0 }}>No records found for <strong>{programConfig.title}</strong>.</p>
-              <p style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
-                Upload data using the Upload Data button on the overview page.
-              </p>
+              {user?.role_id >= 2 && (
+                <p style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
+                  Use the <strong>Upload Data</strong> button above to add records.
+                </p>
+              )}
             </div>
+          ) : selectedRecord ? (
+            <RecordExpandedView 
+              record={selectedRecord}
+              programConfig={programConfig}
+              onBack={() => setSelectedRecord(null)}
+            />
           ) : (
-            matching.map((record, idx) => (
-              <RecordCard
-                key={record.id ?? idx}
-                record={record}
-                slNo={idx + 1}
-                programConfig={programConfig}
-              />
-            ))
+            <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                gap: '1.5rem' 
+            }}>
+              {matching.map((record, idx) => (
+                <GridRecordCard
+                  key={record.id ?? idx}
+                  record={record}
+                  slNo={idx + 1}
+                  onClick={() => setSelectedRecord(record)}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
+
+      <DataUploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        tableName={programConfig.tableKey}
+        token={token}
+      />
     </div>
   );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-function OutreachSection({ user }) {
+function OutreachSection({ user, isPublicView = false }) {
+  const navigate = useNavigate();
+  const uploadVersion = useUploadRefresh();
   const token = localStorage.getItem('authToken');
+  const [searchParams] = useSearchParams();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedProgram, setSelectedProgram] = useState(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // Auto-select program from URL query param (?program=science_quest)
+  useEffect(() => {
+    const programKey = searchParams.get('program');
+    if (programKey) {
+      const found = PROGRAM_CONFIGS.find((c) => c.key === programKey);
+      if (found) setSelectedProgram(found);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!token) return;
@@ -342,7 +445,7 @@ function OutreachSection({ user }) {
       .then((data) => setRecords(data?.records ?? []))
       .catch((err) => setError(err.message || 'Failed to load outreach data'))
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, uploadVersion]);
 
   const getCount = (config) => records.filter((r) => config.match(r.program_name)).length;
 
@@ -350,10 +453,17 @@ function OutreachSection({ user }) {
     return (
       <div className="page-container">
         <div className="page-content">
+          {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+            ← Back to Outreach Extension
+          </button>
+        )}
           <ProgramDetailView
             programConfig={selectedProgram}
             records={records}
-            onBack={() => setSelectedProgram(null)}
+            user={user}
+            token={token}
+            loading={loading}
           />
         </div>
       </div>
@@ -363,6 +473,11 @@ function OutreachSection({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
+        {!isPublicView && (
+          <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
+            ← Back to Outreach Extension
+          </button>
+        )}
         <div className="outreach-page-header">
           <h1>Outreach Programs</h1>
           <p>
@@ -370,17 +485,6 @@ function OutreachSection({ user }) {
             Select a programme to explore its records.
           </p>
         </div>
-
-        {user?.role_id >= 2 && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-            >
-              Upload Data
-            </button>
-          </div>
-        )}
 
         {loading && (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#6e6e73' }}>
@@ -418,12 +522,7 @@ function OutreachSection({ user }) {
                   <h3 className="outreach-card-title">{config.title}</h3>
                   <p className="outreach-card-subtitle">{config.description}</p>
                   {count > 0 && (
-                    <div style={{
-                      marginTop: '0.875rem',
-                      fontSize: '0.78rem',
-                      fontWeight: '600',
-                      color: '#f7a600',
-                    }}>
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.78rem', fontWeight: '600', color: '#f7a600' }}>
                       {count} {count === 1 ? 'record' : 'records'}
                     </div>
                   )}
@@ -433,13 +532,6 @@ function OutreachSection({ user }) {
             })}
           </div>
         )}
-
-        <DataUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          tableName="outreach"
-          token={token}
-        />
       </div>
     </div>
   );
