@@ -184,6 +184,35 @@ export const fetchProgramTrends = async (filters, token) => {
 };
 
 /**
+ * Fetches UG / PG / Research / Total counts grouped by admission year.
+ * @param {Object} filters - { category, state }
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} { data: [{year, UG, PG, Research, Total}] }
+ */
+export const fetchProgramTypeTrends = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '' && value !== 'All') {
+        params.append(key, value);
+      }
+    });
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/program-type-trends${params.toString() ? `?${params}` : ''}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching program type trends:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch program type trends');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
  * Fetches student summary counts (Total / UG / PG / Research) from the
  * academic_program_type column.
  * @param {number|null} year - Admission year to filter by (null = all years)

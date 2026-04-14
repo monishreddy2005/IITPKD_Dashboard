@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
+  BarChart, Bar,
+  AreaChart, Area,
   CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
+  XAxis, YAxis,
+  Tooltip, Legend,
+  PieChart, Pie, Cell
 } from 'recharts';
 
 import {
@@ -90,6 +84,7 @@ function IarSection({ user, isPublicView = false }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [outcomeChartType, setOutcomeChartType] = useState('Bar');
 
   // UI state to control which visualization block is visible
   const [activeView, setActiveView] = useState('trend'); // 'trend' | 'state' | 'country' | 'outcome'
@@ -470,13 +465,33 @@ function IarSection({ user, isPublicView = false }) {
 
               {activeView === 'trend' && (
                 <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📈</span> Outcome Trend Over Years
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Track the proportion of alumni opting for higher studies versus corporate roles across admission years.
-                    </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <h2 style={{ margin: '0 0 6px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '24px' }}>📈</span> Alumni Outcome Over Years
+                      </h2>
+                      <p className="chart-description" style={{ color: '#666', margin: '0' }}>
+                        {outcomeChartType === 'Bar'
+                          ? 'Year-wise breakdown of Total, Higher Studies and Corporate alumni.'
+                          : 'Trend lines for Total, Higher Studies and Corporate alumni across years.'}
+                      </p>
+                    </div>
+                    {/* Bar / Trend toggle — inside chart header */}
+                    <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                      {['Bar', 'Trend'].map(type => (
+                        <button key={type} type="button" onClick={() => setOutcomeChartType(type)}
+                          style={{
+                            padding: '6px 18px', border: 'none', borderRadius: '20px',
+                            cursor: 'pointer', fontSize: '12px', fontWeight: '600',
+                            transition: 'all 0.2s ease',
+                            backgroundColor: outcomeChartType === type ? '#667eea' : '#f0f0f0',
+                            color: outcomeChartType === type ? 'white' : '#555',
+                            boxShadow: outcomeChartType === type ? '0 3px 10px rgba(102,126,234,0.35)' : 'none',
+                          }}>
+                          {type === 'Bar' ? 'Bar Chart' : 'Trend'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {trendData.length === 0 ? (
@@ -486,52 +501,80 @@ function IarSection({ user, isPublicView = false }) {
                     </div>
                   ) : (
                     <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                          <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend wrapperStyle={{ fontSize: '11px' }} />
-                          <Line type="monotone" dataKey="total" name="Total alumni" stroke={TREND_TOTAL_COLOR} strokeWidth={2.5} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="higher" name="Higher studies" stroke={TREND_HIGHER_COLOR} strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="corporate" name="Corporate" stroke={TREND_CORPORATE_COLOR} strokeWidth={2} dot={{ r: 3 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
+
+                      {/* ── Bar Chart ── */}
+                      {outcomeChartType === 'Bar' && (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <BarChart data={trendData} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                              angle={-35} textAnchor="end" height={55} tickLine={false}
+                              label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#555', fontSize: 12 } }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false}
+                              label={{ value: 'Alumni Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#555', fontSize: 12 } }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                            <Bar dataKey="total"     name="Total"          fill={TREND_TOTAL_COLOR}     radius={[4,4,0,0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                            <Bar dataKey="higher"    name="Higher Studies" fill={TREND_HIGHER_COLOR}    radius={[4,4,0,0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                            <Bar dataKey="corporate" name="Corporate"      fill={TREND_CORPORATE_COLOR} radius={[4,4,0,0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {/* ── Trend (Area) Chart ── */}
+                      {outcomeChartType === 'Trend' && (
+                        <ResponsiveContainer width="100%" height={360}>
+                          <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                            <defs>
+                              <linearGradient id="iarGradTotal"     x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor={TREND_TOTAL_COLOR}     stopOpacity={0.7} />
+                                <stop offset="95%" stopColor={TREND_TOTAL_COLOR}     stopOpacity={0} />
+                              </linearGradient>
+                              <linearGradient id="iarGradHigher"    x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor={TREND_HIGHER_COLOR}    stopOpacity={0.7} />
+                                <stop offset="95%" stopColor={TREND_HIGHER_COLOR}    stopOpacity={0} />
+                              </linearGradient>
+                              <linearGradient id="iarGradCorporate" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%"  stopColor={TREND_CORPORATE_COLOR} stopOpacity={0.7} />
+                                <stop offset="95%" stopColor={TREND_CORPORATE_COLOR} stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                              angle={-35} textAnchor="end" height={55} tickLine={false}
+                              label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#555', fontSize: 12 } }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false}
+                              label={{ value: 'Alumni Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#555', fontSize: 12 } }} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                            <Area type="monotone" dataKey="total"     name="Total"          stroke={TREND_TOTAL_COLOR}     fill="url(#iarGradTotal)"     strokeWidth={2.5} dot={{ r: 4, fill: TREND_TOTAL_COLOR,     strokeWidth: 0 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={800} />
+                            <Area type="monotone" dataKey="higher"    name="Higher Studies" stroke={TREND_HIGHER_COLOR}    fill="url(#iarGradHigher)"    strokeWidth={2.5} dot={{ r: 4, fill: TREND_HIGHER_COLOR,    strokeWidth: 0 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={800} />
+                            <Area type="monotone" dataKey="corporate" name="Corporate"      stroke={TREND_CORPORATE_COLOR} fill="url(#iarGradCorporate)" strokeWidth={2.5} dot={{ r: 4, fill: TREND_CORPORATE_COLOR, strokeWidth: 0 }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} animationDuration={800} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
 
                       {/* Chart Statistics */}
                       <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
+                        marginTop: '20px', padding: '15px',
+                        backgroundColor: '#f8f9fa', borderRadius: '8px',
                         border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: '10px'
+                        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'
                       }}>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
-                            {trendData.reduce((sum, item) => sum + item.total, 0)}
-                          </div>
+                          <div style={{ color: TREND_TOTAL_COLOR, fontWeight: 'bold', fontSize: '20px' }}>{trendData.reduce((s, d) => s + d.total, 0)}</div>
                           <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22d3ee', fontWeight: 'bold', fontSize: '20px' }}>
-                            {trendData.reduce((sum, item) => sum + item.higher, 0)}
-                          </div>
+                          <div style={{ color: TREND_HIGHER_COLOR, fontWeight: 'bold', fontSize: '20px' }}>{trendData.reduce((s, d) => s + d.higher, 0)}</div>
                           <div style={{ color: '#666', fontSize: '11px' }}>Higher Studies</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
-                            {trendData.reduce((sum, item) => sum + item.corporate, 0)}
-                          </div>
+                          <div style={{ color: TREND_CORPORATE_COLOR, fontWeight: 'bold', fontSize: '20px' }}>{trendData.reduce((s, d) => s + d.corporate, 0)}</div>
                           <div style={{ color: '#666', fontSize: '11px' }}>Corporate</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '20px' }}>
-                            {trendData.length}
-                          </div>
+                          <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '20px' }}>{trendData.length}</div>
                           <div style={{ color: '#666', fontSize: '11px' }}>Years Covered</div>
                         </div>
                       </div>
@@ -556,61 +599,60 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🗺️</span>
                       <p style={{ color: '#666', fontSize: '16px' }}>No state distribution data to display.</p>
                     </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={380}>
-                        <PieChart>
-                          <Pie
-                            data={stateTop10}
-                            dataKey="count"
-                            nameKey="state"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={130}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            labelLine={false}
-                          >
-                            {stateTop10.map((entry, index) => (
-                              <Cell key={entry.state} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value, name) => [`${value} alumni`, name]} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                  ) : (() => {
+                    const stateTotal = stateTop10.reduce((s, d) => s + d.count, 0);
+                    return (
+                      <div className="chart-container">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                          {/* Pie — no inline labels */}
+                          <div style={{ flex: '0 0 300px' }}>
+                            <ResponsiveContainer width={300} height={300}>
+                              <PieChart>
+                                <Pie data={stateTop10} dataKey="count" nameKey="state"
+                                  cx="50%" cy="50%" outerRadius={120}
+                                  label={false} labelLine={false} isAnimationActive animationDuration={700}>
+                                  {stateTop10.map((entry, i) => (
+                                    <Cell key={entry.state} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip formatter={(value, name) => [`${value} alumni`, name]}
+                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', fontSize: '13px' }} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                          {/* Custom side legend — names + count + % */}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '180px' }}>
+                            {stateTop10.map((entry, i) => {
+                              const pct = stateTotal > 0 ? ((entry.count / stateTotal) * 100).toFixed(1) : 0;
+                              return (
+                                <div key={entry.state} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span style={{ width: 14, height: 14, borderRadius: 3, background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                                  <span style={{ fontSize: '13px', color: '#333', flex: 1, fontWeight: 500 }}>{entry.state}</span>
+                                  <span style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap' }}>{entry.count} ({pct}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
 
-                      {/* Chart Statistics */}
-                      <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '10px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#67e8f9', fontWeight: 'bold', fontSize: '20px' }}>
-                            {stateDistribution.reduce((sum, item) => sum + item.count, 0)}
+                        {/* Stats strip */}
+                        <div style={{ marginTop: '16px', padding: '12px 16px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e0e0e0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#67e8f9', fontWeight: 'bold', fontSize: '20px' }}>{stateDistribution.reduce((s, d) => s + d.count, 0)}</div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
-                            {stateDistribution.length}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>{stateDistribution.length}</div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>States Represented</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>States Represented</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
-                            {stateDistribution.length > 0 ? Math.max(...stateDistribution.map(item => item.count)) : 0}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>{stateDistribution.length > 0 ? Math.max(...stateDistribution.map(d => d.count)) : 0}</div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               )}
 
@@ -630,61 +672,66 @@ function IarSection({ user, isPublicView = false }) {
                       <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🌍</span>
                       <p style={{ color: '#666', fontSize: '16px' }}>No country distribution data to display.</p>
                     </div>
-                  ) : (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={380}>
-                        <PieChart>
-                          <Pie
-                            data={countryTop10}
-                            dataKey="count"
-                            nameKey="country"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={130}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            labelLine={false}
-                          >
-                            {countryTop10.map((entry, index) => (
-                              <Cell key={entry.country} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value, name) => [`${value} alumni`, name]} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                  ) : (() => {
+                    const countryTotal = countryTop10.reduce((s, d) => s + d.count, 0);
+                    return (
+                      <div className="chart-container">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                          {/* Pie — no inline labels */}
+                          <div style={{ flex: '0 0 300px' }}>
+                            <ResponsiveContainer width={300} height={300}>
+                              <PieChart>
+                                <Pie data={countryTop10} dataKey="count" nameKey="country"
+                                  cx="50%" cy="50%" outerRadius={120}
+                                  label={false} labelLine={false} isAnimationActive animationDuration={700}>
+                                  {countryTop10.map((entry, i) => (
+                                    <Cell key={entry.country} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip formatter={(value, name) => [`${value} alumni`, name]}
+                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', fontSize: '13px' }} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                          {/* Custom side legend — names + count + % */}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '180px' }}>
+                            {countryTop10.map((entry, i) => {
+                              const pct = countryTotal > 0 ? ((entry.count / countryTotal) * 100).toFixed(1) : 0;
+                              return (
+                                <div key={entry.country} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span style={{ width: 14, height: 14, borderRadius: 3, background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                                  <span style={{ fontSize: '13px', color: '#333', flex: 1, fontWeight: 500 }}>{entry.country}</span>
+                                  <span style={{ fontSize: '12px', color: '#666', whiteSpace: 'nowrap' }}>{entry.count} ({pct}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
 
-                      {/* Chart Statistics */}
-                      <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '10px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
-                            {countryDistribution.length}
+                        {/* Stats strip */}
+                        <div style={{ marginTop: '16px', padding: '12px 16px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e0e0e0', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
+                              {countryDistribution.length}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Countries</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>Countries</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '20px' }}>
-                            {countryDistribution.reduce((sum, item) => sum + item.count, 0)}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '20px' }}>
+                              {countryDistribution.reduce((sum, item) => sum + item.count, 0)}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>Total Alumni</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
-                            {countryDistribution.length > 0 ? Math.max(...countryDistribution.map(item => item.count)) : 0}
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
+                              {countryDistribution.length > 0 ? Math.max(...countryDistribution.map(item => item.count)) : 0}
+                            </div>
+                            <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
                           </div>
-                          <div style={{ color: '#666', fontSize: '11px' }}>Highest Count</div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               )}
 
@@ -729,8 +776,8 @@ function IarSection({ user, isPublicView = false }) {
                             <XAxis dataKey="department" angle={-38} textAnchor="end" height={80} tick={{ fontSize: 10 }} interval={0} />
                             <YAxis stroke="#666" tick={{ fontSize: 11 }} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="higher" name="Higher Studies" stackId="a" fill={HIGHER_BAR_COLOR} radius={[0, 0, 0, 0]} barSize={24} />
-                            <Bar dataKey="corporate" name="Corporate" stackId="a" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={24} />
+                            <Bar dataKey="higher" name="Higher Studies" fill={HIGHER_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={16} />
+                            <Bar dataKey="corporate" name="Corporate" fill={CORPORATE_BAR_COLOR} radius={[4, 4, 0, 0]} barSize={16} />
                           </BarChart>
                         </ResponsiveContainer>
 

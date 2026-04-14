@@ -90,8 +90,24 @@ export const fetchProgrammeBreakdown = async (filters, token) => {
 };
 
 /**
+ * Retrieves active/inactive counts for all courses and industry courses.
+ * @param {string} token - The auth token.
+ * @returns {Promise<Object>} Course counts.
+ */
+export const fetchCourseCounts = async (token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/course-counts`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch course counts');
+  }
+};
+
+/**
  * Retrieves a paginated list of courses.
  * @param {Object} filters - Active dashboard filters.
+ *   course_type: 'industry' | 'all'
+ *   active_only: 'true' | 'false' | undefined
  * @param {string} search - Text search query.
  * @param {number} page - Result page.
  * @param {number} perPage - Items per page.

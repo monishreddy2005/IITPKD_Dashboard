@@ -2,13 +2,10 @@ import { useEffect, useState } from 'react';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend
+  BarChart, Bar,
+  AreaChart, Area,
+  XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend
 } from 'recharts';
 
 import { fetchIccSummary, fetchIccYearly } from '../services/grievanceStats';
@@ -18,11 +15,17 @@ import './AcademicSection.css';
 import './GrievanceSection.css';
 import { useNavigate } from 'react-router-dom';
 
-const AREA_COLORS = {
-  total: '#667eea',
+const COMPLAINT_COLORS = {
+  total:    '#667eea',
   resolved: '#43e97b',
-  pending: '#fa709a'
+  pending:  '#fa709a',
 };
+
+const BAR_META = [
+  { key: 'total',    color: '#667eea', label: 'Total'    },
+  { key: 'resolved', color: '#43e97b', label: 'Resolved' },
+  { key: 'pending',  color: '#fa709a', label: 'Pending'  },
+];
 
 function IccSection({ user, isPublicView = false }) {
   const navigate = useNavigate();
@@ -30,11 +33,7 @@ function IccSection({ user, isPublicView = false }) {
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [yearlyData, setYearlyData] = useState([]);
-  const [visibleMetrics, setVisibleMetrics] = useState({
-    total: true,
-    resolved: true,
-    pending: true
-  });
+  const [chartType, setChartType] = useState('Bar');
   const [activeView, setActiveView] = useState('chart'); // 'chart' | 'table'
   const [summary, setSummary] = useState({
     total: 0,
@@ -145,9 +144,27 @@ function IccSection({ user, isPublicView = false }) {
           </div>
         ) : (
           <>
-            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '16px', fontSize: '20px' }}>
+            <h2 style={{ textDecoration: 'underline', color: '#000', marginBottom: '12px', fontSize: '20px' }}>
               Internal Complaints Committee (ICC)
             </h2>
+
+            {/* Bar / Trend toggle — above summary cards */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              {['Bar', 'Trend'].map(type => (
+                <button key={type} type="button" onClick={() => setChartType(type)}
+                  style={{
+                    padding: '6px 20px', border: 'none', borderRadius: '20px',
+                    cursor: 'pointer', fontSize: '13px', fontWeight: '600',
+                    transition: 'all 0.2s ease',
+                    backgroundColor: chartType === type ? '#667eea' : '#f0f0f0',
+                    color: chartType === type ? 'white' : '#555',
+                    boxShadow: chartType === type ? '0 3px 10px rgba(102,126,234,0.35)' : 'none',
+                  }}>
+                  {type === 'Bar' ? 'Bar Chart' : 'Trend'}
+                </button>
+              ))}
+            </div>
+
             {/* Modern Summary Cards */}
             <div style={{
               display: 'grid',
@@ -309,79 +326,14 @@ function IccSection({ user, isPublicView = false }) {
             </div>
 
             {activeView === 'chart' && (
-              <div className="chart-section" style={{
-                backgroundColor: '#fff',
-                borderRadius: '16px',
-                padding: '24px',
-                boxShadow: '0 5px 20px rgba(0,0,0,0.05)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '20px',
-                  flexWrap: 'wrap',
-                  gap: '15px'
-                }}>
-                  <div>
-                    <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
-                      Internal Complaints Committee (ICC)
-                    </h2>
-                    <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                      Year-wise Complaint Trend
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setVisibleMetrics(prev => ({ ...prev, total: !prev.total }))}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: visibleMetrics.total ? AREA_COLORS.total : '#f0f0f0',
-                        color: visibleMetrics.total ? 'white' : '#666',
-                        border: 'none',
-                        borderRadius: '20px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Total
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVisibleMetrics(prev => ({ ...prev, resolved: !prev.resolved }))}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: visibleMetrics.resolved ? AREA_COLORS.resolved : '#f0f0f0',
-                        color: visibleMetrics.resolved ? 'white' : '#666',
-                        border: 'none',
-                        borderRadius: '20px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}
-                    >
-                      Resolved
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVisibleMetrics(prev => ({ ...prev, pending: !prev.pending }))}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: visibleMetrics.pending ? AREA_COLORS.pending : '#f0f0f0',
-                        color: visibleMetrics.pending ? 'white' : '#666',
-                        border: 'none',
-                        borderRadius: '20px',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}
-                    >
-                      Pending
-                    </button>
-                  </div>
+              <div className="chart-section" style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '24px', boxShadow: '0 5px 20px rgba(0,0,0,0.05)' }}>
+                <div style={{ marginBottom: '20px' }}>
+                  <h2 style={{ margin: '0 0 4px 0', color: '#333', fontSize: '20px' }}>
+                    Internal Complaints Committee (ICC)
+                  </h2>
+                  <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
+                    {chartType === 'Bar' ? 'Year-wise complaint breakdown' : 'Complaint count trend over years'}
+                  </p>
                 </div>
 
                 {yearlyData.length === 0 ? (
@@ -391,69 +343,61 @@ function IccSection({ user, isPublicView = false }) {
                   </div>
                 ) : (
                   <div className="chart-container">
-                    <ResponsiveContainer width="100%" height={350}>
-                      <AreaChart
-                        data={yearlyData}
-                        margin={{ top: 10, right: 20, left: 40, bottom: 30 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={AREA_COLORS.total} stopOpacity={0.8} />
-                            <stop offset="95%" stopColor={AREA_COLORS.total} stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={AREA_COLORS.resolved} stopOpacity={0.8} />
-                            <stop offset="95%" stopColor={AREA_COLORS.resolved} stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={AREA_COLORS.pending} stopOpacity={0.8} />
-                            <stop offset="95%" stopColor={AREA_COLORS.pending} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                        <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: '#fff',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                          }}
-                        />
-                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                        {visibleMetrics.total && (
-                          <Area
-                            type="monotone"
-                            dataKey="total"
-                            name="Total"
-                            stroke={AREA_COLORS.total}
-                            fill="url(#colorTotal)"
-                            strokeWidth={2}
-                          />
-                        )}
-                        {visibleMetrics.resolved && (
-                          <Area
-                            type="monotone"
-                            dataKey="resolved"
-                            name="Resolved"
-                            stroke={AREA_COLORS.resolved}
-                            fill="url(#colorResolved)"
-                            strokeWidth={2}
-                          />
-                        )}
-                        {visibleMetrics.pending && (
-                          <Area
-                            type="monotone"
-                            dataKey="pending"
-                            name="Pending"
-                            stroke={AREA_COLORS.pending}
-                            fill="url(#colorPending)"
-                            strokeWidth={2}
-                          />
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
+
+                    {/* ── Bar Chart: Total / Resolved / Pending ── */}
+                    {chartType === 'Bar' && (
+                      <ResponsiveContainer width="100%" height={380}>
+                        <BarChart data={yearlyData} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#000"
+                            tick={{ fill: '#000', fontSize: 13, fontWeight: 'bold' }}
+                            angle={-35} textAnchor="end" height={55} tickLine={false}
+                            label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#000', fontSize: 14, fontWeight: 'bold' } }} />
+                          <YAxis stroke="#000"
+                            tick={{ fill: '#000', fontSize: 13, fontWeight: 'bold' }}
+                            allowDecimals={false}
+                            label={{ value: 'Number of Complaints', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000', fontSize: 14, fontWeight: 'bold' } }} />
+                          <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} cursor={{ fill: 'rgba(102,126,234,0.08)' }} />
+                          <Legend verticalAlign="top" align="center" wrapperStyle={{ paddingBottom: '10px', fontWeight: 'bold' }} />
+                          {BAR_META.map(({ key, color, label }) => (
+                            <Bar key={key} dataKey={key} name={label} fill={color} radius={[4, 4, 0, 0]}
+                              isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* ── Trend Chart: complaints (total) only ── */}
+                    {chartType === 'Trend' && (
+                      <ResponsiveContainer width="100%" height={380}>
+                        <AreaChart data={yearlyData} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                          <defs>
+                            <linearGradient id="iccGradComplaints" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%"  stopColor={COMPLAINT_COLORS.total} stopOpacity={0.72} />
+                              <stop offset="95%" stopColor={COMPLAINT_COLORS.total} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#000"
+                            tick={{ fill: '#000', fontSize: 13, fontWeight: 'bold' }}
+                            angle={-35} textAnchor="end" height={55} tickLine={false}
+                            label={{ value: 'Year', position: 'insideBottom', offset: -10, style: { textAnchor: 'middle', fill: '#000', fontSize: 14, fontWeight: 'bold' } }} />
+                          <YAxis stroke="#000"
+                            tick={{ fill: '#000', fontSize: 13, fontWeight: 'bold' }}
+                            allowDecimals={false}
+                            label={{ value: 'Number of Complaints', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#000', fontSize: 14, fontWeight: 'bold' } }} />
+                          <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
+                          <Legend verticalAlign="top" align="center" wrapperStyle={{ paddingBottom: '10px', fontWeight: 'bold' }} />
+                          <Area type="monotone" dataKey="total" name="Complaints"
+                            stroke={COMPLAINT_COLORS.total} fill="url(#iccGradComplaints)"
+                            strokeWidth={2.5}
+                            dot={{ r: 4, fill: COMPLAINT_COLORS.total, strokeWidth: 0 }}
+                            activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+                            animationDuration={800} animationEasing="ease-in-out" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+
                   </div>
                 )}
               </div>

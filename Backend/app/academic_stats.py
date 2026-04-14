@@ -503,3 +503,65 @@ def get_student_summary(current_user_id):
             cur.close()
         if conn:
             conn.close()
+
+
+@academic_bp.route('/stats/program-type-trends', methods=['GET'])
+@token_required
+def get_program_type_trends(current_user_id):
+    """
+    Returns UG / PG / Research / Total counts grouped by admission year.
+    Optional filters: category, state.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed!'}), 500
+
+        filters = {
+            'category': request.args.get('category', type=str),
+            'state': request.args.get('state', type=str),
+        }
+
+        where_clause, params = build_filter_query(filters)
+
+        query = f"""
+            SELECT
+                admission_year AS year,
+                COUNT(*)                                                         AS total,
+                COUNT(*) FILTER (WHERE academic_program_type = 'UG')             AS ug,
+                COUNT(*) FILTER (WHERE academic_program_type = 'PG')             AS pg,
+                COUNT(*) FILTER (WHERE academic_program_type = 'Research')       AS research
+            FROM {STUDENT_TABLE}
+            {where_clause}
+            GROUP BY admission_year
+            ORDER BY admission_year;
+        """
+
+        cur = conn.cursor()
+        cur.execute(query, params)
+        rows = cur.fetchall()
+
+        data = [
+            {
+                'year': row['year'],
+                'UG': int(row['ug'] or 0),
+                'PG': int(row['pg'] or 0),
+                'Research': int(row['research'] or 0),
+                'Total': int(row['total'] or 0),
+            }
+            for row in rows
+        ]
+
+        return jsonify({'data': data}), 200
+
+    except Exception as e:
+        import traceback
+        print(f"Error fetching program type trends: {e}\n{traceback.format_exc()}")
+        return jsonify({'message': 'An error occurred while fetching program type trends.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

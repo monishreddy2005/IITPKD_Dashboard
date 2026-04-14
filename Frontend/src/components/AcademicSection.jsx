@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered, fetchGenderTrends, fetchProgramTrends, fetchCumulativeStudentSummary } from '../services/academicStats';
+import { fetchFilterOptions, fetchGenderDistributionFiltered, fetchStudentStrengthFiltered, fetchGenderTrends, fetchCumulativeStudentSummary, fetchProgramTypeTrends } from '../services/academicStats';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import DataUploadModal from './DataUploadModal';
 import './Page.css';
@@ -8,7 +8,34 @@ import './AcademicSection.css';
 import { useNavigate } from 'react-router-dom';
 
 const COLORS = ['#667eea', '#764ba2', '#f093fb'];
-const TREND_COLORS = ['#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#ff9a9e', '#fbc2eb', '#a18cd1', '#fad0c4', '#ffd1ff', '#a6c1ee'];
+
+const PROGRAM_TYPE_COLORS = {
+  UG: '#4f46e5',
+  PG: '#f97316',
+  Research: '#06b6d4',
+  Total: '#667eea',
+};
+
+const ProgramTypeGradients = () => (
+  <defs>
+    <linearGradient id="ptUG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.7} />
+      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+    </linearGradient>
+    <linearGradient id="ptPG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#f97316" stopOpacity={0.7} />
+      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+    </linearGradient>
+    <linearGradient id="ptResearch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.7} />
+      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+    </linearGradient>
+    <linearGradient id="ptTotal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor="#667eea" stopOpacity={0.7} />
+      <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+    </linearGradient>
+  </defs>
+);
 
 const AREA_COLORS = {
   Total: { stroke: '#667eea', fill: 'url(#colorTotal)' },
@@ -104,7 +131,7 @@ function AcademicSection({ user, isPublicView = false }) {
   const [strengthTotal, setStrengthTotal] = useState(0);
 
   const [selectedGender, setSelectedGender] = useState('Total');
-  const [chartType, setChartType] = useState('Trend');
+  const [chartType, setChartType] = useState('Bar');
   const [trendYears, setTrendYears] = useState(5);
   const [genderTrendData, setGenderTrendData] = useState([]);
   const [genderTrendLoading, setGenderTrendLoading] = useState(true);
@@ -113,10 +140,12 @@ function AcademicSection({ user, isPublicView = false }) {
   });
   const [trendTotal, setTrendTotal] = useState(0);
 
-  const [programTrendData, setProgramTrendData] = useState([]);
-  const [programTrendPrograms, setProgramTrendPrograms] = useState([]);
-  const [programTrendLoading, setProgramTrendLoading] = useState(true);
-  const [programTrendFilters, setProgramTrendFilters] = useState({ category: null, state: null });
+
+  const [programTypeData, setProgramTypeData] = useState([]);
+  const [programTypeLoading, setProgramTypeLoading] = useState(true);
+  const [programTypeChartType, setProgramTypeChartType] = useState('Bar');
+  const [programTypeYears, setProgramTypeYears] = useState(5);
+  const [programTypeFilters, setProgramTypeFilters] = useState({ category: null, state: null });
 
   const [activeChart, setActiveChart] = useState('genderTrend');
   const token = localStorage.getItem('authToken');
@@ -202,20 +231,27 @@ function AcademicSection({ user, isPublicView = false }) {
   }, [displayGenderTrendData, selectedGender]);
 
   const hasTrendData = displayGenderTrendData.some(d => (d.Total || 0) > 0 || (d.Male || 0) > 0 || (d.Female || 0) > 0 || (d.Transgender || 0) > 0);
-  const hasProgramTrendData = programTrendData.length > 0 && programTrendData.slice(-5).some(d => programTrendPrograms.some(p => (d[p] || 0) > 0));
   const hasStrengthData = strengthTotal > 0 && studentStrengthData.some(d => (d.Male || 0) > 0 || (d.Female || 0) > 0 || (d.Transgender || 0) > 0);
 
   useEffect(() => { const load = async () => { if (!token || filters.yearofadmission === null) return; try { setLoading(true); setError(null); const r = await fetchGenderDistributionFiltered(filters, token); setGenderData(r.data); setTotal(r.total); } catch { setError('Failed to load gender distribution data.'); } finally { setLoading(false); } }; load(); }, [filters, token, uploadVersion]);
   useEffect(() => { const load = async () => { if (!token || strengthFilters.yearofadmission === null) return; try { setStrengthLoading(true); setStrengthError(null); const r = await fetchStudentStrengthFiltered(strengthFilters, token); setStudentStrengthData(r.data); setStrengthTotal(r.total); } catch { setStrengthError('Failed to load student strength data.'); } finally { setStrengthLoading(false); } }; load(); }, [strengthFilters, token, uploadVersion]);
   useEffect(() => { const load = async () => { if (!token) return; try { setGenderTrendLoading(true); const r = await fetchGenderTrends(genderTrendFilters, token); setGenderTrendData(r.data); } catch (err) { console.error(err); } finally { setGenderTrendLoading(false); } }; load(); }, [genderTrendFilters, token, uploadVersion]);
-  useEffect(() => { const load = async () => { if (!token) return; try { setProgramTrendLoading(true); const r = await fetchProgramTrends(programTrendFilters, token); setProgramTrendData(r.data); setProgramTrendPrograms(r.programs); } catch (err) { console.error(err); } finally { setProgramTrendLoading(false); } }; load(); }, [programTrendFilters, token, uploadVersion]);
+  useEffect(() => { const load = async () => { if (!token) return; try { setProgramTypeLoading(true); const r = await fetchProgramTypeTrends(programTypeFilters, token); setProgramTypeData(r.data || []); } catch (err) { console.error(err); } finally { setProgramTypeLoading(false); } }; load(); }, [programTypeFilters, token, uploadVersion]);
 
   const handleGenderTrendFilterChange = (n, v) => setGenderTrendFilters(prev => ({ ...prev, [n]: v === 'All' ? null : v }));
-  const handleClearGenderTrendFilters = () => { setGenderTrendFilters({ program: null, batch: null, department: null, category: null, pwd: null }); setTrendYears(5); setSelectedGender('Total'); setChartType('Trend'); };
+  const handleClearGenderTrendFilters = () => { setGenderTrendFilters({ program: null, batch: null, department: null, category: null, pwd: null }); setTrendYears(5); setSelectedGender('Total'); setChartType('Bar'); };
   const handleStrengthFilterChange = (n, v) => setStrengthFilters(prev => ({ ...prev, [n]: v === 'All' ? (n === 'yearofadmission' ? 'All' : null) : v }));
   const handleClearStrengthFilters = () => setStrengthFilters({ yearofadmission: filterOptions.latest_year || null, category: null, state: null });
-  const handleProgramTrendFilterChange = (n, v) => setProgramTrendFilters(prev => ({ ...prev, [n]: v === 'All' ? null : v }));
-  const handleClearProgramTrendFilters = () => setProgramTrendFilters({ category: null, state: null });
+
+  const handleProgramTypeFilterChange = (n, v) => setProgramTypeFilters(prev => ({ ...prev, [n]: v === 'All' ? null : v }));
+  const handleClearProgramTypeFilters = () => { setProgramTypeFilters({ category: null, state: null }); setProgramTypeYears(5); setProgramTypeChartType('Bar'); };
+
+  const displayProgramTypeData = useMemo(() => {
+    if (!programTypeData || programTypeData.length === 0) return [];
+    return programTypeData.slice(-programTypeYears);
+  }, [programTypeData, programTypeYears]);
+
+  const hasProgramTypeData = displayProgramTypeData.some(d => (d.Total || 0) > 0);
 
   const areaKeys = selectedGender === 'All' ? ['Male', 'Female', 'Transgender'] : [selectedGender];
   const fs = { padding: '0.28rem 1.6rem 0.28rem 0.45rem', fontSize: '0.75rem', borderRadius: '7px' };
@@ -469,49 +505,80 @@ function AcademicSection({ user, isPublicView = false }) {
             </div>
           </div>
 
-          {/* ── 2. Student Strength by Program Trend ── */}
+          {/* ── 2. Student Enrollment by Program Type (UG / PG / Research / Total) ── */}
           <div className={`chart-view ${activeChart === 'programTrend' ? 'active' : ''}`}>
-            <div className="chart-header">
-              <h2>Student Strength by Program (Trend)</h2>
-              <p className="chart-description">Student strength trends by program over the last 5 years.</p>
+            <div className="chart-header" style={{ marginBottom: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.4rem', marginBottom: 0 }}>Student Enrollment by Program Type</h2>
             </div>
-            <div className="filter-panel">
-              <div className="filter-header">
-                <h3>Filters</h3>
-                <button className="clear-filters-btn" onClick={handleClearProgramTrendFilters}>Clear All Filters</button>
+
+            {/* Filters */}
+            <div style={{ background: '#f8f9fa', border: '1px solid #e0e0e0', borderRadius: '10px', padding: '0.65rem 1rem', marginBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.55rem', paddingBottom: '0.45rem', borderBottom: '1px solid #e0e0e0' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1a1a1a' }}>Filters</span>
+                <button className="clear-filters-btn" onClick={handleClearProgramTypeFilters} style={{ padding: '0.28rem 0.8rem', fontSize: '0.76rem', borderRadius: '6px' }}>Clear All Filters</button>
               </div>
-              <div className="filter-grid">
-                <div className="filter-group">
-                  <label>Category</label>
-                  <select value={programTrendFilters.category || 'All'} onChange={e => handleProgramTrendFilterChange('category', e.target.value)} className="filter-select">
-                    <option value="All">All</option>
-                    {filterOptions.category.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <label>State</label>
-                  <select value={programTrendFilters.state || 'All'} onChange={e => handleProgramTrendFilterChange('state', e.target.value)} className="filter-select">
-                    <option value="All">All</option>
-                    {filterOptions.state.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                {[
+                  { label: 'Graph Type', el: <select value={programTypeChartType} onChange={e => setProgramTypeChartType(e.target.value)} className="filter-select" style={fs}><option value="Bar">Bar Chart</option><option value="Trend">Trend</option></select> },
+                  { label: 'No. of Years', el: <select value={programTypeYears} onChange={e => setProgramTypeYears(parseInt(e.target.value, 10))} className="filter-select" style={fs}><option value={1}>Last 1 Yr</option><option value={2}>Last 2 Yrs</option><option value={3}>Last 3 Yrs</option><option value={5}>Last 5 Yrs</option><option value={10}>Last 10 Yrs</option></select> },
+                  { label: 'Category', el: <select value={programTypeFilters.category || 'All'} onChange={e => handleProgramTypeFilterChange('category', e.target.value)} className="filter-select" style={fs}><option value="All">All</option>{filterOptions.category.map(c => <option key={c} value={c}>{c}</option>)}</select> },
+                  { label: 'State', el: <select value={programTypeFilters.state || 'All'} onChange={e => handleProgramTypeFilterChange('state', e.target.value)} className="filter-select" style={fs}><option value="All">All</option>{filterOptions.state.map(s => <option key={s} value={s}>{s}</option>)}</select> },
+                ].map(({ label, el }) => (
+                  <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <label style={{ fontSize: '0.7rem', fontWeight: 600, color: '#1a1a1a' }}>{label}</label>
+                    {el}
+                  </div>
+                ))}
               </div>
             </div>
-            <div className={`bar-chart-container trend-chart ${hasProgramTrendData ? '' : 'has-empty'}`}>
-              <h3 className="chart-heading">Student Strength by Program (Trend)</h3>
-              <div className={`trend-empty-state ${hasProgramTrendData ? 'hidden' : ''}`}><p>No information available for the selected filter</p></div>
-              <ResponsiveContainer width="100%" height={500}>
-                <BarChart data={programTrendData.slice(-5)} margin={{ top: 12, right: 30, left: 20, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />
-                  <XAxis dataKey="year" angle={-40} textAnchor="end" height={65} tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }} />
-                  <YAxis tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }} />
-                  <Tooltip {...tooltipStyle} />
-                  <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '0.82rem', paddingBottom: '8px' }} />
-                  {programTrendPrograms.map((p, i) => (
-                    <Bar key={p} dataKey={p} stackId="a" fill={TREND_COLORS[i % TREND_COLORS.length]} {...BAR_ANIMATION} />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+
+            <div className={`bar-chart-container trend-chart ${hasProgramTypeData ? '' : 'has-empty'}`} style={{ padding: '0.75rem 1rem' }}>
+              <div className={`trend-empty-state ${hasProgramTypeData ? 'hidden' : ''}`}>
+                <p>No information available for the selected filter</p>
+              </div>
+
+              {/* ── Bar Chart ── */}
+              <div className={`chart-wrapper ${programTypeChartType === 'Bar' ? 'active' : 'inactive'}`}>
+                <ResponsiveContainer width="100%" height={360}>
+                  <BarChart data={displayProgramTypeData} margin={{ top: 12, right: 30, left: 55, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />
+                    <XAxis dataKey="year" interval={0} angle={-40} textAnchor="end" height={65}
+                      tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }}
+                      label={{ value: 'Year', position: 'insideBottom', offset: -10, style: AXIS_LABEL_STYLE }} />
+                    <YAxis domain={[0, 'dataMax + 10']} allowDecimals={false}
+                      tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }} width={45}
+                      label={{ value: 'Students', angle: -90, position: 'insideLeft', offset: -5, style: AXIS_LABEL_STYLE }} />
+                    <Tooltip {...tooltipStyle} />
+                    <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '0.82rem', paddingBottom: '8px' }} />
+                    <Bar dataKey="UG"       fill={PROGRAM_TYPE_COLORS.UG}       radius={[3,3,0,0]} {...BAR_ANIMATION} />
+                    <Bar dataKey="PG"       fill={PROGRAM_TYPE_COLORS.PG}       radius={[3,3,0,0]} {...BAR_ANIMATION} />
+                    <Bar dataKey="Research" fill={PROGRAM_TYPE_COLORS.Research} radius={[3,3,0,0]} {...BAR_ANIMATION} />
+                    <Bar dataKey="Total"    fill={PROGRAM_TYPE_COLORS.Total}    radius={[3,3,0,0]} {...BAR_ANIMATION} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* ── Trend Chart ── */}
+              <div className={`chart-wrapper ${programTypeChartType === 'Trend' ? 'active' : 'inactive'}`}>
+                <ResponsiveContainer width="100%" height={360}>
+                  <AreaChart data={displayProgramTypeData} margin={{ top: 12, right: 30, left: 55, bottom: 60 }}>
+                    <ProgramTypeGradients />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />
+                    <XAxis dataKey="year" interval={0} angle={-40} textAnchor="end" height={65}
+                      tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }}
+                      label={{ value: 'Year', position: 'insideBottom', offset: -10, style: AXIS_LABEL_STYLE }} />
+                    <YAxis domain={[0, 'dataMax + 10']} allowDecimals={false}
+                      tick={TICK_STYLE} tickLine={false} axisLine={{ stroke: '#ddd' }} width={45}
+                      label={{ value: 'Students', angle: -90, position: 'insideLeft', offset: -5, style: AXIS_LABEL_STYLE }} />
+                    <Tooltip {...tooltipStyle} />
+                    <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '0.82rem', paddingBottom: '8px' }} />
+                    <Area type="monotone" dataKey="UG"       stroke={PROGRAM_TYPE_COLORS.UG}       fill="url(#ptUG)"       strokeWidth={2.5} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} animationDuration={800} />
+                    <Area type="monotone" dataKey="PG"       stroke={PROGRAM_TYPE_COLORS.PG}       fill="url(#ptPG)"       strokeWidth={2.5} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} animationDuration={800} />
+                    <Area type="monotone" dataKey="Research" stroke={PROGRAM_TYPE_COLORS.Research} fill="url(#ptResearch)" strokeWidth={2.5} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} animationDuration={800} />
+                    <Area type="monotone" dataKey="Total"    stroke={PROGRAM_TYPE_COLORS.Total}    fill="url(#ptTotal)"    strokeWidth={2.5} dot={{ r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} animationDuration={800} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 

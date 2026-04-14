@@ -67,6 +67,8 @@ function PlacementSection({ user, isPublicView = false }) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
+  const DEFAULT_GENDERS = ['Male', 'Female', 'Transgender'];
+
   const [filterOptions, setFilterOptions] = useState({
     years: [],
     programs: [],
@@ -76,6 +78,7 @@ function PlacementSection({ user, isPublicView = false }) {
 
   // View type selection with radio buttons
   const [viewType, setViewType] = useState('placementTrend');
+  const [trendChartType, setTrendChartType] = useState('Bar');
 
   // Independent filter states for each view
   const [trendFilters, setTrendFilters] = useState({
@@ -921,7 +924,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -975,18 +978,48 @@ function PlacementSection({ user, isPublicView = false }) {
                       </div>
                     ) : (
                       <div className="chart-container">
-                        <ResponsiveContainer width="100%" height={350}>
-                          <LineChart data={placementTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                            <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            <Line type="monotone" dataKey="percentage" name="Placement %" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} />
-                            <Line type="monotone" dataKey="placed" name="Placed" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
-                            <Line type="monotone" dataKey="registered" name="Registered" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
-                          </LineChart>
-                        </ResponsiveContainer>
+                        {/* Bar / Trend toggle */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                          {['Bar', 'Trend'].map((type) => (
+                            <button key={type} onClick={() => setTrendChartType(type)} style={{
+                              padding: '6px 18px', borderRadius: '6px', border: '2px solid',
+                              borderColor: trendChartType === type ? '#6366f1' : '#dee2e6',
+                              backgroundColor: trendChartType === type ? '#6366f1' : 'transparent',
+                              color: trendChartType === type ? '#fff' : '#555',
+                              fontWeight: trendChartType === type ? 700 : 400,
+                              cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                            }}>{type}</button>
+                          ))}
+                        </div>
+
+                        {trendChartType === 'Bar' && (
+                          <ResponsiveContainer width="100%" height={350}>
+                            <BarChart data={placementTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                              <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend wrapperStyle={{ fontSize: '11px' }} iconType="rect" />
+                              <Bar dataKey="registered" name="Registered" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={18} />
+                              <Bar dataKey="placed" name="Placed" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={18} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+
+                        {trendChartType === 'Trend' && (
+                          <ResponsiveContainer width="100%" height={350}>
+                            <LineChart data={placementTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                              <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend wrapperStyle={{ fontSize: '11px' }} />
+                              <Line type="monotone" dataKey="percentage" name="Placement %" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="placed" name="Placed" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="registered" name="Registered" stroke="#6366f1" strokeWidth={2} dot={{ r: 3 }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        )}
 
                         {/* Chart Statistics */}
                         <div style={{
@@ -1095,7 +1128,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -1150,23 +1183,31 @@ function PlacementSection({ user, isPublicView = false }) {
                     ) : (
                       <div className="chart-container">
                         <ResponsiveContainer width="100%" height={350}>
-                          <PieChart>
-                            <Pie
-                              data={genderPieData}
-                              dataKey="value"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={120}
-                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                              labelLine={false}
-                            >
-                              {genderPieData.map((entry, index) => (
-                                <Cell key={entry.name} fill={GENDER_COLORS[index % GENDER_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => formatPercentage(value)} />
-                          </PieChart>
+                          <BarChart data={genderPieData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                            <XAxis dataKey="name" stroke="#666" tick={{ fontSize: 12 }} />
+                            <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false}
+                              label={{ value: 'Students', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#555', fontSize: 12 } }} />
+                            <Tooltip
+                              content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const reg = payload.find(p => p.dataKey === 'registered')?.value || 0;
+                                const placed = payload.find(p => p.dataKey === 'placed')?.value || 0;
+                                const pct = reg > 0 ? ((placed / reg) * 100).toFixed(1) : '0';
+                                return (
+                                  <div style={{ backgroundColor: '#fff', padding: '10px', border: '1px solid #ccc', borderRadius: '8px', fontSize: '13px' }}>
+                                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold', color: '#333' }}>{label}</p>
+                                    <p style={{ margin: '0', color: '#6366f1' }}>Registered: {formatNumber(reg)}</p>
+                                    <p style={{ margin: '0', color: '#22c55e' }}>Placed: {formatNumber(placed)}</p>
+                                    <p style={{ margin: '4px 0 0 0', color: '#f97316', fontWeight: 600 }}>Placement: {pct}%</p>
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Legend wrapperStyle={{ fontSize: '12px' }} iconType="rect" />
+                            <Bar dataKey="registered" name="Registered" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={32} />
+                            <Bar dataKey="placed" name="Placed" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={32} />
+                          </BarChart>
                         </ResponsiveContainer>
 
                         {/* Gender Statistics */}
@@ -1177,16 +1218,17 @@ function PlacementSection({ user, isPublicView = false }) {
                           borderRadius: '8px',
                           border: '1px solid #e0e0e0',
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gridTemplateColumns: `repeat(${genderPieData.length}, 1fr)`,
                           gap: '15px'
                         }}>
                           {genderPieData.map((item, index) => (
                             <div key={item.name} style={{ textAlign: 'center' }}>
                               <div style={{ color: GENDER_COLORS[index % GENDER_COLORS.length], fontWeight: 'bold', fontSize: '20px' }}>
-                                {item.registered} / {item.placed}
+                                {formatPercentage(item.value)}
                               </div>
-                              <div style={{ color: '#666', fontSize: '12px' }}>
-                                {item.name} (Reg/Placed)
+                              <div style={{ color: '#444', fontSize: '13px', fontWeight: 600 }}>{item.name}</div>
+                              <div style={{ color: '#666', fontSize: '11px' }}>
+                                {formatNumber(item.registered)} reg · {formatNumber(item.placed)} placed
                               </div>
                             </div>
                           ))}
@@ -1268,7 +1310,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -1433,7 +1475,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -1605,7 +1647,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -1811,7 +1853,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>
@@ -1984,7 +2026,7 @@ function PlacementSection({ user, isPublicView = false }) {
                             style={{ width: '100%', padding: '6px', fontSize: '13px', borderRadius: '4px', border: '1px solid #ced4da' }}
                           >
                             <option value="All">All Genders</option>
-                            {filterOptions.genders.map((gender) => (
+                            {(filterOptions.genders.length > 0 ? filterOptions.genders : DEFAULT_GENDERS).map((gender) => (
                               <option key={gender} value={gender}>{gender}</option>
                             ))}
                           </select>

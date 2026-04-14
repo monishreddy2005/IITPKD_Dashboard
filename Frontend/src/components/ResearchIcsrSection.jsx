@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   CartesianGrid,
   XAxis,
   YAxis,
@@ -33,11 +33,10 @@ import './AcademicSection.css';
 import './GrievanceSection.css';
 import './ResearchSection.css';
 
-const PATENT_STATUS_ORDER = ['Filed', 'Granted', 'Published'];
+const PATENT_STATUS_ORDER = ['Filed', 'Granted'];
 const PATENT_COLORS = {
   Filed: '#6366f1',
-  Granted: '#22c55e',
-  Published: '#f97316'
+  Granted: '#22c55e'
 };
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
@@ -112,6 +111,7 @@ const buildPatentBreakdown = (source = {}) => ({
 function ResearchIcsrSection({ user, isPublicView = false }) {
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -126,7 +126,7 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
   });
 
   // Graph type selection with radio buttons
-  const [viewType, setViewType] = useState('projects');
+  const [viewType, setViewType] = useState(location.state?.defaultView || 'projects');
 
   const [filters, setFilters] = useState({
     department: 'All',
@@ -156,6 +156,9 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
   const [mouList, setMouList] = useState([]);
   const [patentStats, setPatentStats] = useState({ overall: buildPatentBreakdown(), yearly: [] });
   const [patentList, setPatentList] = useState([]);
+  const [projectsChartType, setProjectsChartType] = useState('Bar');
+  const [mouChartType, setMouChartType] = useState('Bar');
+  const [patentChartType, setPatentChartType] = useState('Bar');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -589,11 +592,11 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                 <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Patents</span>
               </div>
               <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.patent_breakdown.Filed)} / {formatNumber(summary.patent_breakdown.Granted)} / {formatNumber(summary.patent_breakdown.Published)}
+                {formatNumber(summary.patent_breakdown.Filed)} / {formatNumber(summary.patent_breakdown.Granted)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Filed/Granted/Published</span>
+                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Filed / Granted</span>
               </div>
             </div>
           </div>
@@ -831,32 +834,57 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
+                {/* Bar / Trend toggle */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  {['Bar', 'Trend'].map((type) => (
+                    <button key={type} onClick={() => setProjectsChartType(type)} style={{
+                      padding: '6px 18px', borderRadius: '6px', border: '2px solid',
+                      borderColor: projectsChartType === type ? '#4f46e5' : '#dee2e6',
+                      backgroundColor: projectsChartType === type ? '#4f46e5' : 'transparent',
+                      color: projectsChartType === type ? '#fff' : '#555',
+                      fontWeight: projectsChartType === type ? 700 : 400,
+                      cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                    }}>{type}</button>
+                  ))}
+                </div>
+
                 <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                      <Bar
-                        dataKey="funded"
-                        name="Sponsored Projects"
-                        stackId="a"
-                        fill="#6366f1"
-                        radius={[0, 0, 4, 4]}
-                        barSize={40}
-                      />
-                      <Bar
-                        dataKey="consultancy"
-                        name="Consultancy Projects"
-                        stackId="a"
-                        fill="#22c55e"
-                        radius={[4, 4, 0, 0]}
-                        barSize={40}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {projectsChartType === 'Bar' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Bar dataKey="funded" name="Sponsored Projects" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={22} />
+                        <Bar dataKey="consultancy" name="Consultancy Projects" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={22} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                  {projectsChartType === 'Trend' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <AreaChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <defs>
+                          <linearGradient id="gradFunded" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.7} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="gradConsultancy" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.7} />
+                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Area type="monotone" dataKey="funded" name="Sponsored Projects" stroke="#6366f1" fill="url(#gradFunded)" strokeWidth={2.5} dot={{ r: 4, fill: '#6366f1' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                        <Area type="monotone" dataKey="consultancy" name="Consultancy Projects" stroke="#22c55e" fill="url(#gradConsultancy)" strokeWidth={2.5} dot={{ r: 4, fill: '#22c55e' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </section>
             )}
@@ -946,25 +974,51 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
+                {/* Bar / Trend toggle */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  {['Bar', 'Trend'].map((type) => (
+                    <button key={type} onClick={() => setMouChartType(type)} style={{
+                      padding: '6px 18px', borderRadius: '6px', border: '2px solid',
+                      borderColor: mouChartType === type ? '#a855f7' : '#dee2e6',
+                      backgroundColor: mouChartType === type ? '#a855f7' : 'transparent',
+                      color: mouChartType === type ? '#fff' : '#555',
+                      fontWeight: mouChartType === type ? 700 : 400,
+                      cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                    }}>{type}</button>
+                  ))}
+                </div>
+
                 <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="total"
-                        name="MoUs Signed"
-                        stroke="#a855f7"
-                        strokeWidth={3}
-                        dot={{ r: 6, fill: '#a855f7' }}
-                        activeDot={{ r: 8 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {mouChartType === 'Bar' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        <Bar dataKey="total" name="MoUs Signed" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                  {mouChartType === 'Trend' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <AreaChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <defs>
+                          <linearGradient id="gradMou" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#a855f7" stopOpacity={0.7} />
+                            <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Area type="monotone" dataKey="total" name="MoUs Signed" stroke="#a855f7" fill="url(#gradMou)" strokeWidth={2.5} dot={{ r: 4, fill: '#a855f7' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </section>
             )}
@@ -1069,28 +1123,63 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
+                {/* Bar / Trend toggle */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  {['Bar', 'Trend'].map((type) => (
+                    <button key={type} onClick={() => setPatentChartType(type)} style={{
+                      padding: '6px 18px', borderRadius: '6px', border: '2px solid',
+                      borderColor: patentChartType === type ? '#f97316' : '#dee2e6',
+                      backgroundColor: patentChartType === type ? '#f97316' : 'transparent',
+                      color: patentChartType === type ? '#fff' : '#555',
+                      fontWeight: patentChartType === type ? 700 : 400,
+                      cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                    }}>{type}</button>
+                  ))}
+                </div>
+
                 <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                      {PATENT_STATUS_ORDER.map((status) => (
-                        <Line
-                          key={status}
-                          type="monotone"
-                          dataKey={status}
-                          name={status}
-                          stroke={PATENT_COLORS[status]}
-                          strokeWidth={2.5}
-                          dot={{ r: 5, fill: PATENT_COLORS[status] }}
-                          activeDot={{ r: 7 }}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {/* Bar chart */}
+                  {patentChartType === 'Bar' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <BarChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                        {PATENT_STATUS_ORDER.map((status) => (
+                          <Bar key={status} dataKey={status} name={status} fill={PATENT_COLORS[status]} radius={[4, 4, 0, 0]} barSize={22} />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+
+                  {/* Trend (Area) chart */}
+                  {patentChartType === 'Trend' && (
+                    <ResponsiveContainer width="100%" height={350}>
+                      <AreaChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <defs>
+                          {PATENT_STATUS_ORDER.map((status) => (
+                            <linearGradient key={status} id={`grad${status}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={PATENT_COLORS[status]} stopOpacity={0.7} />
+                              <stop offset="95%" stopColor={PATENT_COLORS[status]} stopOpacity={0} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        {PATENT_STATUS_ORDER.map((status) => (
+                          <Area key={status} type="monotone" dataKey={status} name={status}
+                            stroke={PATENT_COLORS[status]} fill={`url(#grad${status})`}
+                            strokeWidth={2.5} dot={{ r: 4, fill: PATENT_COLORS[status] }}
+                            activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                        ))}
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </section>
             )}

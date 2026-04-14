@@ -264,19 +264,72 @@ def get_programme_breakdown(current_user_id):
 
 # ===================== Course List =====================
 
-@academic_module_bp.route('/courses', methods=['GET'])
+@academic_module_bp.route('/course-counts', methods=['GET'])
 @token_required
-def get_courses(current_user_id):
-    """Paginated, filterable course list."""
+def get_course_counts(current_user_id):
+    """Returns active/inactive counts for all courses and for industry courses only."""
     if not module_tables_available():
         return jsonify({'message': 'Academic module tables are missing.'}), 500
 
-    filters = {
-        'category': request.args.get('category'),
-        'programme': request.args.get('programme'),
-        'status': request.args.get('status'),
-        'proposal_type': request.args.get('proposal_type'),
-    }
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if conn is None:
+            return jsonify({'message': 'Database connection failed.'}), 500
+        cur = conn.cursor()
+
+        cur.execute(f"""
+            SELECT
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 1 END)
+                    AS active_all,
+                COUNT(CASE WHEN UPPER(industry_course_status_currentay) IS NULL
+                               OR UPPER(industry_course_status_currentay) NOT IN ('ACTIVE', 'RUNNING') THEN 1 END)
+                    AS inactive_all,
+                COUNT(CASE WHEN UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
+                               AND UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 1 END)
+                    AS active_industry,
+                COUNT(CASE WHEN UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')
+                               AND (UPPER(industry_course_status_currentay) IS NULL
+                                    OR UPPER(industry_course_status_currentay) NOT IN ('ACTIVE', 'RUNNING')) THEN 1 END)
+                    AS inactive_industry
+            FROM {COURSES_TABLE};
+        """)
+        row = cur.fetchone() or {}
+
+        return jsonify({
+            'active_courses': int(row.get('active_all') or 0),
+            'inactive_courses': int(row.get('inactive_all') or 0),
+            'active_industry_courses': int(row.get('active_industry') or 0),
+            'inactive_industry_courses': int(row.get('inactive_industry') or 0),
+        }), 200
+    except Exception as exc:
+        print(f"Course counts error: {exc}")
+        return jsonify({'message': 'Failed to fetch course counts.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+@academic_module_bp.route('/courses', methods=['GET'])
+@token_required
+def get_courses(current_user_id):
+    """Paginated, filterable course list.
+
+    Query params:
+      course_type  – 'industry' (default) or 'all' (no is_industry_course filter)
+      active_only  – 'true'  → only active/running courses
+                     'false' → only inactive courses
+                     omit   → no status constraint
+      search, page, per_page – as before
+    """
+    if not module_tables_available():
+        return jsonify({'message': 'Academic module tables are missing.'}), 500
+
+    course_type = request.args.get('course_type', 'industry')  # 'industry' | 'all'
+    active_only = request.args.get('active_only')               # 'true' | 'false' | None
     search = request.args.get('search', '', type=str).strip()
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
@@ -289,31 +342,31 @@ def get_courses(current_user_id):
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
 
-        where_clause, params = build_where_clause(
-            filters,
-            {
-                'category': 'course_category',
-                'programme': 'target_programme',
-                'status': 'industry_course_status_currentay',
-                'proposal_type': 'proposal_type',
-            }
-        )
-        # Global filter for industry courses (captures 'YES', 'TRUE', or 'T')
-        industry_filter = "UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')"
-        if where_clause:
-            where_clause += f" AND {industry_filter}"
-        else:
-            where_clause = f"WHERE {industry_filter}"
+        conditions = []
+        params = []
 
-        # Add search
+        # Industry filter
+        if course_type == 'industry':
+            conditions.append("UPPER(is_industry_course) IN ('YES', 'TRUE', 'T')")
+
+        # Active / inactive status filter
+        if active_only == 'true':
+            conditions.append("UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING')")
+        elif active_only == 'false':
+            conditions.append(
+                "(UPPER(industry_course_status_currentay) IS NULL "
+                "OR UPPER(industry_course_status_currentay) NOT IN ('ACTIVE', 'RUNNING'))"
+            )
+
+        # Text search
         if search:
-            search_cond = "(course_code ILIKE %s OR course_name ILIKE %s OR proposing_faculty_name ILIKE %s)"
+            conditions.append(
+                "(course_code ILIKE %s OR course_name ILIKE %s OR proposing_faculty_name ILIKE %s)"
+            )
             pattern = f'%{search}%'
-            if where_clause:
-                where_clause += f" AND {search_cond}"
-            else:
-                where_clause = f"WHERE {search_cond}"
             params.extend([pattern, pattern, pattern])
+
+        where_clause = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
 
         # Total count
         cur.execute(f"SELECT COUNT(*) AS total FROM {COURSES_TABLE} {where_clause}", params)
@@ -334,7 +387,7 @@ def get_courses(current_user_id):
                 target_discipline,
                 industry_partner,
                 industry_coordinator_name,
-                CASE 
+                CASE
                     WHEN UPPER(industry_course_status_currentay) IN ('ACTIVE', 'RUNNING') THEN 'Active'
                     ELSE 'Inactive'
                 END AS status,
@@ -358,8 +411,6 @@ def get_courses(current_user_id):
                 'total_pages': (total + per_page - 1) // per_page if total > 0 else 0
             }
         }), 200
-    except UndefinedTable:
-        return jsonify({'message': 'Academic module tables are missing.'}), 500
     except Exception as exc:
         print(f"Course list error: {exc}")
         return jsonify({'message': 'Failed to fetch course list.'}), 500

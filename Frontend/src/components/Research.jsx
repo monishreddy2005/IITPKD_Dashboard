@@ -20,21 +20,25 @@ function Research({ user }) {
       title: 'ICSR Section',
       route: '/research/icsr',
       description: 'Industrial consultancy & sponsored research metrics',
-      // 🔹 ADDITION
+      allowedRoles: [3]
+    },
+    {
+      title: 'MoU Section',
+      route: '/research/icsr',
+      routeState: { defaultView: 'mousTable' },
+      description: 'Memoranda of Understanding signed with partner organisations',
       allowedRoles: [3]
     },
     {
       title: 'Administrative Section',
       route: '/research/administrative-section',
       description: 'Faculty industry externships and collaborations',
-      // 🔹 ADDITION
       allowedRoles: [3, 2]
     },
     {
       title: 'Library',
       route: '/research/library',
       description: 'Research publications and scholarly outputs',
-      // 🔹 ADDITION
       allowedRoles: [3]
     }
   ];
@@ -93,6 +97,7 @@ function Research({ user }) {
               <Link
                 key={index}
                 to={section.route}
+                state={section.routeState}
                 className="people-campus-card"
               >
                 <div className="card-icon">

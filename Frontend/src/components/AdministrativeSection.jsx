@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
@@ -33,12 +33,10 @@ const GENDER_COLORS = {
   Other: '#f093fb',
 };
 
-// Same colour scheme as ICC for visual parity
-const SERIES_META = [
-  { key: 'Total', color: '#667eea', gradientId: 'colorEmpTotal', label: 'Total' },
-  { key: 'Male', color: '#43e97b', gradientId: 'colorEmpMale', label: 'Male' },
-  { key: 'Female', color: '#fa709a', gradientId: 'colorEmpFemale', label: 'Female' },
-  { key: 'Other', color: '#f093fb', gradientId: 'colorEmpOther', label: 'Other' },
+const EMPLOYEE_TYPE_META = [
+  { key: 'Faculty', color: '#f97316', gradientId: 'gradFaculty', label: 'Faculty' },
+  { key: 'Staff',   color: '#10b981', gradientId: 'gradStaff',   label: 'Staff'   },
+  { key: 'Total',   color: '#667eea', gradientId: 'gradEmpTotal', label: 'Total'  },
 ];
 
 const VIEWS = [
@@ -155,10 +153,7 @@ function AdministrativeSection({ isPublicView = false }) {
   const [expertiseData, setExpertiseData] = useState([]);
   const [expertiseTotal, setExpertiseTotal] = useState(0);
 
-  const [yearwiseData, setYearwiseData] = useState([]);
-  const [visibleSeries, setVisibleSeries] = useState(
-    Object.fromEntries(SERIES_META.map(s => [s.key, true]))
-  );
+  const [yearwiseChartType, setYearwiseChartType] = useState('Bar');
 
   const [genderData, setGenderData] = useState([]);
   const [genderTotal, setGenderTotal] = useState(0);
@@ -223,12 +218,6 @@ function AdministrativeSection({ isPublicView = false }) {
       .catch(() => setError('Failed to load faculty expertise matrix data.'));
   }, [filters, token, activeView, uploadVersion]);
 
-  useEffect(() => {
-    if (!token || activeView !== 'yearwise') return;
-    fetchYearwiseStrength(filters, token)
-      .then(r => { setYearwiseData(r.data); })
-      .catch(() => setError('Failed to load yearwise strength data.'))
-  }, [filters, token, activeView, uploadVersion]);
 
   useEffect(() => {
     if (!token || activeView !== 'gender') return;
@@ -257,16 +246,19 @@ function AdministrativeSection({ isPublicView = false }) {
     setFilters({ department: null, designation: null, gender: null, emp_type: null, group_name: null, appointed_category: null, num_years: 5 });
   };
 
-  const toggleSeries = (key) => {
-    setVisibleSeries(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      return Object.values(next).some(Boolean) ? next : prev;
-    });
-  };
-
   // ── derived ──────────────────────────────────────────────────────────────
 
   const hasDeptData = expertiseTotal > 0 && expertiseData.length > 0;
+
+  // Merge allYearwise / teachingYearwise / nonTeachingYearwise → {year, Faculty, Staff, Total}
+  const combinedYearwise = useMemo(() => {
+    const map = {};
+    allYearwise.forEach(d => { map[d.year] = { year: d.year, Total: d.Total || 0, Faculty: 0, Staff: 0 }; });
+    teachingYearwise.forEach(d => { if (map[d.year]) map[d.year].Faculty = d.Total || 0; });
+    nonTeachingYearwise.forEach(d => { if (map[d.year]) map[d.year].Staff = d.Total || 0; });
+    const sorted = Object.values(map).sort((a, b) => a.year - b.year);
+    return filters.num_years ? sorted.slice(-filters.num_years) : sorted;
+  }, [allYearwise, teachingYearwise, nonTeachingYearwise, filters.num_years]);
 
   // ── shared filter panel (inlined to avoid remount issues) ─────────────
 
@@ -461,50 +453,30 @@ function AdministrativeSection({ isPublicView = false }) {
           <div style={CHART_BOX}>
             {filterPanel}
 
-            {/* Chart header: title (left) + metric toggle buttons (right) — mirrors ICC */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '15px'
-            }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h2 style={{ margin: '0 0 5px 0', color: '#333', fontSize: '20px' }}>
-                  Year-wise Employee Strength
-                </h2>
-                <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>
-                  Overview of total employees and gender-wise breakdown year over year.
-                </p>
+                <h2 style={{ margin: '0 0 4px 0', color: '#333', fontSize: '20px' }}>Year-wise Employee Strength</h2>
+                <p style={{ color: '#666', fontSize: '13px', margin: 0 }}>Faculty, Staff and Total headcount year over year.</p>
               </div>
-              {/* Toggle buttons — identical style to ICC's Total / Resolved / Pending */}
+              {/* Bar / Trend toggle */}
               <div style={{ display: 'flex', gap: '8px' }}>
-                {SERIES_META.map(({ key, color, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => toggleSeries(key)}
+                {['Bar', 'Trend'].map(type => (
+                  <button key={type} type="button" onClick={() => setYearwiseChartType(type)}
                     style={{
-                      padding: '6px 12px',
-                      backgroundColor: visibleSeries[key] ? color : '#f0f0f0',
-                      color: visibleSeries[key] ? 'white' : '#666',
-                      border: 'none',
-                      borderRadius: '20px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {label}
+                      padding: '6px 18px', border: 'none', borderRadius: '20px', cursor: 'pointer',
+                      fontSize: '13px', fontWeight: '600', transition: 'all 0.2s ease',
+                      backgroundColor: yearwiseChartType === type ? '#667eea' : '#f0f0f0',
+                      color: yearwiseChartType === type ? 'white' : '#555',
+                      boxShadow: yearwiseChartType === type ? '0 3px 10px rgba(102,126,234,0.35)' : 'none',
+                    }}>
+                    {type === 'Bar' ? 'Bar Chart' : 'Trend'}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div style={{ position: 'relative' }}>
-              {yearwiseData.length === 0 && (
+            <div style={{ position: 'relative', minHeight: '360px' }}>
+              {combinedYearwise.length === 0 && (
                 <div style={{
                   position: 'absolute', inset: 0, zIndex: 10,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -512,40 +484,64 @@ function AdministrativeSection({ isPublicView = false }) {
                   borderRadius: '8px', pointerEvents: 'none',
                 }}>
                   <span style={{ fontSize: '40px', marginBottom: '10px' }}>📊</span>
-                  <p style={{ color: '#888', fontSize: '15px', fontWeight: 500, margin: 0 }}>No employee records match the current filters.</p>
+                  <p style={{ color: '#888', fontSize: '15px', fontWeight: 500, margin: 0 }}>No employee records found.</p>
                 </div>
               )}
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart
-                  data={yearwiseData}
-                  margin={{ top: 10, right: 20, left: 40, bottom: 30 }}
-                >
-                  <defs>
-                    {SERIES_META.map(({ gradientId, color }) => (
-                      <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-                        <stop offset="95%" stopColor={color} stopOpacity={0} />
-                      </linearGradient>
+
+              {/* Bar Chart */}
+              {yearwiseChartType === 'Bar' && (
+                <ResponsiveContainer width="100%" height={360}>
+                  <BarChart data={combinedYearwise} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                    <defs>
+                      {EMPLOYEE_TYPE_META.map(({ gradientId, color }) => (
+                        <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={color} stopOpacity={0.85} />
+                          <stop offset="95%" stopColor={color} stopOpacity={0.6} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                      angle={-35} textAnchor="end" height={55} tickLine={false} />
+                    <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
+                    <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                    {EMPLOYEE_TYPE_META.map(({ key, color, gradientId, label }) => (
+                      <Bar key={key} dataKey={key} name={label} fill={`url(#${gradientId})`}
+                        stroke={color} strokeWidth={0} radius={[4, 4, 0, 0]} {...BAR_ANIMATION} />
                     ))}
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                  <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#fff', border: '1px solid #ccc',
-                      borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  {SERIES_META.map(({ key, color, gradientId, label }) =>
-                    visibleSeries[key] ? (
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {/* Trend (Area) Chart */}
+              {yearwiseChartType === 'Trend' && (
+                <ResponsiveContainer width="100%" height={360}>
+                  <AreaChart data={combinedYearwise} margin={{ top: 10, right: 20, left: 40, bottom: 40 }}>
+                    <defs>
+                      {EMPLOYEE_TYPE_META.map(({ gradientId, color }) => (
+                        <linearGradient key={gradientId} id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={color} stopOpacity={0.72} />
+                          <stop offset="95%" stopColor={color} stopOpacity={0} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }}
+                      angle={-35} textAnchor="end" height={55} tickLine={false} />
+                    <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px', boxShadow: '0 4px 16px rgba(0,0,0,0.10)' }} />
+                    <Legend verticalAlign="top" align="center" wrapperStyle={{ fontSize: '12px', paddingBottom: '10px' }} />
+                    {EMPLOYEE_TYPE_META.map(({ key, color, gradientId, label }) => (
                       <Area key={key} type="monotone" dataKey={key} name={label}
-                        stroke={color} fill={`url(#${gradientId})`} strokeWidth={2} />
-                    ) : null
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
+                        stroke={color} fill={`url(#${gradientId})`} strokeWidth={2.5}
+                        dot={{ r: 4, fill: color, strokeWidth: 0 }}
+                        activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }}
+                        animationDuration={800} animationEasing="ease-in-out" />
+                    ))}
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         )}

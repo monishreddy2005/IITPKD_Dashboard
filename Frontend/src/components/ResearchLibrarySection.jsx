@@ -56,6 +56,7 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
 
   // View type selection with radio buttons
   const [viewType, setViewType] = useState('trend'); // 'trend' | 'department' | 'type' | 'publicationsTable'
+  const [pubChartType, setPubChartType] = useState('Bar'); // 'Bar' | 'Trend'
 
   const [filters, setFilters] = useState({
     department: 'All',
@@ -602,17 +603,45 @@ function ResearchLibrarySection({ user, isPublicView = false }) {
                   </div>
                 </div>
 
+                {/* Bar / Trend toggle */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  {['Bar', 'Trend'].map((type) => (
+                    <button key={type} onClick={() => setPubChartType(type)} style={{
+                      padding: '6px 18px', borderRadius: '6px', border: '2px solid',
+                      borderColor: pubChartType === type ? '#6366f1' : '#dee2e6',
+                      backgroundColor: pubChartType === type ? '#6366f1' : 'transparent',
+                      color: pubChartType === type ? '#fff' : '#555',
+                      fontWeight: pubChartType === type ? 700 : 400,
+                      cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s'
+                    }}>{type}</button>
+                  ))}
+                </div>
+
                 <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={trendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend iconType="plainline" wrapperStyle={{ fontSize: '11px' }} />
-                      <Line type="monotone" dataKey="publications" name="Publications" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {pubChartType === 'Bar' && (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={trendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend iconType="rect" wrapperStyle={{ fontSize: '11px' }} />
+                        <Bar dataKey="publications" name="Publications" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                  {pubChartType === 'Trend' && (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={trendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
+                        <YAxis stroke="#666" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend iconType="plainline" wrapperStyle={{ fontSize: '11px' }} />
+                        <Line type="monotone" dataKey="publications" name="Publications" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 4, fill: '#6366f1' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </section>
             )}
