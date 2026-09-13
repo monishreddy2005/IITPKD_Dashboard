@@ -3,7 +3,7 @@ Flask==3.1.3
 Werkzeug>=3.0.0
 
 # Database
-psycopg2-binary>=2.9.10
+psycopg2-binary>=2.9.13
 
 # Authentication & Security
 # Pinned at these floors specifically to clear known CVEs (pip-audit, 2026-09-04):
