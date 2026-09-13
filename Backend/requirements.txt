@@ -15,7 +15,7 @@ flask-limiter>=3.0.0
 google-auth>=2.0.0
 
 # Environment Variables
-python-dotenv>=1.2.2
+python-dotenv>=1.2.3
 
 # CORS Support
 flask-cors>=6.0.0
