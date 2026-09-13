@@ -14,1190 +14,336 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  LabelList
 } from 'recharts';
 import {
   fetchIcsrSummary,
   fetchIcsrYearlyDistribution,
   fetchIcsrEventTypes,
-  fetchIcsrEvents,
-  fetchIcsrFilterOptions
+  fetchIcsrEvents
 } from '../services/industryConnectStats';
-import DataUploadModal from './DataUploadModal';
+import DataUploadModal from './LazyDataUploadModal';
+import ExportMenu from './ExportMenu';
+import ChartExpandModal from './ChartExpandModal';
+import CustomTooltip from './CustomTooltip';
+import LastUpdated from './LastUpdated';
+import ShareButton from './ShareButton';
+
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
+import '../DesignSystem.css';
+import './IcsrSection.css';
 
-const EVENT_TYPE_COLORS = ['#4f46e5', '#22c55e', '#0ea5e9', '#f97316', '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'];
+const EVENT_TYPE_COLORS = [
+  '#4f46e5', '#22c55e', '#0ea5e9', '#f97316',
+  '#a855f7', '#facc15', '#fb7185', '#14b8a6', '#ec4899', '#8b5cf6'
+];
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
+
+const formatCompactCurrency = (value) => {
+  if (value === undefined || value === null) return '₹0';
+  if (value >= 10000000)
+    return '₹' + (value / 10000000).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' Cr';
+  if (value >= 100000)
+    return '₹' + (value / 100000).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' L';
+  return '₹' + formatNumber(value);
+};
 
 function IcsrSection({ user, isPublicView = false }) {
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
+
+  const isGuestUser = !user;
+  const isReadOnlyView = isPublicView || isGuestUser;
+  const isAdmin = user?.role_id === 3 || user?.role_id === 9;
+  // Funding figures (Total Funding card + per-event Budget) are fully hidden from
+  // guests — both the not-logged-in case and the role-0 public/guest account.
+  const hideFunding = isGuestUser || user?.role_id === 0;
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-
-  const [summary, setSummary] = useState({
-    total_events: 0,
-    total_funding: 0
-  });
-
+  const [summary, setSummary] = useState({ total_events: 0, total_funding: 0 });
   const [yearlyDistribution, setYearlyDistribution] = useState([]);
   const [eventTypes, setEventTypes] = useState([]);
   const [eventsList, setEventsList] = useState([]);
-  const [filterOptions, setFilterOptions] = useState({
-    event_types: [],
-    departments: [],
-    years: []
-  });
+  const [viewType, setViewType] = useState('yearly');
+  const [filters] = useState({ event_type: 'All', department: 'All', year: 'All', search: '' });
+  const [pagination, setPagination] = useState({ page: 1, per_page: 50, total: 0, total_pages: 0 });
+  const [expandedChart, setExpandedChart] = useState(null);
 
-  // View type selection with radio buttons
-  const [viewType, setViewType] = useState('yearly'); // 'yearly' | 'eventTypes' | 'eventsDirectory'
-
-  const [filters, setFilters] = useState({
-    event_type: 'All',
-    department: 'All',
-    year: 'All',
-    search: ''
-  });
-
-  const [pagination, setPagination] = useState({
-    page: 1,
-    per_page: 50,
-    total: 0,
-    total_pages: 0
-  });
+  const [chartIsMobile, setChartIsMobile] = useState(window.innerWidth <= 640);
+  useEffect(() => {
+    const handle = () => setChartIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
 
   const [loading, setLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState(null);
 
-  // Upload Modal State
-  const [activeUploadTable] = useState('industry_events');
-
-  // Data loading functions
   const loadSummary = useCallback(async () => {
-    if (!token) return;
     try {
       setLoading(true);
-      const data = await fetchIcsrSummary(filters, token);
-      setSummary(data);
+      setSummary(await fetchIcsrSummary(filters, token));
     } catch (err) {
       setError(err.message || 'Failed to load summary data');
     } finally {
       setLoading(false);
+      setHasLoaded(true);
     }
-  }, [token, filters, uploadVersion]);
+  }, [token, filters]);
 
   const loadYearlyDistribution = useCallback(async () => {
-    if (!token) return;
     try {
-      const result = await fetchIcsrYearlyDistribution(filters, token);
-      setYearlyDistribution(result.data || []);
-    } catch (err) {
-      console.error('Error loading yearly distribution:', err);
-    }
-  }, [token, filters, uploadVersion]);
+      const r = await fetchIcsrYearlyDistribution(filters, token);
+      setYearlyDistribution(r.data || []);
+    } catch (err) { console.error(err); }
+  }, [token, filters]);
 
   const loadEventTypes = useCallback(async () => {
-    if (!token) return;
     try {
-      const result = await fetchIcsrEventTypes(filters, token);
-      setEventTypes(result.data || []);
-    } catch (err) {
-      console.error('Error loading event types:', err);
-    }
-  }, [token, filters, uploadVersion]);
+      const r = await fetchIcsrEventTypes(filters, token);
+      setEventTypes(r.data || []);
+    } catch (err) { console.error(err); }
+  }, [token, filters]);
 
   const loadEvents = useCallback(async () => {
-    if (!token) return;
     try {
-      const result = await fetchIcsrEvents(
-        filters,
-        pagination.page,
-        pagination.per_page,
-        token
-      );
-      setEventsList(result.data || []);
-      setPagination(prev => result.pagination || prev);
-    } catch (err) {
-      console.error('Error loading events:', err);
-    }
-  }, [token, filters, pagination.page, pagination.per_page, uploadVersion]);
-
-  const loadFilterOptions = useCallback(async () => {
-    if (!token) return;
-    try {
-      const options = await fetchIcsrFilterOptions(token);
-      setFilterOptions({
-        event_types: options?.event_types || [],
-        departments: options?.departments || [],
-        years: options?.years || []
-      });
-    } catch (err) {
-      console.error('Error loading filter options:', err);
-    }
-  }, [token, uploadVersion]);
+      const r = await fetchIcsrEvents(filters, pagination.page, pagination.per_page, token);
+      setEventsList(r.data || []);
+      setPagination(prev => r.pagination || prev);
+    } catch (err) { console.error(err); }
+  }, [token, filters, pagination.page, pagination.per_page]);
 
   const refreshData = () => {
-    loadSummary();
-    loadYearlyDistribution();
-    loadEventTypes();
-    loadEvents();
-    loadFilterOptions();
+    loadSummary(); loadYearlyDistribution();
+    loadEventTypes(); loadEvents();
   };
 
-  // Initial Data Load (Filter options only once, summary/charts on filters)
-  useEffect(() => {
-    loadFilterOptions();
-  }, [loadFilterOptions]);
+  useEffect(() => { loadSummary(); loadYearlyDistribution(); loadEventTypes(); },
+    [loadSummary, loadYearlyDistribution, loadEventTypes, uploadVersion]);
+  useEffect(() => { loadEvents(); }, [loadEvents, uploadVersion]);
 
-  // Load summary and chart data when filters change
-  useEffect(() => {
-    loadSummary();
-    loadYearlyDistribution();
-    loadEventTypes();
-  }, [loadSummary, loadYearlyDistribution, loadEventTypes, filters]);
 
-  // Load events when filters/pagination change
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
-
-  const handleFilterChange = (field, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (newPage) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      event_type: 'All',
-      department: 'All',
-      year: 'All',
-      search: ''
-    });
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  // Chart data
   const yearlyChartData = useMemo(() => {
-    return yearlyDistribution.map(row => ({
-      year: row.year,
-      events: row.event_count || 0
-    }));
-  }, [yearlyDistribution]);
+    const data = yearlyDistribution.map(row => ({ year: row.year, events: row.event_count || 0 }));
+    return chartIsMobile && data.length > 3 ? data.slice(-3) : data;
+  }, [yearlyDistribution, chartIsMobile]);
 
   const eventTypesPieData = useMemo(() => {
-    const sortedData = [...eventTypes].sort((a, b) => b.count - a.count);
-    const top5 = sortedData.slice(0, 5);
-    const others = sortedData.slice(5);
-
-    const othersCount = others.reduce((sum, item) => sum + (item.count || 0), 0);
-
-    const pieData = top5.map(row => ({
-      name: row.event_type,
-      value: row.count || 0
-    }));
-
-    if (othersCount > 0) {
-      pieData.push({
-        name: 'Others',
-        value: othersCount
-      });
-    }
-
-    return pieData;
+    const sorted = [...eventTypes].sort((a, b) => b.count - a.count);
+    const top5 = sorted.slice(0, 5);
+    const othersCount = sorted.slice(5).reduce((s, i) => s + (i.count || 0), 0);
+    const pie = top5.map(r => ({ name: r.event_type, value: r.count || 0 }));
+    if (othersCount > 0) pie.push({ name: 'Others', value: othersCount });
+    return pie;
   }, [eventTypes]);
 
-  // Custom Tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{
-          backgroundColor: '#fff',
-          padding: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-        }}>
-          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>{label || payload[0].name}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ margin: '0', color: entry.color }}>
-              {entry.name}: {formatNumber(entry.value)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
+  const content = (
+    <>
+      {!isReadOnlyView && (
+        <button className="page-back-btn" onClick={() => navigate('/industry-connect')}>
+          &#8592; Back to Industry Connect
+        </button>
+      )}
 
-  return (
-    <div className={isPublicView ? "" : "page-container"}>
-      <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && (
-          <>
-            <button className="page-back-btn" onClick={() => navigate('/industry-connect')}>
-              ← Back to Industry Connect
-            </button>
-            <div className="page-header-row">
-              <div className="page-header-left">
-                <h1>ICSR Section - Industry Interaction Events</h1>
-              </div>
-              {user && user.role_id === 3 && (
-                <div className="page-header-actions">
-                  <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
-                    <span>📤</span> Upload Events Data
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
+      <div className="icsr-action-row">
+        {error && <div className="icsr-error">{error}</div>}
+        {!isReadOnlyView && isAdmin && (
+          <button className="page-upload-btn" onClick={() => setIsUploadModalOpen(true)}>
+            <span>&#128228;</span> Upload Events
+          </button>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <LastUpdated tables={['industry_events']} />
+        <ShareButton />
+      </div>
+
+      <ChartExpandModal
+        isOpen={!!expandedChart}
+        onClose={() => setExpandedChart(null)}
+        title={expandedChart?.title}
+      >
+        {expandedChart?.content}
+      </ChartExpandModal>
+
+      <div className="icsr-cards">
+        <div className="icsr-card icsr-card--indigo">
+          <h3 className="icsr-card-h3">Total Events</h3>
+          <div className="icsr-card-value">{formatNumber(summary.total_events)}</div>
+        </div>
+        {!hideFunding && (
+          <div className="icsr-card icsr-card--green">
+            <h3 className="icsr-card-h3">Total Funding</h3>
+            <div className="icsr-card-value">{formatCompactCurrency(summary.total_funding)}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="icsr-panel">
+        <div className="icsr-panel-header">
+          <div className="icsr-tab-row">
+            {['yearly', 'eventTypes', 'eventsDirectory'].map(v => (
+              <button
+                key={v}
+                onClick={() => setViewType(v)}
+                className={`icsr-tab-btn${viewType === v ? ' icsr-tab-btn--active' : ' icsr-tab-btn--inactive'}`}
+              >
+                {v === 'yearly' ? 'Trend' : v === 'eventTypes' ? 'Types' : 'Directory'}
+              </button>
+            ))}
+          </div>
+          <ExportMenu
+            elementId={viewType === 'yearly' ? 'icsr-yearly-chart' : viewType === 'eventTypes' ? 'icsr-types-chart' : 'icsr-directory-table'}
+            data={viewType === 'yearly' ? yearlyChartData : viewType === 'eventTypes' ? eventTypesPieData : eventsList}
+            headers={viewType === 'yearly' ? ['Year', 'Events'] : viewType === 'eventTypes' ? ['Type', 'Count'] : (hideFunding ? ['Year', 'Event Name', 'Organization', 'Type'] : ['Year', 'Event Name', 'Organization', 'Type', 'Budget'])}
+            keys={viewType === 'yearly' ? ['year', 'events'] : viewType === 'eventTypes' ? ['name', 'value'] : (hideFunding ? ['year', 'event_name', 'hosted_by', 'event_type'] : ['year', 'event_name', 'hosted_by', 'event_type', 'amount'])}
+            filename={`icsr_${viewType}`}
+            title={`ICSR ${viewType === 'yearly' ? 'Trend' : viewType === 'eventTypes' ? 'Types' : 'Directory'}`}
+          />
+        </div>
+
+        {viewType === 'yearly' && (
+          <div
+            id="icsr-yearly-chart"
+            className="clickable-chart"
+            onClick={() => setExpandedChart({
+              title: "Yearly Event Distribution",
+              content: (
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={chartIsMobile ? yearlyChartData.slice(-3) : yearlyChartData} margin={{ top: 40, right: 30, left: 40, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="year" stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                    <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                    <Bar dataKey="events" name="Events" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )
+            })}
+          >
+            <ResponsiveContainer width="100%" height={chartIsMobile ? 220 : 350}>
+              <BarChart data={chartIsMobile ? yearlyChartData.slice(-3) : yearlyChartData} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 12 }} />
+                <YAxis stroke="#666" tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="events" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={30} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
-        {error && <div className="error-message" style={{
-          padding: '10px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>{error}</div>}
+        {viewType === 'eventTypes' && (
+          <div
+            id="icsr-types-chart"
+            className="clickable-chart"
+            onClick={() => setExpandedChart({
+              title: "Event Type Distribution",
+              content: (
+                <ResponsiveContainer width="100%" height={450}>
+                  <PieChart>
+                    <Pie data={eventTypesPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150} label>
+                      {eventTypesPieData.map((_, i) => <Cell key={i} fill={EVENT_TYPE_COLORS[i % EVENT_TYPE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )
+            })}
+          >
+            <ResponsiveContainer width="100%" height={chartIsMobile ? 220 : 350}>
+              <PieChart>
+                <Pie data={eventTypesPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120}>
+                  {eventTypesPieData.map((_, i) => <Cell key={i} fill={EVENT_TYPE_COLORS[i % EVENT_TYPE_COLORS.length]} />)}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
-        {/* Modern Summary Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '24px',
-          marginBottom: '40px'
-        }}>
-          {/* Total Industry Events Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px',
-            padding: '28px',
-            boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
-            position: 'relative',
-            overflow: 'hidden',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            cursor: 'pointer'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-30px',
-              right: '-30px',
-              width: '150px',
-              height: '150px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '-40px',
-              left: '-40px',
-              width: '180px',
-              height: '180px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '50%'
-            }} />
+        {viewType === 'eventsDirectory' && (
+          chartIsMobile ? (
+            <div id="icsr-directory-table" className="icsr-mobile-list">
+              {eventsList.map((event, i) => (
+                <div key={i} className="icsr-mobile-card">
+                  <div className="icsr-mobile-top">
+                    <span className="icsr-mobile-year">{event.year}</span>
+                    <span className="icsr-mobile-badge">{event.event_type}</span>
+                  </div>
+                  <h4 className="icsr-mobile-h4">{event.event_name}</h4>
+                  <div className="icsr-mobile-details">
+                    {event.hosted_by && <div><strong>Organization:</strong> {event.hosted_by}</div>}
+                    {!hideFunding && <div><strong>Budget:</strong> &#8377;{formatNumber(event.amount)}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table id="icsr-directory-table" className="icsr-table">
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Event Name</th>
+                    <th>Organization</th>
+                    <th>Type</th>
+                    {!hideFunding && <th>Budget</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {eventsList.map((event, i) => (
+                    <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                      <td>{event.year}</td>
+                      <td className="icsr-td-name">{event.event_name}</td>
+                      <td>{event.hosted_by}</td>
+                      <td><span className="icsr-td-type">{event.event_type}</span></td>
+                      {!hideFunding && <td>&#8377;{formatNumber(event.amount)}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+      </div>
 
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                <span style={{
-                  fontSize: '32px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  padding: '10px',
-                  borderRadius: '12px'
-                }}>🏭</span>
-                <h3 style={{
-                  margin: 0,
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  fontSize: '18px',
-                  fontWeight: '500'
-                }}>Total Industry Events</h3>
-              </div>
-              <div style={{
-                fontSize: '48px',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '8px',
-                lineHeight: '1.2'
-              }}>
-                {formatNumber(summary.total_events)}
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  background: '#4ade80',
-                  borderRadius: '50%'
-                }} />
-                <span style={{
-                  fontSize: '14px',
-                  color: 'rgba(255, 255, 255, 0.8)'
-                }}>
-                  Total industry interactions
-                </span>
-              </div>
+      <DataUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        tableName="industry_events"
+        token={token}
+        onUploadSuccess={refreshData}
+      />
+    </>
+  );
+
+  return (
+    <div className={isPublicView ? "" : "page-container performance-render-auto"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {loading && !hasLoaded ? (
+          <div className="chart-skeleton-wrap">
+            <div className="chart-skeleton-heading" />
+            <div className="chart-skeleton" aria-label="Loading chart data…">
+              {[60,85,50,95,40,75,65,80].map((h,i) => (
+                <div key={i} className="chart-skeleton-bar" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="chart-skeleton-labels">
+              {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="chart-skeleton-label" />)}
             </div>
           </div>
-
-          {/* Departments Involved Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            borderRadius: '20px',
-            padding: '28px',
-            boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
-            position: 'relative',
-            overflow: 'hidden',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            cursor: 'pointer'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-30px',
-              right: '-30px',
-              width: '150px',
-              height: '150px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{
-              position: 'absolute',
-              bottom: '-40px',
-              left: '-40px',
-              width: '180px',
-              height: '180px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              borderRadius: '50%'
-            }} />
-
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '16px'
-              }}>
-                <span style={{
-                  fontSize: '32px',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  padding: '10px',
-                  borderRadius: '12px'
-                }}>💰</span>
-                <h3 style={{
-                  margin: 0,
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  fontSize: '18px',
-                  fontWeight: '500'
-                }}>Total Funding Generated</h3>
-              </div>
-              <div style={{
-                fontSize: '48px',
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: '8px',
-                lineHeight: '1.2'
-              }}>
-                ₹{formatNumber(summary.total_funding)}
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  background: '#4ade80',
-                  borderRadius: '50%'
-                }} />
-                <span style={{
-                  fontSize: '14px',
-                  color: 'rgba(255, 255, 255, 0.8)'
-                }}>
-                  Amount sanctioned from events
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Radio Buttons */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '20px',
-          marginBottom: '30px',
-          padding: '20px',
-          borderRadius: '12px'
-        }}>
-          <button
-            onClick={() => setViewType('yearly')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'yearly' ? '#667eea' : 'transparent',
-              color: viewType === 'yearly' ? 'white' : '#333',
-              border: viewType === 'yearly' ? '2px solid #667eea' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'yearly' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📊 Year-wise Trend
-          </button>
-          <button
-            onClick={() => setViewType('eventTypes')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'eventTypes' ? '#22c55e' : 'transparent',
-              color: viewType === 'eventTypes' ? 'white' : '#333',
-              border: viewType === 'eventTypes' ? '2px solid #22c55e' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'eventTypes' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            🥧 Event Type Distribution
-          </button>
-          <button
-            onClick={() => setViewType('eventsDirectory')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'eventsDirectory' ? '#f97316' : 'transparent',
-              color: viewType === 'eventsDirectory' ? 'white' : '#333',
-              border: viewType === 'eventsDirectory' ? '2px solid #f97316' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'eventsDirectory' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📋 Industry Event Directory
-          </button>
-        </div>
-
-        {/* Single View Section based on radio selection */}
-        <div className="chart-section" style={{
-          marginBottom: '30px',
-          padding: '20px',
-          backgroundColor: '#fff',
-          borderRadius: '10px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          {/* Yearly Distribution Trend Line Graph */}
-          {viewType === 'yearly' && (
-            <div>
-              <div className="chart-header" style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '24px' }}>📈</span> Year-wise Event Distribution Trend
-                </h2>
-                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                  Yearly trend of industry events over time
-                </p>
-              </div>
-
-              {/* Filters inside the yearly view */}
-              <div style={{
-                marginBottom: '20px',
-                padding: '15px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                border: '1px solid #e9ecef'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '15px'
-                }}>
-                  <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button
-                    onClick={handleClearFilters}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-
-                <div className="filter-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '12px'
-                }}>
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Event Type</label>
-                    <select
-                      value={filters.event_type}
-                      onChange={(e) => handleFilterChange('event_type', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    >
-                      <option value="All">All Types</option>
-                      {filterOptions.event_types.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
-                    <select
-                      value={filters.year}
-                      onChange={(e) => handleFilterChange('year', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    >
-                      <option value="All">All Years</option>
-                      {filterOptions.years.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Search Events</label>
-                    <input
-                      type="text"
-                      placeholder="Search by title, industry partner..."
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Active Filters Summary */}
-                <div style={{
-                  marginTop: '12px',
-                  padding: '8px',
-                  backgroundColor: '#e9ecef',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}>
-                  <strong>Active Filters:</strong>{' '}
-                  {filters.event_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.event_type}</span>}
-                  {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
-                  {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
-                    <span>No filters applied</span>
-                  }
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="loading-container" style={{ textAlign: 'center', padding: '40px' }}>
-                  <div className="loading-spinner" />
-                  <p>Loading chart data...</p>
-                </div>
-              ) : (
-                <>
-                  {yearlyChartData.length > 0 ? (
-                    <div className="chart-container">
-                      <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={yearlyChartData} margin={{ top: 20, right: 30, left: 40, bottom: 40 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis
-                            dataKey="year"
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{
-                              value: 'Year',
-                              position: 'insideBottom',
-                              offset: -10,
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <YAxis
-                            stroke="#666"
-                            tick={{ fill: '#666', fontSize: 12 }}
-                            label={{
-                              value: 'Number of Events',
-                              angle: -90,
-                              position: 'insideLeft',
-                              style: { fill: '#666', fontSize: 14, fontWeight: 'bold' }
-                            }}
-                          />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend
-                            wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }}
-                            iconType="circle"
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="events"
-                            name="Events"
-                            stroke="#667eea"
-                            strokeWidth={3}
-                            dot={{ r: 6, fill: '#667eea', strokeWidth: 2 }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-
-                      {/* Chart Statistics */}
-                      <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '24px' }}>
-                            {yearlyChartData.reduce((sum, item) => sum + item.events, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Events</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                            {yearlyChartData.length > 0 ? Math.max(...yearlyChartData.map(item => item.events)) : 0}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Peak Events in Year</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {yearlyChartData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Years Covered</div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="no-data" style={{
-                      textAlign: 'center',
-                      padding: '60px',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '8px'
-                    }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📈</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No yearly distribution data available.</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Event Types Distribution - Pie Chart with Top 5 + Others */}
-          {viewType === 'eventTypes' && (
-            <div>
-              <div className="chart-header" style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '24px' }}>🥧</span> Event Type Distribution
-                </h2>
-                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                  Distribution of different types of industry interaction events
-                </p>
-              </div>
-
-              {/* Filters inside the event types view */}
-              <div style={{
-                marginBottom: '20px',
-                padding: '15px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                border: '1px solid #e9ecef'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '15px'
-                }}>
-                  <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button
-                    onClick={handleClearFilters}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-
-                <div className="filter-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '12px'
-                }}>
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
-                    <select
-                      value={filters.year}
-                      onChange={(e) => handleFilterChange('year', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    >
-                      <option value="All">All Years</option>
-                      {filterOptions.years.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Search Events</label>
-                    <input
-                      type="text"
-                      placeholder="Search by title, industry partner..."
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Active Filters Summary */}
-                <div style={{
-                  marginTop: '12px',
-                  padding: '8px',
-                  backgroundColor: '#e9ecef',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}>
-                  <strong>Active Filters:</strong>{' '}
-                  {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
-                  {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.year === 'All' && !filters.search &&
-                    <span>No filters applied</span>
-                  }
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="loading-container" style={{ textAlign: 'center', padding: '40px' }}>
-                  <div className="loading-spinner" />
-                  <p>Loading event types data...</p>
-                </div>
-              ) : (
-                <>
-                  {eventTypesPieData.length > 0 ? (
-                    <div>
-                      {/* Pie Chart for Top 5 + Others */}
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <ResponsiveContainer width="100%" height={450}>
-                          <PieChart margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
-                            <Pie
-                              data={eventTypesPieData}
-                              dataKey="value"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={150}
-                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                              labelLine={{ stroke: '#666', strokeWidth: 1 }}
-                            >
-                              {eventTypesPieData.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={EVENT_TYPE_COLORS[index % EVENT_TYPE_COLORS.length]}
-                                  stroke="#fff"
-                                  strokeWidth={2}
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value, name) => [`${value} events`, name]}
-                              contentStyle={{
-                                backgroundColor: '#fff',
-                                border: '1px solid #ccc',
-                                borderRadius: '4px',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                              }}
-                            />
-                            <Legend
-                              layout="vertical"
-                              align="right"
-                              verticalAlign="middle"
-                              wrapperStyle={{
-                                paddingLeft: '20px',
-                                fontWeight: 'bold',
-                                fontSize: '12px'
-                              }}
-                              iconType="circle"
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Chart Statistics */}
-                      <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '8px',
-                        border: '1px solid #e0e0e0',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(3, 1fr)',
-                        gap: '15px'
-                      }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#4f46e5', fontWeight: 'bold', fontSize: '24px' }}>
-                            {eventTypesPieData.length}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Event Categories</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '24px' }}>
-                            {eventTypesPieData.reduce((sum, item) => sum + item.value, 0)}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Total Events</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '24px' }}>
-                            {eventTypesPieData.length > 0
-                              ? Math.max(...eventTypesPieData.map(item => item.value))
-                              : 0}
-                          </div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>Most Common</div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="no-data" style={{
-                      textAlign: 'center',
-                      padding: '60px',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '8px'
-                    }}>
-                      <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>🥧</span>
-                      <p style={{ color: '#666', fontSize: '16px' }}>No event types data available.</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Industry Event Directory */}
-          {viewType === 'eventsDirectory' && (
-            <div>
-              <div className="chart-header" style={{ marginBottom: '20px' }}>
-                <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '24px' }}>📋</span> Industry Event Directory
-                </h2>
-                <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                  Search and filter through all industry interaction events
-                </p>
-              </div>
-
-              {/* Filters inside the events directory view */}
-              <div style={{
-                marginBottom: '20px',
-                padding: '15px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                border: '1px solid #e9ecef'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '15px'
-                }}>
-                  <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                  <button
-                    onClick={handleClearFilters}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-
-                <div className="filter-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '12px'
-                }}>
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Event Type</label>
-                    <select
-                      value={filters.event_type}
-                      onChange={(e) => handleFilterChange('event_type', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    >
-                      <option value="All">All Types</option>
-                      {filterOptions.event_types.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Year</label>
-                    <select
-                      value={filters.year}
-                      onChange={(e) => handleFilterChange('year', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    >
-                      <option value="All">All Years</option>
-                      {filterOptions.years.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="filter-group">
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Search Events</label>
-                    <input
-                      type="text"
-                      placeholder="Search by title, industry partner..."
-                      value={filters.search}
-                      onChange={(e) => handleFilterChange('search', e.target.value)}
-                      style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Active Filters Summary */}
-                <div style={{
-                  marginTop: '12px',
-                  padding: '8px',
-                  backgroundColor: '#e9ecef',
-                  borderRadius: '4px',
-                  fontSize: '12px'
-                }}>
-                  <strong>Active Filters:</strong>{' '}
-                  {filters.event_type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.event_type}</span>}
-                  {filters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.year}</span>}
-                  {filters.search && <span style={{ marginRight: '8px' }}>🔍 "{filters.search}"</span>}
-                  {filters.event_type === 'All' && filters.year === 'All' && !filters.search &&
-                    <span>No filters applied</span>
-                  }
-                </div>
-              </div>
-
-              {/* Fixed Frame with Scrollable Events Table */}
-              <div style={{
-                border: '1px solid #e0e0e0',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                backgroundColor: '#fff'
-              }}>
-                {eventsList.length > 0 ? (
-                  <>
-                    {/* Table Header - Fixed */}
-                    <div style={{
-                      backgroundColor: '#f97316',
-                      color: 'white',
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 1.2fr 1.8fr 1.2fr 1fr 1.2fr',
-                      gap: '8px',
-                      padding: '12px',
-                      fontWeight: 'bold',
-                      fontSize: '13px',
-                      position: 'sticky',
-                      top: 0,
-                      zIndex: 10
-                    }}>
-                      <div>Event Title</div>
-                      <div>Type</div>
-                      <div>Industry Partner</div>
-                      <div>Date</div>
-                      <div>Duration (hrs)</div>
-                      <div>Department</div>
-                    </div>
-
-                    {/* Scrollable Table Body */}
-                    <div style={{
-                      maxHeight: '500px',
-                      overflowY: 'auto',
-                      overflowX: 'auto'
-                    }}>
-                      {eventsList.map((event, index) => (
-                        <div
-                          key={event.event_id}
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '2fr 1.2fr 1.8fr 1.2fr 1fr 1.2fr',
-                            gap: '8px',
-                            padding: '12px',
-                            backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa',
-                            borderBottom: '1px solid #e0e0e0',
-                            fontSize: '13px',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ fontWeight: '500' }}>{event.event_title}</div>
-                          <div>
-                            <span style={{
-                              backgroundColor: '#e0e7ff',
-                              color: '#4f46e5',
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: 'bold',
-                              display: 'inline-block'
-                            }}>
-                              {event.event_type}
-                            </span>
-                          </div>
-                          <div>{event.industry_partner || '—'}</div>
-                          <div>{event.event_date ? new Date(event.event_date).toLocaleDateString() : '—'}</div>
-                          <div>{event.duration_hours ? `${event.duration_hours}` : '—'}</div>
-                          <div>{event.department || '—'}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Table Statistics */}
-                    <div style={{
-                      padding: '15px',
-                      backgroundColor: '#f8f9fa',
-                      borderTop: '1px solid #e0e0e0',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(4, 1fr)',
-                      gap: '15px'
-                    }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#f97316', fontWeight: 'bold', fontSize: '20px' }}>
-                          {eventsList.length}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Showing</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#667eea', fontWeight: 'bold', fontSize: '20px' }}>
-                          {new Set(eventsList.map(e => e.event_type)).size}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Event Types</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#22c55e', fontWeight: 'bold', fontSize: '20px' }}>
-                          {new Set(eventsList.map(e => e.department).filter(Boolean)).size}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Departments</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#a855f7', fontWeight: 'bold', fontSize: '20px' }}>
-                          {eventsList.reduce((sum, e) => sum + (e.duration_hours || 0), 0)}
-                        </div>
-                        <div style={{ color: '#666', fontSize: '12px' }}>Total Hours</div>
-                      </div>
-                    </div>
-
-                    {/* Pagination */}
-                    {pagination.total_pages > 1 && (
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: '1rem',
-                        padding: '15px',
-                        backgroundColor: '#fff',
-                        borderTop: '1px solid #e0e0e0'
-                      }}>
-                        <button
-                          onClick={() => handlePageChange(pagination.page - 1)}
-                          disabled={pagination.page === 1}
-                          style={{
-                            padding: '8px 16px',
-                            backgroundColor: pagination.page === 1 ? '#ccc' : '#f97316',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: pagination.page === 1 ? 'not-allowed' : 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            transition: 'all 0.3s ease'
-                          }}
-                        >
-                          ← Previous
-                        </button>
-                        <span style={{ color: '#666', fontSize: '14px' }}>
-                          Page <strong>{pagination.page}</strong> of <strong>{pagination.total_pages}</strong>
-                          <span style={{ marginLeft: '8px', color: '#999' }}>
-                            ({formatNumber(pagination.total)} total events)
-                          </span>
-                        </span>
-                        <button
-                          onClick={() => handlePageChange(pagination.page + 1)}
-                          disabled={pagination.page >= pagination.total_pages}
-                          style={{
-                            padding: '8px 16px',
-                            backgroundColor: pagination.page >= pagination.total_pages ? '#ccc' : '#f97316',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: pagination.page >= pagination.total_pages ? 'not-allowed' : 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            transition: 'all 0.3s ease'
-                          }}
-                        >
-                          Next →
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="no-data" style={{
-                    textAlign: 'center',
-                    padding: '60px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px'
-                  }}>
-                    <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📋</span>
-                    <p style={{ color: '#666', fontSize: '16px' }}>No events found for the selected filters.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Upload Modal */}
-        <DataUploadModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          tableName={activeUploadTable}
-          token={token}
-          onUploadSuccess={refreshData}
-        />
+        ) : content}
       </div>
     </div>
   );

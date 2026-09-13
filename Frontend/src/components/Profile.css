@@ -312,4 +312,248 @@
     padding: 0.5rem 0.6rem;
     font-size: 0.82rem;
   }
+
+  .roles-btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .roles-btn-add {
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* ===== Truncate Panel Table ===== */
+
+.truncate-list-wrap {
+  overflow-x: auto;
+}
+
+.truncate-list-table .truncate-actions-col {
+  width: 210px;
+}
+
+.truncate-list-name {
+  font-family: monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+.truncate-list-actions {
+  white-space: nowrap;
+}
+
+.truncate-list-delete-btn {
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.8rem !important;
+}
+
+/* Card layout on mobile */
+@media (max-width: 600px) {
+  .truncate-list-wrap {
+    overflow-x: visible;
+  }
+
+  .truncate-list-table thead {
+    display: none;
+  }
+
+  .truncate-list-table,
+  .truncate-list-table tbody,
+  .truncate-list-row {
+    display: block;
+    width: 100%;
+  }
+
+  .truncate-list-row {
+    border: 1px solid #e3e1dc;
+    border-radius: 8px;
+    margin-bottom: 0.6rem;
+    padding: 0.75rem;
+    background: #fff;
+  }
+
+  .truncate-list-row:hover {
+    background: #fffbf0;
+  }
+
+  .truncate-list-name,
+  .truncate-list-actions {
+    display: block;
+    border: none;
+    padding: 0;
+  }
+
+  .truncate-list-name::before {
+    content: attr(data-label) ': ';
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #999;
+    display: block;
+    margin-bottom: 0.2rem;
+    font-family: inherit;
+  }
+
+  .truncate-list-name {
+    font-size: 0.88rem;
+    margin-bottom: 0.65rem;
+    color: #222;
+  }
+
+  .truncate-list-actions {
+    display: flex;
+    gap: 0.5rem;
+    white-space: normal;
+  }
+
+  .truncate-list-actions .roles-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .truncate-list-delete-btn {
+    font-size: 0.8rem !important;
+    padding: 0.4rem 0.5rem !important;
+  }
+}
+
+/* ── Profile admin button row ── */
+.profile-btn-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* ── Active panel button states ── */
+.page-upload-btn--active       { background-color: #f7a600 !important; color: #fff !important; }
+.page-upload-btn--active-danger { background-color: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
+
+/* ── Loading / status text ── */
+.profile-loading-text { color: #666; padding: 1rem 0; }
+
+/* ── Users table scroll wrapper ── */
+/* Fixed height sized for ~10 data rows before scrolling kicks in
+   (header ~42px + 10 rows @ ~44px each ≈ 480px, +margin for readability). */
+.profile-table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 520px;
+}
+.profile-users-table  { min-width: 700px; }
+.profile-users-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ── Status badges ── */
+.profile-status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.profile-status-active {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.profile-status-pending_verification {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.profile-status-deactivated {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ── Column widths ── */
+.profile-actions-col { width: 160px; }
+.profile-id-col      { width: 80px; }
+
+/* ── Select auto-width in table cell ── */
+.profile-role-select { width: auto; }
+
+/* ── Role ID display in table ── */
+.profile-role-id { font-weight: 600; color: #333; }
+
+/* ── Password edit column ── */
+.profile-pw-col   { display: flex; flex-direction: column; gap: 5px; }
+.profile-pw-input { width: 100%; min-width: 140px; }
+
+/* ── Masked password display ── */
+.profile-pw-dots { color: #999; font-size: 12px; }
+
+/* ── Export table grid (flex, replaces CSS grid) ── */
+.profile-export-grid        { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.profile-export-grid > *    { flex: 1 1 min(200px, 100%); }
+.profile-export-label       { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.profile-table-name         { font-size: 14px; color: #333; }
+
+/* ── Export action row ── */
+.profile-export-actions      { display: flex; gap: 10px; align-items: center; }
+.profile-export-download-btn { padding: 8px 16px; font-size: 14px; }
+
+/* ── Truncate panel ── */
+.roles-panel-title--danger { color: #991b1b; }
+.profile-truncate-desc     { color: #666; font-size: 0.875rem; margin: 0 0 1rem 0; }
+
+/* ===== Floating Toast ===== */
+
+.profile-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 2000;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 380px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  animation: toastSlideIn 0.3s ease;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-toast-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.profile-toast-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.profile-toast-info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+@media (max-width: 480px) {
+  .profile-toast {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: unset;
+  }
 }

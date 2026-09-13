@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
 
 grievance_bp = Blueprint('grievance', __name__)
 
@@ -25,7 +25,7 @@ def _fetch_yearly_data(query):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 def _fetch_summary(query):
@@ -47,11 +47,11 @@ def _fetch_summary(query):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @grievance_bp.route('/igrc/yearly', methods=['GET'])
-@token_required
+@token_optional
 def get_igrc_yearly(current_user_id):
     """
     Returns the year-wise grievance statistics for IGRC.
@@ -73,7 +73,7 @@ def get_igrc_yearly(current_user_id):
 
 
 @grievance_bp.route('/igrc/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_igrc_summary(current_user_id):
     """
     Returns aggregated IGRC grievance statistics.
@@ -93,7 +93,7 @@ def get_igrc_summary(current_user_id):
 
 
 @grievance_bp.route('/icc/yearly', methods=['GET'])
-@token_required
+@token_optional
 def get_icc_yearly(current_user_id):
     """
     Returns the year-wise complaint statistics for ICC.
@@ -115,7 +115,7 @@ def get_icc_yearly(current_user_id):
 
 
 @grievance_bp.route('/icc/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_icc_summary(current_user_id):
     """
     Returns aggregated ICC complaint statistics.

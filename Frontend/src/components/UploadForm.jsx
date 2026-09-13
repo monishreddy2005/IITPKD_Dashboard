@@ -1,71 +1,56 @@
-    import { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
+import { parseCSVToRecords } from '../utils/csvParse';
+import UploadErrorTable from './UploadErrorTable';
+import './UploadForm.css';
 
-// This list should match the 'UPDATABLE_TABLES' dict in the backend
+// Kept in sync with UPDATABLE_TABLES in Backend/app/upload.py — this used to
+// list stale/renamed table names (e.g. 'student', 'alumini', 'employee')
+// that never matched the backend whitelist, so uploads for those tables
+// always failed with a confusing "not allowed" error regardless of the CSV.
 const tableOptions = [
-  'student',
-  'course',
-  'department',
-  'alumni',
-  'alumini',  // Alternative spelling
-  'designation',
-  'employee',
-  'employment_history',
-  'additional_roles',
-  'externship_info',
-  'igrs_yearwise',
-  'icc_yearwise',
-  'ewd_yearwise',
-  'faculty_engagement',
-  'placement_summary',
-  'placement_companies',
-  'placement_packages',
-  'industry_courses',
-  'academic_program_launch',
-  'research_projects',
-  'research_mous',
-  'research_patents',
-  'research_publications',
-  'startups',
-  'innovation_projects',
-  'industry_events',
-  'industry_conclave',
-  'open_house',
-  'nptel_local_chapters',
-  'nptel_courses',
-  'nptel_enrollments',
-  'uba_projects',
-  'uba_events'
+  'department', 'alumni', 'employees', 'courses_table', 'student_table',
+  'externship_info', 'igrs_yearwise', 'icc_yearwise', 'ewd_yearwise', 'faculty_engagement',
+  'placement_summary', 'placement_companies', 'placement_packages',
+  'icsr_sponsered_projects', 'icsr_consultancy_projects', 'icsr_csr',
+  'research_mous', 'research_patents', 'research_publications',
+  'innovation_projects', 'iptif_startup_table', 'iptif_program_table',
+  'iptif_projects_table', 'iptif_facilities_table', 'techin_startup_table',
+  'techin_program_table', 'techin_skill_development_program',
+  'industry_events', 'industry_conclave', 'open_house',
+  'uba_projects', 'uba_events', 'outreach', 'nptel_courses', 'nirf_ranking', 'iar_mous',
 ];
 
-/**
- * A form for administrators to upload CSV files and bulk-update database tables.
- * @param {Object} props
- * @param {string} props.token - The user's auth token.
- * @param {Function} props.onLogout - Callback to log the user out.
- */
+function formatServerError(data, fallbackText) {
+  const message = data?.message || fallbackText;
+  const details = data?.details;
+  if (Array.isArray(details)) {
+    return { text: message, tableErrors: details, truncated: !!data?.truncated };
+  }
+  if (details && typeof details === 'object') {
+    if (data.error_type === 'missing_columns' && details.missing_in_csv) {
+      return { text: `${message} Missing: ${details.missing_in_csv.join(', ')}.`, tableErrors: null, truncated: false };
+    }
+    if (data.error_type === 'extra_columns' && details.extra_in_csv) {
+      return { text: `${message} Unexpected column(s): ${details.extra_in_csv.join(', ')}.`, tableErrors: null, truncated: false };
+    }
+  }
+  return { text: message, tableErrors: null, truncated: false };
+}
+
 function UploadForm({ token, onLogout }) {
   const [selectedTable, setSelectedTable] = useState(tableOptions[0]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [tableErrors, setTableErrors] = useState(null);
+  const [truncated, setTruncated] = useState(false);
   const [previewData, setPreviewData] = useState(null);
 
-  /**
-   * Parses the first 5 lines of a CSV text buffer into a preview table.
-   * @param {string} csvText - The raw CSV string.
-   */
   const parseCSVPreview = (csvText) => {
     try {
-      const lines = csvText.trim().split('\n');
-      const header = lines[0].split(',');
-      
-      // Get rows (next 5 lines, or fewer if the file is short)
-      const rows = lines.slice(1, 6)
-        .filter(line => line) // Filter out empty lines
-        .map(line => line.split(','));
-
-      setPreviewData({ header, rows });
+      const { headers, records } = parseCSVToRecords(csvText);
+      setPreviewData({ header: headers, rows: records.slice(0, 5) });
     } catch (e) {
       console.error("Failed to parse CSV preview:", e);
       setMessage('Error: Could not parse CSV for preview.');
@@ -77,7 +62,7 @@ function UploadForm({ token, onLogout }) {
     const file = event.target.files[0];
     setSelectedFile(file);
     setMessage('');
-    
+    setTableErrors(null);
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => parseCSVPreview(e.target.result);
@@ -90,6 +75,7 @@ function UploadForm({ token, onLogout }) {
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
     setMessage('');
+    setTableErrors(null);
   };
 
   const handleSubmit = async (event) => {
@@ -102,18 +88,18 @@ function UploadForm({ token, onLogout }) {
 
     setIsLoading(true);
     setMessage('');
+    setTableErrors(null);
 
     const formData = new FormData();
     formData.append('table_name', selectedTable);
     formData.append('csv_file', selectedFile);
 
-    // Validate token before making request
     if (!token) {
       setMessage('Error: No authentication token found. Please log in again.');
       setIsLoading(false);
       return;
     }
-    
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/api/upload-csv`,
@@ -127,29 +113,21 @@ function UploadForm({ token, onLogout }) {
 
       setMessage(`Success: ${response.data.message}`);
       setSelectedFile(null);
-      setPreviewData(null); // Clear preview
-      event.target.reset(); // Reset the form
-      
+      setPreviewData(null);
+      event.target.reset();
+
     } catch (error) {
-      let errorMessage = 'An unknown error occurred.';
-      if (error.response) {
-        // Use the specific error message from the backend
-        errorMessage = error.response.data.message;
-        
-        // Handle token errors specifically
+      if (error.response?.data) {
+        let { text, tableErrors: errs, truncated: trunc } = formatServerError(error.response.data, 'An unknown error occurred.');
         if (error.response.status === 401) {
-           errorMessage += " Your session may have expired. Please log out and log back in.";
+          text += " Your session may have expired. Please log out and log back in.";
         }
-        
-        // (rest of the error handling logic is the same)
-        if (error.response.data.details) {
-          // ... (same as before)
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
+        setMessage(`Error: ${text}`);
+        setTableErrors(errs);
+        setTruncated(trunc);
+      } else {
+        setMessage(`Error: ${error.message || 'An unknown error occurred.'}`);
       }
-      
-      setMessage(`Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -157,26 +135,25 @@ function UploadForm({ token, onLogout }) {
 
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="uf-header">
         <h2>Update Database from CSV</h2>
-        <button onClick={onLogout} style={{ height: 'fit-content' }}>
+        <button onClick={onLogout} className="uf-logout-btn">
           Logout
         </button>
       </div>
       <p>Select a table, upload a CSV file, and preview it before updating.</p>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {/* --- Form Inputs (same as before) --- */}
+
+      <form onSubmit={handleSubmit} className="uf-form">
         <div>
-          <label htmlFor="table-select" style={{ marginRight: '1rem' }}>
+          <label htmlFor="table-select" className="uf-label">
             Table to Update:
           </label>
-          <select 
+          <select
             id="table-select"
             value={selectedTable}
             onChange={handleTableChange}
             disabled={isLoading}
-            style={{ padding: '0.5em', fontSize: '1em' }}
+            className="uf-select"
           >
             {tableOptions.map((table) => (
               <option key={table} value={table}>
@@ -187,7 +164,7 @@ function UploadForm({ token, onLogout }) {
         </div>
 
         <div>
-          <label htmlFor="file-input" style={{ marginRight: '1rem' }}>
+          <label htmlFor="file-input" className="uf-label">
             Upload CSV File:
           </label>
           <input
@@ -198,12 +175,11 @@ function UploadForm({ token, onLogout }) {
             disabled={isLoading}
           />
         </div>
-        
-        {/* --- NEW: CSV Preview Table --- */}
+
         {previewData && (
           <div className="csv-preview">
             <h4>CSV Preview (First 5 Rows)</h4>
-            <table style={{ width: '100%', tableLayout: 'auto' }}>
+            <table className="uf-preview-table">
               <thead>
                 <tr>
                   {previewData.header.map((col, index) => (
@@ -212,10 +188,10 @@ function UploadForm({ token, onLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {previewData.rows.map((row, rowIndex) => (
+                {previewData.rows.map((record, rowIndex) => (
                   <tr key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={cellIndex}>{cell}</td>
+                    {previewData.header.map((col, cellIndex) => (
+                      <td key={cellIndex}>{record[col]}</td>
                     ))}
                   </tr>
                 ))}
@@ -223,27 +199,21 @@ function UploadForm({ token, onLogout }) {
             </table>
           </div>
         )}
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           disabled={!selectedFile || isLoading}
         >
           {isLoading ? 'Uploading...' : 'Upload and Update'}
         </button>
       </form>
-      
-      {/* Display messages (success or error) */}
+
       {message && (
-        <p 
-          style={{ 
-            color: message.startsWith('Error') ? 'red' : 'green', 
-            marginTop: '1rem',
-            whiteSpace: 'pre-wrap'
-          }}
-        >
+        <p className={`uf-msg ${message.startsWith('Error') ? 'uf-msg--error' : 'uf-msg--success'}`}>
           {message}
         </p>
       )}
+      {tableErrors && <UploadErrorTable errors={tableErrors} truncated={truncated} />}
     </div>
   );
 }

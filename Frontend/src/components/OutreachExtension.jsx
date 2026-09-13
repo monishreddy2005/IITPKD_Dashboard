@@ -11,56 +11,56 @@ const OUTREACH_EXTENSION_SECTIONS = [
     title: 'Open House',
     description: 'Community Engagement Events',
     route: '/outreach-extension/open-house',
-    allowedRoles: [3]
+    allowedRoles: [3, 15]
   },
   {
     code: '📚',
-    title: 'NPTEL - CCE',
+    title: 'CCE',
     description: 'Centre for Continuing Education',
     route: '/outreach-extension/nptel',
-    allowedRoles: [3]
+    allowedRoles: [3, 16]
   },
   {
     code: '🌾',
     title: 'Unnat Bharat Abhiyan',
     description: 'Rural Development Initiative',
     route: '/outreach-extension/uba',
-    allowedRoles: [3]
+    allowedRoles: [3, 17]
   },
   {
     code: '🔬',
     title: 'Science Quest',
     description: 'Science outreach and laboratory programmes for school students',
     route: '/outreach-extension/outreach?program=science_quest',
-    allowedRoles: [3]
+    allowedRoles: [3, 18]
   },
   {
     code: '📐',
     title: 'Palakkad Math Circle',
     description: 'Mathematics enrichment sessions for school students',
     route: '/outreach-extension/outreach?program=palakkad_math_circle',
-    allowedRoles: [3]
+    allowedRoles: [3, 19]
   },
   {
     code: '🌠',
     title: 'Pale Blue Dot',
     description: 'Astronomy and space science public lecture series',
     route: '/outreach-extension/outreach?program=pale_blue_dot',
-    allowedRoles: [3]
+    allowedRoles: [3, 20]
   },
   {
     code: '🏫',
     title: 'Institute Visits',
     description: 'Organised visits by institutions to the IIT Palakkad campus',
     route: '/outreach-extension/outreach?program=institute_visits',
-    allowedRoles: [3]
+    allowedRoles: [3, 21]
   },
   {
     code: '🤝',
     title: 'NSS Activities',
     description: 'National Service Scheme community service initiatives',
     route: '/outreach-extension/outreach?program=nss_activities',
-    allowedRoles: [3]
+    allowedRoles: [3, 22]
   },
 ];
 
@@ -68,8 +68,7 @@ function OutreachExtension({ user }) {
   const [showPublicView, setShowPublicView] = useState(false);
   const roleId = user?.role_id;
 
-  // If public user → always show public view
-  if (roleId === 1) {
+  if (!user || roleId === 0 || roleId === 1) {
     return <OutreachPublicView user={user} />;
   }
 
@@ -79,13 +78,12 @@ function OutreachExtension({ user }) {
       <div className="page-container">
         <div className="page-content">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn mb-space-4"
             onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
           >
             ← Back to Admin View
           </button>
-          <OutreachPublicView user={user} />
+          <OutreachPublicView user={user} embedded />
         </div>
       </div>
     );
@@ -95,14 +93,16 @@ function OutreachExtension({ user }) {
     <div className="page-container">
       <div className="page-content">
         {/* Public view button for non-public users */}
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            className="upload-data-btn"
-            onClick={() => setShowPublicView(true)}
-          >
-            View Public Page
-          </button>
-        </div>
+        {roleId !== 0 && roleId !== 1 && (
+          <div className="mb-space-4">
+            <button
+              className="page-upload-btn"
+              onClick={() => setShowPublicView(true)}
+            >
+              View Public Page
+            </button>
+          </div>
+        )}
 
         <div className="people-campus-grid">
           {OUTREACH_EXTENSION_SECTIONS.map((section) => {
@@ -110,6 +110,7 @@ function OutreachExtension({ user }) {
             const isSuperAdmin = roleId === 3;
             const isAllowed =
               isSuperAdmin ||
+              roleId === 1 ||
               (section.allowedRoles && section.allowedRoles.includes(roleId));
 
             if (!isAllowed) {

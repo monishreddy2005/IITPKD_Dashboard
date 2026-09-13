@@ -20,65 +20,56 @@ function PeopleCampus({ user }) {
       title: 'Academic Section',
       route: '/people-campus/academic-section',
       description: 'Academic programs and statistics',
-      // 🔹 ADDITION
       allowedRoles: [3, 4]
     },
     {
       title: 'Administrative Section',
       route: '/people-campus/administrative-section',
       description: 'Administrative services and information',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 2]
     },
     {
       title: 'IGRC',
       route: '/people-campus/igrc',
       description: 'Institute Grievance Redressal Committee',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 7]
     },
     {
       title: 'ICC',
       route: '/people-campus/icc',
       description: 'Internal Complaints Committee',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 8]
     },
     {
       title: 'EWD',
       route: '/people-campus/ewd',
       description: 'Engineering & Works Division sustainability metrics',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 6]
     },
     {
       title: 'IAR',
       route: '/people-campus/iar',
       description: 'International & Alumni Relations insights',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 5]
     }
   ];
 
-  // 🔹 ADDITION: If public user → always show public view
-  if (roleId === 1) {
+  if (!user || roleId === 0 || roleId === 1) {
     return <PeopleCampusPublicView user={user} />;
   }
-
   // 🔹 ADDITION: If non-public user explicitly chooses public view
   if (showPublicView) {
     return (
       <div className="page-container">
         <div className="page-content">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn mb-space-4"
             onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
           >
             ← Back to Admin View
           </button>
 
-          <PeopleCampusPublicView user={user} />
+          <PeopleCampusPublicView user={user} embedded />
         </div>
       </div>
     );
@@ -88,9 +79,9 @@ function PeopleCampus({ user }) {
     <div className="page-container">
       <div className="page-content">
         {/* 🔹 ADDITION: Public view button for non-public users */}
-        <div style={{ marginBottom: '1rem' }}>
+        <div className="mb-space-4">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn"
             onClick={() => setShowPublicView(true)}
           >
             View Public Page

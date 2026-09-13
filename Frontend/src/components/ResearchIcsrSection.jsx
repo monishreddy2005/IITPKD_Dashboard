@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
@@ -10,43 +10,52 @@ import {
   Tooltip,
   Legend,
   BarChart,
-  Bar
+  Bar, LabelList
 } from 'recharts';
 
 import {
   fetchResearchFilterOptions,
   fetchIcsrSummary,
   fetchIcsrProjectTrend,
-  fetchConsultancyTrend,
   fetchIcsrProjectList,
+  fetchPatentStats,
   fetchMouTrend,
   fetchMouList,
-  fetchPatentStats,
-  fetchPatentList
 } from '../services/researchStats';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
-
-import DataUploadModal from './DataUploadModal';
+import ExportMenu from './ExportMenu';
+import CustomTooltip from './CustomTooltip';
+import DataUploadModal from './LazyDataUploadModal';
+import ChartExpandModal from './ChartExpandModal';
+import LastUpdated from './LastUpdated';
+import ShareButton from './ShareButton';
 
 import './Page.css';
 import './AcademicSection.css';
 import './GrievanceSection.css';
 import './ResearchSection.css';
+import './ResearchIcsrSection.css';
 
-const PATENT_STATUS_ORDER = ['Filed', 'Granted', 'Published'];
+const PATENT_STATUS_ORDER = ['Filed', 'Granted'];
 const PATENT_COLORS = {
   Filed: '#6366f1',
   Granted: '#22c55e',
-  Published: '#f97316'
+};
+
+const MOU_COLOR = '#a855f7';
+
+const formatDate = (value) => {
+  if (!value) return '–';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '–';
+  return date.toLocaleDateString('en-IN', { year: 'numeric', month: 'short' });
 };
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(Number(value) || 0);
 
 const formatCurrency = (value) => {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    return '₹0';
-  }
+  if (!Number.isFinite(numeric)) return '₹0';
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -54,64 +63,27 @@ const formatCurrency = (value) => {
   }).format(numeric);
 };
 
-const formatScaledCurrency = (value) => {
+const formatCompactCurrency = (value) => {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric) || numeric === 0) {
-    return { value: '0', unit: '' };
+  if (!Number.isFinite(numeric) || numeric === 0) return '₹0';
+  if (numeric >= 10000000) {
+    return '₹' + (numeric / 10000000).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' Cr';
+  } else if (numeric >= 100000) {
+    return '₹' + (numeric / 100000).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' L';
   }
-
-  const crore = 10000000;
-  const lakh = 100000;
-
-  if (numeric >= crore) {
-    const crores = numeric / crore;
-    return {
-      value: new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: crores % 1 === 0 ? 0 : 2
-      }).format(crores),
-      unit: crores === 1 ? 'Crore' : 'Crores'
-    };
-  } else if (numeric >= lakh) {
-    const lakhs = numeric / lakh;
-    return {
-      value: new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: lakhs % 1 === 0 ? 0 : 2
-      }).format(lakhs),
-      unit: lakhs === 1 ? 'Lakh' : 'Lakhs'
-    };
-  } else {
-    return {
-      value: new Intl.NumberFormat('en-IN', {
-        maximumFractionDigits: 0
-      }).format(numeric),
-      unit: ''
-    };
-  }
-};
-
-const formatDate = (value) => {
-  if (!value) return '–';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return '–';
-  }
-  return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'short'
-  });
+  return '₹' + formatNumber(numeric);
 };
 
 const buildPatentBreakdown = (source = {}) => ({
   Filed: Number(source?.Filed) || 0,
   Granted: Number(source?.Granted) || 0,
-  Published: Number(source?.Published) || 0
 });
 
-function ResearchIcsrSection({ user, isPublicView = false }) {
+function ResearchIcsrSection({ user, isPublicView = false, mouOnly = false }) {
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
+  const location = useLocation();
+  const token = localStorage.getItem('authToken');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
@@ -120,20 +92,22 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     project_years: [],
     project_statuses: [],
     project_types: [],
-    mou_years: [],
     patent_years: [],
     patent_statuses: []
   });
 
-  // Graph type selection with radio buttons
-  const [viewType, setViewType] = useState('projects');
+  const isRestrictedUser = typeof user === 'undefined' || user?.role_id === 0;
+
+  const [viewType, setViewType] = useState(mouOnly ? 'mou' : (location.state?.view || 'projects'));
+
+  const [projectsChartMode, setProjectsChartMode] = useState('bar');
+  const [patentsChartMode, setPatentsChartMode] = useState('bar');
 
   const [filters, setFilters] = useState({
     department: 'All',
     project_year: 'All',
     project_type: 'All',
     status: 'All',
-    mou_year: 'All',
     patent_year: 'All',
     patent_status: 'All'
   });
@@ -143,33 +117,106 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     consultancy_projects: 0,
     sanctioned_projects: 0,
     total_projects: 0,
-    total_mous: 0,
     total_patents: 0,
     consultancy_revenue: 0,
     patent_breakdown: buildPatentBreakdown()
   });
 
   const [projectTrend, setProjectTrend] = useState([]);
-  const [consultancyTrend, setConsultancyTrend] = useState([]);
   const [projectList, setProjectList] = useState([]);
+  const [patentStats, setPatentStats] = useState({ overall: buildPatentBreakdown(), yearly: [] });
+
+  const [mouFilters, setMouFilters] = useState({ mou_year: 'All' });
+  const [totalMous, setTotalMous] = useState(0);
   const [mouTrend, setMouTrend] = useState([]);
   const [mouList, setMouList] = useState([]);
-  const [patentStats, setPatentStats] = useState({ overall: buildPatentBreakdown(), yearly: [] });
-  const [patentList, setPatentList] = useState([]);
+  // Guest users can only ever see 'trend' — never 'directory'
+  const [mouViewType, setMouViewType] = useState('trend');
+  const [mouChartMode, setMouChartMode] = useState('bar');
 
   const [loading, setLoading] = useState(false);
+  // True once the first load completes. Used so filter refetches keep the page
+  // mounted (charts update in place) instead of flashing the full-page skeleton.
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState(null);
+  const [expandedChart, setExpandedChart] = useState(null);
 
-  const token = localStorage.getItem('authToken');
+  const loadData = useCallback(async () => {
+    if (mouOnly) return;
+    try {
+      setLoading(true);
+      setError(null);
 
+      const [
+        summaryResp,
+        projectTrendResp,
+        projectListResp,
+        patentStatsResp
+      ] = await Promise.all([
+        fetchIcsrSummary(filters, token),
+        fetchIcsrProjectTrend(filters, token),
+        fetchIcsrProjectList(filters, token),
+        fetchPatentStats(
+          { patent_year: filters.patent_year, patent_status: filters.patent_status },
+          token
+        )
+      ]);
+
+      setSummary({
+        funded_projects: summaryResp?.funded_projects || 0,
+        consultancy_projects: summaryResp?.consultancy_projects || 0,
+        sanctioned_projects: summaryResp?.sanctioned_projects ?? summaryResp?.total_projects ?? 0,
+        total_projects: summaryResp?.total_projects ?? summaryResp?.sanctioned_projects ?? 0,
+        total_patents: summaryResp?.total_patents || 0,
+        consultancy_revenue: summaryResp?.total_sanctioned_revenue || summaryResp?.consultancy_revenue || 0,
+        patent_breakdown: buildPatentBreakdown(summaryResp?.patent_breakdown)
+      });
+
+      setProjectTrend(projectTrendResp?.data || []);
+      setProjectList(projectListResp?.data || []);
+      setPatentStats({
+        overall: buildPatentBreakdown(patentStatsResp?.overall),
+        yearly: Array.isArray(patentStatsResp?.yearly) ? patentStatsResp.yearly : []
+      });
+
+    } catch (err) {
+      console.error('Failed to load ICSR analytics:', err);
+      setError(err.message || 'Failed to load ICSR analytics.');
+    } finally {
+      setLoading(false);
+      setHasLoaded(true);
+    }
+  }, [filters, token, mouOnly]);
+
+  const [chartIsMobile, setChartIsMobile] = useState(window.innerWidth <= 640);
   useEffect(() => {
+    const handle = () => setChartIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+
+  const isGuestUser = !user;
+  const isReadOnlyView = isPublicView || isGuestUser;
+  const isAdmin = user?.role_id === 3 || user?.role_id === 9;
+
+  const safeSetViewType = (type) => {
+    if (isRestrictedUser && type !== 'projects' && !(mouOnly && type === 'mou')) return;
+    setViewType(type);
+  };
+
+  // Safely switch MoU sub-view — guest users are locked to 'trend'
+  const safeSetMouViewType = (type) => {
+    if (isRestrictedUser && type === 'directory') return;
+    setMouViewType(type);
+  };
+
+  const serializedFilters = JSON.stringify(filters);
+  useEffect(() => {
+    let isMounted = true;
     const loadFilterOptions = async () => {
-      if (!token) {
-        setError('Authentication token not found. Please log in again.');
-        return;
-      }
       try {
-        const options = await fetchResearchFilterOptions(token);
+        const options = await fetchResearchFilterOptions(filters, token);
+        if (!isMounted) return;
         setFilterOptions({
           project_departments: Array.isArray(options?.project_departments) ? options.project_departments : [],
           project_years: Array.isArray(options?.project_years)
@@ -185,85 +232,43 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
         });
         setError(null);
       } catch (err) {
-        console.error('Failed to load research filter options:', err);
-        setError(err.message || 'Failed to load filter options.');
+        if (isMounted) {
+          console.error('Failed to load research filter options:', err);
+          setError(err.message || 'Failed to load filter options.');
+        }
       }
     };
-
     loadFilterOptions();
-  }, [token, uploadVersion]);
+    return () => { isMounted = false; };
+  }, [serializedFilters, filters, token, uploadVersion]);
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!token) return;
+    loadData();
+  }, [loadData, uploadVersion]);
+
+  // MoU data — runs for guest users only in mouOnly mode (trend-only), full for non-restricted
+  useEffect(() => {
+    if (!mouOnly && isRestrictedUser) return;
+
+    const loadMouData = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        // Guest users never need the list (directory is hidden), so skip that fetch
+        const trendResp = await fetchMouTrend({ mou_year: mouFilters.mou_year }, token);
+        const trend = trendResp?.data || [];
+        setMouTrend(trend);
+        setTotalMous(trend.reduce((sum, row) => sum + (Number(row.total) || 0), 0));
 
-        const [
-          summaryResp,
-          projectTrendResp,
-          consultancyTrendResp,
-          projectListResp,
-          mouTrendResp,
-          mouListResp,
-          patentStatsResp,
-          patentListResp
-        ] = await Promise.all([
-          fetchIcsrSummary(filters, token),
-          fetchIcsrProjectTrend(filters, token),
-          fetchConsultancyTrend(filters, token),
-          fetchIcsrProjectList(filters, token),
-          fetchMouTrend(token),
-          fetchMouList({ mou_year: filters.mou_year }, token),
-          fetchPatentStats(
-            {
-              patent_year: filters.patent_year,
-              patent_status: filters.patent_status
-            },
-            token
-          ),
-          fetchPatentList(
-            {
-              patent_year: filters.patent_year,
-              patent_status: filters.patent_status
-            },
-            token
-          )
-        ]);
-
-        setSummary({
-          funded_projects: summaryResp?.funded_projects || 0,
-          consultancy_projects: summaryResp?.consultancy_projects || 0,
-          sanctioned_projects:
-            summaryResp?.sanctioned_projects ?? summaryResp?.total_projects ?? 0,
-          total_projects: summaryResp?.total_projects ?? summaryResp?.sanctioned_projects ?? 0,
-          total_mous: summaryResp?.total_mous || 0,
-          total_patents: summaryResp?.total_patents || 0,
-          consultancy_revenue: summaryResp?.total_sanctioned_revenue || summaryResp?.consultancy_revenue || 0,
-          patent_breakdown: buildPatentBreakdown(summaryResp?.patent_breakdown)
-        });
-
-        setProjectTrend(projectTrendResp?.data || []);
-        setConsultancyTrend(consultancyTrendResp?.data || []);
-        setProjectList(projectListResp?.data || []);
-        setMouTrend(mouTrendResp?.data || []);
-        setMouList(mouListResp?.data || []);
-        setPatentStats({
-          overall: buildPatentBreakdown(patentStatsResp?.overall),
-          yearly: Array.isArray(patentStatsResp?.yearly) ? patentStatsResp.yearly : []
-        });
-        setPatentList(patentListResp?.data || []);
+        // Only fetch the directory list for non-restricted users
+        if (!isRestrictedUser) {
+          const listResp = await fetchMouList({ mou_year: mouFilters.mou_year }, token);
+          setMouList(listResp?.data || []);
+        }
       } catch (err) {
-        console.error('Failed to load ICSR analytics:', err);
-        setError(err.message || 'Failed to load ICSR analytics.');
-      } finally {
-        setLoading(false);
+        console.error('Failed to load MoU data:', err);
       }
     };
-
-    loadData();
-  }, [filters, token, uploadVersion]);
+    loadMouData();
+  }, [mouFilters, token, uploadVersion, mouOnly, isRestrictedUser]);
 
   const projectTrendChartData = useMemo(() => {
     if (!projectTrend.length) return [];
@@ -274,41 +279,27 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
     }));
   }, [projectTrend]);
 
-  const consultancyTrendChartData = useMemo(() => {
-    if (!consultancyTrend.length) return [];
-    return consultancyTrend.map((row) => ({
-      year: row.year,
-      funded_revenue: Number(row.funded_revenue) || 0,
-      consultancy_revenue: Number(row.consultancy_revenue) || 0
-    }));
-  }, [consultancyTrend]);
-
-  const mouTrendChartData = useMemo(() => {
-    if (!mouTrend.length) return [];
-    return mouTrend.map((row) => ({
-      year: row.year,
-      total: Number(row.total) || 0
-    }));
-  }, [mouTrend]);
-
   const patentTrendChartData = useMemo(() => {
     if (!patentStats.yearly.length) return [];
-    return patentStats.yearly.map((row) => {
-      const entry = { year: row.year };
-      PATENT_STATUS_ORDER.forEach((status) => {
-        entry[status] = Number(row[status]) || 0;
-      });
-      entry.total = PATENT_STATUS_ORDER.reduce((acc, status) => acc + entry[status], 0);
-      return entry;
-    });
+    return patentStats.yearly.map((row) => ({
+      year: row.year,
+      Filed: Number(row.Filed) || 0,
+      Granted: Number(row.Granted) || 0,
+    }));
   }, [patentStats.yearly]);
 
+  const mouTrendChartData = useMemo(() =>
+    mouTrend.map((row) => ({ year: row.year, total: Number(row.total) || 0 })),
+    [mouTrend]
+  );
+
   const handleFilterChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: value
-    }));
+    setFilters((prev) => ({ ...prev, [field]: value }));
   };
+
+  const handleMouFilterChange = (field, value) =>
+    setMouFilters((prev) => ({ ...prev, [field]: value }));
+  const handleClearMouFilters = () => setMouFilters({ mou_year: 'All' });
 
   const handleClearFilters = () => {
     setFilters({
@@ -316,1064 +307,904 @@ function ResearchIcsrSection({ user, isPublicView = false }) {
       project_year: 'All',
       project_type: 'All',
       status: 'All',
-      mou_year: 'All',
       patent_year: 'All',
       patent_status: 'All'
     });
   };
 
-  // Custom Tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{
-          backgroundColor: '#fff',
-          padding: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-        }}>
-          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ margin: '0', color: entry.color }}>
-              {entry.name}: {entry.name === 'revenue' ? formatCurrency(entry.value) : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className={isPublicView ? "" : "page-container"}>
       <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && (
+        {loading && !hasLoaded ? (
+          <div className="chart-skeleton-wrap">
+            <div className="chart-skeleton-heading" />
+            <div className="chart-skeleton" aria-label="Loading chart data…">
+              {[70,50,85,60,90,45,75,65].map((h,i) => (
+                <div key={i} className="chart-skeleton-bar" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="chart-skeleton-labels">
+              {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="chart-skeleton-label" />)}
+            </div>
+          </div>
+        ) : (
           <>
-            <button className="page-back-btn" onClick={() => navigate('/research')}>
-              ← Back to Research
-            </button>
-            <div className="page-header-row">
-              <div className="page-header-left">
-                <h1>Research · ICSR (Industrial Consultancy & Sponsored Research)</h1>
+            {!isReadOnlyView && (
+              <button className="page-back-btn" onClick={() => navigate('/research')}>
+                &larr; Back to Research
+              </button>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <LastUpdated tables={['icsr_consultancy_projects', 'icsr_sponsered_projects', 'icsr_csr', 'research_patents', 'research_mous']} />
+              <ShareButton />
+            </div>
+
+            {!isReadOnlyView && (
+              <div className="section-header">
+                <div className="section-header-left">
+                  <h1>
+                    {mouOnly
+                      ? 'Industry Collaboration'
+                      : 'Industrial Consultancy & Sponsored Research'}
+                  </h1>
+                </div>
+
+                {!isReadOnlyView && isAdmin && (
+                  <div className="section-header-actions">
+                    {!mouOnly && (
+                      <>
+                        <button
+                          className="page-upload-btn"
+                          onClick={() => navigate('/research/icsr_consultancy_prj')}
+                        >
+                          <span>&#9881;&#65039;</span> Manage Consultancy
+                        </button>
+                        <button
+                          className="page-upload-btn"
+                          onClick={() => navigate('/research/icsr_sponsered_prj')}
+                        >
+                          <span>&#9881;&#65039;</span> Manage Sponsored
+                        </button>
+                        <button
+                          className="page-upload-btn"
+                          onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}
+                        >
+                          <span>&#128228;</span> Consultancy
+                        </button>
+                        <button
+                          className="page-upload-btn"
+                          onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}
+                        >
+                          <span>&#128228;</span> Sponsored
+                        </button>
+                        <button
+                          className="page-upload-btn"
+                          onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}
+                        >
+                          <span>&#128228;</span> Patents
+                        </button>
+                      </>
+                    )}
+                    <button
+                      className="page-upload-btn"
+                      onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}
+                    >
+                      <span>&#128228;</span> MoUs
+                    </button>
+                  </div>
+                )}
               </div>
-              {user && user.role_id === 3 && (
-                <div className="page-header-actions">
-                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('icsr_consultancy_projects'); setIsUploadModalOpen(true); }}>
-                    <span>📤</span> Consultancy
-                  </button>
-                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('icsr_sponsered_projects'); setIsUploadModalOpen(true); }}>
-                    <span>📤</span> Sponsored
-                  </button>
-                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('research_mous'); setIsUploadModalOpen(true); }}>
-                    <span>📤</span> MoUs
-                  </button>
-                  <button className="page-upload-btn" onClick={() => { setActiveUploadTable('research_patents'); setIsUploadModalOpen(true); }}>
-                    <span>📤</span> Patents
-                  </button>
+            )}
+
+            {error && (
+              <div className="icsr-error">{error}</div>
+            )}
+
+            <div className="icsr-export-row">
+              <ExportMenu
+                elementId="icsr-summary-cards-container"
+                data={[{
+                  total_projects: summary.total_projects,
+                  funded_projects: summary.funded_projects,
+                  consultancy_projects: summary.consultancy_projects,
+                  total_revenue: summary.consultancy_revenue,
+                  patents_filed: summary.patent_breakdown.Filed,
+                  patents_granted: summary.patent_breakdown.Granted,
+                  total_patents: summary.total_patents,
+                  total_mous: totalMous
+                }]}
+                headers={['Total Projects', 'Sponsored', 'Consultancy', 'Revenue', 'Patents Filed', 'Patents Granted', 'Total MoUs']}
+                keys={['total_projects', 'funded_projects', 'consultancy_projects', 'total_revenue', 'patents_filed', 'patents_granted', 'total_mous']}
+                filename="icsr_summary"
+                title="ICSR Impact Summary"
+              />
+            </div>
+
+            {/* Summary Cards */}
+            <div id="icsr-summary-cards-container" className="icsr-cards-grid">
+              {!mouOnly && (
+                <>
+                  <div className="icsr-stat-card icsr-stat-card--indigo">
+                    <div className="icsr-stat-card-body">
+                      <div className="icsr-stat-card-header">
+                        <span className="icsr-stat-card-icon">&#128202;</span>
+                        <h3 className="icsr-stat-card-label">Total Projects</h3>
+                      </div>
+                      <div className="metric-value">{formatNumber(summary.total_projects)}</div>
+                      <div className="icsr-stat-card-status">
+                        <span className="icsr-stat-card-dot" />
+                        <span className="icsr-stat-card-subtext">Sponsored + Consultancy</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="icsr-stat-card icsr-stat-card--blue">
+                    <div className="icsr-stat-card-body">
+                      <div className="icsr-stat-card-header">
+                        <span className="icsr-stat-card-icon">&#127919;</span>
+                        <h3 className="icsr-stat-card-label">Sponsored Projects</h3>
+                      </div>
+                      <div className="metric-value">{formatNumber(summary.funded_projects)}</div>
+                      <div className="icsr-stat-card-status">
+                        <span className="icsr-stat-card-dot" />
+                        <span className="icsr-stat-card-subtext">Active + completed</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="icsr-stat-card icsr-stat-card--orange">
+                    <div className="icsr-stat-card-body">
+                      <div className="icsr-stat-card-header">
+                        <span className="icsr-stat-card-icon">&#128188;</span>
+                        <h3 className="icsr-stat-card-label">Consultancy</h3>
+                      </div>
+                      <div className="metric-value">{formatNumber(summary.consultancy_projects)}</div>
+                      <div className="icsr-stat-card-status">
+                        <span className="icsr-stat-card-dot" />
+                        <span className="icsr-stat-card-subtext">Active + Completed</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="icsr-stat-card icsr-stat-card--teal">
+                    <div className="icsr-stat-card-body">
+                      <div className="icsr-stat-card-header">
+                        <span className="icsr-stat-card-icon">&#128176;</span>
+                        <h3 className="icsr-stat-card-label">Total Project Value</h3>
+                      </div>
+                      <div className="metric-value-sm" title={'₹' + formatNumber(summary.consultancy_revenue)}>
+                        {formatCompactCurrency(summary.consultancy_revenue)}
+                      </div>
+                      <div className="icsr-stat-card-status">
+                        <span className="icsr-stat-card-dot" />
+                        <span className="icsr-stat-card-subtext">Sponsored + Consultancy</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Patent summary card removed per request */}
+                </>
+              )}
+
+              {(mouOnly || !isReadOnlyView) && (
+                <div className="icsr-stat-card icsr-stat-card--purple">
+                  <div className="icsr-stat-card-body">
+                    <div className="icsr-stat-card-header">
+                      <span className="icsr-stat-card-icon">&#129309;</span>
+                      <h3 className="icsr-stat-card-label">Total Research MoUs</h3>
+                    </div>
+                    <div className="metric-value">{formatNumber(totalMous)}</div>
+                    <div className="icsr-stat-card-status">
+                      <span className="icsr-stat-card-dot" />
+                      <span className="icsr-stat-card-subtext">External collaborations</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-          </>
-        )}
 
-        {error && <div className="error-message" style={{
-          padding: '10px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>{error}</div>}
+            {/* Global filter block — hidden when MoU view */}
+            {viewType !== 'mou' && (
+              <div className="icsr-filter-block">
+                <div className="filter-panel-header">
+                  <div className="icsr-filter-col">
+                    <h4 className="icsr-filter-h4">Filters</h4>
+                    {!mouOnly && (
+                      <div className="icsr-nav-tabs">
+                        <button
+                          className={`icsr-nav-tab${viewType === 'projects' ? ' icsr-nav-tab--active' : ''}`}
+                          onClick={() => safeSetViewType('projects')}
+                        >
+                          &#128202; Projects Trend
+                        </button>
+                        {/* Patents Trend, Projects Directory, MoUs tabs removed per request */}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className="clear-filters-btn"
+                    onClick={() => { handleClearFilters(); handleClearMouFilters(); }}
+                  >
+                    Clear Filters
+                  </button>
+                </div>
 
-        {/* Modern Summary Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px',
-          marginBottom: '30px'
-        }}>
-          {/* Total Sanctioned Projects Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(79, 70, 229, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>📊</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Total Projects</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.total_projects)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Funded + Consultancy</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Externally Funded Projects Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(59, 130, 246, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>🎯</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Funded Projects</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.funded_projects)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Active + completed</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Consultancy Projects Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(249, 115, 22, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>💼</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Consultancy</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.consultancy_projects)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Client engagements</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Consultancy Revenue Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(20, 184, 166, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>💰</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Revenue</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {(() => {
-                  const scaled = formatScaledCurrency(summary.consultancy_revenue);
-                  return (
+                <div className="icsr-filter-grid">
+                  {(viewType === 'projects' || viewType === 'projectsTable') && (
                     <>
-                      ₹{scaled.value}
-                      {scaled.unit && <span style={{ fontSize: '12px', marginLeft: '2px' }}>{scaled.unit}</span>}
+                      <div className="filter-group">
+                        <label>Department</label>
+                        <select
+                          value={filters.department}
+                          onChange={(e) => handleFilterChange('department', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Departments</option>
+                          {filterOptions.project_departments.map((d) => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label>Project Year</label>
+                        <select
+                          value={filters.project_year}
+                          onChange={(e) => handleFilterChange('project_year', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.project_years.map((y) => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label>Project Type</label>
+                        <select
+                          value={filters.project_type}
+                          onChange={(e) => handleFilterChange('project_type', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Types</option>
+                          {filterOptions.project_types.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label>Status</label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) => handleFilterChange('status', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Statuses</option>
+                          {filterOptions.project_statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
                     </>
-                  );
-                })()}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Sanctioned amount</span>
-              </div>
-            </div>
-          </div>
+                  )}
 
-          {/* Partnership MoUs Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(168, 85, 247, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>🤝</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>MoUs Signed</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.total_mous)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Collaborations</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Patents Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
-            borderRadius: '14px',
-            padding: '16px',
-            boxShadow: '0 8px 16px rgba(236, 72, 153, 0.2)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: '-15px',
-              right: '-15px',
-              width: '70px',
-              height: '70px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '50%'
-            }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px', background: 'rgba(255,255,255,0.2)', padding: '5px', borderRadius: '6px' }}>📝</span>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '21px', fontWeight: '500' }}>Patents</span>
-              </div>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>
-                {formatNumber(summary.patent_breakdown.Filed)} / {formatNumber(summary.patent_breakdown.Granted)} / {formatNumber(summary.patent_breakdown.Published)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '5px', height: '5px', background: '#4ade80', borderRadius: '50%' }} />
-                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>Filed/Granted/Published</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Radio Buttons - Moved Outside */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '20px',
-          marginBottom: '30px',
-          padding: '20px',
-          borderRadius: '12px'
-        }}>
-          <button
-            onClick={() => setViewType('projects')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'projects' ? '#4f46e5' : 'transparent',
-              color: viewType === 'projects' ? 'white' : '#333',
-              border: viewType === 'projects' ? '2px solid #4f46e5' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'projects' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📊 Projects Trend
-          </button>
-          <button
-            onClick={() => setViewType('mous')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'mous' ? '#a855f7' : 'transparent',
-              color: viewType === 'mous' ? 'white' : '#333',
-              border: viewType === 'mous' ? '2px solid #a855f7' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'mous' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            🤝 MoUs Trend
-          </button>
-          <button
-            onClick={() => setViewType('patents')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'patents' ? '#f97316' : 'transparent',
-              color: viewType === 'patents' ? 'white' : '#333',
-              border: viewType === 'patents' ? '2px solid #f97316' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'patents' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📝 Patents Trend
-          </button>
-          <button
-            onClick={() => setViewType('projectsTable')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'projectsTable' ? '#0ea5e9' : 'transparent',
-              color: viewType === 'projectsTable' ? 'white' : '#333',
-              border: viewType === 'projectsTable' ? '2px solid #0ea5e9' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'projectsTable' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📋 Projects Directory
-          </button>
-          <button
-            onClick={() => setViewType('mousTable')}
-            style={{
-              padding: '12px 24px',
-              backgroundColor: viewType === 'mousTable' ? '#ec4899' : 'transparent',
-              color: viewType === 'mousTable' ? 'white' : '#333',
-              border: viewType === 'mousTable' ? '2px solid #ec4899' : '2px solid #dee2e6',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: viewType === 'mousTable' ? 'bold' : 'normal',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            📋 MoUs Directory
-          </button>
-        </div>
-
-
-
-        {loading && (
-          <div className="loading-state">
-            <div className="loading-spinner" />
-            <p>Loading research analytics…</p>
-          </div>
-        )}
-
-        {!loading && (
-          <>
-            {/* Projects Trend Section */}
-            {viewType === 'projects' && (
-              <section className="chart-section" style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#fff',
-                borderRadius: '10px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <div className="chart-header" style={{ marginBottom: '20px' }}>
-                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
-                  </h2>
-                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                    Annual count of sponsored and consultancy projects.
-                  </p>
+                  {viewType === 'patents' && !isRestrictedUser && (
+                    <>
+                      <div className="filter-group">
+                        <label>Patent Year</label>
+                        <select
+                          value={filters.patent_year}
+                          onChange={(e) => handleFilterChange('patent_year', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Years</option>
+                          {filterOptions.patent_years.map((y) => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                      <div className="filter-group">
+                        <label>Patent Status</label>
+                        <select
+                          value={filters.patent_status}
+                          onChange={(e) => handleFilterChange('patent_status', e.target.value)}
+                          className="icsr-select"
+                        >
+                          <option value="All">All Statuses</option>
+                          {filterOptions.patent_statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                {/* Filters inside projects view */}
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button
-                      onClick={handleClearFilters}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#dc3545',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-
-                  <div className="filter-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '12px'
-                  }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-                      <select
-                        value={filters.department}
-                        onChange={(e) => handleFilterChange('department', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Departments</option>
-                        {filterOptions.project_departments.map((dept) => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
-                      <select
-                        value={filters.project_year}
-                        onChange={(e) => handleFilterChange('project_year', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.project_years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
-                      <select
-                        value={filters.project_type}
-                        onChange={(e) => handleFilterChange('project_type', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Types</option>
-                        {filterOptions.project_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
-                      <select
-                        value={filters.status}
-                        onChange={(e) => handleFilterChange('status', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Statuses</option>
-                        {filterOptions.project_statuses.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '8px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
-                    {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
-                    {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
-                    {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
-                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' &&
-                      <span>No filters applied</span>
-                    }
-                  </div>
+                <div className="icsr-active-filters">
+                  <strong>Active Filters:</strong>{' '}
+                  {(viewType === 'projects' || viewType === 'projectsTable') && (
+                    <>
+                      {filters.department !== 'All' && <span>&#127970; {filters.department}</span>}
+                      {filters.project_year !== 'All' && <span> &#128197; {filters.project_year}</span>}
+                      {filters.project_type !== 'All' && <span> &#128203; {filters.project_type}</span>}
+                      {filters.status !== 'All' && <span> &#9889; {filters.status}</span>}
+                    </>
+                  )}
+                  {viewType === 'patents' && !isRestrictedUser && (
+                    <>
+                      {filters.patent_year !== 'All' && <span>&#128197; {filters.patent_year}</span>}
+                      {filters.patent_status !== 'All' && <span> &#128204; {filters.patent_status}</span>}
+                    </>
+                  )}
                 </div>
+              </div>
+            )}
 
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={projectTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
-                      <Bar
-                        dataKey="funded"
-                        name="Sponsored Projects"
-                        stackId="a"
-                        fill="#6366f1"
-                        radius={[0, 0, 4, 4]}
-                        barSize={40}
+            <>
+              {/* Projects Trend */}
+              {viewType === 'projects' && (
+                <section className="icsr-chart-section">
+                  <div className="icsr-chart-header-row">
+                    <div className="chart-header">
+                      <h2 className="icsr-chart-title">
+                        <span className="icsr-chart-icon">&#128202;</span> Projects Trend
+                      </h2>
+                      <p className="chart-description">
+                        Annual count of sponsored and consultancy projects.
+                      </p>
+                    </div>
+                    <ExportMenu
+                      elementId="research-projects-trend-container"
+                      data={projectTrendChartData}
+                      headers={['Year', 'Sponsored Projects', 'Consultancy Projects']}
+                      keys={['year', 'funded', 'consultancy']}
+                      filename="research_projects_trend"
+                      title="Projects Trend"
+                    />
+                  </div>
+
+                  <div className="icsr-mode-btns">
+                    {['bar', 'trend'].map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setProjectsChartMode(mode)}
+                        className={`icsr-mode-btn${projectsChartMode === mode ? ' icsr-mode-btn--active-indigo' : ''}`}
+                      >
+                        {mode === 'bar' ? 'Bar' : 'Trend'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div
+                    id="research-projects-trend-container"
+                    className={`chart-container clickable-chart icsr-chart-area${!projectTrendChartData.length ? ' chart-has-empty' : ''}`}
+                    onClick={() => setExpandedChart({
+                      title: "Projects Trend",
+                      content: (
+                        <ResponsiveContainer width="100%" height={500}>
+                          {projectsChartMode === 'bar' ? (
+                            <BarChart data={projectTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                              <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                              <Bar dataKey="funded" name="Sponsored Projects" fill="#6366f1" radius={[6, 6, 0, 0]}>
+                                <LabelList dataKey="funded" position="top" style={{ fontSize: '12px', fontWeight: 700, fill: "#6366f1" }} />
+                              </Bar>
+                              <Bar dataKey="consultancy" name="Consultancy Projects" fill="#22c55e" radius={[6, 6, 0, 0]}>
+                                <LabelList dataKey="consultancy" position="top" style={{ fontSize: '12px', fontWeight: 700, fill: "#22c55e" }} />
+                              </Bar>
+                            </BarChart>
+                          ) : (
+                            <LineChart data={projectTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                              <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                              <Line type="linear" dataKey="funded" name="Sponsored Projects" stroke="#6366f1" strokeWidth={3} dot={{ r: 6 }} />
+                              <Line type="linear" dataKey="consultancy" name="Consultancy Projects" stroke="#22c55e" strokeWidth={3} dot={{ r: 6 }} />
+                            </LineChart>
+                          )}
+                        </ResponsiveContainer>
+                      )
+                    })}
+                  >
+                    <div className={`section-empty-state ${projectTrendChartData.length ? 'hidden' : ''}`}>
+                      <p>No information available for the selected filter</p>
+                    </div>
+                    <ResponsiveContainer width="100%" height={chartIsMobile ? 220 : 350}>
+                      {projectsChartMode === 'bar' ? (
+                        <BarChart data={projectTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 20, bottom: chartIsMobile ? 60 : 50 }} barCategoryGap="20%">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} width={32} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                          <Bar dataKey="funded" name="Sponsored Projects" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={18}>
+                            <LabelList dataKey="funded" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: "#6366f1" }} />
+                          </Bar>
+                          <Bar dataKey="consultancy" name="Consultancy Projects" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={18}>
+                            <LabelList dataKey="consultancy" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: "#22c55e" }} />
+                          </Bar>
+                        </BarChart>
+                      ) : (
+                        <LineChart data={projectTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 20, bottom: chartIsMobile ? 60 : 50 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: '11px' }} />
+                          <Line type="linear" dataKey="funded" name="Sponsored Projects" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }}>
+                            <LabelList dataKey="funded" position="top" offset={10} style={{ fontSize: '10px', fontWeight: 600, fill: "#6366f1" }} />
+                          </Line>
+                          <Line type="linear" dataKey="consultancy" name="Consultancy Projects" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 3 }}>
+                            <LabelList dataKey="consultancy" position="top" offset={10} style={{ fontSize: '10px', fontWeight: 600, fill: "#22c55e" }} />
+                          </Line>
+                        </LineChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </section>
+              )}
+
+              {/* Patents Trend */}
+              {viewType === 'patents' && !isRestrictedUser && (
+                <section className="icsr-chart-section">
+                  <div className="icsr-chart-header-row">
+                    <div className="chart-header">
+                      <h2 className="icsr-chart-title">
+                        <span className="icsr-chart-icon">&#128221;</span> Knowledge Transfer
+                      </h2>
+                      <p className="chart-description">
+                        Year-wise patent filings, grants, and publications.
+                      </p>
+                    </div>
+                    <ExportMenu
+                      elementId="research-patents-trend-container"
+                      data={patentTrendChartData}
+                      headers={['Year', 'Filed', 'Granted', 'Total']}
+                      keys={['year', 'Filed', 'Granted', 'total']}
+                      filename="research_patents_trend"
+                      title="Patents Trend"
+                    />
+                  </div>
+
+                  <div className="icsr-mode-btns">
+                    {['bar', 'trend'].map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setPatentsChartMode(mode)}
+                        className={`icsr-mode-btn${patentsChartMode === mode ? ' icsr-mode-btn--active-orange' : ''}`}
+                      >
+                        {mode === 'bar' ? 'Bar Chart' : 'Trend Line'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div
+                    id="research-patents-trend-container"
+                    className={`chart-container clickable-chart icsr-chart-area${!patentTrendChartData.length ? ' chart-has-empty' : ''}`}
+                    onClick={() => setExpandedChart({
+                      title: "Knowledge Transfer (Patents)",
+                      content: (
+                        <ResponsiveContainer width="100%" height={500}>
+                          {patentsChartMode === 'bar' ? (
+                            <BarChart data={patentTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }} barCategoryGap="20%">
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                              <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                              <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                              <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                              {PATENT_STATUS_ORDER.map((status) => (
+                                <Bar key={status} dataKey={status} name={status} fill={PATENT_COLORS[status]} radius={[6, 6, 0, 0]}>
+                                  <LabelList dataKey={status} position="top" style={{ fontSize: '12px', fontWeight: 700, fill: PATENT_COLORS[status] }} />
+                                </Bar>
+                              ))}
+                            </BarChart>
+                          ) : (
+                            <LineChart data={patentTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                              <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                              <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                              <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                              <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                              {PATENT_STATUS_ORDER.map((status) => (
+                                <Line key={status} type="linear" dataKey={status} name={status}
+                                  stroke={PATENT_COLORS[status]} strokeWidth={3}
+                                  dot={{ r: 6, fill: PATENT_COLORS[status] }} activeDot={{ r: 8 }}>
+                                  <LabelList dataKey={status} offset={10} position="top" style={{ fontSize: '12px', fontWeight: 700, fill: PATENT_COLORS[status] }} />
+                                </Line>
+                              ))}
+                            </LineChart>
+                          )}
+                        </ResponsiveContainer>
+                      )
+                    })}
+                  >
+                    <div className={`section-empty-state ${patentTrendChartData.length ? 'hidden' : ''}`}>
+                      <p>No information available for the selected filter</p>
+                    </div>
+                    <ResponsiveContainer width="100%" height={chartIsMobile ? 220 : 350}>
+                      {patentsChartMode === 'bar' ? (
+                        <BarChart data={patentTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 20, bottom: chartIsMobile ? 60 : 30 }} barCategoryGap="20%">
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} />
+                          <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                          {PATENT_STATUS_ORDER.map((status) => (
+                            <Bar key={status} dataKey={status} name={status} fill={PATENT_COLORS[status]} radius={[4, 4, 0, 0]} barSize={18}>
+                              <LabelList dataKey={status} position="top" style={{ fontSize: '10px', fontWeight: 600, fill: PATENT_COLORS[status] }} />
+                            </Bar>
+                          ))}
+                        </BarChart>
+                      ) : (
+                        <LineChart data={patentTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 20, bottom: chartIsMobile ? 60 : 30 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                          <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                          <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} />
+                          <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                          <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                          {PATENT_STATUS_ORDER.map((status) => (
+                            <Line key={status} type="linear" dataKey={status} name={status}
+                              stroke={PATENT_COLORS[status]} strokeWidth={2.5}
+                              dot={{ r: 5, fill: PATENT_COLORS[status] }} activeDot={{ r: 7 }}>
+                              <LabelList dataKey={status} offset={10} position="top" style={{ fontSize: '10px', fontWeight: 600, fill: PATENT_COLORS[status] }} />
+                            </Line>
+                          ))}
+                        </LineChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </section>
+              )}
+
+              {/* Projects Directory */}
+              {viewType === 'projectsTable' && !isRestrictedUser && (
+                <section className="icsr-chart-section">
+                  <div className="icsr-chart-header-row">
+                    <div className="chart-header">
+                      <h2 className="icsr-dir-title">
+                        <span>&#128203;</span> Projects Directory
+                      </h2>
+                      <p className="icsr-dir-count">
+                        {projectList.length} projects found
+                      </p>
+                    </div>
+                    <ExportMenu
+                      elementId="research-projects-directory-table"
+                      data={projectList}
+                      headers={['Title', 'PI', 'Type', 'Dept', 'Amount (₹)', 'Status']}
+                      keys={['project_title', 'principal_investigator', 'project_type', 'department', 'amount_sanctioned', 'status']}
+                      filename="research_projects_directory"
+                      title="Projects Directory"
+                      exportType="table"
+                    />
+                  </div>
+
+                  <div id="research-projects-directory-table">
+                    {chartIsMobile ? (
+                      <div className="icsr-mobile-cards">
+                        {projectList.map((p, i) => (
+                          <div key={p.project_id || i} className="icsr-proj-card">
+                            <div className="icsr-proj-card-title">{p.project_title}</div>
+                            <div className="icsr-proj-card-badges">
+                              <span className="icsr-proj-badge-type">{p.project_type}</span>
+                              <span className="icsr-proj-badge-dept">{p.department}</span>
+                              <span className={p.status === 'Ongoing' ? 'icsr-proj-badge-ongoing' : 'icsr-proj-badge-completed'}>
+                                {p.status}
+                              </span>
+                            </div>
+                            <div className="icsr-proj-card-stats">
+                              <div>
+                                <div className="icsr-proj-stat-label">Investigator</div>
+                                <div className="icsr-proj-stat-value">{p.principal_investigator}</div>
+                              </div>
+                              <div>
+                                <div className="icsr-proj-stat-label">Sanctioned Amount</div>
+                                <div className="icsr-proj-stat-amount">{formatCurrency(p.amount_sanctioned)}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {!projectList.length && (
+                          <div className="icsr-empty-state">
+                            No projects found for the selected filter
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="table-responsive icsr-proj-table-wrap">
+                        <table className="icsr-proj-table">
+                          <thead className="icsr-proj-thead">
+                            <tr>
+                              <th>Title</th>
+                              <th>PI</th>
+                              <th>Type</th>
+                              <th>Dept</th>
+                              <th>Amount</th>
+                              <th>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {projectList.map((p, i) => (
+                              <tr key={p.project_id || i} className="ricsr-tr" style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                                <td>{p.project_title}</td>
+                                <td>{p.principal_investigator}</td>
+                                <td>{p.project_type}</td>
+                                <td>{p.department}</td>
+                                <td>{formatCurrency(p.amount_sanctioned)}</td>
+                                <td>
+                                  <span className={p.status === 'Ongoing' ? 'icsr-proj-status--ongoing' : 'icsr-proj-status--completed'}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                            {!projectList.length && (
+                              <tr>
+                                <td colSpan={6} className="icsr-table-empty-cell">
+                                  No information available for the selected filter
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* MoU Section */}
+              {viewType === 'mou' && (!isRestrictedUser || mouOnly) && (
+                <section className="icsr-mou-section">
+                  {/* Top filter bar */}
+                  <div className="icsr-mou-filter-bar">
+                    <div className="icsr-mou-filter-top">
+                      <div className="icsr-mou-filter-left">
+                        <h4 className="icsr-filter-h4">Filters</h4>
+
+                        {/* Nav tabs — only for non-restricted, non-mouOnly users */}
+                        {!mouOnly && !isRestrictedUser && (
+                          <div className="icsr-nav-tabs">
+                            <button
+                              className={`icsr-nav-tab${viewType === 'projects' ? ' icsr-nav-tab--active' : ''}`}
+                              onClick={() => safeSetViewType('projects')}
+                            >
+                              &#128202; Projects Trend
+                            </button>
+                            {/* Patents Trend, Projects Directory, MoUs tabs removed per request */}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        className="clear-filters-btn"
+                        onClick={() => { handleClearFilters(); handleClearMouFilters(); }}
+                      >
+                        Clear Filters
+                      </button>
+                    </div>
+
+                    <div className="icsr-mou-filter-bottom">
+                      {/* Sub-view toggle — Directory button hidden for guest users */}
+                      <div className="icsr-mou-sub-btns">
+                        <button
+                          className={`icsr-mou-tab${mouViewType === 'trend' ? ' icsr-mou-tab--active-trend' : ''}`}
+                          onClick={() => safeSetMouViewType('trend')}
+                        >
+                          &#128200; MoUs Trend
+                        </button>
+
+                        {/* Directory button hidden for guest/restricted users */}
+                        {!isRestrictedUser && (
+                          <button
+                            className={`icsr-mou-tab${mouViewType === 'directory' ? ' icsr-mou-tab--active-directory' : ''}`}
+                            onClick={() => safeSetMouViewType('directory')}
+                          >
+                            &#128203; MoUs Directory
+                          </button>
+                        )}
+                      </div>
+
+                      {/* MoU Year filter hidden for guest/restricted users */}
+                      {!isRestrictedUser && (
+                        <div className="icsr-mou-year-filter">
+                          <label className="icsr-mou-year-label">MoU Year</label>
+                          <select
+                            value={mouFilters.mou_year}
+                            onChange={(e) => handleMouFilterChange('mou_year', e.target.value)}
+                            className="icsr-select"
+                          >
+                            <option value="All">All Years</option>
+                            {(filterOptions.mou_years || []).map((year) => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Chart / Table body */}
+                  <div className="icsr-mou-body">
+                    <div className="icsr-mou-header-row">
+                      <div>
+                        <h2 className="icsr-mou-title">
+                          <span>&#129309;</span>
+                          {mouViewType === 'trend' ? 'MoUs Trend' : 'MoUs Directory'}
+                        </h2>
+                        {mouViewType === 'directory' && !isRestrictedUser && (
+                          <p className="icsr-mou-count">
+                            {mouList.length} MoUs found
+                          </p>
+                        )}
+                      </div>
+                      <ExportMenu
+                        elementId={mouViewType === 'trend' ? "research-mou-trend-container" : "research-mou-directory-table"}
+                        data={mouViewType === 'trend' ? mouTrendChartData : mouList}
+                        headers={mouViewType === 'trend' ? ['Year', 'MoUs Signed'] : ['Partner', 'Focus', 'Signed', 'Valid Till']}
+                        keys={mouViewType === 'trend' ? ['year', 'total'] : ['partner_name', 'collaboration_nature', 'date_signed', 'validity_end']}
+                        filename={`research_mous_${mouViewType}`}
+                        title={mouViewType === 'trend' ? "MoUs Trend" : "MoUs Directory"}
                       />
-                      <Bar
-                        dataKey="consultancy"
-                        name="Consultancy Projects"
-                        stackId="a"
-                        fill="#22c55e"
-                        radius={[4, 4, 0, 0]}
-                        barSize={40}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-            )}
-
-            {/* MoUs Trend Section */}
-            {viewType === 'mous' && (
-              <section className="chart-section" style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#fff',
-                borderRadius: '10px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <div className="chart-header" style={{ marginBottom: '20px' }}>
-                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '24px' }}>🤝</span> MoUs Trend
-                  </h2>
-                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                    Yearly trend of Memorandum of Understanding signed.
-                  </p>
-                </div>
-
-                {/* Filters inside MoUs view */}
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button
-                      onClick={handleClearFilters}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#dc3545',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-
-                  <div className="filter-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr',
-                    gap: '12px'
-                  }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
-                      <select
-                        value={filters.mou_year}
-                        onChange={(e) => handleFilterChange('mou_year', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.mou_years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '8px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
-                    {filters.mou_year === 'All' &&
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
-
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={mouTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                      <Line
-                        type="monotone"
-                        dataKey="total"
-                        name="MoUs Signed"
-                        stroke="#a855f7"
-                        strokeWidth={3}
-                        dot={{ r: 6, fill: '#a855f7' }}
-                        activeDot={{ r: 8 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-            )}
-
-            {/* Patents Trend Section */}
-            {viewType === 'patents' && (
-              <section className="chart-section" style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#fff',
-                borderRadius: '10px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <div className="chart-header" style={{ marginBottom: '20px' }}>
-                  <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '24px' }}>📝</span> Patents Trend
-                  </h2>
-                  <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                    Year-wise patent filings, grants, and publications.
-                  </p>
-                </div>
-
-                {/* Filters inside patents view */}
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button
-                      onClick={handleClearFilters}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#dc3545',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-
-                  <div className="filter-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '12px'
-                  }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Year</label>
-                      <select
-                        value={filters.patent_year}
-                        onChange={(e) => handleFilterChange('patent_year', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.patent_years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
                     </div>
 
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Patent Status</label>
-                      <select
-                        value={filters.patent_status}
-                        onChange={(e) => handleFilterChange('patent_status', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Statuses</option>
-                        {filterOptions.patent_statuses.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* Trend view — always visible */}
+                    {mouViewType === 'trend' && (
+                      <>
+                        <div className="icsr-mode-btns">
+                          {['bar', 'trend'].map((mode) => (
+                            <button
+                              key={mode}
+                              onClick={() => setMouChartMode(mode)}
+                              className={`icsr-mode-btn${mouChartMode === mode ? ' icsr-mode-btn--active-purple' : ''}`}
+                            >
+                              {mode === 'bar' ? 'Bar' : 'Trend'}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div
+                          id="research-mou-trend-container"
+                          className={`chart-container clickable-chart icsr-mou-chart${!mouTrendChartData.length ? ' chart-has-empty' : ''}`}
+                          onClick={() => setExpandedChart({
+                            title: "MoUs Trend",
+                            content: (
+                              <ResponsiveContainer width="100%" height={500}>
+                                {mouChartMode === 'bar' ? (
+                                  <BarChart data={mouTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                    <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                                    <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                                    <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Bar dataKey="total" name="MoUs Signed" fill={MOU_COLOR} radius={[6, 6, 0, 0]}>
+                                      <LabelList dataKey="total" position="top" style={{ fontSize: '12px', fontWeight: 700, fill: MOU_COLOR }} />
+                                    </Bar>
+                                  </BarChart>
+                                ) : (
+                                  <LineChart data={mouTrendChartData} margin={{ top: 40, right: 30, left: 40, bottom: 80 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                    <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={80} />
+                                    <YAxis stroke="#666" tick={{ fontSize: 13, fontWeight: 600 }} />
+                                    <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                    <Line type="linear" dataKey="total" name="MoUs Signed" stroke={MOU_COLOR} strokeWidth={3} dot={{ r: 6 }} />
+                                  </LineChart>
+                                )}
+                              </ResponsiveContainer>
+                            )
+                          })}
+                        >
+                          <div className={`section-empty-state ${mouTrendChartData.length ? 'hidden' : ''}`}>
+                            <p>No information available for the selected filter</p>
+                          </div>
+                          <ResponsiveContainer width="100%" height={chartIsMobile ? 260 : 450}>
+                            {mouChartMode === 'bar' ? (
+                              <BarChart data={mouTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 40, bottom: chartIsMobile ? 60 : 30 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                                <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} />
+                                <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                                <Bar dataKey="total" name="MoUs Signed" fill={MOU_COLOR} radius={[4, 4, 0, 0]} barSize={28}>
+                                  <LabelList dataKey="total" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: MOU_COLOR }} />
+                                </Bar>
+                              </BarChart>
+                            ) : (
+                              <LineChart data={mouTrendChartData} margin={{ top: 30, right: 10, left: chartIsMobile ? 0 : 40, bottom: chartIsMobile ? 60 : 30 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 60 : 30} />
+                                <YAxis stroke="#666" tick={{ fontSize: 11 }} domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]} />
+                                <Tooltip content={<CustomTooltip hidePercentage={true} />} />
+                                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                                <Line type="linear" dataKey="total" name="MoUs Signed"
+                                  stroke={MOU_COLOR} strokeWidth={3}
+                                  dot={{ r: 6, fill: MOU_COLOR }} activeDot={{ r: 8 }}>
+                                  <LabelList dataKey="total" offset={10} position="top" style={{ fontSize: '10px', fontWeight: 600, fill: MOU_COLOR }} />
+                                </Line>
+                              </LineChart>
+                            )}
+                          </ResponsiveContainer>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Directory view — only rendered for non-restricted users */}
+                    {mouViewType === 'directory' && !isRestrictedUser && (
+                      <div id="research-mou-directory-table">
+                        {chartIsMobile ? (
+                          <div className="icsr-mobile-cards">
+                            {mouList.map((m, i) => (
+                              <div key={m.mou_id ?? i} className="icsr-mou-card">
+                                <div className="icsr-mou-card-partner">{m.partner_name}</div>
+                                <div className="icsr-mou-card-nature">{m.collaboration_nature}</div>
+                                <div className="icsr-mou-card-stats">
+                                  <div>
+                                    <div className="icsr-proj-stat-label">Date Signed</div>
+                                    <div className="icsr-proj-stat-value">{formatDate(m.date_signed)}</div>
+                                  </div>
+                                  <div>
+                                    <div className="icsr-proj-stat-label">Valid Till</div>
+                                    <div className="icsr-proj-stat-value">{formatDate(m.validity_end)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {!mouList.length && (
+                              <div className="icsr-empty-state">
+                                No MoUs found for the selected filter
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="table-responsive icsr-mou-table-wrap">
+                            <table className="icsr-mou-table">
+                              <thead className="icsr-mou-thead">
+                                <tr>
+                                  <th>Partner</th>
+                                  <th>Focus</th>
+                                  <th>Signed</th>
+                                  <th>Valid Till</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {mouList.map((m, i) => (
+                                  <tr key={m.mou_id ?? i} className="ricsr-tr" style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                                    <td>{m.partner_name}</td>
+                                    <td>{m.collaboration_nature}</td>
+                                    <td>{formatDate(m.date_signed)}</td>
+                                    <td>{formatDate(m.validity_end)}</td>
+                                  </tr>
+                                ))}
+                                {!mouList.length && (
+                                  <tr>
+                                    <td colSpan={4} className="icsr-table-empty-cell">
+                                      No information available for the selected filter
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
+                </section>
+              )}
+            </>
 
-                  {/* Active Filters Summary */}
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '8px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {filters.patent_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.patent_year}</span>}
-                    {filters.patent_status !== 'All' && <span style={{ marginRight: '8px' }}>📌 {filters.patent_status}</span>}
-                    {filters.patent_year === 'All' && filters.patent_status === 'All' &&
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
+            <DataUploadModal
+              isOpen={isUploadModalOpen}
+              onClose={() => setIsUploadModalOpen(false)}
+              tableName={activeUploadTable}
+              token={token}
+              onUploadSuccess={loadData}
+            />
 
-                <div className="chart-container">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={patentTrendChartData} margin={{ top: 10, right: 20, left: 40, bottom: 30 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                      <XAxis dataKey="year" stroke="#666" tick={{ fontSize: 11 }} />
-                      <YAxis stroke="#666" tick={{ fontSize: 11 }} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                      {PATENT_STATUS_ORDER.map((status) => (
-                        <Line
-                          key={status}
-                          type="monotone"
-                          dataKey={status}
-                          name={status}
-                          stroke={PATENT_COLORS[status]}
-                          strokeWidth={2.5}
-                          dot={{ r: 5, fill: PATENT_COLORS[status] }}
-                          activeDot={{ r: 7 }}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
-            )}
-
-            {/* Projects Directory Table */}
-            {viewType === 'projectsTable' && (
-              <section className="chart-section" style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#fff',
-                borderRadius: '10px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <div className="chart-header" style={{ marginBottom: '15px' }}>
-                  <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>📋</span> Projects Directory
-                  </h2>
-                  <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
-                    {projectList.length} projects found
-                  </p>
-                </div>
-
-                {/* Filters inside projects table view */}
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button
-                      onClick={handleClearFilters}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#dc3545',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-
-                  <div className="filter-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '12px'
-                  }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Department</label>
-                      <select
-                        value={filters.department}
-                        onChange={(e) => handleFilterChange('department', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Departments</option>
-                        {filterOptions.project_departments.map((dept) => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Year</label>
-                      <select
-                        value={filters.project_year}
-                        onChange={(e) => handleFilterChange('project_year', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.project_years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Type</label>
-                      <select
-                        value={filters.project_type}
-                        onChange={(e) => handleFilterChange('project_type', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Types</option>
-                        {filterOptions.project_types.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Project Status</label>
-                      <select
-                        value={filters.status}
-                        onChange={(e) => handleFilterChange('status', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Statuses</option>
-                        {filterOptions.project_statuses.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '8px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {filters.department !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {filters.department}</span>}
-                    {filters.project_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.project_year}</span>}
-                    {filters.project_type !== 'All' && <span style={{ marginRight: '8px' }}>📋 {filters.project_type}</span>}
-                    {filters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {filters.status}</span>}
-                    {filters.department === 'All' && filters.project_year === 'All' && filters.project_type === 'All' && filters.status === 'All' &&
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
-
-                <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#0ea5e9', color: 'white' }}>
-                      <tr>
-                        <th style={{ padding: '10px' }}>Title</th>
-                        <th style={{ padding: '10px' }}>PI</th>
-                        <th style={{ padding: '10px' }}>Type</th>
-                        <th style={{ padding: '10px' }}>Dept</th>
-                        <th style={{ padding: '10px' }}>Amount</th>
-                        <th style={{ padding: '10px' }}>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {projectList.map((p, i) => (
-                        <tr key={p.project_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
-                          <td style={{ padding: '8px' }}>{p.project_title}</td>
-                          <td style={{ padding: '8px' }}>{p.principal_investigator}</td>
-                          <td style={{ padding: '8px' }}>{p.project_type}</td>
-                          <td style={{ padding: '8px' }}>{p.department}</td>
-                          <td style={{ padding: '8px' }}>{formatCurrency(p.amount_sanctioned)}</td>
-                          <td style={{ padding: '8px' }}>{p.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
-
-            {/* MoUs Directory Table */}
-            {viewType === 'mousTable' && (
-              <section className="chart-section" style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#fff',
-                borderRadius: '10px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}>
-                <div className="chart-header" style={{ marginBottom: '15px' }}>
-                  <h2 style={{ margin: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🤝</span> MoUs Directory
-                  </h2>
-                  <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>
-                    {mouList.length} MoUs found
-                  </p>
-                </div>
-
-                {/* Filters inside MoUs table view */}
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '15px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                    <button
-                      onClick={handleClearFilters}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#dc3545',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-
-                  <div className="filter-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr',
-                    gap: '12px'
-                  }}>
-                    <div className="filter-group">
-                      <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>MoU Year</label>
-                      <select
-                        value={filters.mou_year}
-                        onChange={(e) => handleFilterChange('mou_year', e.target.value)}
-                        style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                      >
-                        <option value="All">All Years</option>
-                        {filterOptions.mou_years.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Active Filters Summary */}
-                  <div style={{
-                    marginTop: '12px',
-                    padding: '8px',
-                    backgroundColor: '#e9ecef',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
-                    <strong>Active Filters:</strong>{' '}
-                    {filters.mou_year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {filters.mou_year}</span>}
-                    {filters.mou_year === 'All' &&
-                      <span>No filters applied</span>
-                    }
-                  </div>
-                </div>
-
-                <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                    <thead style={{ position: 'sticky', top: 0, backgroundColor: '#ec4899', color: 'white' }}>
-                      <tr>
-                        <th style={{ padding: '10px' }}>Partner</th>
-                        <th style={{ padding: '10px' }}>Focus</th>
-                        <th style={{ padding: '10px' }}>Signed</th>
-                        <th style={{ padding: '10px' }}>Valid Till</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mouList.map((m, i) => (
-                        <tr key={m.mou_id} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f8f9fa' }}>
-                          <td style={{ padding: '8px' }}>{m.partner_name}</td>
-                          <td style={{ padding: '8px' }}>{m.collaboration_nature}</td>
-                          <td style={{ padding: '8px' }}>{formatDate(m.date_signed)}</td>
-                          <td style={{ padding: '8px' }}>{formatDate(m.validity_end)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
+            {/* Fullscreen Chart Modal */}
+            <ChartExpandModal
+              isOpen={!!expandedChart}
+              onClose={() => setExpandedChart(null)}
+              title={expandedChart?.title}
+            >
+              {expandedChart?.content}
+            </ChartExpandModal>
           </>
         )}
       </div>
-
-      {/* Upload Modal */}
-      <DataUploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        tableName={activeUploadTable}
-        token={token}
-      />
     </div>
   );
 }

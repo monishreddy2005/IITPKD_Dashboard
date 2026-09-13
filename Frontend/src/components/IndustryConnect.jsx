@@ -17,23 +17,26 @@ function IndustryConnect({ user }) {
 
   const sections = [
     {
+      title: 'Administrative Section',
+      route: '/industry-connect/administrative-section',
+      description: 'Faculty industry externships and collaborations',
+      allowedRoles: [3, 2]
+    },
+    {
       title: 'ICSR Section',
       route: '/industry-connect/icsr',
       description: 'Industry interaction events, workshops, and engagement activities',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 9]
     },
     {
       title: 'Industry-Academia Conclave',
       route: '/industry-connect/conclave',
       description: 'Year-wise conclave information, themes, and participating companies',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 12]
     }
   ];
 
-  // 🔹 ADDITION: If public user → always show public view
-  if (roleId === 1) {
+  if (!user || roleId === 0 || roleId === 1) {
     return <IndustryConnectPublicView user={user} />;
   }
 
@@ -43,14 +46,13 @@ function IndustryConnect({ user }) {
       <div className="page-container">
         <div className="page-content">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn mb-space-4"
             onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
           >
             ← Back to Admin View
           </button>
 
-          <IndustryConnectPublicView user={user} />
+          <IndustryConnectPublicView user={user} embedded />
         </div>
       </div>
     );
@@ -59,15 +61,17 @@ function IndustryConnect({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-       {/* 🔹 ADDITION: Public view button for non-public users */}
-        <div style={{ marginBottom: '1rem' }}>
+        {/* 🔹 ADDITION: Public view button for non-public users */}
+        {roleId !== 0 && roleId !== 1 && (
+          <div className="mb-space-4">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn"
             onClick={() => setShowPublicView(true)}
           >
             View Public Page
           </button>
         </div>
+        )}
 
         <div className="people-campus-grid">
           {sections.map((section, index) => {
@@ -76,6 +80,7 @@ function IndustryConnect({ user }) {
             const isSuperAdmin = roleId === 3;
             const isAllowed =
               isSuperAdmin ||
+              roleId === 1 ||
               (section.allowedRoles && section.allowedRoles.includes(roleId));
 
             if (!isAllowed) {

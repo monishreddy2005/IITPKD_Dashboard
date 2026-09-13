@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '../utils/cachedAxios';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/iar`;
 
@@ -26,9 +26,10 @@ const handleError = (error, defaultMessage) => {
   throw new Error('Network error. Please check if the backend server is running.');
 };
 
-export const fetchFilterOptions = async (token) => {
+export const fetchFilterOptions = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/filter-options`, authHeaders(token));
+    const query = buildQueryParams(filters);
+    const response = await axios.get(`${API_BASE_URL}/filter-options${query ? `?${query}` : ''}`, authHeaders(token));
     return response.data;
   } catch (error) {
     handleError(error, 'Failed to fetch filter options');
@@ -74,4 +75,35 @@ export const fetchOutcomeBreakdown = async (filters, token) => {
     handleError(error, 'Failed to fetch outcome breakdown');
   }
 };
+
+export const fetchIarMouFilterOptions = async (filters, token) => {
+  try {
+    const query = buildQueryParams(filters);
+    const response = await axios.get(`${API_BASE_URL}/mous/filter-options${query ? `?${query}` : ''}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch IAR MoU filter options');
+  }
+};
+
+export const fetchIarMouTrend = async (filters, token) => {
+  try {
+    const query = buildQueryParams(filters);
+    const response = await axios.get(`${API_BASE_URL}/mous/trend?${query}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch IAR MoU trend');
+  }
+};
+
+export const fetchIarMouList = async (filters, token) => {
+  try {
+    const query = buildQueryParams(filters);
+    const response = await axios.get(`${API_BASE_URL}/mous/list?${query}`, authHeaders(token));
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Failed to fetch IAR MoU records');
+  }
+};
+
 

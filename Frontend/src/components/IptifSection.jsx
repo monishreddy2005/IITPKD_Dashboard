@@ -1,14 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer,
   LineChart,
   Line,
+  BarChart,
+  Bar,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Legend
+  Legend,
+  LabelList
 } from 'recharts';
 import {
   fetchIptifSummary,
@@ -19,30 +22,121 @@ import {
   fetchIptifFilterOptions
 } from '../services/iptifStats';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
-import DataUploadModal from './DataUploadModal';
+import DataUploadModal from './LazyDataUploadModal';
+import LastUpdated from './LastUpdated';
+import ShareButton from './ShareButton';
 import './Page.css';
 import './PeopleCampus.css';
+import './IptifSection.css';
+import ExportMenu from './ExportMenu';
+import ChartExpandModal from './ChartExpandModal';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
+const CONTENT_HEIGHT = 480;
+const TABLE_BODY_HEIGHT = CONTENT_HEIGHT - 44;
+
+const TRANSITION_STYLE = `
+  @keyframes iptif-fade-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.995); }
+    to   { opacity: 1; transform: translateY(0)   scale(1);     }
+  }
+  .iptif-anim {
+    animation: iptif-fade-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .iptif-filter-panel {
+    overflow: hidden;
+    transition: max-height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity    0.30s cubic-bezier(0.22, 1, 0.36, 1),
+                transform  0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .iptif-filter-panel.open  { max-height: 300px; opacity: 1; transform: translateY(0);    }
+  .iptif-filter-panel.shut  { max-height: 0;     opacity: 0; transform: translateY(-6px); }
+  .iptif-tab-btn {
+    padding: 9px 22px;
+    border-radius: 50px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background 0.22s, color 0.22s, border-color 0.22s, box-shadow 0.22s, transform 0.15s;
+  }
+  .iptif-tab-btn:hover  { transform: translateY(-1px); }
+  .iptif-tab-btn:active { transform: translateY(0); }
+  .iptif-mode-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+  }
+  .iptif-mode-btn:hover  { transform: translateY(-1px); }
+  .iptif-mode-btn:active { transform: translateY(0); }
+  .iptif-summary-card {
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1),
+                box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+    user-select: none;
+  }
+  .iptif-summary-card:hover  { transform: translateY(-4px) scale(1.02); }
+  .iptif-summary-card:active { transform: scale(0.97); }
+`;
+
+function injectStyle() {
+  if (document.getElementById('iptif-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'iptif-styles';
+  s.textContent = TRANSITION_STYLE;
+  document.head.appendChild(s);
+}
+
+const VIEWS = [
+  { id: 'projects',   label: 'Projects Trend',    color: '#667eea', icon: '📊' },
+  { id: 'programs',   label: 'Programs Trend',    color: '#f093fb', icon: '🎓' },
+  { id: 'startups',   label: 'Startups Growth',   color: '#43e97b', icon: '🚀' },
+  { id: 'facilities', label: 'Facilities Revenue', color: '#f97316', icon: '🏭' },
+];
+
 function IptifSection({ user, isPublicView = false }) {
+  injectStyle();
+
   const uploadVersion = useUploadRefresh();
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
+
+  const isGuestUser = !user;
+  const isRestricted = typeof user === 'undefined' || user?.role_id === 0;
+  const isReadOnlyView = isPublicView || isGuestUser;
+  const isAdmin = user?.role_id === 3 || user?.role_id === 14;
+  // Facilities Revenue is internal data — hide it from guests / public viewers.
+  const hideFacilities = isRestricted || isReadOnlyView;
+  // Startup revenue column is hidden from guests only (unauthenticated or the role-0 guest account);
+  // every authenticated role — including admins — still sees it.
+  const hideRevenue = isGuestUser || user?.role_id === 0;
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
 
-  // View type selection with radio buttons
-  const [viewType, setViewType] = useState('projects'); // projects, programs, startups, facilities
+  const [viewType, setViewType] = useState('projects');
+  const [chartMode, setChartMode] = useState('bar');
 
-  const [summary, setSummary] = useState({
-    total_projects: 0,
-    total_programs: 0,
-    total_startups: 0
-  });
-
-  const [trendData, setTrendData] = useState([]);
-  const [tableData, setTableData] = useState([]);
+  const [summary, setSummary] = useState({ total_projects: 0, total_programs: 0, total_startups: 0 });
+  const [projectsTrend, setProjectsTrend] = useState([]);
+  const [projectsTable, setProjectsTable] = useState([]);
+  const [programsTrend, setProgramsTrend] = useState([]);
+  const [programsTable, setProgramsTable] = useState([]);
+  const [startupsTrend, setStartupsTrend] = useState([]);
+  const [startupsTable, setStartupsTable] = useState([]);
+  const [facilitiesTrend, setFacilitiesTrend] = useState([]);
+  const [facilitiesTable, setFacilitiesTable] = useState([]);
 
   const [filterOptions, setFilterOptions] = useState({
     projects: { schemes: [], statuses: [], years: [] },
@@ -51,99 +145,106 @@ function IptifSection({ user, isPublicView = false }) {
     facilities: { types: [] }
   });
 
-  // Filters state broken down by view to preserve state across views
   const [projectFilters, setProjectFilters] = useState({ scheme: 'All', status: 'All', year: 'All' });
   const [programFilters, setProgramFilters] = useState({ type: 'All', association: 'All' });
   const [startupFilters, setStartupFilters] = useState({ domain: 'All', status: 'All' });
   const [facilityFilters, setFacilityFilters] = useState({ facility_type: 'All' });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingPrograms, setLoadingPrograms] = useState(false);
+  const [loadingStartups, setLoadingStartups] = useState(false);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
 
-  // Initial Data Load
+  const [error, setError] = useState(null);
+  const [expandedChart, setExpandedChart] = useState(null);
+
+  const [chartIsMobile, setChartIsMobile] = useState(window.innerWidth <= 640);
   useEffect(() => {
-    if (!token) return;
-    const initialLoad = async () => {
+    const handle = () => setChartIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+  const contentHeight = chartIsMobile ? 280 : 480;
+
+  const [animKey, setAnimKey] = useState(0);
+  const bump = useCallback(() => setAnimKey(k => k + 1), []);
+
+  const serializedProjectFilters = JSON.stringify(projectFilters);
+  useEffect(() => {
+    const load = async () => {
       try {
-        setLoading(true);
         const [sumData, filterOps] = await Promise.all([
           fetchIptifSummary(token),
-          fetchIptifFilterOptions(token)
+          fetchIptifFilterOptions(projectFilters, token)
         ]);
         if (sumData) setSummary(sumData);
         if (filterOps) setFilterOptions(filterOps);
-      } catch (err) {
-        setError(err.message || 'Failed to initialize IPTIF data');
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { setError(err.message || 'Failed to initialize IPTIF data'); }
     };
-    initialLoad();
-  }, [token, uploadVersion]);
+    load();
+  }, [serializedProjectFilters, projectFilters, token, uploadVersion]);
 
-  // Load specific view data
   useEffect(() => {
-    if (!token) return;
-    let isMounted = true;
+    let m = true;
+    setLoadingProjects(true);
+    fetchIptifProjects(projectFilters, token)
+      .then(r => { if (m && r) { setProjectsTrend(r.trend || []); setProjectsTable(r.data || []); } })
+      .catch(err => { if (m) setError(err.message); })
+      .finally(() => { if (m) setLoadingProjects(false); });
+    return () => { m = false; };
+  }, [token, projectFilters, uploadVersion]);
 
-    const loadViewData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        let result;
-        if (viewType === 'projects') {
-          result = await fetchIptifProjects(projectFilters, token);
-        } else if (viewType === 'programs') {
-          result = await fetchIptifPrograms(programFilters, token);
-        } else if (viewType === 'startups') {
-          result = await fetchIptifStartups(startupFilters, token);
-        } else if (viewType === 'facilities') {
-          result = await fetchIptifFacilities(facilityFilters, token);
-        }
+  useEffect(() => {
+    let m = true;
+    setLoadingPrograms(true);
+    fetchIptifPrograms(programFilters, token)
+      .then(r => { if (m && r) { setProgramsTrend(r.trend || []); setProgramsTable(r.data || []); } })
+      .catch(err => { if (m) setError(err.message); })
+      .finally(() => { if (m) setLoadingPrograms(false); });
+    return () => { m = false; };
+  }, [token, programFilters, uploadVersion]);
 
-        if (isMounted && result) {
-          setTrendData(result.trend || []);
-          setTableData(result.data || []);
-        }
-      } catch (err) {
-        if (isMounted) setError(err.message || `Failed to load ${viewType} data`);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+  useEffect(() => {
+    let m = true;
+    setLoadingStartups(true);
+    fetchIptifStartups(startupFilters, token)
+      .then(r => { if (m && r) { setStartupsTrend(r.trend || []); setStartupsTable(r.data || []); } })
+      .catch(err => { if (m) setError(err.message); })
+      .finally(() => { if (m) setLoadingStartups(false); });
+    return () => { m = false; };
+  }, [token, startupFilters, uploadVersion]);
 
-    loadViewData();
-    return () => { isMounted = false; };
-  }, [token, viewType, projectFilters, programFilters, startupFilters, facilityFilters, uploadVersion]);
+  useEffect(() => {
+    if (hideFacilities) return; // don't fetch revenue data for guests / public viewers
+    let m = true;
+    setLoadingFacilities(true);
+    fetchIptifFacilities(facilityFilters, token)
+      .then(r => { if (m && r) { setFacilitiesTrend(r.trend || []); setFacilitiesTable(r.data || []); } })
+      .catch(err => { if (m) setError(err.message); })
+      .finally(() => { if (m) setLoadingFacilities(false); });
+    return () => { m = false; };
+  }, [token, facilityFilters, uploadVersion, hideFacilities]);
 
-  // Handlers
-  const handleFilterChange = (setter) => (field, value) => {
-    setter(prev => ({ ...prev, [field]: value }));
+  const handleFilterChange = (setter) => (field, value) => setter(prev => ({ ...prev, [field]: value }));
+  const switchView = (id) => { setViewType(id); bump(); };
+  const switchMode = (mode) => { setChartMode(mode); bump(); };
+
+  const handleSummaryCard = (view) => {
+    setViewType(view);
+    setChartMode(isRestricted ? 'bar' : 'table');
+    bump();
+    setTimeout(() => {
+      document.getElementById('iptif-content-region')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   };
 
-  const handleClearFilters = () => {
-    if (viewType === 'projects') setProjectFilters({ scheme: 'All', status: 'All', year: 'All' });
-    if (viewType === 'programs') setProgramFilters({ type: 'All', association: 'All' });
-    if (viewType === 'startups') setStartupFilters({ domain: 'All', status: 'All' });
-    if (viewType === 'facilities') setFacilityFilters({ facility_type: 'All' });
-  };
-
-  // Custom Line Chart Tooltip
-  const CustomTooltip = ({ active, payload, label }) => {
+  const IptifTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{
-          backgroundColor: '#fff',
-          padding: '10px',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-        }}>
-          <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: '#333' }}>Year: {label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} style={{ margin: '0', color: entry.color }}>
-              {entry.name}: {formatNumber(entry.value)}
-            </p>
+        <div className="iptif-tooltip">
+          <p className="iptif-tooltip-year">Year: {label}</p>
+          {payload.map((entry, i) => (
+            <p key={i} className="iptif-tooltip-entry" style={{ color: entry.color }}>{entry.name}: {formatNumber(entry.value)}</p>
           ))}
         </div>
       );
@@ -151,912 +252,517 @@ function IptifSection({ user, isPublicView = false }) {
     return null;
   };
 
+  const renderChart = (data, color, name) => (
+    <div
+      className="clickable-chart iptif-chart-box"
+      style={{ height: `${contentHeight}px` }}
+      onClick={() => setExpandedChart({
+        title: `${currentView?.label} Trend`,
+        content: (
+          <ResponsiveContainer width="100%" height={500}>
+            {chartMode === 'bar' ? (
+              <BarChart data={data} margin={{ top: 40, right: 30, left: 40, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="year" stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={60} />
+                <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                <Tooltip content={<IptifTooltip />} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} iconType="rect" />
+                <Bar dataKey="count" name={name} fill={color} radius={[6, 6, 0, 0]}>
+                  <LabelList dataKey="count" position="top" style={{ fontSize: '11px', fontWeight: 700, fill: color }} />
+                </Bar>
+              </BarChart>
+            ) : (
+              <LineChart data={data} margin={{ top: 40, right: 30, left: 40, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="year" stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} interval={0} angle={-45} textAnchor="end" height={60} />
+                <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                <Tooltip content={<IptifTooltip />} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                <Line type="linear" dataKey="count" name={name} stroke={color} strokeWidth={3} dot={{ r: 6, fill: color, strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8 }}>
+                  <LabelList dataKey="count" position="top" style={{ fontSize: '11px', fontWeight: 700, fill: color }} />
+                </Line>
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        )
+      })}
+    >
+      {data.length === 0 && (
+        <div className="iptif-no-data-overlay">
+          <span className="iptif-no-data-icon">&#128202;</span>
+          <p className="iptif-no-data-text">No data available for the selected filters.</p>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height={contentHeight} minWidth={0}>
+        {chartMode === 'bar' ? (
+          <BarChart data={data} margin={{ top: 20, right: 30, left: chartIsMobile ? 20 : 40, bottom: chartIsMobile ? 50 : 20 }} barCategoryGap="20%">
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="year" stroke="#666" interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 50 : 30} tick={{ fontSize: 11 }} />
+            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+            <Tooltip content={<IptifTooltip />} />
+            <Legend />
+            <Bar dataKey="count" name={name} fill={color} radius={[4, 4, 0, 0]} barSize={28}>
+              <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: color }} />
+            </Bar>
+          </BarChart>
+        ) : (
+          <LineChart data={data} margin={{ top: 20, right: 30, left: chartIsMobile ? 20 : 40, bottom: chartIsMobile ? 50 : 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="year" stroke="#666" interval={0} angle={chartIsMobile ? -45 : 0} textAnchor={chartIsMobile ? "end" : "middle"} height={chartIsMobile ? 50 : 30} tick={{ fontSize: 11 }} />
+            <YAxis stroke="#666" tick={{ fontSize: 11 }} />
+            <Tooltip content={<IptifTooltip />} />
+            <Legend />
+            <Line type="linear" dataKey="count" name={name} stroke={color} strokeWidth={3} dot={{ r: 5, fill: color, strokeWidth: 0 }} activeDot={{ r: 7 }}>
+              <LabelList offset={10} dataKey="count" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: color }} />
+            </Line>
+          </LineChart>
+        )}
+      </ResponsiveContainer>
+    </div>
+  );
+
+  const currentView = VIEWS.find(v => v.id === viewType);
+  const color = currentView?.color || '#667eea';
+
+  const renderFilters = () => {
+    if (viewType === 'projects') return (
+      <div className="iptif-filter-grid">
+        <div>
+          <label className="iptif-filter-label">Scheme</label>
+          <select value={projectFilters.scheme} onChange={e => handleFilterChange(setProjectFilters)('scheme', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Schemes</option>
+            {filterOptions.projects.schemes.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="iptif-filter-label">Status</label>
+          <select value={projectFilters.status} onChange={e => handleFilterChange(setProjectFilters)('status', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Statuses</option>
+            {filterOptions.projects.statuses.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="iptif-filter-label">Start Year</label>
+          <select value={projectFilters.year} onChange={e => handleFilterChange(setProjectFilters)('year', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Years</option>
+            {filterOptions.projects.years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      </div>
+    );
+    if (viewType === 'programs') return (
+      <div className="iptif-filter-grid">
+        <div>
+          <label className="iptif-filter-label">Type</label>
+          <select value={programFilters.type} onChange={e => handleFilterChange(setProgramFilters)('type', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Types</option>
+            {filterOptions.programs.types.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="iptif-filter-label">Association</label>
+          <select value={programFilters.association} onChange={e => handleFilterChange(setProgramFilters)('association', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Associations</option>
+            {filterOptions.programs.associations.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+        </div>
+      </div>
+    );
+    if (viewType === 'startups') return (
+      <div className="iptif-filter-grid">
+        <div>
+          <label className="iptif-filter-label">Domain</label>
+          <select value={startupFilters.domain} onChange={e => handleFilterChange(setStartupFilters)('domain', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Domains</option>
+            {filterOptions.startups.domains.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="iptif-filter-label">Status</label>
+          <select value={startupFilters.status} onChange={e => handleFilterChange(setStartupFilters)('status', e.target.value)} className="iptif-filter-select">
+            <option value="All">All Statuses</option>
+            {filterOptions.startups.statuses.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+      </div>
+    );
+    if (viewType === 'facilities') return (
+      <div>
+        <label className="iptif-filter-label">Facility Type</label>
+        <select value={facilityFilters.facility_type} onChange={e => handleFilterChange(setFacilityFilters)('facility_type', e.target.value)} className="iptif-filter-select iptif-filter-select--narrow">
+          <option value="All">All Facility Types</option>
+          {filterOptions.facilities.types.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+    );
+  };
+
+  const clearFilters = () => {
+    if (viewType === 'projects') setProjectFilters({ scheme: 'All', status: 'All', year: 'All' });
+    if (viewType === 'programs') setProgramFilters({ type: 'All', association: 'All' });
+    if (viewType === 'startups') setStartupFilters({ domain: 'All', status: 'All' });
+    if (viewType === 'facilities') setFacilityFilters({ facility_type: 'All' });
+  };
+
+  const TableShell = ({ headerBg, columns, children }) => (
+    <div className="iptif-table-shell" style={{ height: `${contentHeight}px` }}>
+      <div className="iptif-table-header" style={{ backgroundColor: headerBg, gridTemplateColumns: columns }}>
+        {children[0]}
+      </div>
+      <div className="iptif-table-body">
+        {children[1]}
+      </div>
+    </div>
+  );
+
+  const renderTable = () => {
+    if (viewType === 'projects') {
+      if (!projectsTable.length && !loadingProjects) return <EmptyState />;
+      if (chartIsMobile) {
+        return (
+          <div className="iptif-mobile-list" style={{ maxHeight: `${contentHeight}px` }}>
+            {projectsTable.map((row, idx) => (
+              <div key={idx} className="iptif-mobile-card">
+                <div className="iptif-mobile-card-title">{row.project_name}</div>
+                <div className="iptif-mobile-card-fields">
+                  <div><span className="iptif-field-label">Scheme:</span><br />{row.scheme}</div>
+                  <div><span className="iptif-field-label">Status:</span><br /><span className={`iptif-status-badge iptif-status-badge--sm${row.status === 'Ongoing' ? ' iptif-status-badge--ongoing' : ' iptif-status-badge--other'}`}>{row.status}</span></div>
+                  <div><span className="iptif-field-label">Start Date:</span><br />{row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <TableShell headerBg="#667eea" columns="2fr 1.5fr 1fr 1.2fr">
+          {[
+            <><div>Project Name</div><div>Scheme</div><div>Status</div><div>Start Date</div></>,
+            <>
+              {projectsTable.map((row, idx) => (
+                <div key={idx} className="iptif-table-row" style={{ gridTemplateColumns: '2fr 1.5fr 1fr 1.2fr', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                  <div className="iptif-table-row-name">{row.project_name}</div>
+                  <div>{row.scheme}</div>
+                  <div><span className={`iptif-status-badge iptif-status-badge--md${row.status === 'Ongoing' ? ' iptif-status-badge--ongoing' : ' iptif-status-badge--other'}`}>{row.status}</span></div>
+                  <div>{row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'}</div>
+                </div>
+              ))}
+            </>
+          ]}
+        </TableShell>
+      );
+    }
+    if (viewType === 'programs') {
+      if (!programsTable.length && !loadingPrograms) return <EmptyState />;
+      if (chartIsMobile) {
+        return (
+          <div className="iptif-mobile-list" style={{ maxHeight: `${contentHeight}px` }}>
+            {programsTable.map((row, idx) => (
+              <div key={idx} className="iptif-mobile-card">
+                <div className="iptif-mobile-card-title">{row.program_name}</div>
+                <div className="iptif-mobile-card-fields">
+                  <div><span className="iptif-field-label">Type:</span><br />{row.type}</div>
+                  <div><span className="iptif-field-label">Association:</span><br />{row.association}</div>
+                  <div className="span-full"><span className="iptif-field-label">Target Audience:</span><br />{row.targetted_audi}</div>
+                  <div><span className="iptif-field-label">Attendees:</span><br />{row.no_of_attendees}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <TableShell headerBg="#f093fb" columns="2fr 1.2fr 1.2fr 1.5fr 1fr">
+          {[
+            <><div>Program Name</div><div>Type</div><div>Association</div><div>Target Audience</div><div>Attendees</div></>,
+            <>
+              {programsTable.map((row, idx) => (
+                <div key={idx} className="iptif-table-row" style={{ gridTemplateColumns: '2fr 1.2fr 1.2fr 1.5fr 1fr', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                  <div className="iptif-table-row-name">{row.program_name}</div>
+                  <div>{row.type}</div><div>{row.association}</div><div>{row.targetted_audi}</div><div>{row.no_of_attendees}</div>
+                </div>
+              ))}
+            </>
+          ]}
+        </TableShell>
+      );
+    }
+    if (viewType === 'startups') {
+      if (!startupsTable.length && !loadingStartups) return <EmptyState />;
+      if (chartIsMobile) {
+        return (
+          <div className="iptif-mobile-list" style={{ maxHeight: `${contentHeight}px` }}>
+            {startupsTable.map((row, idx) => (
+              <div key={idx} className="iptif-mobile-card">
+                <div className="iptif-mobile-card-title">{row.startup_name}</div>
+                <div className="iptif-mobile-card-fields">
+                  <div><span className="iptif-field-label">Domain:</span><br />{row.domain}</div>
+                  <div><span className="iptif-field-label">Status:</span><br />{row.status}</div>
+                  <div><span className="iptif-field-label">Jobs Created:</span><br />{row.number_of_jobs}</div>
+                  {!hideRevenue && <div><span className="iptif-field-label">Revenue:</span><br />{row.revenue ? `₹${formatNumber(row.revenue)}` : '-'}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      const startupCols = hideRevenue ? '1.8fr 1.5fr 1fr 1fr' : '1.8fr 1.5fr 1fr 1fr 1.2fr';
+      return (
+        <TableShell headerBg="#43e97b" columns={startupCols}>
+          {[
+            <><div>Startup Name</div><div>Domain</div><div>Status</div><div>Jobs Created</div>{!hideRevenue && <div>Revenue (&#8377;)</div>}</>,
+            <>
+              {startupsTable.map((row, idx) => (
+                <div key={idx} className="iptif-table-row" style={{ gridTemplateColumns: startupCols, backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                  <div className="iptif-table-row-name">{row.startup_name}</div>
+                  <div>{row.domain}</div><div>{row.status}</div><div>{row.number_of_jobs}</div>
+                  {!hideRevenue && <div>{row.revenue ? `₹${formatNumber(row.revenue)}` : '-'}</div>}
+                </div>
+              ))}
+            </>
+          ]}
+        </TableShell>
+      );
+    }
+    if (viewType === 'facilities') {
+      if (!facilitiesTable.length && !loadingFacilities) return <EmptyState />;
+      if (chartIsMobile) {
+        return (
+          <div className="iptif-mobile-list" style={{ maxHeight: `${contentHeight}px` }}>
+            {facilitiesTable.map((row, idx) => (
+              <div key={idx} className="iptif-mobile-card">
+                <div className="iptif-mobile-card-title">{row.facility_name}</div>
+                <div className="iptif-mobile-card-fields">
+                  <div><span className="iptif-field-label">Type:</span><br />{row.facility_type}</div>
+                  <div><span className="iptif-field-label">Availability:</span><br />{row.availability_status}</div>
+                  <div><span className="iptif-field-label">Financial Year:</span><br />{row.financial_year}</div>
+                  <div><span className="iptif-field-label">Revenue:</span><br />{row.revenue_made ? `₹${formatNumber(row.revenue_made)}` : '0'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <TableShell headerBg="#f97316" columns="2fr 1.5fr 1.2fr 1.2fr 1.2fr">
+          {[
+            <><div>Facility Name</div><div>Type</div><div>Availability</div><div>Financial Year</div><div>Revenue (&#8377;)</div></>,
+            <>
+              {facilitiesTable.map((row, idx) => (
+                <div key={idx} className="iptif-table-row" style={{ gridTemplateColumns: '2fr 1.5fr 1.2fr 1.2fr 1.2fr', backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                  <div className="iptif-table-row-name">{row.facility_name}</div>
+                  <div>{row.facility_type}</div><div>{row.availability_status}</div><div>{row.financial_year}</div>
+                  <div>{row.revenue_made ? formatNumber(row.revenue_made) : '0'}</div>
+                </div>
+              ))}
+            </>
+          ]}
+        </TableShell>
+      );
+    }
+  };
+
+  const trendData = viewType === 'projects' ? projectsTrend : viewType === 'programs' ? programsTrend : viewType === 'startups' ? startupsTrend : facilitiesTrend;
+  const trendLabel = viewType === 'projects' ? 'Projects Count' : viewType === 'programs' ? 'Programs Count' : viewType === 'startups' ? 'Startups Count' : 'Revenue (₹)';
+  const exportId = `iptif-${viewType}-chart-container`;
+  const exportData = chartMode === 'table' ? (viewType === 'projects' ? projectsTable : viewType === 'programs' ? programsTable : viewType === 'startups' ? startupsTable : facilitiesTable) : trendData;
 
   return (
-    <div className={isPublicView ? "" : "page-container"}>
-      <div className={isPublicView ? "" : "page-content"}>
-        {!isPublicView && (
+    <div className={isPublicView ? '' : 'page-container'}>
+      <div className={isPublicView ? '' : 'page-content'}>
+
+        {!isReadOnlyView && (
           <button className="page-back-btn" onClick={() => navigate('/innovation-entrepreneurship')}>
-            ← Back to Innovation & Entrepreneurship
+            &#8592; Back to Innovation &amp; Entrepreneurship
           </button>
         )}
 
-        <h1 style={{ marginBottom: '5px' }}>IPTIF</h1>
+        <h1 className="iptif-h1">IIT Palakkad Technology IHub Foundation (IPTIF)</h1>
 
-        {/* Upload Buttons - Moved to Top */}
-        {user && user.role_id === 3 && (
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end'
-          }}>
-            <button
-              onClick={() => { setActiveUploadTable('iptif_projects_table'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#667eea', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Projects
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('iptif_program_table'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#f093fb', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Programs
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('iptif_startup_table'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#43e97b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Startups
-            </button>
-            <button
-              onClick={() => { setActiveUploadTable('iptif_facilities_table'); setIsUploadModalOpen(true); }}
-              style={{ padding: '8px 16px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-            >
-              📤 Upload Facilities
-            </button>
+        {!isReadOnlyView && isAdmin && (
+          <div className="iptif-upload-row">
+            {[
+              { label: 'Upload Projects',   table: 'iptif_projects_table' },
+              { label: 'Upload Programs',   table: 'iptif_program_table' },
+              { label: 'Upload Startups',   table: 'iptif_startup_table' },
+              { label: 'Upload Facilities', table: 'iptif_facilities_table' },
+            ].map(({ label, table }) => (
+              <button key={table} className="page-upload-btn" onClick={() => { setActiveUploadTable(table); setIsUploadModalOpen(true); }}>
+                &#128228; {label}
+              </button>
+            ))}
           </div>
         )}
 
-        {error && <div className="error-message" style={{
-          padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '20px'
-        }}>{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-        {/* Summary Cards - Keeping original colors */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '24px',
-          marginBottom: '40px'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '20px', padding: '24px', boxShadow: '0 10px 20px rgba(102, 126, 234, 0.2)', color: 'white'
-          }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', opacity: 0.9 }}>Total Projects</h3>
-            <div style={{ fontSize: '40px', fontWeight: 'bold' }}>{formatNumber(summary.total_projects)}</div>
-          </div>
-          <div style={{
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            borderRadius: '20px', padding: '24px', boxShadow: '0 10px 20px rgba(240, 147, 251, 0.2)', color: 'white'
-          }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', opacity: 0.9 }}>Total Programs</h3>
-            <div style={{ fontSize: '40px', fontWeight: 'bold' }}>{formatNumber(summary.total_programs)}</div>
-          </div>
-          <div style={{
-            background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            borderRadius: '20px', padding: '24px', boxShadow: '0 10px 20px rgba(67, 233, 123, 0.2)', color: 'white'
-          }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', opacity: 0.9 }}>Total Startups</h3>
-            <div style={{ fontSize: '40px', fontWeight: 'bold' }}>{formatNumber(summary.total_startups)}</div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LastUpdated tables={['iptif_projects_table', 'iptif_program_table', 'iptif_startup_table', 'iptif_facilities_table']} />
+          <ShareButton />
         </div>
 
-        {/* Radio Buttons - Keeping original styling */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '20px',
-          marginBottom: '30px',
-          padding: '20px',
-          borderRadius: '12px',
-          backgroundColor: 'transparent',
-          flexWrap: 'wrap'
-        }}>
-          <button
-            onClick={() => setViewType('projects')}
-            style={{
-              padding: '12px 28px',
-              backgroundColor: viewType === 'projects' ? '#667eea' : 'white',
-              color: viewType === 'projects' ? 'white' : '#333',
-              border: viewType === 'projects' ? '2px solid #667eea' : '2px solid #dee2e6',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: viewType === 'projects' ? '600' : '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: viewType === 'projects' ? `0 6px 16px #667eea40` : 'none'
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>📊</span>
-            Projects Trend
-          </button>
-          <button
-            onClick={() => setViewType('programs')}
-            style={{
-              padding: '12px 28px',
-              backgroundColor: viewType === 'programs' ? '#f093fb' : 'white',
-              color: viewType === 'programs' ? 'white' : '#333',
-              border: viewType === 'programs' ? '2px solid #f093fb' : '2px solid #dee2e6',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: viewType === 'programs' ? '600' : '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: viewType === 'programs' ? `0 6px 16px #f093fb40` : 'none'
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>🎓</span>
-            Programs Trend
-          </button>
-          <button
-            onClick={() => setViewType('startups')}
-            style={{
-              padding: '12px 28px',
-              backgroundColor: viewType === 'startups' ? '#43e97b' : 'white',
-              color: viewType === 'startups' ? 'white' : '#333',
-              border: viewType === 'startups' ? '2px solid #43e97b' : '2px solid #dee2e6',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: viewType === 'startups' ? '600' : '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: viewType === 'startups' ? `0 6px 16px #43e97b40` : 'none'
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>🚀</span>
-            Startups Growth
-          </button>
-          <button
-            onClick={() => setViewType('facilities')}
-            style={{
-              padding: '12px 28px',
-              backgroundColor: viewType === 'facilities' ? '#f97316' : 'white',
-              color: viewType === 'facilities' ? 'white' : '#333',
-              border: viewType === 'facilities' ? '2px solid #f97316' : '2px solid #dee2e6',
-              borderRadius: '50px',
-              cursor: 'pointer',
-              fontSize: '15px',
-              fontWeight: viewType === 'facilities' ? '600' : '500',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: viewType === 'facilities' ? `0 6px 16px #f9731640` : 'none'
-            }}
-          >
-            <span style={{ fontSize: '18px' }}>🏭</span>
-            Facilities Revenue
-          </button>
+        <div className="iptif-export-row">
+          <ExportMenu
+            elementId="iptif-summary-cards-container"
+            data={[summary]}
+            headers={['Total Projects', 'Total Programs', 'Total Startups']}
+            keys={['total_projects', 'total_programs', 'total_startups']}
+            filename="iptif_summary"
+            title="IPTIF Summary"
+          />
         </div>
 
-        {/* Dynamic Views: Charts and Tables - Keeping original styling */}
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <div className="loading-spinner" />
-              <p>Loading data...</p>
+        <div id="iptif-summary-cards-container" className="iptif-cards-grid">
+          {[
+            { view: 'projects',  bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: '0 10px 20px rgba(102,126,234,0.2)', label: 'Total Projects',  value: summary.total_projects },
+            { view: 'programs',  bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', shadow: '0 10px 20px rgba(240,147,251,0.2)', label: 'Total Programs',  value: summary.total_programs },
+            { view: 'startups',  bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', shadow: '0 10px 20px rgba(67,233,123,0.2)',  label: 'Total Startups',  value: summary.total_startups },
+          ].map(({ view, bg, shadow, label, value }) => (
+            <div
+              key={view}
+              className="iptif-summary-card"
+              onClick={() => handleSummaryCard(view)}
+              style={{ background: bg, boxShadow: shadow }}
+            >
+              <h3>{label}</h3>
+              <div className="metric-value">{formatNumber(value)}</div>
+              <div className="iptif-summary-card-footer">Click to view directory &#8594;</div>
             </div>
-          ) : (
-            <>
-              {/* Projects View */}
-              {viewType === 'projects' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>📊</span> Projects Trend
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Yearly trend of projects by scheme and status
-                    </p>
-                  </div>
+          ))}
+        </div>
 
-                  {/* Filters inside projects view */}
-                  <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #e9ecef'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '15px'
-                    }}>
-                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button
-                        onClick={handleClearFilters}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
+        <div id="iptif-content-region" className="iptif-content-panel">
+          <div className="iptif-filter-heading-row">
+            <h4 className="iptif-filter-h4">Filters</h4>
+          </div>
 
-                    <div className="filter-grid" style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: '12px'
-                    }}>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Scheme</label>
-                        <select
-                          value={projectFilters.scheme}
-                          onChange={(e) => handleFilterChange(setProjectFilters)('scheme', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Schemes</option>
-                          {filterOptions.projects.schemes.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
-                        <select
-                          value={projectFilters.status}
-                          onChange={(e) => handleFilterChange(setProjectFilters)('status', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Statuses</option>
-                          {filterOptions.projects.statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Start Year</label>
-                        <select
-                          value={projectFilters.year}
-                          onChange={(e) => handleFilterChange(setProjectFilters)('year', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Years</option>
-                          {filterOptions.projects.years.map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                      </div>
-                    </div>
+          <div className="iptif-tabs-row">
+            {VIEWS.filter(v => !hideFacilities || v.id !== 'facilities').map(({ id, label, color: c, icon }) => {
+              const active = viewType === id;
+              return (
+                <button
+                  key={id}
+                  className="iptif-tab-btn"
+                  onClick={() => switchView(id)}
+                  style={{
+                    backgroundColor: active ? c : 'white',
+                    color: active ? 'white' : '#333',
+                    borderColor: active ? c : '#dee2e6',
+                    boxShadow: active ? `0 6px 16px ${c}40` : 'none',
+                    fontWeight: active ? 600 : 500,
+                  }}
+                >
+                  <span className="iptif-tab-icon">{icon}</span>{label}
+                </button>
+              );
+            })}
+          </div>
 
-                    {/* Active Filters Summary */}
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      backgroundColor: '#e9ecef',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      <strong>Active Filters:</strong>{' '}
-                      {projectFilters.scheme !== 'All' && <span style={{ marginRight: '8px' }}>📌 {projectFilters.scheme}</span>}
-                      {projectFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {projectFilters.status}</span>}
-                      {projectFilters.year !== 'All' && <span style={{ marginRight: '8px' }}>📅 {projectFilters.year}</span>}
-                      {projectFilters.scheme === 'All' && projectFilters.status === 'All' && projectFilters.year === 'All' &&
-                        <span>No filters applied</span>
-                      }
-                    </div>
-                  </div>
+          <div className="iptif-filter-panel">
+            <div className="iptif-filter-inner">
+              <div className="iptif-filter-end-row">
+                <button onClick={clearFilters} className="iptif-clear-btn">Clear Filters</button>
+              </div>
+              {renderFilters()}
+            </div>
+          </div>
 
-                  {/* Trend Chart */}
-                  {trendData.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                          <YAxis stroke="#666" />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend />
-                          <Line
-                            type="monotone"
-                            dataKey="count"
-                            name="Projects Count"
-                            stroke="#667eea"
-                            strokeWidth={3}
-                            dot={{ r: 6, fill: '#667eea', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+          <div className="iptif-divider" />
 
-                  {/* Scrollable Projects Table */}
-                  {tableData.length > 0 && (
-                    <div>
-                      <h3 style={{ marginBottom: '15px' }}>Projects Directory</h3>
-                      <div style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        backgroundColor: '#fff'
-                      }}>
-                        <div style={{
-                          backgroundColor: '#667eea',
-                          color: 'white',
-                          display: 'grid',
-                          gridTemplateColumns: '2fr 1.5fr 1fr 1.2fr',
-                          gap: '8px',
-                          padding: '12px',
-                          fontWeight: 'bold',
-                          fontSize: '13px',
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 10
-                        }}>
-                          <div>Project Name</div>
-                          <div>Scheme</div>
-                          <div>Status</div>
-                          <div>Start Date</div>
-                        </div>
-                        <div style={{
-                          maxHeight: '400px',
-                          overflowY: 'auto',
-                          overflowX: 'auto'
-                        }}>
-                          {tableData.map((row, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '2fr 1.5fr 1fr 1.2fr',
-                                gap: '8px',
-                                padding: '12px',
-                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                                borderBottom: '1px solid #e0e0e0',
-                                fontSize: '13px',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <div style={{ fontWeight: '500' }}>{row.project_name}</div>
-                              <div>{row.scheme}</div>
-                              <div>
-                                <span style={{
-                                  backgroundColor: row.status === 'Ongoing' ? '#e0f2fe' : '#f1f5f9',
-                                  color: row.status === 'Ongoing' ? '#0284c7' : '#475569',
-                                  padding: '4px 8px',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
-                                  display: 'inline-block'
-                                }}>
-                                  {row.status}
-                                </span>
-                              </div>
-                              <div>{row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+          <div className="iptif-chart-header-row">
+            <div>
+              <h2 className="iptif-chart-h2">
+                <span className="iptif-chart-icon">{currentView?.icon}</span>
+                {currentView?.label}
+              </h2>
+              <p className="iptif-chart-desc">
+                {viewType === 'projects'   && 'Yearly trend of projects by scheme and status'}
+                {viewType === 'programs'   && 'Yearly trend of programs by type and association'}
+                {viewType === 'startups'   && 'Yearly growth of startups by domain and status'}
+                {viewType === 'facilities' && 'Yearly revenue trend from facilities by type'}
+              </p>
+            </div>
+            <div className="iptif-mode-row">
+              {['bar', 'trend', 'table']
+                .filter(mode => !isRestricted || mode !== 'table')
+                .map(mode => {
+                  const modeActive = chartMode === mode;
+                  const modeLabel = mode === 'bar' ? 'Bar' : mode === 'trend' ? 'Trend' : 'Table';
+                  return (
+                    <button
+                      key={mode}
+                      className="iptif-mode-btn"
+                      onClick={() => switchMode(mode)}
+                      style={{
+                        backgroundColor: modeActive ? color : '#e9ecef',
+                        color: modeActive ? '#fff' : '#333',
+                        boxShadow: modeActive ? `0 4px 10px ${color}40` : 'none',
+                      }}
+                    >
+                      {modeLabel}
+                    </button>
+                  );
+                })}
+              <ExportMenu
+                elementId={exportId}
+                data={exportData}
+                headers={chartMode === 'table'
+                  ? (viewType === 'projects'   ? ['Project Name', 'Scheme', 'Status', 'Start Date']
+                    : viewType === 'programs'  ? ['Program Name', 'Type', 'Association', 'Target Audience', 'Attendees']
+                    : viewType === 'startups'  ? (hideRevenue ? ['Startup Name', 'Domain', 'Status', 'Jobs'] : ['Startup Name', 'Domain', 'Status', 'Jobs', 'Revenue'])
+                    : ['Facility Name', 'Type', 'Availability', 'Financial Year', 'Revenue'])
+                  : ['Year', 'Count']}
+                keys={chartMode === 'table'
+                  ? (viewType === 'projects'   ? ['project_name', 'scheme', 'status', 'start_date']
+                    : viewType === 'programs'  ? ['program_name', 'type', 'association', 'targetted_audi', 'no_of_attendees']
+                    : viewType === 'startups'  ? (hideRevenue ? ['startup_name', 'domain', 'status', 'number_of_jobs'] : ['startup_name', 'domain', 'status', 'number_of_jobs', 'revenue'])
+                    : ['facility_name', 'facility_type', 'availability_status', 'financial_year', 'revenue_made'])
+                  : ['year', 'count']}
+                filename={`iptif_${viewType}_${chartMode}`}
+                title={`${currentView?.label} — ${chartMode === 'table' ? 'Directory' : chartMode === 'bar' ? 'Bar Chart' : 'Trend'}`}
+              />
+            </div>
+          </div>
 
-              {/* Programs View */}
-              {viewType === 'programs' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🎓</span> Programs Trend
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Yearly trend of programs by type and association
-                    </p>
-                  </div>
+          <div key={animKey} className="iptif-anim" id={exportId}>
+            {chartMode === 'table' && !isRestricted
+              ? renderTable()
+              : renderChart(trendData, color, trendLabel)
+            }
+          </div>
+        </div>
 
-                  {/* Filters inside programs view */}
-                  <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #e9ecef'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '15px'
-                    }}>
-                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button
-                        onClick={handleClearFilters}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
+        <div className="iptif-cta-banner iptif-cta-banner--facilities">
+          <div className="iptif-cta-left">
+            <div>
+              <h3 className="iptif-cta-h3">Explore Our Facilities</h3>
+              <p className="iptif-cta-p">Browse the labs, equipment, and spaces IPTIF offers — with details on availability and how to avail each one.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/innovation-entrepreneurship/iptif/facilities')}
+            className="iptif-cta-link iptif-cta-link--primary"
+          >
+            View Facilities &#8594;
+          </button>
+        </div>
 
-                    <div className="filter-grid" style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '12px'
-                    }}>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Type</label>
-                        <select
-                          value={programFilters.type}
-                          onChange={(e) => handleFilterChange(setProgramFilters)('type', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Types</option>
-                          {filterOptions.programs.types.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Association</label>
-                        <select
-                          value={programFilters.association}
-                          onChange={(e) => handleFilterChange(setProgramFilters)('association', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Associations</option>
-                          {filterOptions.programs.associations.map(a => <option key={a} value={a}>{a}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Active Filters Summary */}
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      backgroundColor: '#e9ecef',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      <strong>Active Filters:</strong>{' '}
-                      {programFilters.type !== 'All' && <span style={{ marginRight: '8px' }}>📌 {programFilters.type}</span>}
-                      {programFilters.association !== 'All' && <span style={{ marginRight: '8px' }}>🤝 {programFilters.association}</span>}
-                      {programFilters.type === 'All' && programFilters.association === 'All' &&
-                        <span>No filters applied</span>
-                      }
-                    </div>
-                  </div>
-
-                  {/* Trend Chart */}
-                  {trendData.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                          <YAxis stroke="#666" />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend />
-                          <Line
-                            type="monotone"
-                            dataKey="count"
-                            name="Programs Count"
-                            stroke="#f093fb"
-                            strokeWidth={3}
-                            dot={{ r: 6, fill: '#f093fb', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-
-                  {/* Scrollable Programs Table */}
-                  {tableData.length > 0 && (
-                    <div>
-                      <h3 style={{ marginBottom: '15px' }}>Programs Directory</h3>
-                      <div style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        backgroundColor: '#fff'
-                      }}>
-                        <div style={{
-                          backgroundColor: '#f093fb',
-                          color: 'white',
-                          display: 'grid',
-                          gridTemplateColumns: '2fr 1.2fr 1.2fr 1.5fr 1fr',
-                          gap: '8px',
-                          padding: '12px',
-                          fontWeight: 'bold',
-                          fontSize: '13px',
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 10
-                        }}>
-                          <div>Program Name</div>
-                          <div>Type</div>
-                          <div>Association</div>
-                          <div>Target Audience</div>
-                          <div>Attendees</div>
-                        </div>
-                        <div style={{
-                          maxHeight: '400px',
-                          overflowY: 'auto',
-                          overflowX: 'auto'
-                        }}>
-                          {tableData.map((row, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '2fr 1.2fr 1.2fr 1.5fr 1fr',
-                                gap: '8px',
-                                padding: '12px',
-                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                                borderBottom: '1px solid #e0e0e0',
-                                fontSize: '13px',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <div style={{ fontWeight: '500' }}>{row.program_name}</div>
-                              <div>{row.type}</div>
-                              <div>{row.association}</div>
-                              <div>{row.targetted_audi}</div>
-                              <div>{row.no_of_attendees}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Startups View */}
-              {viewType === 'startups' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🚀</span> Startups Growth
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Yearly growth of startups by domain and status
-                    </p>
-                  </div>
-
-                  {/* Filters inside startups view */}
-                  <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #e9ecef'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '15px'
-                    }}>
-                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button
-                        onClick={handleClearFilters}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
-
-                    <div className="filter-grid" style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '12px'
-                    }}>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Domain</label>
-                        <select
-                          value={startupFilters.domain}
-                          onChange={(e) => handleFilterChange(setStartupFilters)('domain', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Domains</option>
-                          {filterOptions.startups.domains.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </div>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Status</label>
-                        <select
-                          value={startupFilters.status}
-                          onChange={(e) => handleFilterChange(setStartupFilters)('status', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Statuses</option>
-                          {filterOptions.startups.statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Active Filters Summary */}
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      backgroundColor: '#e9ecef',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      <strong>Active Filters:</strong>{' '}
-                      {startupFilters.domain !== 'All' && <span style={{ marginRight: '8px' }}>🌐 {startupFilters.domain}</span>}
-                      {startupFilters.status !== 'All' && <span style={{ marginRight: '8px' }}>⚡ {startupFilters.status}</span>}
-                      {startupFilters.domain === 'All' && startupFilters.status === 'All' &&
-                        <span>No filters applied</span>
-                      }
-                    </div>
-                  </div>
-
-                  {/* Trend Chart */}
-                  {trendData.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                          <YAxis stroke="#666" />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend />
-                          <Line
-                            type="monotone"
-                            dataKey="count"
-                            name="Startups Count"
-                            stroke="#43e97b"
-                            strokeWidth={3}
-                            dot={{ r: 6, fill: '#43e97b', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-
-                  {/* Scrollable Startups Table */}
-                  {tableData.length > 0 && (
-                    <div>
-                      <h3 style={{ marginBottom: '15px' }}>Startups Directory</h3>
-                      <div style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        backgroundColor: '#fff'
-                      }}>
-                        <div style={{
-                          backgroundColor: '#43e97b',
-                          color: 'white',
-                          display: 'grid',
-                          gridTemplateColumns: '1.8fr 1.5fr 1fr 1fr 1.2fr',
-                          gap: '8px',
-                          padding: '12px',
-                          fontWeight: 'bold',
-                          fontSize: '13px',
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 10
-                        }}>
-                          <div>Startup Name</div>
-                          <div>Domain</div>
-                          <div>Status</div>
-                          <div>Jobs Created</div>
-                          <div>Revenue (₹)</div>
-                        </div>
-                        <div style={{
-                          maxHeight: '400px',
-                          overflowY: 'auto',
-                          overflowX: 'auto'
-                        }}>
-                          {tableData.map((row, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1.8fr 1.5fr 1fr 1fr 1.2fr',
-                                gap: '8px',
-                                padding: '12px',
-                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                                borderBottom: '1px solid #e0e0e0',
-                                fontSize: '13px',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <div style={{ fontWeight: '500' }}>{row.startup_name}</div>
-                              <div>{row.domain}</div>
-                              <div>{row.status}</div>
-                              <div>{row.number_of_jobs}</div>
-                              <div>{row.revenue ? `₹${formatNumber(row.revenue)}` : '-'}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Facilities View */}
-              {viewType === 'facilities' && (
-                <div>
-                  <div className="chart-header" style={{ marginBottom: '20px' }}>
-                    <h2 style={{ margin: '0 0 10px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '24px' }}>🏭</span> Facilities Revenue
-                    </h2>
-                    <p className="chart-description" style={{ color: '#666', margin: '0' }}>
-                      Yearly revenue trend from facilities by type
-                    </p>
-                  </div>
-
-                  {/* Filters inside facilities view */}
-                  <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '8px',
-                    border: '1px solid #e9ecef'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '15px'
-                    }}>
-                      <h4 style={{ margin: 0, color: '#333', fontSize: '14px' }}>Filters</h4>
-                      <button
-                        onClick={handleClearFilters}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
-
-                    <div className="filter-grid" style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr',
-                      gap: '12px'
-                    }}>
-                      <div className="filter-group">
-                        <label style={{ fontSize: '12px', fontWeight: '600', color: '#555' }}>Facility Type</label>
-                        <select
-                          value={facilityFilters.facility_type}
-                          onChange={(e) => handleFilterChange(setFacilityFilters)('facility_type', e.target.value)}
-                          style={{ padding: '6px', fontSize: '13px', width: '100%' }}
-                        >
-                          <option value="All">All Facility Types</option>
-                          {filterOptions.facilities.types.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Active Filters Summary */}
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      backgroundColor: '#e9ecef',
-                      borderRadius: '4px',
-                      fontSize: '12px'
-                    }}>
-                      <strong>Active Filters:</strong>{' '}
-                      {facilityFilters.facility_type !== 'All' && <span style={{ marginRight: '8px' }}>🏢 {facilityFilters.facility_type}</span>}
-                      {facilityFilters.facility_type === 'All' &&
-                        <span>No filters applied</span>
-                      }
-                    </div>
-                  </div>
-
-                  {/* Trend Chart */}
-                  {trendData.length > 0 && (
-                    <div style={{ marginBottom: '40px' }}>
-                      <ResponsiveContainer width="100%" height={350}>
-                        <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                          <YAxis stroke="#666" />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Legend />
-                          <Line
-                            type="monotone"
-                            dataKey="count"
-                            name="Revenue (₹)"
-                            stroke="#f97316"
-                            strokeWidth={3}
-                            dot={{ r: 6, fill: '#f97316', strokeWidth: 2, stroke: '#fff' }}
-                            activeDot={{ r: 8 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-
-                  {/* Scrollable Facilities Table */}
-                  {tableData.length > 0 && (
-                    <div>
-                      <h3 style={{ marginBottom: '15px' }}>Facilities Directory</h3>
-                      <div style={{
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        overflow: 'hidden',
-                        backgroundColor: '#fff'
-                      }}>
-                        <div style={{
-                          backgroundColor: '#f97316',
-                          color: 'white',
-                          display: 'grid',
-                          gridTemplateColumns: '2fr 1.5fr 1.2fr 1.2fr 1.2fr',
-                          gap: '8px',
-                          padding: '12px',
-                          fontWeight: 'bold',
-                          fontSize: '13px',
-                          position: 'sticky',
-                          top: 0,
-                          zIndex: 10
-                        }}>
-                          <div>Facility Name</div>
-                          <div>Type</div>
-                          <div>Availability</div>
-                          <div>Financial Year</div>
-                          <div>Revenue (₹)</div>
-                        </div>
-                        <div style={{
-                          maxHeight: '400px',
-                          overflowY: 'auto',
-                          overflowX: 'auto'
-                        }}>
-                          {tableData.map((row, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '2fr 1.5fr 1.2fr 1.2fr 1.2fr',
-                                gap: '8px',
-                                padding: '12px',
-                                backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                                borderBottom: '1px solid #e0e0e0',
-                                fontSize: '13px',
-                                alignItems: 'center'
-                              }}
-                            >
-                              <div style={{ fontWeight: '500' }}>{row.facility_name}</div>
-                              <div>{row.facility_type}</div>
-                              <div>{row.availability_status}</div>
-                              <div>{row.financial_year}</div>
-                              <div>{row.revenue_made ? formatNumber(row.revenue_made) : '0'}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* No Data Message */}
-              {trendData.length === 0 && tableData.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                  <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📊</span>
-                  <p>No data available for the selected filters.</p>
-                </div>
-              )}
-            </>
-          )}
+        <div className="iptif-cta-banner">
+          <div className="iptif-cta-left">
+            <div>
+              <h3 className="iptif-cta-h3">Explore More on IPTIF</h3>
+              <p className="iptif-cta-p">Discover how IPTIF at IIT Palakkad is fostering innovation, incubation, and entrepreneurial excellence at IPTIF IIT Palakkad</p>
+            </div>
+          </div>
+          <a
+            href="https://iptif.tech/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="iptif-cta-link"
+          >
+            Visit iptif.tech &#8594;
+          </a>
         </div>
       </div>
 
@@ -1066,6 +772,23 @@ function IptifSection({ user, isPublicView = false }) {
         tableName={activeUploadTable}
         token={token}
       />
+
+      <ChartExpandModal
+        isOpen={!!expandedChart}
+        onClose={() => setExpandedChart(null)}
+        title={expandedChart?.title}
+      >
+        {expandedChart?.content}
+      </ChartExpandModal>
+    </div>
+  );
+}
+
+function EmptyState({ msg }) {
+  return (
+    <div className="iptif-empty-state" style={{ height: `${CONTENT_HEIGHT}px` }}>
+      <span className="iptif-empty-icon">&#128193;</span>
+      <p className="iptif-empty-text">{msg || 'No data available for the selected filters.'}</p>
     </div>
   );
 }

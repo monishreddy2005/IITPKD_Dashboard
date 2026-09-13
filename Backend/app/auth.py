@@ -1,14 +1,18 @@
 """Authentication: JWT helpers, decorator, and user management routes."""
 import datetime
+import os
+import secrets
 from datetime import timezone
 from functools import wraps
 
 import jwt
 import psycopg2.errors
 from flask import Blueprint, jsonify, request, current_app
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
-from .db import get_db_connection
-from . import bcrypt
+from .db import get_db_connection, release_db_connection
+from . import bcrypt, limiter
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -17,15 +21,25 @@ auth_bp = Blueprint('auth', __name__)
 # JWT helpers
 # ---------------------------------------------------------------------------
 
-def encode_auth_token(user_id, role_id):
-    """Creates a signed JWT valid for 24 hours. Returns the token string or None."""
+def encode_auth_token(user_id, role_id, password_changed_at):
+    """
+    Creates a signed JWT valid for 24 hours. Returns the token string or None.
+
+    Embeds password_changed_at (as the 'pwd' claim, a unix timestamp) at the
+    moment of issuance. token_required compares this against the account's
+    *current* password_changed_at on every request, so a password change
+    invalidates every outstanding token immediately instead of waiting up to
+    24 hours for natural expiry.
+    """
     try:
         now = datetime.datetime.now(timezone.utc)
+        pwd_epoch = int(password_changed_at.replace(tzinfo=timezone.utc).timestamp()) if password_changed_at else 0
         payload = {
             'sub': str(user_id),
             'role': role_id,
+            'pwd': pwd_epoch,
             'iat': int(now.timestamp()),
-            'exp': int((now + datetime.timedelta(days=30)).timestamp()),
+            'exp': int((now + datetime.timedelta(hours=24)).timestamp()),
         }
         return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
     except Exception as e:
@@ -35,13 +49,13 @@ def encode_auth_token(user_id, role_id):
 
 def decode_auth_token(token):
     """
-    Decodes a JWT. Returns the integer user_id on success,
+    Decodes a JWT. Returns {'user_id': int, 'pwd_epoch': int} on success,
     or an error message string on failure.
     """
     try:
         secret = current_app.config['SECRET_KEY']
         payload = jwt.decode(token, secret, algorithms=['HS256'], leeway=10)
-        return int(payload['sub'])
+        return {'user_id': int(payload['sub']), 'pwd_epoch': int(payload.get('pwd', 0))}
     except jwt.ExpiredSignatureError:
         return 'Token expired. Please log in again.'
     except jwt.InvalidTokenError:
@@ -50,8 +64,53 @@ def decode_auth_token(token):
         return 'Error validating token. Please log in again.'
 
 
+def _check_session_still_valid(user_id, pwd_epoch_claim):
+    """
+    Re-reads the account's current status and password-change timestamp.
+
+    Returns (is_valid, error_message). is_valid is False if the account no
+    longer exists, is suspended, or its password has changed since this JWT
+    was issued (the DB's password_changed_at is newer than the token's pwd
+    claim). This is what makes suspension AND password resets take effect
+    immediately instead of only at the next login — the JWT itself is never
+    re-issued or revoked out-of-band, so it must be checked per request.
+    """
+    conn = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return False, 'Error validating session. Please log in again.'
+        cur = conn.cursor()
+        cur.execute("SELECT status, password_changed_at FROM users WHERE id = %s;", (user_id,))
+        row = cur.fetchone()
+        cur.close()
+
+        if not row:
+            return False, 'Account no longer exists. Please log in again.'
+
+        status = row.get('status')
+        if status and status != 'active':
+            return False, 'Account is not active. Please contact an administrator.'
+
+        changed_at = row.get('password_changed_at')
+        if changed_at:
+            current_epoch = int(changed_at.replace(tzinfo=timezone.utc).timestamp())
+            if current_epoch > pwd_epoch_claim:
+                return False, 'Your password was changed. Please log in again.'
+
+        return True, None
+    except Exception as e:
+        print(f"Session validity check error: {e}")
+        return False, 'Error validating session. Please log in again.'
+    finally:
+        if conn:
+            release_db_connection(conn)
+
+
 def token_required(f):
-    """Route decorator that checks for a valid Bearer token in the Authorization header."""
+    """Route decorator that checks for a valid Bearer token in the Authorization header,
+    that the account it belongs to is still active, and that its password hasn't
+    changed since the token was issued."""
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization', '')
@@ -63,11 +122,44 @@ def token_required(f):
         else:
             return jsonify({'message': 'Invalid Authorization header format!'}), 401
 
-        user_id = decode_auth_token(token)
-        if isinstance(user_id, str):
-            return jsonify({'message': user_id}), 401
+        decoded = decode_auth_token(token)
+        if isinstance(decoded, str):
+            return jsonify({'message': decoded}), 401
 
-        kwargs['current_user_id'] = user_id
+        is_valid, error_message = _check_session_still_valid(decoded['user_id'], decoded['pwd_epoch'])
+        if not is_valid:
+            return jsonify({'message': error_message}), 401
+
+        kwargs['current_user_id'] = decoded['user_id']
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def token_optional(f):
+    """Route decorator that validates a token if present, allows the request if absent.
+    Use on public/read-only endpoints that should also work for unauthenticated users.
+    A token that's since been invalidated (suspended account, or password changed)
+    is rejected with the same error as token_required — it is not silently
+    downgraded to anonymous, matching this decorator's prior behavior for any
+    other invalid token."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+        parts = auth_header.split()
+        if (len(parts) == 2 and parts[0].lower() == 'bearer'
+                and parts[1].lower() not in ('null', 'undefined', '')):
+            decoded = decode_auth_token(parts[1])
+            if isinstance(decoded, str):
+                return jsonify({'message': decoded}), 401
+
+            is_valid, error_message = _check_session_still_valid(decoded['user_id'], decoded['pwd_epoch'])
+            if not is_valid:
+                return jsonify({'message': error_message}), 401
+
+            kwargs['current_user_id'] = decoded['user_id']
+        else:
+            kwargs['current_user_id'] = None
         return f(*args, **kwargs)
 
     return decorated
@@ -77,43 +169,8 @@ def token_required(f):
 # Auth routes
 # ---------------------------------------------------------------------------
 
-@auth_bp.route('/signup', methods=['POST'])
-def signup():
-    """Registers a new user and returns a JWT."""
-    data = request.get_json()
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'Email and password are required!'}), 400
-
-    hashed = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-    conn = None
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            INSERT INTO users (email, password_hash, display_name, username)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id, email, display_name, created_at, role_id;
-            """,
-            (data['email'], hashed, data.get('display_name'), data.get('username'))
-        )
-        new_user = cur.fetchone()
-        conn.commit()
-        return jsonify({
-            'message': 'User created successfully!',
-            'token': encode_auth_token(new_user['id'], new_user['role_id']),
-            'user': new_user,
-        }), 201
-    except psycopg2.errors.UniqueViolation:
-        conn.rollback()
-        return jsonify({'message': 'Email or username already exists.'}), 409
-    finally:
-        if conn:
-            cur.close()
-            conn.close()
-
-
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     """Validates credentials and returns a JWT on success."""
     data = request.get_json()
@@ -124,14 +181,37 @@ def login():
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE email = %s;", (data['email'],))
+        cur.execute("SELECT id, email, display_name, role_id, status, password_hash, failed_login_attempts, last_failed_at, password_changed_at, created_at FROM users WHERE email = %s;", (data['email'],))
         user = cur.fetchone()
 
         if not user:
-            return jsonify({'message': 'Email not found.'}), 404
+            return jsonify({'message': 'Invalid email or password.'}), 401
+
+        max_attempts = int(os.environ.get('MAX_LOGIN_ATTEMPTS', '10'))
+        lockout_minutes = int(os.environ.get('LOCKOUT_DURATION_MINUTES', '30'))
+        failed = user.get('failed_login_attempts') or 0
+        if failed >= max_attempts:
+            last_attempt = user.get('last_failed_at')
+            if last_attempt:
+                elapsed = (datetime.datetime.now(timezone.utc) - last_attempt.replace(tzinfo=timezone.utc)).total_seconds()
+                if elapsed < lockout_minutes * 60:
+                    remaining = int((lockout_minutes * 60 - elapsed) / 60) + 1
+                    return jsonify({'message': f'Account locked due to too many failed attempts. Try again in {remaining} minutes.'}), 429
+                cur.execute("UPDATE users SET failed_login_attempts = 0 WHERE id = %s;", (user['id'],))
+                conn.commit()
+            else:
+                return jsonify({'message': f'Account locked due to too many failed attempts. Try again in {lockout_minutes} minutes.'}), 429
 
         if not bcrypt.check_password_hash(user['password_hash'], data['password']):
-            return jsonify({'message': 'Incorrect password.'}), 401
+            cur.execute(
+                "UPDATE users SET failed_login_attempts = failed_login_attempts + 1, last_failed_at = NOW() WHERE id = %s;",
+                (user['id'],),
+            )
+            conn.commit()
+            return jsonify({'message': 'Invalid email or password.'}), 401
+
+        if user.get('status') and user['status'] != 'active':
+            return jsonify({'message': 'Account is not active. Please contact an administrator.'}), 403
 
         cur.execute(
             "UPDATE users SET last_login_at = NOW(), failed_login_attempts = 0 WHERE id = %s;",
@@ -139,16 +219,164 @@ def login():
         )
         conn.commit()
 
+        password_changed_at = user['password_changed_at']
         del user['password_hash']
+        del user['password_changed_at']
         return jsonify({
             'message': 'Login successful!',
-            'token': encode_auth_token(user['id'], user['role_id']),
+            'token': encode_auth_token(user['id'], user['role_id'], password_changed_at),
             'user': user,
         }), 200
     finally:
         if conn:
             cur.close()
-            conn.close()
+            release_db_connection(conn)
+
+
+# ---------------------------------------------------------------------------
+# Google OAuth route
+# ---------------------------------------------------------------------------
+
+_GOOGLE_ISSUERS = {'accounts.google.com', 'https://accounts.google.com'}
+
+
+@auth_bp.route('/google', methods=['POST'])
+@limiter.limit("10 per minute")
+def google_login():
+    """Verifies a Google ID token and returns a JWT. Any verified Google account is accepted."""
+    data = request.get_json()
+    if not data or not data.get('credential'):
+        return jsonify({'message': 'Google credential is required.'}), 400
+
+    client_id = current_app.config.get('GOOGLE_CLIENT_ID', '')
+    if not client_id:
+        return jsonify({'message': 'Google OAuth is not configured on this server.'}), 500
+
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            data['credential'],
+            google_requests.Request(),
+            client_id,
+            clock_skew_in_seconds=120,
+        )
+    except ValueError as e:
+        print(f"Google token verification failed: {e}")
+        return jsonify({'message': 'Invalid Google token. Please try again.'}), 401
+
+    if idinfo.get('iss') not in _GOOGLE_ISSUERS:
+        return jsonify({'message': 'Invalid token issuer.'}), 401
+
+    if not idinfo.get('email_verified'):
+        return jsonify({'message': 'Google account email is not verified.'}), 401
+
+    email = idinfo['email']
+    display_name = idinfo.get('name', email.split('@')[0])
+
+    allowed_domains = os.environ.get('OAUTH_ALLOWED_DOMAINS', 'iitpkd.ac.in').split(',')
+    email_domain = email.rsplit('@', 1)[-1].lower()
+    if email_domain not in allowed_domains:
+        return jsonify({'message': 'Only institutional email accounts are allowed.'}), 403
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT id, email, display_name, role_id, status, password_hash, password_changed_at, created_at FROM users WHERE email = %s;", (email,))
+        user = cur.fetchone()
+
+        if not user:
+            # First login: create the user as pending, not active — matching the
+            # password-account flow (/auth/create-user), an admin still has to
+            # approve any new account before it can use the dashboard, even one
+            # from a verified institutional Google identity (M3). A random hash
+            # satisfies NOT NULL while preventing password-based login for this
+            # OAuth-only account.
+            dummy_hash = bcrypt.generate_password_hash(
+                secrets.token_urlsafe(32)
+            ).decode('utf-8')
+            cur.execute(
+                """
+                INSERT INTO users (email, password_hash, display_name, role_id, status)
+                VALUES (%s, %s, %s, 0, 'pending_verification')
+                RETURNING id, email, display_name, role_id, status, created_at;
+                """,
+                (email, dummy_hash, display_name),
+            )
+            user = dict(cur.fetchone())
+            conn.commit()
+            return jsonify({
+                'message': 'Account created. An administrator must activate it before you can sign in.',
+            }), 403
+        else:
+            if user.get('status') and user['status'] != 'active':
+                return jsonify({'message': 'Account is not active. Please contact an administrator.'}), 403
+
+            cur.execute(
+                "UPDATE users SET last_login_at = NOW() WHERE id = %s;",
+                (user['id'],),
+            )
+            conn.commit()
+            user = dict(user)
+            user.pop('password_hash', None)
+
+        password_changed_at = user.pop('password_changed_at', None)
+        return jsonify({
+            'message': 'Login successful!',
+            'token': encode_auth_token(user['id'], user['role_id'], password_changed_at),
+            'user': user,
+        }), 200
+
+    finally:
+        if conn:
+            cur.close()
+            release_db_connection(conn)
+
+
+# ---------------------------------------------------------------------------
+# Guest login route
+# ---------------------------------------------------------------------------
+
+@auth_bp.route('/guest', methods=['POST'])
+@limiter.limit("10 per minute")
+def guest_login():
+    """Logs in the pre-configured guest account whose credentials live in .env."""
+    guest_email = os.environ.get('GUEST_USER_NAME', '')
+    guest_password = os.environ.get('GUEST_USER_PASSWORD', '')
+    if not guest_email or not guest_password:
+        return jsonify({'message': 'Guest login is not configured on this server.'}), 500
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, email, display_name, role_id, status, password_hash, password_changed_at, created_at FROM users WHERE email = %s;",
+            (guest_email,)
+        )
+        user = cur.fetchone()
+
+        if not user:
+            return jsonify({'message': 'Guest account not found.'}), 404
+
+        if not bcrypt.check_password_hash(user['password_hash'], guest_password):
+            return jsonify({'message': 'Guest login configuration error.'}), 500
+
+        cur.execute("UPDATE users SET last_login_at = NOW() WHERE id = %s;", (user['id'],))
+        conn.commit()
+
+        user = dict(user)
+        user.pop('password_hash', None)
+        password_changed_at = user.pop('password_changed_at', None)
+        return jsonify({
+            'message': 'Login successful!',
+            'token': encode_auth_token(user['id'], user['role_id'], password_changed_at),
+            'user': user,
+        }), 200
+    finally:
+        if conn:
+            cur.close()
+            release_db_connection(conn)
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +392,47 @@ def _require_admin(cur, user_id):
     return user
 
 
+def _require_role(cur, user_id, allowed_roles):
+    """
+    Returns the user row if their role_id is in `allowed_roles`, else None.
+
+    Generalization of _require_admin for per-resource (rather than global)
+    authorization — e.g. upload.py's TABLE_UPLOAD_ROLES, which mirrors
+    Frontend/src/utils/rolePermissions.js's SECTION_PERMISSIONS so a role
+    the frontend shows an action to is the same role the backend accepts it
+    from. Applies no implicit admin bypass; callers must include role_id 3
+    in `allowed_roles` themselves wherever master admin should always pass.
+    """
+    cur.execute("SELECT role_id FROM users WHERE id = %s;", (user_id,))
+    user = cur.fetchone()
+    if not user or user['role_id'] not in allowed_roles:
+        return None
+    return user
+
+
+def _is_management(user_id):
+    """
+    True only for a currently-active role_id=3 account. Used by the public
+    dashboard stats blueprints (administrative_stats.py, academic_stats.py)
+    to decide which read-only view/connection a token_optional route uses —
+    deliberately separate from _require_admin, which 403s a request outright.
+    This never rejects a request; it only narrows what it can see.
+    """
+    if not user_id:
+        return False
+    conn = get_db_connection()
+    if not conn:
+        return False
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT role_id FROM users WHERE id = %s;", (user_id,))
+        row = cur.fetchone()
+        return bool(row and row['role_id'] == 3)
+    finally:
+        cur.close()
+        release_db_connection(conn)
+
+
 @auth_bp.route('/roles', methods=['GET'])
 @token_required
 def get_roles(current_user_id):
@@ -177,7 +446,7 @@ def get_roles(current_user_id):
         return jsonify(cur.fetchall()), 200
     finally:
         cur.close()
-        conn.close()
+        release_db_connection(conn)
 
 
 @auth_bp.route('/roles/<int:role_id>', methods=['PUT'])
@@ -204,10 +473,11 @@ def update_role(current_user_id, role_id):
         return jsonify(updated), 200
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': str(e)}), 500
+        print(f"Error updating role: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         cur.close()
-        conn.close()
+        release_db_connection(conn)
 
 
 @auth_bp.route('/roles', methods=['POST'])
@@ -237,10 +507,11 @@ def create_role(current_user_id):
         return jsonify({'message': 'A role with that id or name already exists'}), 409
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': str(e)}), 500
+        print(f"Error creating role: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         cur.close()
-        conn.close()
+        release_db_connection(conn)
 
 
 @auth_bp.route('/roles/<int:role_id>', methods=['DELETE'])
@@ -267,22 +538,49 @@ def delete_role(current_user_id, role_id):
         return jsonify({'message': 'Role deleted successfully'}), 200
     except Exception as e:
         conn.rollback()
-        return jsonify({'message': str(e)}), 500
+        print(f"Error deleting role: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         cur.close()
-        conn.close()
+        release_db_connection(conn)
+
+
+def _role_exists(cur, role_id):
+    """True if role_id refers to a real row in roles. Guards against a typo'd
+    or malicious integer being written straight into users.role_id with no
+    FK-violation feedback until something else breaks later."""
+    cur.execute("SELECT 1 FROM roles WHERE id = %s;", (role_id,))
+    return cur.fetchone() is not None
 
 
 @auth_bp.route('/create-user', methods=['POST'])
+@limiter.limit("20 per hour")
 @token_required
 def create_user(current_user_id):
     """Creates a new user account. Admin only."""
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'message': 'Request body must be JSON.'}), 400
+
+    required = ('email', 'password', 'username', 'role_id')
+    missing = [f for f in required if not data.get(f) and data.get(f) != 0]
+    if missing:
+        return jsonify({'message': f"Missing required field(s): {', '.join(missing)}"}), 400
+
     conn = get_db_connection()
+    if not conn:
+        return jsonify({'message': 'Database connection failed.'}), 503
     cur = conn.cursor()
     try:
         if not _require_admin(cur, current_user_id):
             return jsonify({'message': 'Admin access required'}), 403
+
+        try:
+            role_id = int(data['role_id'])
+        except (TypeError, ValueError):
+            return jsonify({'message': 'role_id must be an integer.'}), 400
+        if not _role_exists(cur, role_id):
+            return jsonify({'message': f"Unknown role_id: {role_id}"}), 400
 
         hashed = bcrypt.generate_password_hash(data['password']).decode('utf-8')
         cur.execute(
@@ -291,7 +589,7 @@ def create_user(current_user_id):
             VALUES (%s, %s, %s, %s, %s, 'pending_verification')
             RETURNING id, email, username, display_name, role_id;
             """,
-            (data['email'], hashed, data['username'], data.get('display_name'), data['role_id'])
+            (data['email'], hashed, data['username'], data.get('display_name'), role_id)
         )
         new_user = cur.fetchone()
         conn.commit()
@@ -299,6 +597,91 @@ def create_user(current_user_id):
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
         return jsonify({'message': 'Email or username already exists'}), 409
+    except Exception as e:
+        conn.rollback()
+        print(f"Error creating user: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         cur.close()
-        conn.close()
+        release_db_connection(conn)
+
+@auth_bp.route('/users', methods=['GET'])
+@token_required
+def get_users(current_user_id):
+    """Returns all existing users. Admin only."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if not _require_admin(cur, current_user_id):
+            return jsonify({'message': 'Admin access required'}), 403
+            
+        cur.execute("SELECT id, email, username, display_name, role_id, status FROM users ORDER BY id DESC;")
+        users = cur.fetchall()
+        return jsonify(users), 200
+    except Exception as e:
+        print(f"Error fetching users: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
+    finally:
+        cur.close()
+        release_db_connection(conn)
+
+
+_VALID_USER_STATUSES = {'pending_verification', 'active', 'deactivated'}
+
+
+@auth_bp.route('/users/<int:user_id>', methods=['PUT'])
+@limiter.limit("30 per hour")
+@token_required
+def update_user(current_user_id, user_id):
+    """Updates a user's role_id, status, and optionally password. Admin only."""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'message': 'Request body must be JSON.'}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if not _require_admin(cur, current_user_id):
+            return jsonify({'message': 'Admin access required'}), 403
+
+        # Update role_id if provided
+        if 'role_id' in data:
+            try:
+                new_role_id = int(data['role_id'])
+            except (TypeError, ValueError):
+                return jsonify({'message': 'role_id must be an integer.'}), 400
+            if not _role_exists(cur, new_role_id):
+                return jsonify({'message': f"Unknown role_id: {new_role_id}"}), 400
+            cur.execute("UPDATE users SET role_id = %s WHERE id = %s;", (new_role_id, user_id))
+
+        # Update status if provided. No extra invalidation step needed here —
+        # token_required already re-checks status fresh on every request, so
+        # setting a user to 'deactivated' takes effect on their very next
+        # request, not just their next login.
+        if 'status' in data and data['status']:
+            if data['status'] not in _VALID_USER_STATUSES:
+                return jsonify({
+                    'message': f"Invalid status. Must be one of: {', '.join(sorted(_VALID_USER_STATUSES))}"
+                }), 400
+            cur.execute("UPDATE users SET status = %s WHERE id = %s;", (data['status'], user_id))
+
+        # Update password if provided. Bumping password_changed_at here is
+        # what makes this take effect immediately: it invalidates every JWT
+        # already issued to this account (see token_required), not just
+        # future logins.
+        if 'password' in data and data['password'].strip():
+            hashed = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+            cur.execute(
+                "UPDATE users SET password_hash = %s, password_changed_at = now() WHERE id = %s;",
+                (hashed, user_id)
+            )
+
+        conn.commit()
+        return jsonify({'message': 'User updated successfully'}), 200
+    except Exception as e:
+        conn.rollback()
+        print(f"Error updating user: {e}")
+        return jsonify({'message': 'An internal error occurred.'}), 500
+    finally:
+        cur.close()
+        release_db_connection(conn)

@@ -4,25 +4,38 @@ import InnovationPublicView from './InnovationPublicView';
 import './Page.css';
 import './PeopleCampus.css';
 
-function InnovationEntrepreneurship({ user, isPublicView }) {
+function InnovationEntrepreneurship({ user }) {
   const roleId = user?.role_id;
 
   const sections = [
     {
-      title: 'IPTIF',
+      title: 'Home Grown Startup',
+      route: '/innovation-entrepreneurship/home-ground-startup',
+      description: 'Internal Startups',
+      allowedRoles: [3, 13, 14]
+    },
+    {
+      title: 'IIT Palakkad Technology IHub Foundation (IPTIF)',
       route: '/innovation-entrepreneurship/iptif',
-      description: 'Innovation'
+      description: 'Innovation',
+      allowedRoles: [3, 14]
     },
     {
       title: 'TechIn',
       route: '/innovation-entrepreneurship/techin',
-      description: 'Entrepreneurship'
+      description: 'Entrepreneurship',
+      allowedRoles: [3, 13]
+    },
+    {
+      title: 'Startup Portfolio',
+      route: '/innovation-entrepreneurship/startup-portfolio',
+      description: 'Showcase of IPTIF & TechIn startups',
+      allowedRoles: [3, 13, 14]
     }
   ];
   const [showPublicView, setShowPublicView] = useState(false);
 
-  // If public user → always show public view
-  if (roleId === 1) {
+  if (!user || roleId === 0 || roleId === 1) {
     return <InnovationPublicView user={user} />;
   }
 
@@ -32,13 +45,12 @@ function InnovationEntrepreneurship({ user, isPublicView }) {
       <div className="page-container">
         <div className="page-content">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn mb-space-4"
             onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
           >
             ← Back to Admin View
           </button>
-          <InnovationPublicView user={user} />
+          <InnovationPublicView user={user} embedded />
         </div>
       </div>
     );
@@ -48,17 +60,21 @@ function InnovationEntrepreneurship({ user, isPublicView }) {
     <div className="page-container">
       <div className="page-content">
         {/* Public view button for non-public users */}
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            className="upload-data-btn"
-            onClick={() => setShowPublicView(true)}
-          >
-            View Public Page
-          </button>
-        </div>
+        {roleId !== 0 && roleId !== 1 && (
+          <div className="mb-space-4">
+            <button
+              className="page-upload-btn"
+              onClick={() => setShowPublicView(true)}
+            >
+              View Public Page
+            </button>
+          </div>
+        )}
 
-        <div className="people-campus-grid" style={{ marginTop: '2rem' }}>
+        <div className="people-campus-grid mt-space-8">
           {sections.map((section, index) => {
+            const isAllowed = roleId === 3 || (section.allowedRoles && section.allowedRoles.includes(roleId));
+            if (!isAllowed) return null;
             return (
               <Link
                 key={index}
@@ -66,7 +82,7 @@ function InnovationEntrepreneurship({ user, isPublicView }) {
                 className="people-campus-card"
               >
                 <div className="card-icon">
-                  {section.title === 'IPTIF' ? '💡' : '🚀'}
+                  {section.title === 'IIT Palakkad Technology IHub Foundation (IPTIF)' ? '💡' : section.title === 'Startup Portfolio' ? '📇' : section.title === 'Home Grown Startup' ? '🏠' : '🚀'}
                 </div>
                 <h3 className="card-title">{section.title}</h3>
                 <p className="card-description">{section.description}</p>

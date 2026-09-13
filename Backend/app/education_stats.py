@@ -3,8 +3,9 @@ from datetime import date
 from flask import Blueprint, jsonify, request
 from psycopg2.errors import UndefinedTable
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns
 
 education_bp = Blueprint('education', __name__)
 
@@ -18,7 +19,6 @@ CATEGORY_KEYWORDS = {
 }
 
 def get_standardized_type_sql():
-    """Returns a SQL CASE expression to standardize engagement_type based on keywords."""
     return """
         CASE
             WHEN engagement_type ILIKE '%%Adjunct%%' THEN 'Adjunct'
@@ -31,7 +31,6 @@ def get_standardized_type_sql():
     """
 
 def get_standardized_type_python(raw_type):
-    """Returns the standardized engagement category for a raw string in Python."""
     if not raw_type:
         return None
     raw_type_lower = raw_type.lower()
@@ -44,39 +43,62 @@ def get_standardized_type_python(raw_type):
 ENGAGEMENT_TABLE_NAME = 'faculty_engagement'
 
 
+def get_cutoff_date(year_str):
+    today = date.today()
+    if not year_str or year_str in ('', 'All'):
+        return today
+    try:
+        year_val = int(year_str)
+        if year_val >= today.year:
+            return today
+        return date(year_val, 12, 31)
+    except (ValueError, TypeError):
+        return today
+
+
 def build_filter_query(filters):
     conditions = []
     params = []
 
-    mapping = {
-        'year': 'year',
-        'department': 'department',
-        'engagement_type': 'engagement_type'
-    }
+    year_str = filters.get('year')
+    if year_str and year_str not in ('', 'All'):
+        try:
+            year_val = int(year_str)
+            cutoff = get_cutoff_date(year_str)
+            year_start = date(year_val, 1, 1)
+            conditions.append(
+                "startdate <= %s AND (enddate IS NULL OR enddate >= %s)"
+            )
+            params.extend([cutoff, year_start])
+        except (ValueError, TypeError):
+            pass
 
-    for key, column in mapping.items():
-        value = filters.get(key)
-        if value in (None, '', 'All'):
-            continue
-        if key == 'engagement_type':
-            # For standardized filtering, match by keywords
-            if value == 'FacultyFellow':
-                conditions.append("(engagement_type ILIKE %s OR engagement_type ILIKE %s)")
-                params.extend(["%Faculty Fellow%", "%FacultyFellow%"])
-            elif value == 'PoP':
-                conditions.append("(engagement_type ILIKE %s OR engagement_type ILIKE %s OR engagement_type ILIKE %s)")
-                params.extend(["%PoP%", "%Professor of Practice%", "%Practice%"])
-            else:
-                conditions.append(f"{column} ILIKE %s")
-                params.append(f"%{value}%")
+    if filters.get('department') not in (None, '', 'All'):
+        conditions.append("department = %s")
+        params.append(filters['department'])
+
+    engagement_type = filters.get('engagement_type')
+    if engagement_type not in (None, '', 'All'):
+        if engagement_type == 'FacultyFellow':
+            conditions.append(
+                "(engagement_type ILIKE %s OR engagement_type ILIKE %s)"
+            )
+            params.extend(["%Faculty Fellow%", "%FacultyFellow%"])
+        elif engagement_type == 'PoP':
+            conditions.append(
+                "(engagement_type ILIKE %s OR engagement_type ILIKE %s OR engagement_type ILIKE %s)"
+            )
+            params.extend(["%PoP%", "%Professor of Practice%", "%Practice%"])
         else:
-            conditions.append(f"{column} = %s")
-            params.append(value)
+            conditions.append("engagement_type ILIKE %s")
+            params.append(f"%{engagement_type}%")
 
-    where_clause = ''
-    if conditions:
-        where_clause = 'WHERE ' + ' AND '.join(conditions)
+    where_clause = ('WHERE ' + ' AND '.join(conditions)) if conditions else ''
     return where_clause, params
+
+
+def active_sql():
+    return "CASE WHEN enddate IS NULL OR enddate >= %s::date THEN 1 ELSE 0 END"
 
 
 def fetch_rows(where_clause, params, extra_columns=''):
@@ -116,7 +138,9 @@ def fetch_rows(where_clause, params, extra_columns=''):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
+
+
 def faculty_engagement_table_exists():
     conn = None
     cur = None
@@ -145,35 +169,35 @@ def faculty_engagement_table_exists():
         if cur:
             cur.close()
         if conn:
-            conn.close()
-def compute_summary(rows):
-    today = date.today()
-    summary_map = {eng_type: {'total': 0, 'active': 0} for eng_type in ENGAGEMENT_TYPES}
+            release_db_connection(conn)
+
+
+def compute_summary(rows, year_str=None):
+    cutoff = get_cutoff_date(year_str)
+    summary_map = {eng_type: {'active': 0} for eng_type in ENGAGEMENT_TYPES}
+
     for row in rows:
-        engagement_type_raw = row.get('engagement_type')
-        engagement_type = get_standardized_type_python(engagement_type_raw)
-        
+        engagement_type = get_standardized_type_python(row.get('engagement_type'))
         if not engagement_type:
             continue
-
-        if engagement_type not in summary_map:
-            summary_map[engagement_type] = {'total': 0, 'active': 0}
-        summary_map[engagement_type]['total'] += 1
-
         enddate = row.get('enddate')
-        if enddate is None:
+        if enddate is not None and isinstance(enddate, str):
+            try:
+                from datetime import datetime
+                enddate = datetime.strptime(enddate, "%Y-%m-%d").date()
+            except Exception:
+                enddate = None
+        if (enddate is None) or (enddate >= cutoff):
             summary_map[engagement_type]['active'] += 1
-        elif isinstance(enddate, date) and enddate > today:
-            summary_map[engagement_type]['active'] += 1
 
-    overall_total = sum(item['total'] for item in summary_map.values())
-    overall_active = sum(item['active'] for item in summary_map.values())
+    overall_active = sum(v['active'] for v in summary_map.values())
+    return summary_map, overall_active
 
-    return summary_map, overall_total, overall_active
 
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @education_bp.route('/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_filter_options(current_user_id):
     if not faculty_engagement_table_exists():
         return jsonify({
@@ -190,30 +214,70 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
+
+        current_filters = {
+            'year': request.args.get('year'),
+            'department': request.args.get('department'),
+            'engagement_type': request.args.get('engagement_type')
+        }
+        for k, v in current_filters.items():
+            if v == 'All' or v == '':
+                current_filters[k] = None
+
+        def get_where_except(exclude_key):
+            temp_filters = {k: v for k, v in current_filters.items() if k != exclude_key}
+            return build_filter_query(temp_filters)
+
+        filter_options = {}
+
+        # Departments
+        where_clause, params = get_where_except('department')
+        cur.execute(f"SELECT DISTINCT department FROM faculty_engagement {where_clause} {'AND' if where_clause else 'WHERE'} department IS NOT NULL AND department <> '' ORDER BY department", params)
+        filter_options['departments'] = [row['department'] for row in cur.fetchall() if row['department']]
+
+        # Years (Calculate min/max based on other filters)
+        where_clause, params = get_where_except('year')
         cur.execute(
-            """
+            f"""
             SELECT
-                ARRAY(
-                    SELECT DISTINCT year FROM faculty_engagement
-                    WHERE year IS NOT NULL ORDER BY year DESC
-                ) AS years,
-                ARRAY(
-                    SELECT DISTINCT department FROM faculty_engagement
-                    WHERE department IS NOT NULL AND department <> ''
-                    ORDER BY department
-                ) AS departments,
-                ARRAY(
-                    SELECT DISTINCT engagement_type FROM faculty_engagement
-                    ORDER BY engagement_type
-                ) AS engagement_types
-            """
+                MIN(EXTRACT(YEAR FROM startdate))::int AS min_year,
+                MAX(EXTRACT(YEAR FROM enddate))::int AS max_year,
+                MAX(EXTRACT(YEAR FROM startdate))::int AS max_start_year
+            FROM faculty_engagement
+            {where_clause}
+            """, params
         )
         row = cur.fetchone()
-        return jsonify({
-            'years': row['years'] if row and row['years'] else [],
-            'departments': row['departments'] if row and row['departments'] else [],
-            'engagement_types': ENGAGEMENT_TYPES
-        }), 200
+
+        years = []
+        current_year = date.today().year
+        if row and row['min_year'] is not None:
+            min_y = row['min_year']
+
+            cur.execute(
+                f"SELECT EXISTS(SELECT 1 FROM faculty_engagement {where_clause} {'AND' if where_clause else 'WHERE'} enddate IS NULL) AS has_ongoing_flag", params
+            )
+            ongoing_row = cur.fetchone()
+            has_ongoing = ongoing_row['has_ongoing_flag'] if ongoing_row else False
+
+            potential_max = [min_y]
+            if row['max_year'] is not None:
+                potential_max.append(row['max_year'])
+            if row['max_start_year'] is not None:
+                potential_max.append(row['max_start_year'])
+            if has_ongoing:
+                potential_max.append(current_year)
+
+            max_y = max(potential_max)
+            max_y = max(max_y, current_year)
+            years = list(range(max_y, min_y - 1, -1))
+
+        filter_options['years'] = years
+        filter_options['current_year'] = current_year
+        filter_options['engagement_types'] = ENGAGEMENT_TYPES
+
+        return jsonify(filter_options), 200
+
     except Exception as exc:
         print(f"Education filter options error: {exc}")
         return jsonify({'message': 'Failed to fetch filter options.'}), 500
@@ -221,11 +285,11 @@ def get_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @education_bp.route('/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_summary(current_user_id):
     if not faculty_engagement_table_exists():
         return jsonify({
@@ -235,8 +299,9 @@ def get_summary(current_user_id):
             )
         }), 500
 
+    year_str = request.args.get('year')
     filters = {
-        'year': request.args.get('year'),
+        'year': year_str,
         'department': request.args.get('department'),
         'engagement_type': request.args.get('engagement_type')
     }
@@ -245,21 +310,19 @@ def get_summary(current_user_id):
     if error:
         return jsonify({'message': error}), 500
 
-    summary_map, overall_total, overall_active = compute_summary(rows)
+    summary_map, overall_active = compute_summary(rows, year_str)
 
-    summary_list = []
-    for eng_type in ENGAGEMENT_TYPES:
-        data = summary_map.get(eng_type, {'total': 0, 'active': 0})
-        summary_list.append({
+    summary_list = [
+        {
             'engagement_type': eng_type,
-            'total': data['total'],
-            'active': data['active']
-        })
+            'active': summary_map[eng_type]['active'],
+        }
+        for eng_type in ENGAGEMENT_TYPES
+    ]
 
     return jsonify({
         'data': {
             'summary': summary_list,
-            'overall_total': overall_total,
             'overall_active': overall_active,
             'filters_applied': filters
         }
@@ -267,7 +330,7 @@ def get_summary(current_user_id):
 
 
 @education_bp.route('/department-breakdown', methods=['GET'])
-@token_required
+@token_optional
 def get_department_breakdown(current_user_id):
     if not faculty_engagement_table_exists():
         return jsonify({
@@ -277,12 +340,14 @@ def get_department_breakdown(current_user_id):
             )
         }), 500
 
+    year_str = request.args.get('year')
     filters = {
-        'year': request.args.get('year'),
+        'year': year_str,
         'department': request.args.get('department'),
         'engagement_type': request.args.get('engagement_type')
     }
     where_clause, params = build_filter_query(filters)
+    cutoff = get_cutoff_date(year_str)
 
     conn = None
     cur = None
@@ -296,19 +361,14 @@ def get_department_breakdown(current_user_id):
             SELECT department,
                    {get_standardized_type_sql()} AS std_type,
                    COUNT(*) AS total,
-                   SUM(
-                       CASE
-                           WHEN enddate IS NULL OR enddate > CURRENT_DATE THEN 1
-                           ELSE 0
-                       END
-                   ) AS active
+                   SUM({active_sql()}) AS active
             FROM faculty_engagement
             {where_clause}
             GROUP BY department, std_type
             HAVING {get_standardized_type_sql()} IS NOT NULL
             ORDER BY department, std_type
             """,
-            params
+            [cutoff.isoformat()] + list(params)
         )
         rows = cur.fetchall()
 
@@ -318,7 +378,10 @@ def get_department_breakdown(current_user_id):
             if dept not in breakdown_map:
                 breakdown_map[dept] = {
                     'department': dept,
-                    'details': {eng_type: {'total': 0, 'active': 0} for eng_type in ENGAGEMENT_TYPES}
+                    'details': {
+                        eng_type: {'total': 0, 'active': 0}
+                        for eng_type in ENGAGEMENT_TYPES
+                    }
                 }
             breakdown_map[dept]['details'][row['std_type']] = {
                 'total': row['total'],
@@ -328,8 +391,7 @@ def get_department_breakdown(current_user_id):
         formatted = []
         for dept, data in sorted(breakdown_map.items()):
             entry = {'department': dept}
-            totals = 0
-            actives = 0
+            totals = actives = 0
             for eng_type in ENGAGEMENT_TYPES:
                 entry[f"{eng_type}_total"] = data['details'][eng_type]['total']
                 entry[f"{eng_type}_active"] = data['details'][eng_type]['active']
@@ -341,12 +403,7 @@ def get_department_breakdown(current_user_id):
 
         return jsonify({'data': formatted}), 200
     except UndefinedTable:
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
     except Exception as exc:
         print(f"Education department breakdown error: {exc}")
         return jsonify({'message': 'Failed to fetch department breakdown.'}), 500
@@ -354,22 +411,17 @@ def get_department_breakdown(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @education_bp.route('/year-trend', methods=['GET'])
-@token_required
+@token_optional
 def get_year_trend(current_user_id):
     if not faculty_engagement_table_exists():
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
 
     filters = {
-        'year': request.args.get('year'),
+        'year': None,
         'department': request.args.get('department'),
         'engagement_type': request.args.get('engagement_type')
     }
@@ -382,16 +434,48 @@ def get_year_trend(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
+
+        # Count engagements active as of Dec-31 of each year (today for current year)
         cur.execute(
             f"""
-            SELECT year,
-                   {get_standardized_type_sql()} AS std_type,
-                   COUNT(*) AS total
-            FROM faculty_engagement
-            {where_clause}
-            GROUP BY year, std_type
-            HAVING {get_standardized_type_sql()} IS NOT NULL
-            ORDER BY year ASC, std_type
+            WITH years AS (
+                SELECT generate_series(
+                    MIN(EXTRACT(YEAR FROM startdate))::int,
+                    GREATEST(
+                        MAX(EXTRACT(YEAR FROM COALESCE(enddate, CURRENT_DATE)))::int,
+                        EXTRACT(YEAR FROM CURRENT_DATE)::int
+                    )
+                ) AS yr
+                FROM faculty_engagement
+            ),
+            base AS (
+                SELECT
+                    {get_standardized_type_sql()} AS std_type,
+                    startdate,
+                    enddate
+                FROM faculty_engagement
+                {where_clause}
+            )
+            SELECT
+                y.yr AS year,
+                b.std_type,
+                COUNT(*) AS active
+            FROM years y
+            JOIN base b ON
+                b.std_type IS NOT NULL
+                AND b.startdate <= CASE
+                    WHEN y.yr >= EXTRACT(YEAR FROM CURRENT_DATE) THEN CURRENT_DATE
+                    ELSE (y.yr || '-12-31')::date
+                END
+                AND (
+                    b.enddate IS NULL
+                    OR b.enddate >= CASE
+                        WHEN y.yr >= EXTRACT(YEAR FROM CURRENT_DATE) THEN CURRENT_DATE
+                        ELSE (y.yr || '-12-31')::date
+                    END
+                )
+            GROUP BY y.yr, b.std_type
+            ORDER BY y.yr ASC, b.std_type
             """,
             params
         )
@@ -399,23 +483,18 @@ def get_year_trend(current_user_id):
 
         trend_map = {}
         for row in rows:
-            year = row['year']
-            if year is None:
+            yr = row['year']
+            if yr is None:
                 continue
-            if year not in trend_map:
-                trend_map[year] = {eng_type: 0 for eng_type in ENGAGEMENT_TYPES}
-                trend_map[year]['year'] = year
-            trend_map[year][row['std_type']] = row['total']
+            if yr not in trend_map:
+                trend_map[yr] = {eng_type: 0 for eng_type in ENGAGEMENT_TYPES}
+                trend_map[yr]['year'] = yr
+            trend_map[yr][row['std_type']] = row['active']
 
-        trend_list = [trend_map[year] for year in sorted(trend_map.keys())]
+        trend_list = [trend_map[yr] for yr in sorted(trend_map.keys())]
         return jsonify({'data': trend_list}), 200
     except UndefinedTable:
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
     except Exception as exc:
         print(f"Education year trend error: {exc}")
         return jsonify({'message': 'Failed to fetch year trend.'}), 500
@@ -423,26 +502,23 @@ def get_year_trend(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @education_bp.route('/type-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_type_distribution(current_user_id):
     if not faculty_engagement_table_exists():
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
 
+    year_str = request.args.get('year')
     filters = {
-        'year': request.args.get('year'),
+        'year': year_str,
         'department': request.args.get('department'),
         'engagement_type': request.args.get('engagement_type')
     }
     where_clause, params = build_filter_query(filters)
+    cutoff = get_cutoff_date(year_str)
 
     conn = None
     cur = None
@@ -451,28 +527,37 @@ def get_type_distribution(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
+
+        # Wrap in a subquery so we can GROUP BY the alias std_type
         cur.execute(
             f"""
-            SELECT {get_standardized_type_sql()} AS std_type,
-                   COUNT(*) AS total
-            FROM faculty_engagement
-            {where_clause}
+            SELECT std_type,
+                   COUNT(*) AS total,
+                   SUM({active_sql()}) AS active
+            FROM (
+                SELECT {get_standardized_type_sql()} AS std_type,
+                       enddate
+                FROM faculty_engagement
+                {where_clause}
+            ) sub
+            WHERE std_type IS NOT NULL
             GROUP BY std_type
-            HAVING {get_standardized_type_sql()} IS NOT NULL
             ORDER BY std_type
             """,
-            params
+            [cutoff.isoformat()] + list(params)
         )
         rows = cur.fetchall()
-        distribution = [{'engagement_type': row['std_type'], 'total': row['total']} for row in rows]
+        distribution = [
+            {
+                'engagement_type': row['std_type'],
+                'total': row['total'],
+                'active': row['active']
+            }
+            for row in rows
+        ]
         return jsonify({'data': distribution}), 200
     except UndefinedTable:
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
     except Exception as exc:
         print(f"Education type distribution error: {exc}")
         return jsonify({'message': 'Failed to fetch type distribution.'}), 500
@@ -480,26 +565,29 @@ def get_type_distribution(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @education_bp.route('/list', methods=['GET'])
-@token_required
+@token_optional
 def get_faculty_engagement_list(current_user_id):
     if not faculty_engagement_table_exists():
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
 
+    year_str = request.args.get('year')
     filters = {
-        'year': request.args.get('year'),
+        'year': year_str,
         'department': request.args.get('department'),
         'engagement_type': request.args.get('engagement_type')
     }
     where_clause, params = build_filter_query(filters)
+    cutoff = get_cutoff_date(year_str)
+
+    active_condition = "(enddate IS NULL OR enddate >= %s::date)"
+    if where_clause:
+        active_where = where_clause + f" AND {active_condition}"
+    else:
+        active_where = f"WHERE {active_condition}"
 
     conn = None
     cur = None
@@ -520,38 +608,34 @@ def get_faculty_engagement_list(current_user_id):
                 enddate,
                 duration_months,
                 year,
-                remarks
+                remarks,
+                fc_bg_type
             FROM faculty_engagement
-            {where_clause}
+            {active_where}
             ORDER BY year DESC, faculty_name ASC
             """,
-            params
+            list(params) + [cutoff.isoformat()]
         )
         rows = cur.fetchall()
-        
-        # Convert rows to list of dicts
+
         result = []
         for row in rows:
             result.append({
                 'engagement_code': row.get('engagement_code'),
-                'faculty_name': row.get('faculty_name'),
+                'faculty_name': redact_pii_patterns(row.get('faculty_name')),
                 'engagement_type': row.get('engagement_type'),
-                'department': row.get('department'),
+                'department': redact_pii_patterns(row.get('department')),
                 'startdate': row.get('startdate').isoformat() if row.get('startdate') else None,
                 'enddate': row.get('enddate').isoformat() if row.get('enddate') else None,
                 'duration_months': row.get('duration_months'),
                 'year': row.get('year'),
-                'remarks': row.get('remarks')
+                'remarks': redact_pii_patterns(row.get('remarks')),
+                'fc_bg_type': row.get('fc_bg_type')
             })
-        
+
         return jsonify({'data': result}), 200
     except UndefinedTable:
-        return jsonify({
-            'message': (
-                "Faculty engagement table not found. Please apply the latest schema.sql "
-                "so the education dashboards can load data."
-            )
-        }), 500
+        return jsonify({'message': "Faculty engagement table not found."}), 500
     except Exception as exc:
         print(f"Education list error: {exc}")
         return jsonify({'message': 'Failed to fetch faculty engagement list.'}), 500
@@ -559,5 +643,4 @@ def get_faculty_engagement_list(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
-
+            release_db_connection(conn)

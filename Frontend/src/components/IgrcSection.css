@@ -1,0 +1,88 @@
+/* ============================================================ */
+/* IGRC SECTION — component-specific styles                     */
+/* ============================================================ */
+
+/* ── Export row ── */
+.igrc-export-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Summary cards use the shared design-system .metric-card + .summary-cards-grid-4
+   classes (see AcademicSection.css) for consistency with other People & Campus
+   subpages. */
+
+/* ── Chart section h2 ── */
+.igrc-chart-h2 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+/* ── Metric toggle group ── */
+.igrc-metric-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.igrc-metric-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  align-items: center;
+}
+.igrc-metric-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.igrc-metric-row-label--active { color: #64748b; }
+.igrc-metric-row-label--hidden { color: #94a3b8; }
+
+/* ── Bar/Trend toggle toolbar ── */
+.igrc-toggle-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.igrc-toggle-left { display: flex; gap: 8px; }
+
+/* ── Chart type mode buttons (active = fixed #667eea) ── */
+.igrc-mode-btn {
+  padding: 7px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  background-color: #e9ecef;
+  color: #333;
+  transition: all 0.2s;
+}
+.igrc-mode-btn--active {
+  background-color: #667eea;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Export menu z-index wrapper ── */
+.igrc-export-wrapper { position: relative; z-index: 9999; }
+
+/* ── Chart container ── */
+.igrc-chart-container { padding: 10px; }
+
+/* ── Chart description paragraph (zero margin) ── */
+.igrc-chart-desc-p { margin: 0; }
+
+/* ── Metric toggle buttons ── */
+.igrc-metric-btn { min-width: 90px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.igrc-metric-btn--hidden { opacity: 0.6; border-style: dashed; }
+
+/* ── Hidden metrics row entrance animation ── */
+.igrc-metric-row--animated { animation: fadeIn 0.3s ease; }

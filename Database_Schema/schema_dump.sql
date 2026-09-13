@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
+\restrict Hy7sSOSecbwTjjnsRIhj7Mf6Jo0DdjcO51XhOTmAFcgLRIaVeIFgpH9ikZ2FLps
 
--- Dumped from database version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
--- Dumped by pg_dump version 18.3 (Ubuntu 18.3-1.pgdg24.04+1)
+-- Dumped from database version 18.4 (Ubuntu 18.4-1.pgdg24.04+1)
+-- Dumped by pg_dump version 18.4 (Ubuntu 18.4-1.pgdg24.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -20,7 +20,21 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: academic_program_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS '';
+
+
+--
+-- Name: academic_program_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.academic_program_type AS ENUM (
@@ -31,10 +45,8 @@ CREATE TYPE public.academic_program_type AS ENUM (
 );
 
 
-ALTER TYPE public.academic_program_type OWNER TO postgres;
-
 --
--- Name: alumni_outcome_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: alumni_outcome_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.alumni_outcome_type AS ENUM (
@@ -45,10 +57,8 @@ CREATE TYPE public.alumni_outcome_type AS ENUM (
 );
 
 
-ALTER TYPE public.alumni_outcome_type OWNER TO postgres;
-
 --
--- Name: batch_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: batch_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.batch_type AS ENUM (
@@ -57,10 +67,8 @@ CREATE TYPE public.batch_type AS ENUM (
 );
 
 
-ALTER TYPE public.batch_type OWNER TO postgres;
-
 --
--- Name: category_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: category_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.category_type AS ENUM (
@@ -72,10 +80,8 @@ CREATE TYPE public.category_type AS ENUM (
 );
 
 
-ALTER TYPE public.category_type OWNER TO postgres;
-
 --
--- Name: course_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: course_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.course_status AS ENUM (
@@ -84,10 +90,8 @@ CREATE TYPE public.course_status AS ENUM (
 );
 
 
-ALTER TYPE public.course_status OWNER TO postgres;
-
 --
--- Name: emp_gender; Type: TYPE; Schema: public; Owner: postgres
+-- Name: emp_gender; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.emp_gender AS ENUM (
@@ -98,10 +102,8 @@ CREATE TYPE public.emp_gender AS ENUM (
 );
 
 
-ALTER TYPE public.emp_gender OWNER TO postgres;
-
 --
--- Name: emp_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: emp_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.emp_status AS ENUM (
@@ -111,10 +113,8 @@ CREATE TYPE public.emp_status AS ENUM (
 );
 
 
-ALTER TYPE public.emp_status OWNER TO postgres;
-
 --
--- Name: event_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: event_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.event_type AS ENUM (
@@ -131,10 +131,8 @@ CREATE TYPE public.event_type AS ENUM (
 );
 
 
-ALTER TYPE public.event_type OWNER TO postgres;
-
 --
--- Name: faculty_engagement_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: faculty_engagement_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.faculty_engagement_type AS ENUM (
@@ -146,10 +144,8 @@ CREATE TYPE public.faculty_engagement_type AS ENUM (
 );
 
 
-ALTER TYPE public.faculty_engagement_type OWNER TO postgres;
-
 --
--- Name: gender_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: gender_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.gender_type AS ENUM (
@@ -159,10 +155,8 @@ CREATE TYPE public.gender_type AS ENUM (
 );
 
 
-ALTER TYPE public.gender_type OWNER TO postgres;
-
 --
--- Name: innovation_project_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: innovation_project_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.innovation_project_type AS ENUM (
@@ -171,10 +165,8 @@ CREATE TYPE public.innovation_project_type AS ENUM (
 );
 
 
-ALTER TYPE public.innovation_project_type OWNER TO postgres;
-
 --
--- Name: lien_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: lien_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.lien_type AS ENUM (
@@ -184,10 +176,8 @@ CREATE TYPE public.lien_type AS ENUM (
 );
 
 
-ALTER TYPE public.lien_type OWNER TO postgres;
-
 --
--- Name: nature_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: nature_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.nature_type AS ENUM (
@@ -200,10 +190,8 @@ CREATE TYPE public.nature_type AS ENUM (
 );
 
 
-ALTER TYPE public.nature_type OWNER TO postgres;
-
 --
--- Name: patent_status_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: patent_status_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.patent_status_type AS ENUM (
@@ -213,10 +201,8 @@ CREATE TYPE public.patent_status_type AS ENUM (
 );
 
 
-ALTER TYPE public.patent_status_type OWNER TO postgres;
-
 --
--- Name: program_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: program_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.program_type AS ENUM (
@@ -228,10 +214,8 @@ CREATE TYPE public.program_type AS ENUM (
 );
 
 
-ALTER TYPE public.program_type OWNER TO postgres;
-
 --
--- Name: project_status_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: project_status_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.project_status_type AS ENUM (
@@ -240,10 +224,8 @@ CREATE TYPE public.project_status_type AS ENUM (
 );
 
 
-ALTER TYPE public.project_status_type OWNER TO postgres;
-
 --
--- Name: publication_category; Type: TYPE; Schema: public; Owner: postgres
+-- Name: publication_category; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.publication_category AS ENUM (
@@ -254,10 +236,8 @@ CREATE TYPE public.publication_category AS ENUM (
 );
 
 
-ALTER TYPE public.publication_category OWNER TO postgres;
-
 --
--- Name: research_patent_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: research_patent_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.research_patent_status AS ENUM (
@@ -267,10 +247,8 @@ CREATE TYPE public.research_patent_status AS ENUM (
 );
 
 
-ALTER TYPE public.research_patent_status OWNER TO postgres;
-
 --
--- Name: research_project_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: research_project_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.research_project_status AS ENUM (
@@ -279,10 +257,8 @@ CREATE TYPE public.research_project_status AS ENUM (
 );
 
 
-ALTER TYPE public.research_project_status OWNER TO postgres;
-
 --
--- Name: research_project_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: research_project_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.research_project_type AS ENUM (
@@ -291,10 +267,8 @@ CREATE TYPE public.research_project_type AS ENUM (
 );
 
 
-ALTER TYPE public.research_project_type OWNER TO postgres;
-
 --
--- Name: role_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: role_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.role_status AS ENUM (
@@ -303,10 +277,8 @@ CREATE TYPE public.role_status AS ENUM (
 );
 
 
-ALTER TYPE public.role_status OWNER TO postgres;
-
 --
--- Name: startup_status_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: startup_status_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.startup_status_type AS ENUM (
@@ -316,10 +288,8 @@ CREATE TYPE public.startup_status_type AS ENUM (
 );
 
 
-ALTER TYPE public.startup_status_type OWNER TO postgres;
-
 --
--- Name: status_type; Type: TYPE; Schema: public; Owner: postgres
+-- Name: status_type; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.status_type AS ENUM (
@@ -329,10 +299,8 @@ CREATE TYPE public.status_type AS ENUM (
 );
 
 
-ALTER TYPE public.status_type OWNER TO postgres;
-
 --
--- Name: user_status; Type: TYPE; Schema: public; Owner: postgres
+-- Name: user_status; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.user_status AS ENUM (
@@ -342,14 +310,30 @@ CREATE TYPE public.user_status AS ENUM (
 );
 
 
-ALTER TYPE public.user_status OWNER TO postgres;
+--
+-- Name: set_last_updated(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.set_last_updated() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Skip the timestamp bump if nothing actually changed (UPDATE only)
+    IF TG_OP = 'UPDATE' AND NEW IS NOT DISTINCT FROM OLD THEN
+        RETURN NEW;
+    END IF;
+    NEW.last_updated = now();
+    RETURN NEW;
+END;
+$$;
+
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: alumni; Type: TABLE; Schema: public; Owner: postgres
+-- Name: alumni; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.alumni (
@@ -366,14 +350,13 @@ CREATE TABLE public.alumni (
     alumni_contribution text,
     gender character varying(10),
     name character varying(150),
-    sector character varying(50)
+    sector character varying(50),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.alumni OWNER TO postgres;
-
 --
--- Name: courses_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: courses_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.courses_table (
@@ -381,7 +364,7 @@ CREATE TABLE public.courses_table (
     course_name character varying(200),
     credit_l_t_p_c character varying(50),
     course_category character varying(200),
-    proposing_faculty_name character varying(200),
+    proposing_faculty_name character varying(500),
     faculty_affiliation character varying(50),
     target_programme character varying(200),
     target_discipline character varying(50),
@@ -394,15 +377,14 @@ CREATE TABLE public.courses_table (
     is_industry_course character varying(10),
     industry_partner character varying(100),
     industry_coordinator_name character varying(200),
-    industry_course_status_currentay character varying(100),
-    course_status_history text
+    course_status_currentay character varying(100),
+    course_status_history text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.courses_table OWNER TO postgres;
-
 --
--- Name: department; Type: TABLE; Schema: public; Owner: postgres
+-- Name: department; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.department (
@@ -410,14 +392,13 @@ CREATE TABLE public.department (
     deptname character varying(100) NOT NULL,
     coursesoffered text,
     faculty text,
-    courselist text
+    courselist text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.department OWNER TO postgres;
-
 --
--- Name: employees; Type: TABLE; Schema: public; Owner: postgres
+-- Name: employees; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.employees (
@@ -453,14 +434,13 @@ CREATE TABLE public.employees (
     prior_teaching_exp_in_months integer,
     total_teaching_exp_in_months integer,
     original_category character varying(10),
-    appointed_category character varying(10)
+    appointed_category character varying(10),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.employees OWNER TO postgres;
-
 --
--- Name: ewd_yearwise; Type: TABLE; Schema: public; Owner: postgres
+-- Name: ewd_yearwise; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.ewd_yearwise (
@@ -470,14 +450,13 @@ CREATE TABLE public.ewd_yearwise (
     per_capita_water_consumption numeric(10,2) NOT NULL,
     per_capita_recycled_water numeric(10,2) NOT NULL,
     green_coverage numeric(10,2) NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT check_non_negativity CHECK (((annual_electricity_consumption >= 0) AND (per_capita_electricity_consumption >= (0)::numeric) AND (per_capita_water_consumption >= (0)::numeric) AND (per_capita_recycled_water >= (0)::numeric) AND (green_coverage >= (0)::numeric)))
 );
 
 
-ALTER TABLE public.ewd_yearwise OWNER TO postgres;
-
 --
--- Name: externship_info; Type: TABLE; Schema: public; Owner: postgres
+-- Name: externship_info; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.externship_info (
@@ -492,14 +471,13 @@ CREATE TABLE public.externship_info (
     type character varying(50) NOT NULL,
     remarks text,
     createddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    modifieddate timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.externship_info OWNER TO postgres;
-
 --
--- Name: externship_info_externid_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: externship_info_externid_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.externship_info_externid_seq
@@ -511,17 +489,15 @@ CREATE SEQUENCE public.externship_info_externid_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.externship_info_externid_seq OWNER TO postgres;
-
 --
--- Name: externship_info_externid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: externship_info_externid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.externship_info_externid_seq OWNED BY public.externship_info.externid;
 
 
 --
--- Name: faculty_engagement; Type: TABLE; Schema: public; Owner: postgres
+-- Name: faculty_engagement; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.faculty_engagement (
@@ -534,14 +510,31 @@ CREATE TABLE public.faculty_engagement (
     duration_months integer,
     year integer NOT NULL,
     remarks text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    fc_bg_type character varying(20),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.faculty_engagement OWNER TO postgres;
+--
+-- Name: iar_mous; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.iar_mous (
+    id text NOT NULL,
+    partner_name character varying(255),
+    framework character varying(50),
+    country character varying(100),
+    collaboration_nature character varying(255),
+    date_signed date,
+    validity_end date,
+    remarks character varying(50),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
 
 --
--- Name: icc_yearwise; Type: TABLE; Schema: public; Owner: postgres
+-- Name: icc_yearwise; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.icc_yearwise (
@@ -549,6 +542,7 @@ CREATE TABLE public.icc_yearwise (
     total_complaints integer NOT NULL,
     complaints_resolved integer NOT NULL,
     complaints_pending integer NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT check_pending_non_negative CHECK ((complaints_pending >= 0)),
     CONSTRAINT check_resolved_non_negative CHECK ((complaints_resolved >= 0)),
     CONSTRAINT check_total_equals_sum CHECK ((total_complaints = (complaints_pending + complaints_resolved))),
@@ -556,10 +550,8 @@ CREATE TABLE public.icc_yearwise (
 );
 
 
-ALTER TABLE public.icc_yearwise OWNER TO postgres;
-
 --
--- Name: icsr_consultancy_projects; Type: TABLE; Schema: public; Owner: postgres
+-- Name: icsr_consultancy_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.icsr_consultancy_projects (
@@ -573,14 +565,13 @@ CREATE TABLE public.icsr_consultancy_projects (
     start_date date,
     end_date date,
     status character varying(20),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.icsr_consultancy_projects OWNER TO postgres;
-
 --
--- Name: icsr_csr; Type: TABLE; Schema: public; Owner: postgres
+-- Name: icsr_csr; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.icsr_csr (
@@ -589,14 +580,13 @@ CREATE TABLE public.icsr_csr (
     year integer,
     type_of_company character varying(100),
     type_of_support character varying(100),
-    amount_given numeric(15,2)
+    amount_given numeric(15,2),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.icsr_csr OWNER TO postgres;
-
 --
--- Name: icsr_sponsered_projects; Type: TABLE; Schema: public; Owner: postgres
+-- Name: icsr_sponsered_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.icsr_sponsered_projects (
@@ -614,14 +604,13 @@ CREATE TABLE public.icsr_sponsered_projects (
     start_date date,
     end_date date,
     status character varying(20),
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.icsr_sponsered_projects OWNER TO postgres;
-
 --
--- Name: igrs_yearwise; Type: TABLE; Schema: public; Owner: postgres
+-- Name: igrs_yearwise; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.igrs_yearwise (
@@ -629,6 +618,7 @@ CREATE TABLE public.igrs_yearwise (
     total_grievances_filed integer NOT NULL,
     grievances_resolved integer NOT NULL,
     grievances_pending integer NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT check_pending_non_negative CHECK ((grievances_pending >= 0)),
     CONSTRAINT check_resolved_non_negative CHECK ((grievances_resolved >= 0)),
     CONSTRAINT check_total_equals_sum CHECK ((total_grievances_filed = (grievances_resolved + grievances_pending))),
@@ -636,10 +626,8 @@ CREATE TABLE public.igrs_yearwise (
 );
 
 
-ALTER TABLE public.igrs_yearwise OWNER TO postgres;
-
 --
--- Name: industry_conclave; Type: TABLE; Schema: public; Owner: postgres
+-- Name: industry_conclave; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.industry_conclave (
@@ -654,14 +642,13 @@ CREATE TABLE public.industry_conclave (
     event_photos_url text,
     brochure_url text,
     description text,
-    created_at timestamp without time zone
+    created_at timestamp without time zone,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.industry_conclave OWNER TO postgres;
-
 --
--- Name: industry_conclave_conclave_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: industry_conclave_conclave_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.industry_conclave_conclave_id_seq
@@ -673,17 +660,15 @@ CREATE SEQUENCE public.industry_conclave_conclave_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.industry_conclave_conclave_id_seq OWNER TO postgres;
-
 --
--- Name: industry_conclave_conclave_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: industry_conclave_conclave_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.industry_conclave_conclave_id_seq OWNED BY public.industry_conclave.conclave_id;
 
 
 --
--- Name: industry_events; Type: TABLE; Schema: public; Owner: postgres
+-- Name: industry_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.industry_events (
@@ -695,14 +680,13 @@ CREATE TABLE public.industry_events (
     hosted_by character varying(150),
     funding_by character varying(100),
     amount numeric(12,2),
-    year integer
+    year integer,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.industry_events OWNER TO postgres;
-
 --
--- Name: innovation_projects; Type: TABLE; Schema: public; Owner: postgres
+-- Name: innovation_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.innovation_projects (
@@ -713,14 +697,13 @@ CREATE TABLE public.innovation_projects (
     year_started integer NOT NULL,
     status character varying(50) DEFAULT 'Ongoing'::character varying,
     description text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.innovation_projects OWNER TO postgres;
-
 --
--- Name: innovation_projects_project_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: innovation_projects_project_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.innovation_projects_project_id_seq
@@ -732,17 +715,15 @@ CREATE SEQUENCE public.innovation_projects_project_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.innovation_projects_project_id_seq OWNER TO postgres;
-
 --
--- Name: innovation_projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: innovation_projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.innovation_projects_project_id_seq OWNED BY public.innovation_projects.project_id;
 
 
 --
--- Name: iptif_facilities_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: iptif_facilities_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.iptif_facilities_table (
@@ -752,14 +733,18 @@ CREATE TABLE public.iptif_facilities_table (
     revenue_made numeric(12,2),
     availability_status character varying(50),
     financial_year character varying(10),
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    display_title character varying(300),
+    facility_summary text,
+    image_url text,
+    availing_guidance text,
+    more_info_link text
 );
 
 
-ALTER TABLE public.iptif_facilities_table OWNER TO postgres;
-
 --
--- Name: iptif_program_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: iptif_program_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.iptif_program_table (
@@ -771,14 +756,13 @@ CREATE TABLE public.iptif_program_table (
     date date,
     targetted_audi character varying(150),
     no_of_attendees integer,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.iptif_program_table OWNER TO postgres;
-
 --
--- Name: iptif_projects_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: iptif_projects_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.iptif_projects_table (
@@ -787,14 +771,13 @@ CREATE TABLE public.iptif_projects_table (
     scheme character varying(150),
     status character varying(50),
     start_date date,
-    end_date date
+    end_date date,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.iptif_projects_table OWNER TO postgres;
-
 --
--- Name: iptif_startup_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: iptif_startup_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.iptif_startup_table (
@@ -806,14 +789,48 @@ CREATE TABLE public.iptif_startup_table (
     status character varying(50),
     revenue numeric(15,2),
     number_of_jobs integer,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.iptif_startup_table OWNER TO postgres;
+--
+-- Name: mou_partner_logos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.mou_partner_logos (
+    id integer NOT NULL,
+    name character varying(200) NOT NULL,
+    logo_url text,
+    display_order integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
 
 --
--- Name: nirf_ranking; Type: TABLE; Schema: public; Owner: postgres
+-- Name: mou_partner_logos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.mou_partner_logos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: mou_partner_logos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.mou_partner_logos_id_seq OWNED BY public.mou_partner_logos.id;
+
+
+--
+-- Name: nirf_ranking; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.nirf_ranking (
@@ -823,14 +840,14 @@ CREATE TABLE public.nirf_ranking (
     rpc_score numeric(5,2),
     go_score numeric(5,2),
     oi_score numeric(5,2),
-    pr_score numeric(5,2)
+    pr_score numeric(5,2),
+    rank integer,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.nirf_ranking OWNER TO postgres;
-
 --
--- Name: nirf_ranking_ranking_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: nirf_ranking_ranking_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.nirf_ranking_ranking_id_seq
@@ -842,17 +859,15 @@ CREATE SEQUENCE public.nirf_ranking_ranking_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.nirf_ranking_ranking_id_seq OWNER TO postgres;
-
 --
--- Name: nirf_ranking_ranking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: nirf_ranking_ranking_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.nirf_ranking_ranking_id_seq OWNED BY public.nirf_ranking.ranking_id;
 
 
 --
--- Name: nptel_courses; Type: TABLE; Schema: public; Owner: postgres
+-- Name: nptel_courses; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.nptel_courses (
@@ -862,14 +877,13 @@ CREATE TABLE public.nptel_courses (
     department character varying(255),
     course_name character varying(255),
     enrollments integer,
-    offering_year date
+    offering_year date,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.nptel_courses OWNER TO postgres;
-
 --
--- Name: nptel_courses_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: nptel_courses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.nptel_courses_id_seq
@@ -881,17 +895,15 @@ CREATE SEQUENCE public.nptel_courses_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.nptel_courses_id_seq OWNER TO postgres;
-
 --
--- Name: nptel_courses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: nptel_courses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.nptel_courses_id_seq OWNED BY public.nptel_courses.id;
 
 
 --
--- Name: open_house; Type: TABLE; Schema: public; Owner: postgres
+-- Name: open_house; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.open_house (
@@ -908,15 +920,14 @@ CREATE TABLE public.open_house (
     poster_url character varying(500),
     brochure_url character varying(500),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT open_house_num_departments_check CHECK ((num_departments >= 0)),
     CONSTRAINT open_house_total_visitors_check CHECK ((total_visitors >= 0))
 );
 
 
-ALTER TABLE public.open_house OWNER TO postgres;
-
 --
--- Name: open_house_event_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: open_house_event_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.open_house_event_id_seq
@@ -928,17 +939,15 @@ CREATE SEQUENCE public.open_house_event_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.open_house_event_id_seq OWNER TO postgres;
-
 --
--- Name: open_house_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: open_house_event_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.open_house_event_id_seq OWNED BY public.open_house.event_id;
 
 
 --
--- Name: outreach; Type: TABLE; Schema: public; Owner: postgres
+-- Name: outreach; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.outreach (
@@ -974,14 +983,13 @@ CREATE TABLE public.outreach (
     nss_activity_type character varying(100),
     nss_volunteer_count integer,
     nss_community_reached text,
-    extra_data jsonb
+    extra_data jsonb,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.outreach OWNER TO postgres;
-
 --
--- Name: outreach_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: outreach_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.outreach_id_seq
@@ -993,17 +1001,15 @@ CREATE SEQUENCE public.outreach_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.outreach_id_seq OWNER TO postgres;
-
 --
--- Name: outreach_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: outreach_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.outreach_id_seq OWNED BY public.outreach.id;
 
 
 --
--- Name: placement_companies; Type: TABLE; Schema: public; Owner: postgres
+-- Name: placement_companies; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.placement_companies (
@@ -1015,14 +1021,13 @@ CREATE TABLE public.placement_companies (
     hires integer DEFAULT 0 NOT NULL,
     is_top_recruiter boolean DEFAULT false,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT placement_company_non_negative CHECK (((offers >= 0) AND (hires >= 0)))
 );
 
 
-ALTER TABLE public.placement_companies OWNER TO postgres;
-
 --
--- Name: placement_companies_company_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: placement_companies_company_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.placement_companies_company_id_seq
@@ -1034,17 +1039,15 @@ CREATE SEQUENCE public.placement_companies_company_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.placement_companies_company_id_seq OWNER TO postgres;
-
 --
--- Name: placement_companies_company_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: placement_companies_company_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.placement_companies_company_id_seq OWNED BY public.placement_companies.company_id;
 
 
 --
--- Name: placement_packages; Type: TABLE; Schema: public; Owner: postgres
+-- Name: placement_packages; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.placement_packages (
@@ -1053,32 +1056,31 @@ CREATE TABLE public.placement_packages (
     highest_package numeric(10,2),
     lowest_package numeric(10,2),
     average_package numeric(10,2),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT placement_packages_check CHECK ((((highest_package IS NULL) OR (highest_package >= (0)::numeric)) AND ((lowest_package IS NULL) OR (lowest_package >= (0)::numeric)) AND ((average_package IS NULL) OR (average_package >= (0)::numeric)) AND ((highest_package IS NULL) OR (lowest_package IS NULL) OR (highest_package >= lowest_package)) AND ((average_package IS NULL) OR (lowest_package IS NULL) OR (highest_package IS NULL) OR ((average_package >= lowest_package) AND (average_package <= highest_package)))))
 );
 
 
-ALTER TABLE public.placement_packages OWNER TO postgres;
-
 --
--- Name: placement_summary; Type: TABLE; Schema: public; Owner: postgres
+-- Name: placement_summary; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.placement_summary (
     placement_year character varying(20) NOT NULL,
-    program character varying(100) NOT NULL,
+    program character varying(20) NOT NULL,
     gender public.gender_type NOT NULL,
     registered integer NOT NULL,
     placed integer NOT NULL,
+    branch character varying(50) NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT placement_summary_check CHECK ((placed <= registered)),
     CONSTRAINT placement_summary_placed_check CHECK ((placed >= 0)),
     CONSTRAINT placement_summary_registered_check CHECK ((registered >= 0))
 );
 
 
-ALTER TABLE public.placement_summary OWNER TO postgres;
-
 --
--- Name: research_mous; Type: TABLE; Schema: public; Owner: postgres
+-- Name: research_mous; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.research_mous (
@@ -1087,14 +1089,13 @@ CREATE TABLE public.research_mous (
     collaboration_nature text,
     date_signed date NOT NULL,
     validity_end date,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.research_mous OWNER TO postgres;
-
 --
--- Name: research_mous_mou_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: research_mous_mou_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.research_mous_mou_id_seq
@@ -1106,17 +1107,15 @@ CREATE SEQUENCE public.research_mous_mou_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.research_mous_mou_id_seq OWNER TO postgres;
-
 --
--- Name: research_mous_mou_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: research_mous_mou_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.research_mous_mou_id_seq OWNED BY public.research_mous.mou_id;
 
 
 --
--- Name: research_patents; Type: TABLE; Schema: public; Owner: postgres
+-- Name: research_patents; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.research_patents (
@@ -1124,7 +1123,7 @@ CREATE TABLE public.research_patents (
     patent_title character varying(250) NOT NULL,
     patent_status public.patent_status_type NOT NULL,
     filing_date date,
-    grant_date character varying(50),
+    grant_date date,
     remarks text,
     inventor1 character varying(200),
     inventor1_category character varying(200),
@@ -1133,14 +1132,13 @@ CREATE TABLE public.research_patents (
     inventor3 character varying(200),
     inventor3_category character varying(200),
     inventor4 character varying(200),
-    inventor4_category character varying(200)
+    inventor4_category character varying(200),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.research_patents OWNER TO postgres;
-
 --
--- Name: research_patents_patent_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: research_patents_patent_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.research_patents_patent_id_seq
@@ -1152,17 +1150,15 @@ CREATE SEQUENCE public.research_patents_patent_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.research_patents_patent_id_seq OWNER TO postgres;
-
 --
--- Name: research_patents_patent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: research_patents_patent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.research_patents_patent_id_seq OWNED BY public.research_patents.patent_id;
 
 
 --
--- Name: research_publications; Type: TABLE; Schema: public; Owner: postgres
+-- Name: research_publications; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.research_publications (
@@ -1173,26 +1169,24 @@ CREATE TABLE public.research_publications (
     publication_year integer NOT NULL,
     publication_type character varying(300) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    id character varying(32) NOT NULL
+    id character varying(32) NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.research_publications OWNER TO postgres;
-
 --
--- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+-- Name: roles; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.roles (
     id integer NOT NULL,
-    name character varying(50) NOT NULL
+    name character varying(50) NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.roles OWNER TO postgres;
-
 --
--- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.roles_id_seq
@@ -1204,17 +1198,15 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.roles_id_seq OWNER TO postgres;
-
 --
--- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 
 --
--- Name: student_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: student_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.student_table (
@@ -1284,14 +1276,13 @@ CREATE TABLE public.student_table (
     date_of_withdrawal_termination date,
     ay_of_withdrawal_termination character varying(10),
     reason_for_withdrawal_termination text,
-    academic_program_type character varying(15)
+    academic_program_type character varying(15),
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.student_table OWNER TO postgres;
-
 --
--- Name: techin_program_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: techin_program_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.techin_program_table (
@@ -1303,14 +1294,13 @@ CREATE TABLE public.techin_program_table (
     event_date date,
     targetted_audience character varying(150),
     no_of_attendess integer,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.techin_program_table OWNER TO postgres;
-
 --
--- Name: techin_skill_development_program; Type: TABLE; Schema: public; Owner: postgres
+-- Name: techin_skill_development_program; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.techin_skill_development_program (
@@ -1322,14 +1312,13 @@ CREATE TABLE public.techin_skill_development_program (
     event_date date,
     targetted_audience character varying(150),
     no_of_attendess integer,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.techin_skill_development_program OWNER TO postgres;
-
 --
--- Name: techin_startup_table; Type: TABLE; Schema: public; Owner: postgres
+-- Name: techin_startup_table; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.techin_startup_table (
@@ -1341,14 +1330,13 @@ CREATE TABLE public.techin_startup_table (
     status character varying(50),
     revenue numeric(15,2),
     number_of_jobs integer,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.techin_startup_table OWNER TO postgres;
-
 --
--- Name: uba_events; Type: TABLE; Schema: public; Owner: postgres
+-- Name: uba_events; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.uba_events (
@@ -1364,14 +1352,13 @@ CREATE TABLE public.uba_events (
     num_schools integer,
     num_colleges integer,
     geographic_reach text,
-    remarks text
+    remarks text,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.uba_events OWNER TO postgres;
-
 --
--- Name: uba_events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: uba_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.uba_events_id_seq
@@ -1383,17 +1370,15 @@ CREATE SEQUENCE public.uba_events_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.uba_events_id_seq OWNER TO postgres;
-
 --
--- Name: uba_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: uba_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.uba_events_id_seq OWNED BY public.uba_events.id;
 
 
 --
--- Name: uba_projects; Type: TABLE; Schema: public; Owner: postgres
+-- Name: uba_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.uba_projects (
@@ -1405,14 +1390,13 @@ CREATE TABLE public.uba_projects (
     start_date date,
     end_date date,
     collaboration_partners text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.uba_projects OWNER TO postgres;
-
 --
--- Name: uba_projects_project_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: uba_projects_project_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.uba_projects_project_id_seq
@@ -1424,17 +1408,15 @@ CREATE SEQUENCE public.uba_projects_project_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.uba_projects_project_id_seq OWNER TO postgres;
-
 --
--- Name: uba_projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: uba_projects_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.uba_projects_project_id_seq OWNED BY public.uba_projects.project_id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -1446,15 +1428,16 @@ CREATE TABLE public.users (
     status public.user_status DEFAULT 'pending_verification'::public.user_status NOT NULL,
     last_login_at timestamp with time zone,
     failed_login_attempts smallint DEFAULT 0 NOT NULL,
+    last_failed_at timestamp with time zone,
     role_id integer DEFAULT 1 NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL,
+    password_changed_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
-ALTER TABLE public.users OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -1466,108 +1449,144 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
-
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: externship_info externid; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: v_faculty_engagement_standardized; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_faculty_engagement_standardized AS
+ SELECT engagement_code,
+    faculty_name,
+    engagement_type,
+    department,
+    startdate,
+    enddate,
+    duration_months,
+    year,
+    remarks,
+    created_at,
+    fc_bg_type,
+        CASE
+            WHEN ((engagement_type)::text ~~* '%Adjunct%'::text) THEN 'Adjunct'::text
+            WHEN ((engagement_type)::text ~~* '%Honorary%'::text) THEN 'Honorary'::text
+            WHEN ((engagement_type)::text ~~* '%Visiting%'::text) THEN 'Visiting'::text
+            WHEN (((engagement_type)::text ~~* '%Faculty Fellow%'::text) OR ((engagement_type)::text ~~* '%FacultyFellow%'::text)) THEN 'FacultyFellow'::text
+            WHEN (((engagement_type)::text ~~* '%PoP%'::text) OR ((engagement_type)::text ~~* '%Professor of Practice%'::text) OR ((engagement_type)::text ~~* '%Practice%'::text)) THEN 'PoP'::text
+            ELSE 'Other'::text
+        END AS std_type,
+        CASE
+            WHEN ((enddate IS NULL) OR (enddate > CURRENT_DATE)) THEN 'Active'::text
+            ELSE 'Inactive'::text
+        END AS current_status
+   FROM public.faculty_engagement;
+
+
+--
+-- Name: externship_info externid; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.externship_info ALTER COLUMN externid SET DEFAULT nextval('public.externship_info_externid_seq'::regclass);
 
 
 --
--- Name: industry_conclave conclave_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: industry_conclave conclave_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.industry_conclave ALTER COLUMN conclave_id SET DEFAULT nextval('public.industry_conclave_conclave_id_seq'::regclass);
 
 
 --
--- Name: innovation_projects project_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: innovation_projects project_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.innovation_projects ALTER COLUMN project_id SET DEFAULT nextval('public.innovation_projects_project_id_seq'::regclass);
 
 
 --
--- Name: nirf_ranking ranking_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: mou_partner_logos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mou_partner_logos ALTER COLUMN id SET DEFAULT nextval('public.mou_partner_logos_id_seq'::regclass);
+
+
+--
+-- Name: nirf_ranking ranking_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nirf_ranking ALTER COLUMN ranking_id SET DEFAULT nextval('public.nirf_ranking_ranking_id_seq'::regclass);
 
 
 --
--- Name: nptel_courses id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: nptel_courses id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nptel_courses ALTER COLUMN id SET DEFAULT nextval('public.nptel_courses_id_seq'::regclass);
 
 
 --
--- Name: open_house event_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: open_house event_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.open_house ALTER COLUMN event_id SET DEFAULT nextval('public.open_house_event_id_seq'::regclass);
 
 
 --
--- Name: placement_companies company_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: placement_companies company_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.placement_companies ALTER COLUMN company_id SET DEFAULT nextval('public.placement_companies_company_id_seq'::regclass);
 
 
 --
--- Name: research_mous mou_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: research_mous mou_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.research_mous ALTER COLUMN mou_id SET DEFAULT nextval('public.research_mous_mou_id_seq'::regclass);
 
 
 --
--- Name: research_patents patent_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: research_patents patent_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.research_patents ALTER COLUMN patent_id SET DEFAULT nextval('public.research_patents_patent_id_seq'::regclass);
 
 
 --
--- Name: roles id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
 
 
 --
--- Name: uba_events id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: uba_events id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.uba_events ALTER COLUMN id SET DEFAULT nextval('public.uba_events_id_seq'::regclass);
 
 
 --
--- Name: uba_projects project_id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: uba_projects project_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.uba_projects ALTER COLUMN project_id SET DEFAULT nextval('public.uba_projects_project_id_seq'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- Name: alumni alumni_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: alumni alumni_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.alumni
@@ -1575,7 +1594,7 @@ ALTER TABLE ONLY public.alumni
 
 
 --
--- Name: courses_table courses_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: courses_table courses_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.courses_table
@@ -1583,7 +1602,7 @@ ALTER TABLE ONLY public.courses_table
 
 
 --
--- Name: department department_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: department department_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.department
@@ -1591,7 +1610,7 @@ ALTER TABLE ONLY public.department
 
 
 --
--- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: employees employees_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.employees
@@ -1599,7 +1618,7 @@ ALTER TABLE ONLY public.employees
 
 
 --
--- Name: ewd_yearwise ewd_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: ewd_yearwise ewd_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ewd_yearwise
@@ -1607,7 +1626,7 @@ ALTER TABLE ONLY public.ewd_yearwise
 
 
 --
--- Name: externship_info externship_info_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: externship_info externship_info_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.externship_info
@@ -1615,7 +1634,7 @@ ALTER TABLE ONLY public.externship_info
 
 
 --
--- Name: faculty_engagement faculty_engagement_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: faculty_engagement faculty_engagement_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.faculty_engagement
@@ -1623,7 +1642,15 @@ ALTER TABLE ONLY public.faculty_engagement
 
 
 --
--- Name: icc_yearwise icc_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: iar_mous iar_mous_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.iar_mous
+    ADD CONSTRAINT iar_mous_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: icc_yearwise icc_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.icc_yearwise
@@ -1631,7 +1658,7 @@ ALTER TABLE ONLY public.icc_yearwise
 
 
 --
--- Name: icsr_consultancy_projects icsr_consultancy_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: icsr_consultancy_projects icsr_consultancy_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.icsr_consultancy_projects
@@ -1639,7 +1666,7 @@ ALTER TABLE ONLY public.icsr_consultancy_projects
 
 
 --
--- Name: icsr_csr icsr_csr_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: icsr_csr icsr_csr_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.icsr_csr
@@ -1647,7 +1674,7 @@ ALTER TABLE ONLY public.icsr_csr
 
 
 --
--- Name: icsr_sponsered_projects icsr_sponsered_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: icsr_sponsered_projects icsr_sponsered_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.icsr_sponsered_projects
@@ -1655,7 +1682,7 @@ ALTER TABLE ONLY public.icsr_sponsered_projects
 
 
 --
--- Name: igrs_yearwise igrs_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: igrs_yearwise igrs_yearwise_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.igrs_yearwise
@@ -1663,7 +1690,7 @@ ALTER TABLE ONLY public.igrs_yearwise
 
 
 --
--- Name: industry_conclave industry_conclave_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: industry_conclave industry_conclave_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.industry_conclave
@@ -1671,7 +1698,7 @@ ALTER TABLE ONLY public.industry_conclave
 
 
 --
--- Name: industry_events industry_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: industry_events industry_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.industry_events
@@ -1679,7 +1706,7 @@ ALTER TABLE ONLY public.industry_events
 
 
 --
--- Name: innovation_projects innovation_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: innovation_projects innovation_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.innovation_projects
@@ -1687,7 +1714,7 @@ ALTER TABLE ONLY public.innovation_projects
 
 
 --
--- Name: innovation_projects innovation_projects_project_title_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: innovation_projects innovation_projects_project_title_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.innovation_projects
@@ -1695,7 +1722,7 @@ ALTER TABLE ONLY public.innovation_projects
 
 
 --
--- Name: iptif_facilities_table iptif_facilities_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: iptif_facilities_table iptif_facilities_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.iptif_facilities_table
@@ -1703,7 +1730,7 @@ ALTER TABLE ONLY public.iptif_facilities_table
 
 
 --
--- Name: iptif_program_table iptif_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: iptif_program_table iptif_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.iptif_program_table
@@ -1711,7 +1738,7 @@ ALTER TABLE ONLY public.iptif_program_table
 
 
 --
--- Name: iptif_projects_table iptif_projects_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: iptif_projects_table iptif_projects_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.iptif_projects_table
@@ -1719,7 +1746,7 @@ ALTER TABLE ONLY public.iptif_projects_table
 
 
 --
--- Name: iptif_startup_table iptif_startup_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: iptif_startup_table iptif_startup_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.iptif_startup_table
@@ -1727,7 +1754,15 @@ ALTER TABLE ONLY public.iptif_startup_table
 
 
 --
--- Name: nirf_ranking nirf_ranking_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: mou_partner_logos mou_partner_logos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.mou_partner_logos
+    ADD CONSTRAINT mou_partner_logos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: nirf_ranking nirf_ranking_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nirf_ranking
@@ -1735,7 +1770,7 @@ ALTER TABLE ONLY public.nirf_ranking
 
 
 --
--- Name: nirf_ranking nirf_ranking_year_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: nirf_ranking nirf_ranking_year_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nirf_ranking
@@ -1743,7 +1778,7 @@ ALTER TABLE ONLY public.nirf_ranking
 
 
 --
--- Name: nptel_courses nptel_courses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: nptel_courses nptel_courses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.nptel_courses
@@ -1751,7 +1786,7 @@ ALTER TABLE ONLY public.nptel_courses
 
 
 --
--- Name: open_house open_house_event_year_event_date_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: open_house open_house_event_year_event_date_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.open_house
@@ -1759,7 +1794,7 @@ ALTER TABLE ONLY public.open_house
 
 
 --
--- Name: open_house open_house_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: open_house open_house_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.open_house
@@ -1767,7 +1802,7 @@ ALTER TABLE ONLY public.open_house
 
 
 --
--- Name: outreach outreach_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: outreach outreach_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.outreach
@@ -1775,7 +1810,7 @@ ALTER TABLE ONLY public.outreach
 
 
 --
--- Name: placement_companies placement_companies_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: placement_companies placement_companies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.placement_companies
@@ -1783,7 +1818,7 @@ ALTER TABLE ONLY public.placement_companies
 
 
 --
--- Name: placement_packages placement_packages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: placement_packages placement_packages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.placement_packages
@@ -1791,15 +1826,15 @@ ALTER TABLE ONLY public.placement_packages
 
 
 --
--- Name: placement_summary placement_summary_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: placement_summary placement_summary_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.placement_summary
-    ADD CONSTRAINT placement_summary_pkey PRIMARY KEY (placement_year, program, gender);
+    ADD CONSTRAINT placement_summary_pkey PRIMARY KEY (placement_year, program, gender, branch);
 
 
 --
--- Name: research_mous research_mous_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: research_mous research_mous_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.research_mous
@@ -1807,7 +1842,7 @@ ALTER TABLE ONLY public.research_mous
 
 
 --
--- Name: research_patents research_patents_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: research_patents research_patents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.research_patents
@@ -1815,7 +1850,7 @@ ALTER TABLE ONLY public.research_patents
 
 
 --
--- Name: research_publications research_publications_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: research_publications research_publications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.research_publications
@@ -1823,7 +1858,7 @@ ALTER TABLE ONLY public.research_publications
 
 
 --
--- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: roles roles_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.roles
@@ -1831,7 +1866,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.roles
@@ -1839,7 +1874,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: student_table student_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: student_table student_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.student_table
@@ -1847,7 +1882,7 @@ ALTER TABLE ONLY public.student_table
 
 
 --
--- Name: techin_program_table techin_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: techin_program_table techin_program_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.techin_program_table
@@ -1855,7 +1890,7 @@ ALTER TABLE ONLY public.techin_program_table
 
 
 --
--- Name: techin_skill_development_program techin_skill_development_program_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: techin_skill_development_program techin_skill_development_program_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.techin_skill_development_program
@@ -1863,7 +1898,7 @@ ALTER TABLE ONLY public.techin_skill_development_program
 
 
 --
--- Name: techin_startup_table techin_startup_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: techin_startup_table techin_startup_table_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.techin_startup_table
@@ -1871,7 +1906,7 @@ ALTER TABLE ONLY public.techin_startup_table
 
 
 --
--- Name: uba_events uba_events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: uba_events uba_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.uba_events
@@ -1879,7 +1914,7 @@ ALTER TABLE ONLY public.uba_events
 
 
 --
--- Name: uba_projects uba_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: uba_projects uba_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.uba_projects
@@ -1887,7 +1922,7 @@ ALTER TABLE ONLY public.uba_projects
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1895,7 +1930,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1903,7 +1938,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1911,42 +1946,812 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: idx_innovation_projects_sector; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_alumni_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_alumni_last_updated ON public.alumni USING btree (last_updated);
+
+
+--
+-- Name: idx_courses_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_courses_table_last_updated ON public.courses_table USING btree (last_updated);
+
+
+--
+-- Name: idx_department_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_department_last_updated ON public.department USING btree (last_updated);
+
+
+--
+-- Name: idx_employees_appointed_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_appointed_category ON public.employees USING btree (appointed_category);
+
+
+--
+-- Name: idx_employees_department; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_department ON public.employees USING btree (department);
+
+
+--
+-- Name: idx_employees_designation; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_designation ON public.employees USING btree (designation);
+
+
+--
+-- Name: idx_employees_doj; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_doj ON public.employees USING btree (doj);
+
+
+--
+-- Name: idx_employees_emp_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_emp_type ON public.employees USING btree (emp_type);
+
+
+--
+-- Name: idx_employees_empstatus; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_empstatus ON public.employees USING btree (empstatus);
+
+
+--
+-- Name: idx_employees_gender; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_gender ON public.employees USING btree (gender);
+
+
+--
+-- Name: idx_employees_group_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_group_name ON public.employees USING btree (group_name);
+
+
+--
+-- Name: idx_employees_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_employees_last_updated ON public.employees USING btree (last_updated);
+
+
+--
+-- Name: idx_ewd_yearwise_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ewd_yearwise_last_updated ON public.ewd_yearwise USING btree (last_updated);
+
+
+--
+-- Name: idx_externship_info_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_externship_info_last_updated ON public.externship_info USING btree (last_updated);
+
+
+--
+-- Name: idx_faculty_engagement_dept; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_faculty_engagement_dept ON public.faculty_engagement USING btree (department);
+
+
+--
+-- Name: idx_faculty_engagement_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_faculty_engagement_last_updated ON public.faculty_engagement USING btree (last_updated);
+
+
+--
+-- Name: idx_faculty_engagement_startdate; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_faculty_engagement_startdate ON public.faculty_engagement USING btree (startdate);
+
+
+--
+-- Name: idx_faculty_engagement_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_faculty_engagement_year ON public.faculty_engagement USING btree (year);
+
+
+--
+-- Name: idx_iar_mous_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_iar_mous_last_updated ON public.iar_mous USING btree (last_updated);
+
+
+--
+-- Name: idx_icc_yearwise_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icc_yearwise_last_updated ON public.icc_yearwise USING btree (last_updated);
+
+
+--
+-- Name: idx_icsr_consultancy_department; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_consultancy_department ON public.icsr_consultancy_projects USING btree (department);
+
+
+--
+-- Name: idx_icsr_consultancy_projects_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_consultancy_projects_last_updated ON public.icsr_consultancy_projects USING btree (last_updated);
+
+
+--
+-- Name: idx_icsr_consultancy_start_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_consultancy_start_date ON public.icsr_consultancy_projects USING btree (start_date);
+
+
+--
+-- Name: idx_icsr_csr_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_csr_last_updated ON public.icsr_csr USING btree (last_updated);
+
+
+--
+-- Name: idx_icsr_sponsered_projects_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_sponsered_projects_last_updated ON public.icsr_sponsered_projects USING btree (last_updated);
+
+
+--
+-- Name: idx_icsr_sponsored_department; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_sponsored_department ON public.icsr_sponsered_projects USING btree (principal_investigator_department);
+
+
+--
+-- Name: idx_icsr_sponsored_start_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_icsr_sponsored_start_date ON public.icsr_sponsered_projects USING btree (start_date);
+
+
+--
+-- Name: idx_igrs_yearwise_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_igrs_yearwise_last_updated ON public.igrs_yearwise USING btree (last_updated);
+
+
+--
+-- Name: idx_industry_conclave_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_industry_conclave_last_updated ON public.industry_conclave USING btree (last_updated);
+
+
+--
+-- Name: idx_industry_events_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_industry_events_last_updated ON public.industry_events USING btree (last_updated);
+
+
+--
+-- Name: idx_innovation_projects_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_innovation_projects_last_updated ON public.innovation_projects USING btree (last_updated);
+
+
+--
+-- Name: idx_innovation_projects_sector; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_innovation_projects_sector ON public.innovation_projects USING btree (sector);
 
 
 --
--- Name: idx_innovation_projects_year; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_innovation_projects_year; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_innovation_projects_year ON public.innovation_projects USING btree (year_started);
 
 
 --
--- Name: idx_open_house_date; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_iptif_facilities_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_iptif_facilities_table_last_updated ON public.iptif_facilities_table USING btree (last_updated);
+
+
+--
+-- Name: idx_iptif_program_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_iptif_program_table_last_updated ON public.iptif_program_table USING btree (last_updated);
+
+
+--
+-- Name: idx_iptif_projects_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_iptif_projects_table_last_updated ON public.iptif_projects_table USING btree (last_updated);
+
+
+--
+-- Name: idx_iptif_startup_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_iptif_startup_table_last_updated ON public.iptif_startup_table USING btree (last_updated);
+
+
+--
+-- Name: idx_mou_partner_logos_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_mou_partner_logos_last_updated ON public.mou_partner_logos USING btree (last_updated);
+
+
+--
+-- Name: idx_nirf_ranking_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nirf_ranking_last_updated ON public.nirf_ranking USING btree (last_updated);
+
+
+--
+-- Name: idx_nptel_courses_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_nptel_courses_last_updated ON public.nptel_courses USING btree (last_updated);
+
+
+--
+-- Name: idx_open_house_date; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_open_house_date ON public.open_house USING btree (event_date);
 
 
 --
--- Name: idx_open_house_year; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_open_house_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_open_house_last_updated ON public.open_house USING btree (last_updated);
+
+
+--
+-- Name: idx_open_house_year; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_open_house_year ON public.open_house USING btree (event_year);
 
 
 --
--- Name: idx_uba_projects_status; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_outreach_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_outreach_last_updated ON public.outreach USING btree (last_updated);
+
+
+--
+-- Name: idx_placement_companies_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_companies_last_updated ON public.placement_companies USING btree (last_updated);
+
+
+--
+-- Name: idx_placement_companies_sector; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_companies_sector ON public.placement_companies USING btree (sector);
+
+
+--
+-- Name: idx_placement_companies_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_companies_year ON public.placement_companies USING btree (placement_year);
+
+
+--
+-- Name: idx_placement_packages_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_packages_last_updated ON public.placement_packages USING btree (last_updated);
+
+
+--
+-- Name: idx_placement_packages_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_packages_year ON public.placement_packages USING btree (placement_year);
+
+
+--
+-- Name: idx_placement_summary_branch; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_summary_branch ON public.placement_summary USING btree (branch);
+
+
+--
+-- Name: idx_placement_summary_gender; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_summary_gender ON public.placement_summary USING btree (gender);
+
+
+--
+-- Name: idx_placement_summary_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_summary_last_updated ON public.placement_summary USING btree (last_updated);
+
+
+--
+-- Name: idx_placement_summary_program; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_summary_program ON public.placement_summary USING btree (program);
+
+
+--
+-- Name: idx_placement_summary_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_placement_summary_year ON public.placement_summary USING btree (placement_year);
+
+
+--
+-- Name: idx_research_mous_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_research_mous_last_updated ON public.research_mous USING btree (last_updated);
+
+
+--
+-- Name: idx_research_patents_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_research_patents_last_updated ON public.research_patents USING btree (last_updated);
+
+
+--
+-- Name: idx_research_publications_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_research_publications_last_updated ON public.research_publications USING btree (last_updated);
+
+
+--
+-- Name: idx_roles_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_roles_last_updated ON public.roles USING btree (last_updated);
+
+
+--
+-- Name: idx_student_admission_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_admission_year ON public.student_table USING btree (admission_year);
+
+
+--
+-- Name: idx_student_batch; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_batch ON public.student_table USING btree (admission_batch);
+
+
+--
+-- Name: idx_student_category; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_category ON public.student_table USING btree (original_category);
+
+
+--
+-- Name: idx_student_department; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_department ON public.student_table USING btree (department_current);
+
+
+--
+-- Name: idx_student_gender; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_gender ON public.student_table USING btree (gender);
+
+
+--
+-- Name: idx_student_program_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_program_type ON public.student_table USING btree (academic_program_type);
+
+
+--
+-- Name: idx_student_programme; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_programme ON public.student_table USING btree (programme_current);
+
+
+--
+-- Name: idx_student_state; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_state ON public.student_table USING btree (state);
+
+
+--
+-- Name: idx_student_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_status ON public.student_table USING btree (student_status);
+
+
+--
+-- Name: idx_student_stream; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_stream ON public.student_table USING btree (stream_current);
+
+
+--
+-- Name: idx_student_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_student_table_last_updated ON public.student_table USING btree (last_updated);
+
+
+--
+-- Name: idx_techin_program_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_techin_program_table_last_updated ON public.techin_program_table USING btree (last_updated);
+
+
+--
+-- Name: idx_techin_skill_development_program_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_techin_skill_development_program_last_updated ON public.techin_skill_development_program USING btree (last_updated);
+
+
+--
+-- Name: idx_techin_startup_table_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_techin_startup_table_last_updated ON public.techin_startup_table USING btree (last_updated);
+
+
+--
+-- Name: idx_uba_events_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uba_events_last_updated ON public.uba_events USING btree (last_updated);
+
+
+--
+-- Name: idx_uba_projects_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_uba_projects_last_updated ON public.uba_projects USING btree (last_updated);
+
+
+--
+-- Name: idx_uba_projects_status; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_uba_projects_status ON public.uba_projects USING btree (project_status);
 
 
 --
--- Name: users fk_role; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: idx_users_last_updated; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_last_updated ON public.users USING btree (last_updated);
+
+
+--
+-- Name: alumni trg_alumni_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_alumni_last_updated BEFORE INSERT OR UPDATE ON public.alumni FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: courses_table trg_courses_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_courses_table_last_updated BEFORE INSERT OR UPDATE ON public.courses_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: department trg_department_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_department_last_updated BEFORE INSERT OR UPDATE ON public.department FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: employees trg_employees_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_employees_last_updated BEFORE INSERT OR UPDATE ON public.employees FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: ewd_yearwise trg_ewd_yearwise_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_ewd_yearwise_last_updated BEFORE INSERT OR UPDATE ON public.ewd_yearwise FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: externship_info trg_externship_info_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_externship_info_last_updated BEFORE INSERT OR UPDATE ON public.externship_info FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: faculty_engagement trg_faculty_engagement_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_faculty_engagement_last_updated BEFORE INSERT OR UPDATE ON public.faculty_engagement FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: iar_mous trg_iar_mous_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_iar_mous_last_updated BEFORE INSERT OR UPDATE ON public.iar_mous FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: icc_yearwise trg_icc_yearwise_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_icc_yearwise_last_updated BEFORE INSERT OR UPDATE ON public.icc_yearwise FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: icsr_consultancy_projects trg_icsr_consultancy_projects_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_icsr_consultancy_projects_last_updated BEFORE INSERT OR UPDATE ON public.icsr_consultancy_projects FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: icsr_csr trg_icsr_csr_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_icsr_csr_last_updated BEFORE INSERT OR UPDATE ON public.icsr_csr FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: icsr_sponsered_projects trg_icsr_sponsered_projects_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_icsr_sponsered_projects_last_updated BEFORE INSERT OR UPDATE ON public.icsr_sponsered_projects FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: igrs_yearwise trg_igrs_yearwise_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_igrs_yearwise_last_updated BEFORE INSERT OR UPDATE ON public.igrs_yearwise FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: industry_conclave trg_industry_conclave_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_industry_conclave_last_updated BEFORE INSERT OR UPDATE ON public.industry_conclave FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: industry_events trg_industry_events_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_industry_events_last_updated BEFORE INSERT OR UPDATE ON public.industry_events FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: innovation_projects trg_innovation_projects_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_innovation_projects_last_updated BEFORE INSERT OR UPDATE ON public.innovation_projects FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: iptif_facilities_table trg_iptif_facilities_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_iptif_facilities_table_last_updated BEFORE INSERT OR UPDATE ON public.iptif_facilities_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: iptif_program_table trg_iptif_program_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_iptif_program_table_last_updated BEFORE INSERT OR UPDATE ON public.iptif_program_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: iptif_projects_table trg_iptif_projects_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_iptif_projects_table_last_updated BEFORE INSERT OR UPDATE ON public.iptif_projects_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: iptif_startup_table trg_iptif_startup_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_iptif_startup_table_last_updated BEFORE INSERT OR UPDATE ON public.iptif_startup_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: mou_partner_logos trg_mou_partner_logos_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_mou_partner_logos_last_updated BEFORE INSERT OR UPDATE ON public.mou_partner_logos FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: nirf_ranking trg_nirf_ranking_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_nirf_ranking_last_updated BEFORE INSERT OR UPDATE ON public.nirf_ranking FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: nptel_courses trg_nptel_courses_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_nptel_courses_last_updated BEFORE INSERT OR UPDATE ON public.nptel_courses FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: open_house trg_open_house_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_open_house_last_updated BEFORE INSERT OR UPDATE ON public.open_house FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: outreach trg_outreach_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_outreach_last_updated BEFORE INSERT OR UPDATE ON public.outreach FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: placement_companies trg_placement_companies_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_placement_companies_last_updated BEFORE INSERT OR UPDATE ON public.placement_companies FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: placement_packages trg_placement_packages_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_placement_packages_last_updated BEFORE INSERT OR UPDATE ON public.placement_packages FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: placement_summary trg_placement_summary_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_placement_summary_last_updated BEFORE INSERT OR UPDATE ON public.placement_summary FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: research_mous trg_research_mous_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_research_mous_last_updated BEFORE INSERT OR UPDATE ON public.research_mous FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: research_patents trg_research_patents_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_research_patents_last_updated BEFORE INSERT OR UPDATE ON public.research_patents FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: research_publications trg_research_publications_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_research_publications_last_updated BEFORE INSERT OR UPDATE ON public.research_publications FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: roles trg_roles_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_roles_last_updated BEFORE INSERT OR UPDATE ON public.roles FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: student_table trg_student_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_student_table_last_updated BEFORE INSERT OR UPDATE ON public.student_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: techin_program_table trg_techin_program_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_techin_program_table_last_updated BEFORE INSERT OR UPDATE ON public.techin_program_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: techin_skill_development_program trg_techin_skill_development_program_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_techin_skill_development_program_last_updated BEFORE INSERT OR UPDATE ON public.techin_skill_development_program FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: techin_startup_table trg_techin_startup_table_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_techin_startup_table_last_updated BEFORE INSERT OR UPDATE ON public.techin_startup_table FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: uba_events trg_uba_events_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_uba_events_last_updated BEFORE INSERT OR UPDATE ON public.uba_events FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: uba_projects trg_uba_projects_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_uba_projects_last_updated BEFORE INSERT OR UPDATE ON public.uba_projects FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: users trg_users_last_updated; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_users_last_updated BEFORE INSERT OR UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.set_last_updated();
+
+
+--
+-- Name: users fk_role; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -1954,8 +2759,144 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Additive migrations folded in 2026-09-04
+--
+-- Database_Schema/migrations/ contained several ALTER/CREATE statements that
+-- were written and applied to some running database, but never folded back
+-- into this dump — a fresh install via setup_database.py was missing them
+-- entirely (confirmed: feedback OTP submission, the IPTIF facilities publish
+-- toggle, ICSR industry-sponsor fields, and the startup portfolio showcase
+-- all 500'd against a database built from this file before this block was
+-- added). This section makes the dump match what the application code
+-- actually requires. The original migrations/*.sql files are left in place
+-- as a record and remain safe to re-run (IF NOT EXISTS throughout).
+--
+
+-- migrations/add_facilities_is_published.sql
+ALTER TABLE public.iptif_facilities_table ADD COLUMN IF NOT EXISTS is_published boolean NOT NULL DEFAULT false;
+UPDATE public.iptif_facilities_table SET is_published = true WHERE display_title IS NOT NULL AND is_published = false;
+CREATE INDEX IF NOT EXISTS idx_iptif_facilities_published ON public.iptif_facilities_table (is_published) WHERE is_published;
+
+-- migrations/add_feedback_verification.sql + add_feedback_guest_email.sql
+CREATE TABLE IF NOT EXISTS public.feedback_verification (
+    verification_id TEXT PRIMARY KEY,
+    user_id         INTEGER REFERENCES public.users(id) ON DELETE CASCADE,
+    email           TEXT,
+    otp_hash        TEXT    NOT NULL,
+    captcha_answer  INTEGER NOT NULL,
+    attempts        INTEGER NOT NULL DEFAULT 0,
+    consumed        BOOLEAN NOT NULL DEFAULT FALSE,
+    expires_at      TIMESTAMPTZ NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_verif_user       ON public.feedback_verification (user_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_verif_expires_at ON public.feedback_verification (expires_at);
+CREATE INDEX IF NOT EXISTS idx_feedback_verif_email      ON public.feedback_verification (email);
+
+-- migrations/add_icsr_consultancy_industry_columns.sql
+ALTER TABLE public.icsr_consultancy_projects ADD COLUMN IF NOT EXISTS sponsoring_industry varchar(200);
+ALTER TABLE public.icsr_consultancy_projects ADD COLUMN IF NOT EXISTS industry_logo       text;
+ALTER TABLE public.icsr_consultancy_projects ADD COLUMN IF NOT EXISTS project_area        varchar(200);
+
+-- migrations/add_icsr_sponsored_industry_columns.sql
+ALTER TABLE public.icsr_sponsered_projects ADD COLUMN IF NOT EXISTS sponsered_industry varchar(200);
+ALTER TABLE public.icsr_sponsered_projects ADD COLUMN IF NOT EXISTS industry_logo      text;
+ALTER TABLE public.icsr_sponsered_projects ADD COLUMN IF NOT EXISTS project_area       varchar(200);
+
+-- migrations/add_startup_portfolio_columns.sql
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_logo                 text;
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_website_link         text;
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_founder_name         varchar(200);
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_founder_profile_line text;
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_summary              text;
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS startup_tagline              varchar(300);
+ALTER TABLE public.iptif_startup_table  ADD COLUMN IF NOT EXISTS is_published                 boolean NOT NULL DEFAULT false;
+
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_logo                 text;
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_website_link         text;
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_founder_name         varchar(200);
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_founder_profile_line text;
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_summary              text;
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS startup_tagline              varchar(300);
+ALTER TABLE public.techin_startup_table ADD COLUMN IF NOT EXISTS is_published                 boolean NOT NULL DEFAULT false;
+
+CREATE INDEX IF NOT EXISTS idx_iptif_startup_table_published  ON public.iptif_startup_table  (is_published) WHERE is_published;
+CREATE INDEX IF NOT EXISTS idx_techin_startup_table_published ON public.techin_startup_table (is_published) WHERE is_published;
+
+-- Seed public.roles — every users.role_id value the application actually
+-- assigns or checks (Frontend/src/utils/rolePermissions.js ROLE_NAMES) is a
+-- foreign key into this table, but it was never seeded anywhere in this
+-- dump. On a fresh database this makes EVERY user insert fail with
+-- "violates foreign key constraint fk_role" — including /auth/google
+-- auto-provisioning (role_id 0), the schema default (role_id 1), and
+-- Backend/create_admin.py (role_id 3). Confirmed by bootstrapping an admin
+-- against a database restored from this file before this block was added.
+INSERT INTO public.roles (id, name) VALUES
+    (0,  'Guest'),
+    (1,  'Management View'),
+    (2,  'Administration Section'),
+    (3,  'Master Admin'),
+    (4,  'Academic Section'),
+    (5,  'IAR'),
+    (6,  'EWD'),
+    (7,  'IGRC'),
+    (8,  'ICC'),
+    (9,  'ICSR'),
+    (10, 'Library'),
+    (11, 'CDC'),
+    (12, 'IAC'),
+    (13, 'TechIn'),
+    (14, 'IPTIF'),
+    (15, 'Open House'),
+    (16, 'CCE'),
+    (17, 'UBA'),
+    (18, 'Science Quest'),
+    (19, 'PMC'),
+    (20, 'PBD'),
+    (21, 'Institute Visits'),
+    (22, 'NSS')
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('public.roles_id_seq', (SELECT COALESCE(MAX(id), 0) + 1 FROM public.roles), false);
+
+
+-- Least-privilege read surface for the public dashboard stats endpoints —
+-- see Database_Schema/migrations/add_dashboard_views.sql for the full
+-- rationale. A fresh database restored from this dump gets these views
+-- directly; Backend/setup_dashboard_roles.py still needs to be run
+-- separately to create the two Postgres roles that are actually granted
+-- access to them.
+
+CREATE OR REPLACE VIEW employees_dashboard_view AS
+SELECT
+    id, department, designation, gender, emp_type, empstatus,
+    group_name, doj, dor, last_updated
+FROM employees;
+
+CREATE OR REPLACE VIEW students_dashboard_view AS
+SELECT
+    admission_year, admission_batch, programme_current, stream_current,
+    department_current, academic_program_type, student_status,
+    gender, state, nationality
+FROM student_table;
+
+CREATE OR REPLACE VIEW employees_admin_view AS
+SELECT
+    id, department, designation, gender, emp_type, empstatus,
+    group_name, appointed_category, doj, dor, last_updated
+FROM employees;
+
+CREATE OR REPLACE VIEW students_admin_view AS
+SELECT
+    admission_year, admission_batch, programme_current, stream_current,
+    department_current, academic_program_type, student_status,
+    gender, state, nationality, original_category, pwd_status
+FROM student_table;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Mzzfd4knMX88AzPYyvr72NeayoX3eNQldBL9AGby4aXLDQ4RBg69udAhrtBRFMh
+\unrestrict Hy7sSOSecbwTjjnsRIhj7Mf6Jo0DdjcO51XhOTmAFcgLRIaVeIFgpH9ikZ2FLps
 

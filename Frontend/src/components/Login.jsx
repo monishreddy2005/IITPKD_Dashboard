@@ -1,39 +1,51 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
 import './Login.css';
 import IIPKD_Logo from '../assets/IITPKD_Logo.png';
 // The Login component receives a prop `onLoginSuccess` from App.jsx
-// which it will call with the token and user data after a successful login/signup.
+// which it will call with the token and user data after a successful login.
 function Login({ onLoginSuccess }) {
   const navigate = useNavigate();
-  // This state toggles between Login and Sign Up forms
-  const [isLoginView, setIsLoginView] = useState(true);
 
   // Form fields state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  /**
-   * Handles the form submission for both login and signup.
-   */
+  // GoogleLogin component calls this with { credential } — the Google ID token.
+  // The raw ID token is sent to the backend for cryptographic verification.
+  const handleGoogleSuccess = async ({ credential }) => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/auth/google`,
+        { credential }
+      );
+      onLoginSuccess(response.data.token, response.data.user);
+      navigate('/');
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Google sign-in failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setIsLoading(true);
 
-    const url = isLoginView
-      ? `${import.meta.env.VITE_API_BASE_URL}/auth/login`
-      : `${import.meta.env.VITE_API_BASE_URL}/auth/signup`;
-
-    const payload = isLoginView
-      ? { email, password }
-      : { email, password, username, display_name: displayName };
+    const url = `${import.meta.env.VITE_API_BASE_URL}/auth/login`;
+    const payload = { email, password };
 
     try {
       const response = await axios.post(url, payload);
@@ -69,9 +81,9 @@ function Login({ onLoginSuccess }) {
           <img src={IIPKD_Logo} alt="IIT Palakkad Logo" />
         </div>
 
-        <h2>{isLoginView ? 'Sign in to Dashboard' : 'Create an Account'}</h2>
+        <h2>Sign in to Dashboard</h2>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} className="login-form">
           <input
             type="email"
             placeholder="Email"
@@ -88,40 +100,25 @@ function Login({ onLoginSuccess }) {
             required
           />
 
-          {!isLoginView && (
-            <>
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Display Name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </>
-          )}
-
           <button type="submit" disabled={isLoading}>
-            {isLoading ? 'Loading...' : (isLoginView ? 'Login' : 'Sign Up')}
+            {isLoading ? 'Loading...' : 'Login'}
           </button>
 
           {error && <p className="login-error">{error}</p>}
         </form>
 
-        {/* <button
-        className="login-toggle"
-        onClick={() => {
-          setIsLoginView(!isLoginView);
-          setError('');
-        }}
-      >
-        {isLoginView ? 'Need an account? Sign Up' : 'Already have an account? Login'}
-      </button> */}
+        <div className="login-divider">or</div>
+
+        <div className="login-google-wrap">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google sign-in was cancelled or failed.')}
+            width="320"
+            text="signin_with"
+            shape="rectangular"
+            theme="outline"
+          />
+        </div>
       </div>
     </div>
   );

@@ -11,8 +11,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns
 
 
 research_bp = Blueprint('research_module', __name__)
@@ -119,7 +120,7 @@ def _build_patent_filters(
         try:
             year_int = int(patent_year)
             conditions.append(
-                "EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT = %s"
+                "EXTRACT(YEAR FROM filing_date)::INT = %s"
             )
             params.append(year_int)
         except ValueError:
@@ -166,12 +167,33 @@ def _build_publication_filters(
 
 
 @research_bp.route('/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_filter_options(current_user_id):
     conn = None
     cur = None
     try:
         conn = get_db_connection()
+
+        # Read current active filters
+        department = request.args.get('department')
+        project_year = request.args.get('project_year')
+        status = request.args.get('status')
+        patent_year = request.args.get('patent_year')
+        patent_status = request.args.get('patent_status')
+        publication_year = request.args.get('publication_year')
+        publication_type = request.args.get('publication_type')
+        mou_year = request.args.get('mou_year')
+
+        def clean(v): return None if (v is None or v in ('', 'All')) else v
+        department = clean(department)
+        project_year = clean(project_year)
+        status = clean(status)
+        patent_year = clean(patent_year)
+        patent_status = clean(patent_status)
+        publication_year = clean(publication_year)
+        publication_type = clean(publication_type)
+        mou_year = clean(mou_year)
+
         filters: Dict[str, List[Any]] = {
             'project_departments': [],
             'project_years': [],
@@ -189,108 +211,90 @@ def get_filter_options(current_user_id):
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-        # Collect project departments from both icsr tables
-        depts = set()
-        years = set()
-        statuses = set()
+        # --- Project filters: cross-filter using status & year (but not the one being fetched) ---
+        depts = set(); years = set(); statuses = set()
 
         if _table_exists(conn, 'icsr_sponsered_projects'):
-            cur.execute(
-                "SELECT DISTINCT principal_investigator_department AS dept FROM icsr_sponsered_projects WHERE principal_investigator_department IS NOT NULL"
-            )
+            # Departments: filter by year+status
+            wc_d, p_d = _build_project_filters(None, project_year, status, 'principal_investigator_department')
+            cur.execute(f"SELECT DISTINCT principal_investigator_department AS dept FROM icsr_sponsered_projects {wc_d} WHERE principal_investigator_department IS NOT NULL" if not wc_d else f"SELECT DISTINCT principal_investigator_department AS dept FROM icsr_sponsered_projects {wc_d} AND principal_investigator_department IS NOT NULL", p_d)
             depts.update(row['dept'] for row in cur.fetchall())
-            cur.execute(
-                "SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_sponsered_projects WHERE start_date IS NOT NULL OR end_date IS NOT NULL"
-            )
+            # Years: filter by dept+status
+            wc_y, p_y = _build_project_filters(department, None, status, 'principal_investigator_department')
+            cur.execute(f"SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_sponsered_projects {wc_y} {'AND' if wc_y else 'WHERE'} (start_date IS NOT NULL OR end_date IS NOT NULL)", p_y)
             years.update(int(row['year']) for row in cur.fetchall() if row['year'] is not None)
-            cur.execute("SELECT DISTINCT status FROM icsr_sponsered_projects WHERE status IS NOT NULL")
+            # Statuses: filter by dept+year
+            wc_s, p_s = _build_project_filters(department, project_year, None, 'principal_investigator_department')
+            cur.execute(f"SELECT DISTINCT status FROM icsr_sponsered_projects {wc_s} {'AND' if wc_s else 'WHERE'} status IS NOT NULL", p_s)
             statuses.update(row['status'] for row in cur.fetchall())
 
         if _table_exists(conn, 'icsr_consultancy_projects'):
-            cur.execute(
-                "SELECT DISTINCT department AS dept FROM icsr_consultancy_projects WHERE department IS NOT NULL"
-            )
+            wc_d, p_d = _build_project_filters(None, project_year, status, 'department')
+            cur.execute(f"SELECT DISTINCT department AS dept FROM icsr_consultancy_projects {wc_d} {'AND' if wc_d else 'WHERE'} department IS NOT NULL", p_d)
             depts.update(row['dept'] for row in cur.fetchall())
-            cur.execute(
-                "SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_consultancy_projects WHERE start_date IS NOT NULL OR end_date IS NOT NULL"
-            )
+            wc_y, p_y = _build_project_filters(department, None, status, 'department')
+            cur.execute(f"SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(start_date, end_date))::INT AS year FROM icsr_consultancy_projects {wc_y} {'AND' if wc_y else 'WHERE'} (start_date IS NOT NULL OR end_date IS NOT NULL)", p_y)
             years.update(int(row['year']) for row in cur.fetchall() if row['year'] is not None)
-            cur.execute("SELECT DISTINCT status FROM icsr_consultancy_projects WHERE status IS NOT NULL")
+            wc_s, p_s = _build_project_filters(department, project_year, None, 'department')
+            cur.execute(f"SELECT DISTINCT status FROM icsr_consultancy_projects {wc_s} {'AND' if wc_s else 'WHERE'} status IS NOT NULL", p_s)
             statuses.update(row['status'] for row in cur.fetchall())
 
         filters['project_departments'] = sorted(depts)
         filters['project_years'] = sorted(years, reverse=True)
         filters['project_statuses'] = sorted(statuses)
-        filters['project_types'] = ['Funded', 'Consultancy']  # Fixed list — each table is a type
-        filters['externship_departments'] = filters['project_departments']
+        filters['project_types'] = ['Sponsored', 'Consultancy']
 
         if _table_exists(conn, 'research_mous'):
-            cur.execute(
-                """
-                SELECT DISTINCT EXTRACT(YEAR FROM date_signed)::INT AS year
-                FROM research_mous
-                ORDER BY year DESC
-                """
-            )
+            cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM date_signed)::INT AS year FROM research_mous ORDER BY year DESC")
             filters['mou_years'] = [int(row['year']) for row in cur.fetchall() if row['year'] is not None]
 
         if _table_exists(conn, 'research_patents'):
-            cur.execute(
-                """
-                SELECT DISTINCT EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT AS year
-                FROM research_patents
-                WHERE filing_date IS NOT NULL OR grant_date IS NOT NULL
-                ORDER BY year DESC
-                """
-            )
+            # Patent years: filter by patent_status
+            py_cond = "WHERE patent_status = %s AND filing_date IS NOT NULL" if patent_status else "WHERE filing_date IS NOT NULL"
+            py_params = [patent_status] if patent_status else []
+            cur.execute(f"SELECT DISTINCT EXTRACT(YEAR FROM filing_date)::INT AS year FROM research_patents {py_cond} ORDER BY year DESC", py_params)
             filters['patent_years'] = [int(row['year']) for row in cur.fetchall() if row['year'] is not None]
 
-            cur.execute(
-                "SELECT DISTINCT patent_status FROM research_patents ORDER BY patent_status"
-            )
+            # Patent statuses: filter by patent_year
+            ps_cond = "WHERE EXTRACT(YEAR FROM filing_date)::INT = %s AND patent_status IS NOT NULL" if patent_year else "WHERE patent_status IS NOT NULL"
+            ps_params = [int(patent_year)] if patent_year else []
+            cur.execute(f"SELECT DISTINCT patent_status FROM research_patents {ps_cond} ORDER BY patent_status", ps_params)
             filters['patent_statuses'] = [row['patent_status'] for row in cur.fetchall()]
 
         if _table_exists(conn, 'research_publications'):
-            cur.execute(
-                "SELECT DISTINCT department FROM research_publications WHERE department IS NOT NULL ORDER BY department"
-            )
+            # Publication departments: filter by pub_year + pub_type
+            pub_d_wc, pub_d_p = _build_publication_filters(None, publication_year, publication_type)
+            cur.execute(f"SELECT DISTINCT department FROM research_publications {pub_d_wc} {'AND' if pub_d_wc else 'WHERE'} department IS NOT NULL ORDER BY department", pub_d_p)
             filters['publication_departments'] = [row['department'] for row in cur.fetchall()]
 
-            cur.execute(
-                "SELECT DISTINCT publication_year FROM research_publications ORDER BY publication_year DESC"
-            )
-            filters['publication_years'] = [
-                int(row['publication_year']) for row in cur.fetchall() if row['publication_year'] is not None
-            ]
+            # Publication years: filter by dept + pub_type
+            pub_y_wc, pub_y_p = _build_publication_filters(department, None, publication_type)
+            cur.execute(f"SELECT DISTINCT publication_year FROM research_publications {pub_y_wc} {'AND' if pub_y_wc else 'WHERE'} publication_year IS NOT NULL ORDER BY publication_year DESC", pub_y_p)
+            filters['publication_years'] = [int(row['publication_year']) for row in cur.fetchall() if row['publication_year'] is not None]
 
-            cur.execute(
-                "SELECT DISTINCT publication_type FROM research_publications ORDER BY publication_type"
-            )
+            # Publication types: filter by dept + pub_year
+            pub_t_wc, pub_t_p = _build_publication_filters(department, publication_year, None)
+            cur.execute(f"SELECT DISTINCT publication_type FROM research_publications {pub_t_wc} {'AND' if pub_t_wc else 'WHERE'} publication_type IS NOT NULL ORDER BY publication_type", pub_t_p)
             filters['publication_types'] = [row['publication_type'] for row in cur.fetchall()]
 
         if _table_exists(conn, 'externship_info'):
-            cur.execute(
-                """
-                SELECT DISTINCT EXTRACT(YEAR FROM startdate)::INT AS year
-                FROM externship_info
-                WHERE startdate IS NOT NULL
-                ORDER BY year DESC
-                """
-            )
+            cur.execute("SELECT DISTINCT EXTRACT(YEAR FROM startdate)::INT AS year FROM externship_info WHERE startdate IS NOT NULL ORDER BY year DESC")
             filters['externship_years'] = [int(row['year']) for row in cur.fetchall() if row['year'] is not None]
+            cur.execute("SELECT DISTINCT department FROM externship_info WHERE department IS NOT NULL ORDER BY department")
+            filters['externship_departments'] = [row['department'] for row in cur.fetchall()]
 
         return jsonify(filters)
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch research filter options: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_summary(current_user_id):
     conn = None
     cur = None
@@ -309,7 +313,7 @@ def get_summary(current_user_id):
         total_projects = 0
 
         # Count funded (sponsored) projects
-        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Funded'):
+        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Sponsored'):
             where_clause, params = _build_project_filters(
                 department, project_year, status, dept_column='principal_investigator_department'
             )
@@ -384,16 +388,16 @@ def get_summary(current_user_id):
         }
         return jsonify(summary)
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch research summary: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/projects/trend', methods=['GET'])
-@token_required
+@token_optional
 def funded_project_trend(current_user_id):
     """Return yearly project counts from both sponsored and consultancy tables."""
     conn = None
@@ -402,6 +406,7 @@ def funded_project_trend(current_user_id):
         department = request.args.get('department')
         project_year = request.args.get('project_year')
         status = request.args.get('status')
+        project_type = request.args.get('project_type')
 
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
@@ -409,7 +414,7 @@ def funded_project_trend(current_user_id):
         yearly: Dict[int, Dict[str, int]] = defaultdict(lambda: {'funded': 0, 'consultancy': 0})
 
         # Sponsored (funded) projects
-        if _table_exists(conn, 'icsr_sponsered_projects'):
+        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Sponsored'):
             wc, p = _build_project_filters(department, project_year, status, dept_column='principal_investigator_department')
             if wc:
                 wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
@@ -424,7 +429,7 @@ def funded_project_trend(current_user_id):
                     yearly[int(row['year'])]['funded'] = int(row['total'])
 
         # Consultancy projects
-        if _table_exists(conn, 'icsr_consultancy_projects'):
+        if _table_exists(conn, 'icsr_consultancy_projects') and project_type in (None, '', 'All', 'Consultancy'):
             wc, p = _build_project_filters(department, project_year, status, dept_column='department')
             if wc:
                 wc += " AND COALESCE(start_date, end_date) IS NOT NULL"
@@ -444,16 +449,16 @@ def funded_project_trend(current_user_id):
         ]
         return jsonify({'data': data}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch project trend: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/projects/list', methods=['GET'])
-@token_required
+@token_optional
 def project_list(current_user_id):
     conn = None
     cur = None
@@ -468,7 +473,7 @@ def project_list(current_user_id):
         rows = []
 
         # Fetch funded (sponsored) projects
-        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Funded'):
+        if _table_exists(conn, 'icsr_sponsered_projects') and project_type in (None, '', 'All', 'Sponsored'):
             where_clause, params = _build_project_filters(
                 department, project_year, status, dept_column='principal_investigator_department'
             )
@@ -476,7 +481,7 @@ def project_list(current_user_id):
                 f"""
                 SELECT project_id, project_title, principal_investigator,
                        principal_investigator_department AS department,
-                       'Funded' AS project_type,
+                       'Sponsored' AS project_type,
                        funding_agency, client_organization,
                        amount_sanctioned, start_date, end_date, status
                 FROM icsr_sponsered_projects
@@ -487,12 +492,12 @@ def project_list(current_user_id):
             for row in cur.fetchall():
                 rows.append({
                     'project_id': row['project_id'],
-                    'project_title': row['project_title'],
-                    'principal_investigator': row['principal_investigator'],
-                    'department': row['department'],
+                    'project_title': redact_pii_patterns(row['project_title']),
+                    'principal_investigator': redact_pii_patterns(row['principal_investigator']),
+                    'department': redact_pii_patterns(row['department']),
                     'project_type': row['project_type'],
-                    'funding_agency': row['funding_agency'],
-                    'client_organization': row['client_organization'],
+                    'funding_agency': redact_pii_patterns(row['funding_agency']),
+                    'client_organization': redact_pii_patterns(row['client_organization']),
                     'amount_sanctioned': _decimal_to_float(row['amount_sanctioned']),
                     'start_date': _serialize_date(row['start_date']),
                     'end_date': _serialize_date(row['end_date']),
@@ -519,12 +524,12 @@ def project_list(current_user_id):
             for row in cur.fetchall():
                 rows.append({
                     'project_id': row['project_id'],
-                    'project_title': row['project_title'],
-                    'principal_investigator': row['principal_investigator'],
-                    'department': row['department'],
+                    'project_title': redact_pii_patterns(row['project_title']),
+                    'principal_investigator': redact_pii_patterns(row['principal_investigator']),
+                    'department': redact_pii_patterns(row['department']),
                     'project_type': row['project_type'],
-                    'funding_agency': row['funding_agency'],
-                    'client_organization': row['client_organization'],
+                    'funding_agency': redact_pii_patterns(row['funding_agency']),
+                    'client_organization': redact_pii_patterns(row['client_organization']),
                     'amount_sanctioned': _decimal_to_float(row['amount_sanctioned']),
                     'start_date': _serialize_date(row['start_date']),
                     'end_date': _serialize_date(row['end_date']),
@@ -535,16 +540,16 @@ def project_list(current_user_id):
         rows.sort(key=lambda r: (r['start_date'] or r['end_date'] or '', r['project_title'] or ''), reverse=True)
         return jsonify({'data': rows})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch projects: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/consultancy/revenue-trend', methods=['GET'])
-@token_required
+@token_optional
 def consultancy_revenue_trend(current_user_id):
     """Return yearly revenue from both sponsored and consultancy tables."""
     conn = None
@@ -595,16 +600,16 @@ def consultancy_revenue_trend(current_user_id):
         ]
         return jsonify({'data': data}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch revenue trend: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/mous/list', methods=['GET'])
-@token_required
+@token_optional
 def mou_list(current_user_id):
     conn = None
     cur = None
@@ -634,43 +639,54 @@ def mou_list(current_user_id):
         for row in cur.fetchall():
             rows.append({
                 'mou_id': row['mou_id'],
-                'partner_name': row['partner_name'],
+                'partner_name': redact_pii_patterns(row['partner_name']),
                 'collaboration_nature': row['collaboration_nature'],
                 'date_signed': _serialize_date(row['date_signed']),
                 'validity_end': _serialize_date(row['validity_end']),
-                'remarks': row['remarks'],
+                'remarks': redact_pii_patterns(row['remarks']),
             })
         return jsonify({'data': rows})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch MoUs: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/mous/trend', methods=['GET'])
-@token_required
+@token_optional
 def mou_trend(current_user_id):
     conn = None
     cur = None
     try:
+        mou_year = request.args.get('mou_year')
+        
         conn = get_db_connection()
         if not _table_exists(conn, 'research_mous'):
             return jsonify({'data': []}), 200
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+        where_clause, params = _build_year_filter('date_signed', mou_year)
+        
+        # If no where clause, we still need the 'WHERE date_signed IS NOT NULL'
+        if not where_clause:
+            where_clause = "WHERE date_signed IS NOT NULL"
+        else:
+            where_clause += " AND date_signed IS NOT NULL"
+
         cur.execute(
-            """
+            f"""
             SELECT
                 EXTRACT(YEAR FROM date_signed)::INT AS year,
                 COUNT(*) AS total
             FROM research_mous
-            WHERE date_signed IS NOT NULL
+            {where_clause}
             GROUP BY year
             ORDER BY year
-            """
+            """,
+            params
         )
         data = [
             {'year': int(row['year']), 'total': int(row['total'])}
@@ -678,16 +694,16 @@ def mou_trend(current_user_id):
         ]
         return jsonify({'data': data}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch MoU trend: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/patents/stats', methods=['GET'])
-@token_required
+@token_optional
 def patent_stats(current_user_id):
     conn = None
     cur = None
@@ -700,54 +716,77 @@ def patent_stats(current_user_id):
             return jsonify({'overall': {}, 'yearly': []})
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        where_clause, params = _build_patent_filters(patent_year, patent_status)
 
-        query = f"""
-            SELECT
-                EXTRACT(YEAR FROM COALESCE(grant_date::date, filing_date))::INT AS year,
-                patent_status,
-                COUNT(*) AS total
+        # Filed: count all patents grouped by filing_date year
+        filed_conditions = ["filing_date IS NOT NULL"]
+        filed_params: List[Any] = []
+        if patent_year and patent_year != 'All':
+            try:
+                filed_conditions.append("EXTRACT(YEAR FROM filing_date)::INT = %s")
+                filed_params.append(int(patent_year))
+            except ValueError:
+                pass
+        if patent_status and patent_status != 'All':
+            filed_conditions.append("patent_status = %s")
+            filed_params.append(patent_status)
+        filed_where = "WHERE " + " AND ".join(filed_conditions)
+
+        cur.execute(f"""
+            SELECT EXTRACT(YEAR FROM filing_date)::INT AS year, COUNT(*) AS total
             FROM research_patents
-            {where_clause}
-            GROUP BY year, patent_status
-            ORDER BY year
-        """
-        cur.execute(query, params)
-        status_keys = ['Filed', 'Granted', 'Published']
-        yearly_map: Dict[int, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        overall_counts = {key: 0 for key in status_keys}
-        for row in cur.fetchall():
-            year = row['year']
-            if year is None:
-                continue
-            status_value = row['patent_status']
-            total = int(row['total'])
-            yearly_map[year][status_value] += total
-            if status_value in overall_counts:
-                overall_counts[status_value] += total
-            else:
-                overall_counts[status_value] = total
+            {filed_where}
+            GROUP BY year ORDER BY year
+        """, filed_params)
+        filed_rows = cur.fetchall()
 
-        yearly = []
-        for year in sorted(yearly_map.keys()):
-            entry = {'year': int(year)}
-            for status_key in status_keys:
-                entry[status_key] = yearly_map[year].get(status_key, 0)
-            entry['total'] = sum(entry[status_key] for status_key in status_keys)
-            yearly.append(entry)
+        # Granted: count patents with status='Granted' grouped by grant_date year
+        granted_conditions = ["patent_status = 'Granted'", "grant_date IS NOT NULL"]
+        granted_params: List[Any] = []
+        if patent_year and patent_year != 'All':
+            try:
+                granted_conditions.append("EXTRACT(YEAR FROM grant_date::date)::INT = %s")
+                granted_params.append(int(patent_year))
+            except ValueError:
+                pass
+        granted_where = "WHERE " + " AND ".join(granted_conditions)
+
+        cur.execute(f"""
+            SELECT EXTRACT(YEAR FROM grant_date::date)::INT AS year, COUNT(*) AS total
+            FROM research_patents
+            {granted_where}
+            GROUP BY year ORDER BY year
+        """, granted_params)
+        granted_rows = cur.fetchall()
+
+        yearly_map: Dict[int, Dict[str, int]] = defaultdict(lambda: {'Filed': 0, 'Granted': 0})
+        for row in filed_rows:
+            if row['year'] is not None:
+                yearly_map[int(row['year'])]['Filed'] = int(row['total'])
+        for row in granted_rows:
+            if row['year'] is not None:
+                yearly_map[int(row['year'])]['Granted'] = int(row['total'])
+
+        yearly = [
+            {'year': y, 'Filed': yearly_map[y]['Filed'], 'Granted': yearly_map[y]['Granted']}
+            for y in sorted(yearly_map.keys())
+        ]
+        overall_counts = {
+            'Filed': sum(e['Filed'] for e in yearly),
+            'Granted': sum(e['Granted'] for e in yearly),
+        }
 
         return jsonify({'overall': overall_counts, 'yearly': yearly}), 200
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch patent stats: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/patents/list', methods=['GET'])
-@token_required
+@token_optional
 def patent_list(current_user_id):
     conn = None
     cur = None
@@ -784,34 +823,48 @@ def patent_list(current_user_id):
             inventors_list = [row[f'inventor{i}'] for i in range(1, 5) if row.get(f'inventor{i}')]
             rows.append({
                 'patent_id': row['patent_id'],
-                'patent_title': row['patent_title'],
-                'inventors': ', '.join(inventors_list),
-                'inventor1': row.get('inventor1'),
+                'patent_title': redact_pii_patterns(row['patent_title']),
+                'inventors': redact_pii_patterns(', '.join(inventors_list)),
+                'inventor1': redact_pii_patterns(row.get('inventor1')),
                 'inventor1_category': row.get('inventor1_category'),
-                'inventor2': row.get('inventor2'),
+                'inventor2': redact_pii_patterns(row.get('inventor2')),
                 'inventor2_category': row.get('inventor2_category'),
-                'inventor3': row.get('inventor3'),
+                'inventor3': redact_pii_patterns(row.get('inventor3')),
                 'inventor3_category': row.get('inventor3_category'),
-                'inventor4': row.get('inventor4'),
+                'inventor4': redact_pii_patterns(row.get('inventor4')),
                 'inventor4_category': row.get('inventor4_category'),
                 'patent_status': row['patent_status'],
                 'filing_date': _serialize_date(row['filing_date']),
                 'grant_date': _serialize_date(row['grant_date']),
-                'remarks': row['remarks'],
+                'remarks': redact_pii_patterns(row['remarks']),
             })
         return jsonify({'data': rows})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch patents: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
-@research_bp.route('/externships/summary', methods=['GET'])
-@token_required
-def externship_summary(current_user_id):
+@research_bp.route('/externships/analytics', methods=['GET'])
+@token_optional
+def externship_analytics(current_user_id):
+    return _externship_analytics_impl(current_user_id)
+
+
+def _externship_analytics_impl(current_user_id):
+    """
+    Combined summary and list data for externships to reduce API calls.
+
+    Undecorated on purpose: externship_summary/externship_list below call
+    this directly rather than the @token_optional-wrapped route function —
+    calling a decorated function with an explicit current_user_id used to
+    raise "got multiple values for argument 'current_user_id'", because
+    token_optional's wrapper injects that same name as a kwarg on top of the
+    one already passed positionally. Both aliases 500'd on every request.
+    """
     conn = None
     cur = None
     try:
@@ -820,10 +873,9 @@ def externship_summary(current_user_id):
 
         conn = get_db_connection()
         if not _table_exists(conn, 'externship_info'):
-            return jsonify({'total': 0, 'yearly': [], 'department': []})
+            return jsonify({'total': 0, 'yearly': [], 'department': [], 'data': []})
 
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-
         conditions: List[str] = []
         params: List[Any] = []
 
@@ -843,6 +895,7 @@ def externship_summary(current_user_id):
         if conditions:
             where_clause = "WHERE " + " AND ".join(conditions)
 
+        # 1. Fetch Summary Data
         query_yearly = f"""
             SELECT
                 EXTRACT(YEAR FROM startdate)::INT AS year,
@@ -854,127 +907,82 @@ def externship_summary(current_user_id):
             ORDER BY year
         """
         cur.execute(query_yearly, params)
-        yearly_map: Dict[int, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        yearly_map = defaultdict(lambda: defaultdict(int))
         total_externships = 0
         for row in cur.fetchall():
-            year_value = row['year']
-            if year_value is None:
-                continue
+            y_val = row['year']
+            if y_val is None: continue
             ext_type = row['externship_type'] or 'Unknown'
             count = int(row['total'])
-            yearly_map[year_value][ext_type] += count
-            yearly_map[year_value]['total'] += count
+            yearly_map[y_val][ext_type] += count
+            yearly_map[y_val]['total'] += count
             total_externships += count
 
         yearly_data = []
-        for year_value in sorted(yearly_map.keys()):
-            entry = {'year': int(year_value), 'total': int(yearly_map[year_value]['total'])}
-            for key, value in yearly_map[year_value].items():
-                if key != 'total':
-                    entry[key] = int(value)
+        for y_val in sorted(yearly_map.keys()):
+            entry = {'year': int(y_val), 'total': int(yearly_map[y_val]['total'])}
+            for key, val in yearly_map[y_val].items():
+                if key != 'total': entry[key] = int(val)
             yearly_data.append(entry)
 
-        query_department = f"""
-            SELECT department,
-                   COUNT(*) AS total
-            FROM externship_info
-            {where_clause}
-            GROUP BY department
-            ORDER BY total DESC
-        """
-        cur.execute(query_department, params)
-        department_data = []
-        for row in cur.fetchall():
-            department_data.append({
-                'department': row['department'],
-                'total': int(row['total']),
-            })
+        query_dept = f'SELECT department, COUNT(*) AS total FROM externship_info {where_clause} GROUP BY department ORDER BY total DESC'
+        cur.execute(query_dept, params)
+        dept_data = [{'department': r['department'], 'total': int(r['total'])} for r in cur.fetchall()]
 
-        return jsonify({'total': int(total_externships), 'yearly': yearly_data, 'department': department_data})
-    except Exception as exc:
-        return jsonify({'message': f'Failed to fetch externship summary: {exc}'}), 500
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-@research_bp.route('/externships/list', methods=['GET'])
-@token_required
-def externship_list(current_user_id):
-    conn = None
-    cur = None
-    try:
-        department = request.args.get('department')
-        year = request.args.get('externship_year')
-
-        conn = get_db_connection()
-        if not _table_exists(conn, 'externship_info'):
-            return jsonify({'data': []})
-
-        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        conditions: List[str] = []
-        params: List[Any] = []
-
-        if department and department != 'All':
-            conditions.append("department = %s")
-            params.append(department)
-
-        if year and year != 'All':
-            try:
-                year_int = int(year)
-                conditions.append("EXTRACT(YEAR FROM startdate)::INT = %s")
-                params.append(year_int)
-            except ValueError:
-                pass
-
-        where_clause = ""
-        if conditions:
-            where_clause = "WHERE " + " AND ".join(conditions)
-
-        query = f"""
+        # 2. Fetch List Data
+        query_list = f"""
             SELECT
-                externid AS externship_id,
-                empname AS faculty_name,
-                department,
-                industry_name,
-                "type" AS externship_type,
-                startdate,
-                enddate,
-                CASE
-                    WHEN enddate IS NOT NULL THEN (enddate - startdate)
-                    ELSE NULL
-                END AS duration_days
+                externid AS externship_id, empname AS faculty_name,
+                department, industry_name, "type" AS externship_type,
+                startdate, enddate,
+                CASE WHEN enddate IS NOT NULL THEN (enddate - startdate) ELSE NULL END AS duration_days
             FROM externship_info
             {where_clause}
             ORDER BY startdate DESC NULLS LAST, empname
         """
-        cur.execute(query, params)
-        rows = []
+        cur.execute(query_list, params)
+        list_data = []
         for row in cur.fetchall():
-            rows.append({
+            list_data.append({
                 'externship_id': row['externship_id'],
-                'faculty_name': row['faculty_name'],
-                'department': row['department'],
-                'industry_name': row['industry_name'],
+                'faculty_name': redact_pii_patterns(row['faculty_name']),
+                'department': redact_pii_patterns(row['department']),
+                'industry_name': redact_pii_patterns(row['industry_name']),
                 'type': row['externship_type'],
                 'startdate': _serialize_date(row['startdate']),
                 'enddate': _serialize_date(row['enddate']),
                 'duration_days': int(row['duration_days']) if row['duration_days'] is not None else None,
             })
-        return jsonify({'data': rows})
+
+        return jsonify({
+            'total': int(total_externships),
+            'yearly': yearly_data,
+            'department': dept_data,
+            'data': list_data
+        })
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch externships: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+        if cur: cur.close()
+        if conn: release_db_connection(conn)
+
+
+@research_bp.route('/externships/summary', methods=['GET'])
+@token_optional
+def externship_summary(current_user_id):
+    # Keep for backward compatibility, but we should use /analytics
+    return _externship_analytics_impl(current_user_id)
+
+
+@research_bp.route('/externships/list', methods=['GET'])
+@token_optional
+def externship_list(current_user_id):
+    # Keep for backward compatibility
+    return _externship_analytics_impl(current_user_id)
 
 
 @research_bp.route('/publications/summary', methods=['GET'])
-@token_required
+@token_optional
 def publication_summary(current_user_id):
     conn = None
     cur = None
@@ -1039,16 +1047,16 @@ def publication_summary(current_user_id):
             'conference_count': conference_count
         })
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch publication summary: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/publications/trend', methods=['GET'])
-@token_required
+@token_optional
 def publication_trend(current_user_id):
     conn = None
     cur = None
@@ -1075,16 +1083,16 @@ def publication_trend(current_user_id):
         data = [{'year': row['year'], 'total': row['total']} for row in cur.fetchall()]
         return jsonify({'data': data})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch publication trend: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/publications/department', methods=['GET'])
-@token_required
+@token_optional
 def publication_by_department(current_user_id):
     conn = None
     cur = None
@@ -1111,16 +1119,16 @@ def publication_by_department(current_user_id):
         data = [{'department': row['department'], 'total': row['total']} for row in cur.fetchall()]
         return jsonify({'data': data})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch department publications: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/publications/type-distribution', methods=['GET'])
-@token_required
+@token_optional
 def publication_type_distribution(current_user_id):
     conn = None
     cur = None
@@ -1145,16 +1153,16 @@ def publication_type_distribution(current_user_id):
         data = [{'publication_type': row['publication_type'], 'total': row['total']} for row in cur.fetchall()]
         return jsonify({'data': data})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch publication type distribution: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @research_bp.route('/publications/list', methods=['GET'])
-@token_required
+@token_optional
 def publication_list(current_user_id):
     conn = None
     cur = None
@@ -1187,18 +1195,18 @@ def publication_list(current_user_id):
         for row in cur.fetchall():
             data.append({
                 'publication_id': row['id'],
-                'publication_title': row['publication_title'],
-                'journal_name': row['journal_name'],
-                'department': row['department'],
-                'faculty_name': row['faculty_name'],
+                'publication_title': redact_pii_patterns(row['publication_title']),
+                'journal_name': redact_pii_patterns(row['journal_name']),
+                'department': redact_pii_patterns(row['department']),
+                'faculty_name': redact_pii_patterns(row['faculty_name']),
                 'publication_year': row['publication_year'],
                 'publication_type': row['publication_type'],
             })
         return jsonify({'data': data})
     except Exception as exc:
-        return jsonify({'message': f'Failed to fetch publications: {exc}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)

@@ -1,78 +1,87 @@
 import { useState, useEffect } from 'react';
 import {
   fetchNptelSummary,
-  fetchNptelTrend,
   fetchNptelList
 } from '../services/outreachExtensionStats';
 import { useUploadRefresh } from '../hooks/useUploadRefresh';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Legend
+  Legend,
+  LabelList
 } from 'recharts';
 import './Page.css';
 import './AcademicSection.css';
-import DataUploadModal from './DataUploadModal';
+import './NptelSection.css';
+import DataUploadModal from './LazyDataUploadModal';
 import { useNavigate } from 'react-router-dom';
+import CustomTooltip from './CustomTooltip';
+import ExportMenu from './ExportMenu';
+import ChartExpandModal from './ChartExpandModal';
+import LastUpdated from './LastUpdated';
+import ShareButton from './ShareButton';
 
 const formatNumber = (value) => new Intl.NumberFormat('en-IN').format(value || 0);
 
 function NptelSection({ user, isPublicView = false }) {
   const navigate = useNavigate();
-
   const uploadVersion = useUploadRefresh();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [activeUploadTable, setActiveUploadTable] = useState('');
   const token = localStorage.getItem('authToken');
 
+  const isGuestUser = !user;
+  const isReadOnlyView = isPublicView || isGuestUser;
+  const isAdmin = user?.role_id === 3 || user?.role_id === 16;
+
   const [summary, setSummary] = useState({
     total_courses: 0,
-    total_enrollments: 0
+    total_enrollments: 0,
+    yearly_stats: []
   });
-
-  const [viewType, setViewType] = useState('courses_trend');
-  const [trendData, setTrendData] = useState([]);
   const [listData, setListData] = useState([]);
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState(null);
+  const [expandedChart, setExpandedChart] = useState(null);
 
-  // Load data
+  const [chartIsMobile, setChartIsMobile] = useState(window.innerWidth <= 640);
+  useEffect(() => {
+    const handle = () => setChartIsMobile(window.innerWidth <= 640);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
-      if (!token) return;
       try {
         setLoading(true);
-        const [sumData, trendRes, listRes] = await Promise.all([
+        const [sumRes, listRes] = await Promise.all([
           fetchNptelSummary(token),
-          fetchNptelTrend(token),
           fetchNptelList(token)
         ]);
-        setSummary(sumData);
-        setTrendData(trendRes?.trend || []);
+        setSummary(sumRes || { total_courses: 0, total_enrollments: 0, yearly_stats: [] });
         setListData(listRes?.courses || []);
       } catch (err) {
         setError(err.message || 'Failed to load NPTEL data');
       } finally {
         setLoading(false);
+        setHasLoaded(true);
       }
     };
     loadData();
   }, [token, uploadVersion]);
 
-
   if (error) {
-    return isPublicView ? (
-      <p className="error-message">{error}</p>
-    ) : (
+    return (
       <div className="page-container">
         <div className="page-content">
-          <h1>NPTEL – CCE</h1>
+          <h1>NPTEL &#8211; CCE</h1>
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -81,330 +90,176 @@ function NptelSection({ user, isPublicView = false }) {
 
   const content = (
     <>
-      {!isPublicView && (
+      {!isReadOnlyView && (
         <button className="page-back-btn" onClick={() => navigate('/outreach-extension')}>
-          ← Back to Outreach Extension
+          &#8592; Back to Outreach Extension
         </button>
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        {!isPublicView && <h1 style={{ margin: 0 }}>NPTEL – CCE (Centre for Continuing Education)</h1>}
 
-        {!isPublicView && user && user.role_id === 3 && (
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              className="upload-data-btn"
-              onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
-              style={{ 
-                padding: '10px 20px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 5px rgba(40, 167, 69, 0.3)'
-              }}
-            >
-              <span>📖</span> Upload NPTEL Courses
-            </button>
-          </div>
+      <div className="nptel-header">
+        <h1 className="nptel-header-h1">CCE Statistics</h1>
+        {!isReadOnlyView && isAdmin && (
+          <button
+            className="page-upload-btn"
+            onClick={() => { setActiveUploadTable('nptel_courses'); setIsUploadModalOpen(true); }}
+          >
+            <span>&#128214;</span> Upload NPTEL Data
+          </button>
         )}
       </div>
 
-      {/* Summary Cards - Modern Design */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '24px',
-        marginBottom: '40px'
-      }}>
-        {/* Total Courses Card */}
-        <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '20px',
-          padding: '28px',
-          boxShadow: '0 15px 35px rgba(102, 126, 234, 0.3)',
-          position: 'relative',
-          overflow: 'hidden',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          cursor: 'pointer',
-          ':hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: '0 20px 40px rgba(102, 126, 234, 0.4)'
-          }
-        }}>
-          {/* Decorative circles */}
-          <div style={{
-            position: 'absolute',
-            top: '-30px',
-            right: '-30px',
-            width: '150px',
-            height: '150px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '50%'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-40px',
-            left: '-40px',
-            width: '180px',
-            height: '180px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: '50%'
-          }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '16px'
-            }}>
-              <span style={{
-                fontSize: '32px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                padding: '10px',
-                borderRadius: '12px'
-              }}>📚</span>
-              <h3 style={{
-                margin: 0,
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '18px',
-                fontWeight: '500'
-              }}>Total Courses Offered</h3>
-            </div>
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: 'white',
-              marginBottom: '8px',
-              lineHeight: '1.2'
-            }}>
-              {formatNumber(summary.total_courses)}
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                background: '#4ade80',
-                borderRadius: '50%'
-              }} />
-              <span style={{
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>
-                Active NPTEL courses
-              </span>
-            </div>
-          </div>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <LastUpdated tables={['nptel_courses']} />
+        <ShareButton />
+      </div>
 
-        {/* Total Enrollments Card */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          borderRadius: '20px',
-          padding: '28px',
-          boxShadow: '0 15px 35px rgba(240, 147, 251, 0.3)',
-          position: 'relative',
-          overflow: 'hidden',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          cursor: 'pointer',
-          ':hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: '0 20px 40px rgba(240, 147, 251, 0.4)'
-          }
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: '-30px',
-            right: '-30px',
-            width: '150px',
-            height: '150px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '50%'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-40px',
-            left: '-40px',
-            width: '180px',
-            height: '180px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            borderRadius: '50%'
-          }} />
-          
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              marginBottom: '16px'
-            }}>
-              <span style={{
-                fontSize: '32px',
-                background: 'rgba(255, 255, 255, 0.2)',
-                padding: '10px',
-                borderRadius: '12px'
-              }}>👥</span>
-              <h3 style={{
-                margin: 0,
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '18px',
-                fontWeight: '500'
-              }}>Total Enrollments</h3>
-            </div>
-            <div style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: 'white',
-              marginBottom: '8px',
-              lineHeight: '1.2'
-            }}>
-              {formatNumber(summary.total_enrollments)}
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                background: '#4ade80',
-                borderRadius: '50%'
-              }} />
-              <span style={{
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.8)'
-              }}>
-                Student registrations
-              </span>
-            </div>
+      <ChartExpandModal
+        isOpen={!!expandedChart}
+        onClose={() => setExpandedChart(null)}
+        title={expandedChart?.title}
+      >
+        {expandedChart?.content}
+      </ChartExpandModal>
+
+      <div id="nptel-summary-cards-container" className="nptel-cards">
+        <div className="nptel-card nptel-card--purple">
+          <div className="nptel-card-header">
+            <span className="nptel-card-icon">&#128218;</span>
+            <h3 className="nptel-card-h3">Total Courses Offered</h3>
           </div>
+          <div className="nptel-card-value">{formatNumber(summary.total_courses)}</div>
+        </div>
+        <div className="nptel-card nptel-card--pink">
+          <div className="nptel-card-header">
+            <span className="nptel-card-icon">&#128101;</span>
+            <h3 className="nptel-card-h3">Total Enrollments</h3>
+          </div>
+          <div className="nptel-card-value">{formatNumber(summary.total_enrollments)}</div>
         </div>
       </div>
 
-      {/* View Selection & Trend Chart */}
-      <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3 style={{ margin: 0 }}>Trends & Analysis</h3>
+      <div className="nptel-panel nptel-panel--mb">
+        <div className="nptel-panel-header">
+          <h3 className="nptel-panel-h3">Enrollment &amp; Certification Trends</h3>
+          <ExportMenu
+            elementId="nptel-chart-container"
+            data={summary.yearly_stats}
+            headers={['Year', 'Enrollments', 'Certifications']}
+            keys={['stat_year', 'enrollment_count', 'certification_count']}
+            filename="nptel_trends"
+            title="NPTEL Enrollment Trends"
+          />
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '25px' }}>
-          {[
-            { id: 'courses_trend', label: 'Courses Trend', color: '#667eea' },
-            { id: 'enrollments_trend', label: 'Enrollments Trend', color: '#f093fb' },
-          ].map(type => (
-            <label key={type.id} style={{
-              display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '8px 16px',
-              backgroundColor: viewType === type.id ? type.color : 'white',
-              color: viewType === type.id ? 'white' : '#333',
-              borderRadius: '6px', border: `2px solid ${type.color}`, transition: 'all 0.2s ease'
-            }}>
-              <input
-                type="radio" name="nptelViewType" value={type.id}
-                checked={viewType === type.id} onChange={(e) => setViewType(e.target.value)}
-                style={{ accentColor: type.color }}
-              />
-              <span style={{ fontWeight: viewType === type.id ? 'bold' : 'normal' }}>{type.label}</span>
-            </label>
-          ))}
+        <div id="nptel-chart-container">
+          {summary.yearly_stats && summary.yearly_stats.length > 0 ? (
+            <div
+              className="clickable-chart"
+              onClick={() => setExpandedChart({
+                title: "NPTEL Trends",
+                content: (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={chartIsMobile ? summary.yearly_stats.slice(-3) : summary.yearly_stats} margin={{ top: 40, right: 30, left: 40, bottom: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                      <XAxis dataKey="stat_year" stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                      <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 13, fontWeight: 600 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                      <Bar dataKey="enrollment_count" name="Enrollments" fill="#667eea" radius={[6, 6, 0, 0]}>
+                        <LabelList dataKey="enrollment_count" position="top" style={{ fontSize: '11px', fontWeight: 700, fill: '#667eea' }} />
+                      </Bar>
+                      <Bar dataKey="certification_count" name="Certifications" fill="#22c55e" radius={[6, 6, 0, 0]}>
+                        <LabelList dataKey="certification_count" position="top" style={{ fontSize: '11px', fontWeight: 700, fill: '#22c55e' }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )
+              })}
+            >
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={chartIsMobile ? summary.yearly_stats.slice(-3) : summary.yearly_stats} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis dataKey="stat_year" stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                  <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="enrollment_count" fill="#667eea" name="Enrollments" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="enrollment_count" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: '#667eea' }} />
+                  </Bar>
+                  <Bar dataKey="certification_count" fill="#22c55e" name="Certifications" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="certification_count" position="top" style={{ fontSize: '10px', fontWeight: 600, fill: '#22c55e' }} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="nptel-chart-empty">No trend data available</div>
+          )}
         </div>
-        
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            {trendData.length > 0 ? (
-              <div style={{ marginBottom: '40px' }}>
-                <h3 style={{ marginBottom: '20px', color: '#333' }}>
-                  {viewType === 'courses_trend' ? 'Courses Trend' : 'Enrollments Trend'}
-                </h3>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={trendData} margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="year" stroke="#666" padding={{ left: 30, right: 30 }} />
-                    <YAxis stroke="#666" />
-                    <Tooltip />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey={viewType === 'courses_trend' ? 'courses' : 'enrollments'} 
-                      name={viewType === 'courses_trend' ? 'Courses' : 'Enrollments'} 
-                      stroke={viewType === 'courses_trend' ? '#667eea' : '#f093fb'} 
-                      strokeWidth={3} 
-                      dot={{ r: 6, fill: viewType === 'courses_trend' ? '#667eea' : '#f093fb', strokeWidth: 2, stroke: '#fff' }} 
-                      activeDot={{ r: 8 }} 
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+      </div>
+
+      <div className="nptel-panel">
+        <div className="nptel-panel-header">
+          <h3 className="nptel-panel-h3">Course Directory</h3>
+          <ExportMenu
+            elementId="nptel-courses-list-container"
+            data={listData}
+            headers={['Year', 'Course Name', 'Department', 'Faculty', 'Enrollment']}
+            keys={['course_year', 'course_name', 'department_name', 'faculty_coordinator', 'student_enrollment']}
+            filename="nptel_course_directory"
+            title="NPTEL Course Directory"
+          />
+        </div>
+
+        {chartIsMobile ? (
+          <div className="nptel-mobile-list">
+            {listData.length === 0 ? (
+              <div className="nptel-mobile-empty">No courses found</div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                <span style={{ fontSize: '32px', display: 'block', marginBottom: '10px' }}>📈</span>
-                No trend data available.
-              </div>
+              listData.map((course) => (
+                <div key={course.course_id} className="nptel-mobile-card">
+                  <div className="nptel-mobile-top">
+                    <span className="nptel-mobile-year">FY {course.course_year}</span>
+                    <span className="nptel-mobile-dept">{course.department_name}</span>
+                  </div>
+                  <h4 className="nptel-mobile-h4">{course.course_name}</h4>
+                  <div className="nptel-mobile-details">
+                    <div><strong>Faculty:</strong> {course.faculty_coordinator || '—'}</div>
+                    <div><strong>Enrollment:</strong> {course.student_enrollment || '0'}</div>
+                  </div>
+                </div>
+              ))
             )}
-        </div>
-      </div>
-
-      {/* Data Table */}
-      <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '30px' }}>
-        <h3 style={{ marginBottom: '20px', color: '#333' }}>Course List Details</h3>
-        <div className="table-responsive" style={{ overflowX: 'auto' }}>
-          <table className="grievance-table" style={{
-            width: '100%',
-            minWidth: '800px',
-            borderCollapse: 'collapse',
-            backgroundColor: '#fff',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '1px solid #e0e0e0'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: '#28a745', color: 'white' }}>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Sr. No</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Course Name</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Department</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Faculty Name</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Enrollments</th>
-                <th style={{ padding: '12px', textAlign: 'left' }}>Offering Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listData.length > 0 ? (
-                listData.map((row, idx) => (
-                  <tr
-                    key={row.id}
-                    style={{
-                      backgroundColor: idx % 2 === 0 ? '#fff' : '#f8f9fa',
-                      borderBottom: '1px solid #e0e0e0'
-                    }}
-                  >
-                    <td style={{ padding: '12px' }}>{idx + 1}</td>
-                    <td style={{ padding: '12px', fontWeight: '500' }}>{row.course_name}</td>
-                    <td style={{ padding: '12px' }}>{row.department}</td>
-                    <td style={{ padding: '12px' }}>{row.faculty_name}</td>
-                    <td style={{ padding: '12px' }}>{row.enrollments || '0'}</td>
-                    <td style={{ padding: '12px' }}>{row.offering_year || 'N/A'}</td>
-                  </tr>
-                ))
-              ) : (
+          </div>
+        ) : (
+          <div id="nptel-courses-list-container" className="table-responsive">
+            <table className="nptel-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#666' }}>No records found.</td>
+                  <th>Year</th>
+                  <th>Course Name</th>
+                  <th>Department</th>
+                  <th>Faculty</th>
+                  <th>Enrollment</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {listData.length === 0 ? (
+                  <tr><td colSpan="5" className="nptel-td-empty">No records found</td></tr>
+                ) : (
+                  listData.map((course, index) => (
+                    <tr key={course.course_id} style={{ backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa' }}>
+                      <td className="nptel-td-year">{course.course_year}</td>
+                      <td className="nptel-td-name">{course.course_name}</td>
+                      <td className="nptel-td-text">{course.department_name}</td>
+                      <td className="nptel-td-text">{course.faculty_coordinator || '—'}</td>
+                      <td className="nptel-td-bold">{course.student_enrollment}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <DataUploadModal
@@ -416,16 +271,22 @@ function NptelSection({ user, isPublicView = false }) {
     </>
   );
 
-  // If public view, return content without wrappers
-  if (isPublicView) {
-    return content;
-  }
-
-  // If not public view, wrap in page-container and page-content
   return (
-    <div className="page-container">
-      <div className="page-content">
-        {content}
+    <div className={isPublicView ? "" : "page-container performance-render-auto"}>
+      <div className={isPublicView ? "" : "page-content"}>
+        {loading && !hasLoaded ? (
+          <div className="chart-skeleton-wrap">
+            <div className="chart-skeleton-heading" />
+            <div className="chart-skeleton" aria-label="Loading chart data…">
+              {[45,70,90,55,80,65,75,50].map((h,i) => (
+                <div key={i} className="chart-skeleton-bar" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="chart-skeleton-labels">
+              {[1,2,3,4,5,6,7,8].map(i => <div key={i} className="chart-skeleton-label" />)}
+            </div>
+          </div>
+        ) : content}
       </div>
     </div>
   );

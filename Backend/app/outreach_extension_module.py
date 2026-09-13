@@ -2,8 +2,9 @@
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_in_rows
 
 
 outreach_extension_bp = Blueprint('outreach_extension', __name__)
@@ -42,12 +43,12 @@ def _data_available() -> bool:
             _table_exists(conn, UBA_EVENTS_TABLE)
         )
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 
 @outreach_extension_bp.route('/open-house/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_open_house_summary(current_user_id):
     """Get summary statistics for Open House events."""
     if not _data_available():
@@ -103,23 +104,19 @@ def get_open_house_summary(current_user_id):
         }), 200
         
     except Exception as e:
-        import traceback
-        error_details = str(e)
         print(f"Open House summary error: {e}")
-        print(traceback.format_exc())
         return jsonify({
             'message': 'Failed to fetch Open House summary statistics.',
-            'error': error_details
         }), 500
     finally:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @outreach_extension_bp.route('/open-house/list', methods=['GET'])
-@token_required
+@token_optional
 def get_open_house_list(current_user_id):
     """Get paginated list of Open House events with search and filter."""
     if not _data_available():
@@ -186,7 +183,7 @@ def get_open_house_list(current_user_id):
         events = cur.fetchall()
         
         return jsonify({
-            'events': [dict(event) for event in events],
+            'events': redact_pii_in_rows([dict(event) for event in events]),
             'pagination': {
                 'page': page,
                 'per_page': per_page,
@@ -202,11 +199,11 @@ def get_open_house_list(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @outreach_extension_bp.route('/open-house/timeline', methods=['GET'])
-@token_required
+@token_optional
 def get_open_house_timeline(current_user_id):
     """Get year-wise timeline data for Open House events."""
     if not _data_available():
@@ -244,12 +241,12 @@ def get_open_house_timeline(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 
 @outreach_extension_bp.route('/nptel/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_nptel_summary(current_user_id):
     conn = None
     cur = None
@@ -271,10 +268,10 @@ def get_nptel_summary(current_user_id):
         return jsonify({'message': 'Failed to fetch NPTEL summary.'}), 500
     finally:
         if cur: cur.close()
-        if conn: conn.close()
+        if conn: release_db_connection(conn)
 
 @outreach_extension_bp.route('/nptel/trend', methods=['GET'])
-@token_required
+@token_optional
 def get_nptel_trend(current_user_id):
     conn = None
     cur = None
@@ -304,10 +301,10 @@ def get_nptel_trend(current_user_id):
         return jsonify({'message': 'Failed to fetch NPTEL trend.'}), 500
     finally:
         if cur: cur.close()
-        if conn: conn.close()
+        if conn: release_db_connection(conn)
 
 @outreach_extension_bp.route('/nptel/list', methods=['GET'])
-@token_required
+@token_optional
 def get_nptel_list(current_user_id):
     conn = None
     cur = None
@@ -329,21 +326,21 @@ def get_nptel_list(current_user_id):
             ORDER BY offering_year DESC NULLS LAST, course_name ASC;
         """)
         courses = cur.fetchall()
-        
+
         return jsonify({
-            'courses': [dict(c) for c in courses]
+            'courses': redact_pii_in_rows([dict(c) for c in courses])
         }), 200
     except Exception as e:
         print(f"NPTEL list error: {e}")
         return jsonify({'message': 'Failed to fetch NPTEL list.'}), 500
     finally:
         if cur: cur.close()
-        if conn: conn.close()
+        if conn: release_db_connection(conn)
 
 
 
 @outreach_extension_bp.route('/uba/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_uba_summary(current_user_id):
     """Get summary statistics for UBA."""
     if not _data_available():
@@ -378,11 +375,11 @@ def get_uba_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @outreach_extension_bp.route('/uba/projects', methods=['GET'])
-@token_required
+@token_optional
 def get_uba_projects(current_user_id):
     """Get list of UBA projects with events."""
     if not _data_available():
@@ -411,11 +408,11 @@ def get_uba_projects(current_user_id):
             ORDER BY start_date DESC NULLS LAST, project_id DESC;
         """)
         projects = cur.fetchall()
-        
+
         return jsonify({
-            'projects': [dict(project) for project in projects]
+            'projects': redact_pii_in_rows([dict(project) for project in projects])
         }), 200
-        
+
     except Exception as e:
         print(f"UBA projects error: {e}")
         return jsonify({'message': 'Failed to fetch UBA projects.'}), 500
@@ -423,11 +420,11 @@ def get_uba_projects(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @outreach_extension_bp.route('/outreach/list', methods=['GET'])
-@token_required
+@token_optional
 def get_outreach_list(current_user_id):
     """Get list of records from the outreach table, optionally filtered by program_name."""
     conn = None
@@ -467,7 +464,7 @@ def get_outreach_list(current_user_id):
         """, params)
 
         records = cur.fetchall()
-        return jsonify({'records': [dict(r) for r in records]}), 200
+        return jsonify({'records': redact_pii_in_rows([dict(r) for r in records])}), 200
 
     except Exception as e:
         print(f"Outreach list error: {e}")
@@ -476,11 +473,11 @@ def get_outreach_list(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @outreach_extension_bp.route('/uba/events', methods=['GET'])
-@token_required
+@token_optional
 def get_uba_events(current_user_id):
     """Get all UBA events, optionally filtered by year."""
     conn = None
@@ -523,7 +520,7 @@ def get_uba_events(current_user_id):
         """, params)
         events = cur.fetchall()
 
-        return jsonify({'events': [dict(e) for e in events]}), 200
+        return jsonify({'events': redact_pii_in_rows([dict(e) for e in events])}), 200
 
     except Exception as e:
         print(f"UBA events error: {e}")
@@ -532,5 +529,5 @@ def get_uba_events(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 

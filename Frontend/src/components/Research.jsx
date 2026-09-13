@@ -20,27 +20,17 @@ function Research({ user }) {
       title: 'ICSR Section',
       route: '/research/icsr',
       description: 'Industrial consultancy & sponsored research metrics',
-      // 🔹 ADDITION
-      allowedRoles: [3]
-    },
-    {
-      title: 'Administrative Section',
-      route: '/research/administrative-section',
-      description: 'Faculty industry externships and collaborations',
-      // 🔹 ADDITION
-      allowedRoles: [3, 2]
+      allowedRoles: [3, 9]
     },
     {
       title: 'Library',
       route: '/research/library',
       description: 'Research publications and scholarly outputs',
-      // 🔹 ADDITION
-      allowedRoles: [3]
+      allowedRoles: [3, 10]
     }
   ];
 
-  // 🔹 ADDITION: If public user → always show public view
-  if (roleId === 1) {
+  if (!user || roleId === 0 || roleId === 1) {
     return <ResearchPublicView user={user} />;
   }
 
@@ -50,14 +40,13 @@ function Research({ user }) {
       <div className="page-container">
         <div className="page-content">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn mb-space-4"
             onClick={() => setShowPublicView(false)}
-            style={{ marginBottom: '1rem' }}
           >
             ← Back to Admin View
           </button>
 
-          <ResearchPublicView user={user} />
+          <ResearchPublicView user={user} embedded />
         </div>
       </div>
     );
@@ -66,10 +55,9 @@ function Research({ user }) {
   return (
     <div className="page-container">
       <div className="page-content">
-        {/* 🔹 ADDITION: Public view button for non-public users */}
-        <div style={{ marginBottom: '1rem' }}>
+        <div className="mb-space-4">
           <button
-            className="upload-data-btn"
+            className="page-upload-btn"
             onClick={() => setShowPublicView(true)}
           >
             View Public Page
@@ -83,6 +71,7 @@ function Research({ user }) {
             const isSuperAdmin = roleId === 3;
             const isAllowed =
               isSuperAdmin ||
+              roleId === 1 ||
               (section.allowedRoles && section.allowedRoles.includes(roleId));
 
             if (!isAllowed) {
@@ -93,6 +82,7 @@ function Research({ user }) {
               <Link
                 key={index}
                 to={section.route}
+                state={section.state}
                 className="people-campus-card"
               >
                 <div className="card-icon">

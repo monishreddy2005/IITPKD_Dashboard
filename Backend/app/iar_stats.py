@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns, redact_pii_in_rows
 
 iar_bp = Blueprint('iar', __name__)
 
@@ -80,7 +81,7 @@ def apply_filters_and_fetch(where_clause, params,
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 def classify_outcome(row):
@@ -100,7 +101,7 @@ def classify_outcome(row):
 
 
 @iar_bp.route('/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_filter_options(current_user_id):
     conn = None
     cur = None
@@ -109,24 +110,37 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
 
+        current_filters = {
+            'year': request.args.get('year'),
+            'department': request.args.get('department'),
+            'course_type': request.args.get('course_type'),
+        }
+        for k, v in current_filters.items():
+            if v == 'All' or v == '':
+                current_filters[k] = None
+
+        def where_except(exclude_key):
+            temp = {k: v for k, v in current_filters.items() if k != exclude_key}
+            return build_filter_query(temp)
+
         cur = conn.cursor()
-        cur.execute("""
-            SELECT
-                ARRAY(SELECT DISTINCT year_of_graduation FROM alumni
-                      WHERE year_of_graduation IS NOT NULL
-                      ORDER BY year_of_graduation DESC) AS years,
-                ARRAY(SELECT DISTINCT department FROM alumni
-                      WHERE department IS NOT NULL AND department != ''
-                      ORDER BY department) AS departments,
-                ARRAY(SELECT DISTINCT course_type FROM alumni
-                      WHERE course_type IS NOT NULL
-                      ORDER BY course_type) AS course_types
-        """)
-        row = cur.fetchone()
+
+        where, params = where_except('year')
+        cur.execute(f"SELECT DISTINCT year_of_graduation FROM alumni {where} {'AND' if where else 'WHERE'} year_of_graduation IS NOT NULL ORDER BY year_of_graduation DESC", params)
+        years = [row['year_of_graduation'] for row in cur.fetchall() if row['year_of_graduation'] is not None]
+
+        where, params = where_except('department')
+        cur.execute(f"SELECT DISTINCT department FROM alumni {where} {'AND' if where else 'WHERE'} department IS NOT NULL AND department != '' ORDER BY department", params)
+        departments = [row['department'] for row in cur.fetchall() if row['department']]
+
+        where, params = where_except('course_type')
+        cur.execute(f"SELECT DISTINCT course_type FROM alumni {where} {'AND' if where else 'WHERE'} course_type IS NOT NULL ORDER BY course_type", params)
+        course_types = [row['course_type'] for row in cur.fetchall() if row['course_type']]
+
         return jsonify({
-            'years': row['years'] if row and row.get('years') else [],
-            'departments': row['departments'] if row and row.get('departments') else [],
-            'course_types': row['course_types'] if row and row.get('course_types') else [],
+            'years': years,
+            'departments': departments,
+            'course_types': course_types,
         }), 200
     except Exception as exc:
         print(f"IAR filter options error: {exc}")
@@ -135,11 +149,11 @@ def get_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @iar_bp.route('/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_summary(current_user_id):
     filters = {
         'year': request.args.get('year'),
@@ -185,7 +199,7 @@ def get_summary(current_user_id):
 
 
 @iar_bp.route('/state-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_state_distribution(current_user_id):
     filters = {
         'year': request.args.get('year'),
@@ -194,13 +208,24 @@ def get_state_distribution(current_user_id):
     }
 
     where_clause, params = build_filter_query(filters)
+
+    # Exclude rows where place_of_settlement_state is NULL or blank
+    extra_condition = "place_of_settlement_state IS NOT NULL AND TRIM(place_of_settlement_state) <> ''"
+    if where_clause:
+        where_clause += f" AND {extra_condition}"
+    else:
+        where_clause = f"WHERE {extra_condition}"
+
     rows, error = apply_filters_and_fetch(where_clause, params)
     if error:
         return jsonify({'message': error}), 500
 
     distribution = {}
     for row in rows:
-        state = row.get('place_of_settlement_state') or 'Unknown'
+        state = row.get('place_of_settlement_state')
+        if not state or not state.strip():
+            continue
+        state = redact_pii_patterns(state)
         distribution[state] = distribution.get(state, 0) + 1
 
     formatted = [
@@ -211,7 +236,7 @@ def get_state_distribution(current_user_id):
 
 
 @iar_bp.route('/country-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_country_distribution(current_user_id):
     filters = {
         'year': request.args.get('year'),
@@ -226,7 +251,7 @@ def get_country_distribution(current_user_id):
 
     distribution = {}
     for row in rows:
-        country = row.get('country_of_settlement') or 'Unknown'
+        country = redact_pii_patterns(row.get('country_of_settlement')) or 'Unknown'
         distribution[country] = distribution.get(country, 0) + 1
 
     formatted = [
@@ -237,7 +262,7 @@ def get_country_distribution(current_user_id):
 
 
 @iar_bp.route('/outcome-breakdown', methods=['GET'])
-@token_required
+@token_optional
 def get_outcome_breakdown(current_user_id):
     """Per-department counts for higher studies vs corporate (inferred from current_job)."""
     filters = {
@@ -264,3 +289,99 @@ def get_outcome_breakdown(current_user_id):
 
     formatted = sorted(breakdown.values(), key=lambda x: x['department'])
     return jsonify({'data': formatted}), 200
+
+
+# ---------------------------------------------------------------------------
+# IAR MOUs
+# ---------------------------------------------------------------------------
+
+@iar_bp.route('/mous/filter-options', methods=['GET'])
+@token_optional
+def get_mou_filter_options(current_user_id):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed'}), 500
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT DISTINCT EXTRACT(YEAR FROM date_signed) as year
+            FROM iar_mous
+            WHERE date_signed IS NOT NULL
+            ORDER BY year DESC
+        """)
+        years = [str(int(row['year'])) for row in cur.fetchall()]
+        return jsonify({'mou_years': years}), 200
+    except Exception as e:
+        print(f"IAR MoU filter options error: {e}")
+        return jsonify({'message': 'Failed to fetch MoU filter options'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: release_db_connection(conn)
+
+
+@iar_bp.route('/mous/trend', methods=['GET'])
+@token_optional
+def get_mou_trend(current_user_id):
+    mou_year = request.args.get('mou_year')
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed'}), 500
+        cur = conn.cursor()
+        
+        query = "SELECT EXTRACT(YEAR FROM date_signed) as year, COUNT(*) as total FROM iar_mous WHERE date_signed IS NOT NULL"
+        params = []
+        if mou_year and mou_year != 'All':
+            query += " AND EXTRACT(YEAR FROM date_signed) = %s"
+            params.append(mou_year)
+        query += " GROUP BY year ORDER BY year ASC"
+        
+        cur.execute(query, params)
+        trend = [{'year': str(int(row['year'])), 'total': row['total']} for row in cur.fetchall()]
+        return jsonify({'data': trend}), 200
+    except Exception as e:
+        print(f"IAR MoU trend error: {e}")
+        return jsonify({'message': 'Failed to fetch MoU trend'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: release_db_connection(conn)
+
+
+@iar_bp.route('/mous/list', methods=['GET'])
+@token_optional
+def get_mou_list(current_user_id):
+    mou_year = request.args.get('mou_year')
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed'}), 500
+        cur = conn.cursor()
+        
+        query = "SELECT * FROM iar_mous"
+        params = []
+        if mou_year and mou_year != 'All':
+            query += " WHERE EXTRACT(YEAR FROM date_signed) = %s"
+            params.append(mou_year)
+        query += " ORDER BY date_signed DESC NULLS LAST"
+        
+        cur.execute(query, params)
+        rows = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
+        for r in rows:
+            if r.get('date_signed'):
+                r['date_signed'] = r['date_signed'].isoformat()
+            if r.get('validity_end'):
+                r['validity_end'] = r['validity_end'].isoformat()
+                
+        return jsonify({'data': rows}), 200
+    except Exception as e:
+        print(f"IAR MoU list error: {e}")
+        return jsonify({'message': 'Failed to fetch MoU records'}), 500
+    finally:
+        if cur: cur.close()
+        if conn: release_db_connection(conn)

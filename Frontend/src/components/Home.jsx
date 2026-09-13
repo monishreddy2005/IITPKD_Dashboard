@@ -1,16 +1,22 @@
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
+import Breadcrumb from './Breadcrumb';
+import Footer from './Footer';
 import './Home.css';
 
-function Home({ user, onLogout }) {
+function Home({ user, onLogout, isGuest }) {
   return (
     <div className="home-container">
-      <Header user={user} onLogout={onLogout} />
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <Header user={user} onLogout={onLogout} isGuest={isGuest} />
 
-      {/* Main Content Area - Rendered by child routes */}
-      <main className="main-content">
+      <main id="main-content" className="main-content">
+        <Breadcrumb />
         <Outlet />
       </main>
+      <br></br> <br></br> <br></br> <br></br> <br></br> 
+      
+      <Footer />
     </div>
   );
 }

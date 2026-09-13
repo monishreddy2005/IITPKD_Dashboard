@@ -10,8 +10,9 @@ from typing import Any, Dict, List, Optional, Tuple
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns, redact_pii_in_rows
 
 
 innovation_bp = Blueprint('innovation', __name__)
@@ -67,7 +68,7 @@ def _data_available() -> bool:
             _table_exists(conn, INNOVATION_PROJECTS_TABLE)
         )
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 def _iptif_data_available() -> bool:
@@ -83,7 +84,7 @@ def _iptif_data_available() -> bool:
             _table_exists(conn, IPTIF_FACILITIES_TABLE)
         )
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 def _techin_data_available() -> bool:
@@ -98,7 +99,7 @@ def _techin_data_available() -> bool:
             _table_exists(conn, TECHIN_STARTUP_TABLE)
         )
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 def build_where_clause(filter_mapping: Dict[str, str], filters: Dict[str, Any]) -> Tuple[str, List]:
@@ -117,7 +118,7 @@ def build_where_clause(filter_mapping: Dict[str, str], filters: Dict[str, Any]) 
 
 
 @innovation_bp.route('/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_summary(current_user_id):
     """Get summary statistics for innovation and entrepreneurship."""
     if not _data_available():
@@ -163,11 +164,11 @@ def get_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/yearly-growth', methods=['GET'])
-@token_required
+@token_optional
 def get_yearly_growth(current_user_id):
     """Get year-wise growth of incubatees and startups."""
     if not _data_available():
@@ -245,11 +246,11 @@ def get_yearly_growth(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/sector-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_sector_distribution(current_user_id):
     """Get sector-wise innovation distribution."""
     if not _data_available():
@@ -321,11 +322,11 @@ def get_sector_distribution(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/startups', methods=['GET'])
-@token_required
+@token_optional
 def get_startups(current_user_id):
     """Get list of startups with search and filter capabilities."""
     if not _data_available():
@@ -405,14 +406,14 @@ def get_startups(current_user_id):
         """
         cur.execute(query, params + [per_page, offset])
         startups = cur.fetchall()
-        
+
         result = []
         for row in startups:
             result.append({
                 'startup_id': row['startup_id'],
-                'startup_name': row['startup_name'],
-                'founder_name': row['founder_name'],
-                'innovation_focus_area': row['innovation_focus_area'],
+                'startup_name': redact_pii_patterns(row['startup_name']),
+                'founder_name': redact_pii_patterns(row['founder_name']),
+                'innovation_focus_area': redact_pii_patterns(row['innovation_focus_area']),
                 'year_of_incubation': row['year_of_incubation'],
                 'status': row['status'],
                 'sector': row['sector'],
@@ -436,13 +437,13 @@ def get_startups(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_filter_options(current_user_id):
-    """Get filter options for startups and projects."""
+    """Get filter options for startups and projects with cross-filtering."""
     if not _data_available():
         return jsonify({'message': 'Innovation tables are missing.'}), 500
 
@@ -452,36 +453,48 @@ def get_filter_options(current_user_id):
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
-        
+
+        # Active filters
+        active_status = request.args.get('status')
+        active_sector = request.args.get('sector')
+        active_year   = request.args.get('year')
+        def clean(v): return None if (v is None or v in ('', 'All')) else v
+        active_status = clean(active_status)
+        active_sector = clean(active_sector)
+        active_year   = clean(active_year)
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
-        
-        # Get distinct statuses
-        cur.execute(f"SELECT DISTINCT status FROM {STARTUPS_TABLE} ORDER BY status;")
+
+        # Statuses: filter by sector + year (exclude status itself)
+        conds, params = [], []
+        if active_sector: conds.append("sector = %s"); params.append(active_sector)
+        if active_year:   conds.append("year_of_incubation = %s"); params.append(int(active_year))
+        w = ("WHERE " + " AND ".join(conds) + " AND ") if conds else "WHERE "
+        cur.execute(f"SELECT DISTINCT status FROM {STARTUPS_TABLE} {w}status IS NOT NULL ORDER BY status;", params)
         statuses = [row['status'] for row in cur.fetchall() if row['status']]
-        
-        # Get distinct sectors
-        cur.execute(f"""
-            SELECT DISTINCT sector 
-            FROM {STARTUPS_TABLE} 
-            WHERE sector IS NOT NULL AND sector != ''
-            ORDER BY sector;
-        """)
+
+        # Sectors: filter by status + year
+        conds, params = [], []
+        if active_status: conds.append("status = %s"); params.append(active_status)
+        if active_year:   conds.append("year_of_incubation = %s"); params.append(int(active_year))
+        w = ("WHERE " + " AND ".join(conds) + " AND ") if conds else "WHERE "
+        cur.execute(f"SELECT DISTINCT sector FROM {STARTUPS_TABLE} {w}sector IS NOT NULL AND sector != '' ORDER BY sector;", params)
         sectors = [row['sector'] for row in cur.fetchall() if row['sector']]
-        
-        # Get distinct years
-        cur.execute(f"""
-            SELECT DISTINCT year_of_incubation as year
-            FROM {STARTUPS_TABLE}
-            ORDER BY year DESC;
-        """)
+
+        # Years: filter by status + sector
+        conds, params = [], []
+        if active_status: conds.append("status = %s"); params.append(active_status)
+        if active_sector: conds.append("sector = %s"); params.append(active_sector)
+        w = ("WHERE " + " AND ".join(conds) + " AND ") if conds else "WHERE "
+        cur.execute(f"SELECT DISTINCT year_of_incubation as year FROM {STARTUPS_TABLE} {w}year_of_incubation IS NOT NULL ORDER BY year DESC;", params)
         years = [row['year'] for row in cur.fetchall() if row['year']]
-        
+
         return jsonify({
             'statuses': statuses,
             'sectors': sectors,
             'years': years
         }), 200
-        
+
     except Exception as e:
         print(f"Innovation filter options error: {e}")
         return jsonify({'message': 'Failed to fetch filter options.'}), 500
@@ -489,7 +502,7 @@ def get_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 # ==========================================
@@ -497,7 +510,7 @@ def get_filter_options(current_user_id):
 # ==========================================
 
 @innovation_bp.route('/iptif/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_summary(current_user_id):
     """Get overall summary for IPTIF."""
     if not _iptif_data_available():
@@ -534,11 +547,11 @@ def get_iptif_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/iptif/trends/projects', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_projects(current_user_id):
     """Get IPTIF projects trend and list."""
     if not _iptif_data_available():
@@ -591,7 +604,7 @@ def get_iptif_projects(current_user_id):
             ORDER BY start_date DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -602,11 +615,11 @@ def get_iptif_projects(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/iptif/trends/programs', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_programs(current_user_id):
     """Get IPTIF programs trend and list."""
     if not _iptif_data_available():
@@ -653,7 +666,7 @@ def get_iptif_programs(current_user_id):
             ORDER BY COALESCE(start_end, date) DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -664,11 +677,11 @@ def get_iptif_programs(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/iptif/trends/startups', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_startups(current_user_id):
     """Get IPTIF startups trend and list."""
     if not _iptif_data_available():
@@ -715,7 +728,7 @@ def get_iptif_startups(current_user_id):
             ORDER BY incubated_date DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -726,11 +739,11 @@ def get_iptif_startups(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/iptif/trends/facilities', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_facilities_revenue(current_user_id):
     """Get IPTIF facilities revenue trend and list."""
     if not _iptif_data_available():
@@ -773,7 +786,7 @@ def get_iptif_facilities_revenue(current_user_id):
             ORDER BY financial_year DESC, facility_name ASC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -784,11 +797,11 @@ def get_iptif_facilities_revenue(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/iptif/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_iptif_filter_options(current_user_id):
     """Get filter options for all IPTIF tables."""
     if not _iptif_data_available():
@@ -853,7 +866,7 @@ def get_iptif_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 # ==========================================
@@ -861,7 +874,7 @@ def get_iptif_filter_options(current_user_id):
 # ==========================================
 
 @innovation_bp.route('/techin/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_techin_summary(current_user_id):
     """Get overall summary for TechIn."""
     if not _techin_data_available():
@@ -914,11 +927,11 @@ def get_techin_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/techin/trends/programs', methods=['GET'])
-@token_required
+@token_optional
 def get_techin_programs(current_user_id):
     """Get TechIn programs trend and list."""
     if not _techin_data_available():
@@ -965,7 +978,7 @@ def get_techin_programs(current_user_id):
             ORDER BY COALESCE(start_end, event_date) DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -976,11 +989,11 @@ def get_techin_programs(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/techin/trends/skill-dev', methods=['GET'])
-@token_required
+@token_optional
 def get_techin_skill_dev(current_user_id):
     """Get TechIn skill development trend and list."""
     if not _techin_data_available():
@@ -1027,7 +1040,7 @@ def get_techin_skill_dev(current_user_id):
             ORDER BY COALESCE(start_end, event_date) DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -1038,11 +1051,11 @@ def get_techin_skill_dev(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/techin/trends/startups', methods=['GET'])
-@token_required
+@token_optional
 def get_techin_startups(current_user_id):
     """Get TechIn startups trend and list."""
     if not _techin_data_available():
@@ -1089,7 +1102,7 @@ def get_techin_startups(current_user_id):
             ORDER BY incubated_date DESC;
         """
         cur.execute(list_query, params)
-        data_list = [dict(row) for row in cur.fetchall()]
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
         
         return jsonify({'trend': trend, 'data': data_list}), 200
         
@@ -1100,11 +1113,11 @@ def get_techin_startups(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @innovation_bp.route('/techin/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_techin_filter_options(current_user_id):
     """Get filter options for TechIn tables."""
     if not _techin_data_available():
@@ -1159,5 +1172,198 @@ def get_techin_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
+
+
+# ==========================================
+#         HOME GROUND STARTUPS ENDPOINTS
+# ==========================================
+# Only entries where LOWER(startup_origin) = 'internal' are considered.
+# Both iptif_startup_table and techin_startup_table are queried together.
+
+def _home_ground_available():
+    conn = get_db_connection()
+    if not conn:
+        return False
+    try:
+        return _table_exists(conn, IPTIF_STARTUP_TABLE) or _table_exists(conn, TECHIN_STARTUP_TABLE)
+    finally:
+        release_db_connection(conn)
+
+
+@innovation_bp.route('/home-ground/summary', methods=['GET'])
+@token_optional
+def get_home_ground_summary(current_user_id):
+    """Summary stats for internal-origin startups from both IPTIF and TechIn tables."""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        internal_filter = "LOWER(COALESCE(startup_origin, '')) = 'internal'"
+
+        union_base = f"""
+            SELECT revenue, number_of_jobs FROM {IPTIF_STARTUP_TABLE}
+            WHERE {internal_filter}
+            UNION ALL
+            SELECT revenue, number_of_jobs FROM {TECHIN_STARTUP_TABLE}
+            WHERE {internal_filter}
+        """
+
+        cur.execute(f"SELECT COUNT(*) as total FROM ({union_base}) AS combined;")
+        total_startups = cur.fetchone()['total'] or 0
+
+        cur.execute(f"""
+            SELECT
+                COALESCE(SUM(revenue), 0) as total_revenue,
+                COALESCE(MAX(revenue), 0) as highest_revenue,
+                COALESCE(AVG(revenue), 0) as average_revenue
+            FROM ({union_base}) AS combined
+            WHERE revenue IS NOT NULL;
+        """)
+        rev_stats = cur.fetchone()
+
+        cur.execute(f"""
+            SELECT COALESCE(SUM(number_of_jobs), 0) as total_jobs
+            FROM ({union_base}) AS combined;
+        """)
+        jobs_row = cur.fetchone()
+
+        return jsonify({
+            'total_startups': total_startups,
+            'total_revenue': float(rev_stats['total_revenue']),
+            'highest_revenue': float(rev_stats['highest_revenue']),
+            'average_revenue': float(rev_stats['average_revenue']),
+            'total_jobs': int(jobs_row['total_jobs'])
+        }), 200
+
+    except Exception as e:
+        print(f"Home ground summary error: {e}")
+        return jsonify({'message': 'Failed to fetch home ground summary.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            release_db_connection(conn)
+
+
+@innovation_bp.route('/home-ground/trends/startups', methods=['GET'])
+@token_optional
+def get_home_ground_startups(current_user_id):
+    """Startup growth trend and list for internal-origin startups from both tables."""
+    filters = {
+        'domain': request.args.get('domain'),
+        'status': request.args.get('status')
+    }
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        conditions = ["LOWER(COALESCE(startup_origin, '')) = 'internal'"]
+        params = []
+        if filters['domain'] and filters['domain'] != 'All':
+            conditions.append("domain = %s")
+            params.append(filters['domain'])
+        if filters['status'] and filters['status'] != 'All':
+            conditions.append("status = %s")
+            params.append(filters['status'])
+
+        where_clause = "WHERE " + " AND ".join(conditions)
+
+        union_query = f"""
+            SELECT startup_name, domain, status, number_of_jobs, revenue, incubated_date
+            FROM {IPTIF_STARTUP_TABLE}
+            {where_clause}
+            UNION ALL
+            SELECT startup_name, domain, status, number_of_jobs, revenue, incubated_date
+            FROM {TECHIN_STARTUP_TABLE}
+            {where_clause}
+        """
+
+        trend_query = f"""
+            SELECT EXTRACT(YEAR FROM incubated_date)::INT as year, COUNT(*) as count
+            FROM ({union_query}) AS combined
+            GROUP BY year
+            ORDER BY year ASC;
+        """
+        cur.execute(trend_query, params + params)
+        trend = [dict(row) for row in cur.fetchall() if row['year']]
+
+        list_query = f"""
+            SELECT startup_name, domain, status, number_of_jobs, revenue, incubated_date
+            FROM ({union_query}) AS combined
+            ORDER BY incubated_date DESC;
+        """
+        cur.execute(list_query, params + params)
+        data_list = redact_pii_in_rows([dict(row) for row in cur.fetchall()])
+
+        return jsonify({'trend': trend, 'data': data_list}), 200
+
+    except Exception as e:
+        print(f"Home ground startups error: {e}")
+        return jsonify({'message': 'Failed to fetch home ground startups data.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            release_db_connection(conn)
+
+
+@innovation_bp.route('/home-ground/filter-options', methods=['GET'])
+@token_optional
+def get_home_ground_filter_options(current_user_id):
+    """Filter options (domain, status) for internal-origin startups from both tables."""
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'message': 'Database connection failed.'}), 500
+
+        cur = conn.cursor(cursor_factory=extras.RealDictCursor)
+
+        internal_filter = "LOWER(COALESCE(startup_origin, '')) = 'internal'"
+
+        cur.execute(f"""
+            SELECT DISTINCT domain FROM (
+                SELECT domain FROM {IPTIF_STARTUP_TABLE} WHERE {internal_filter}
+                UNION ALL
+                SELECT domain FROM {TECHIN_STARTUP_TABLE} WHERE {internal_filter}
+            ) AS combined
+            WHERE domain IS NOT NULL
+            ORDER BY domain;
+        """)
+        domains = [row['domain'] for row in cur.fetchall()]
+
+        cur.execute(f"""
+            SELECT DISTINCT status FROM (
+                SELECT status FROM {IPTIF_STARTUP_TABLE} WHERE {internal_filter}
+                UNION ALL
+                SELECT status FROM {TECHIN_STARTUP_TABLE} WHERE {internal_filter}
+            ) AS combined
+            WHERE status IS NOT NULL
+            ORDER BY status;
+        """)
+        statuses = [row['status'] for row in cur.fetchall()]
+
+        return jsonify({'domains': domains, 'statuses': statuses}), 200
+
+    except Exception as e:
+        print(f"Home ground filter options error: {e}")
+        return jsonify({'message': 'Failed to fetch filter options.'}), 500
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            release_db_connection(conn)
 

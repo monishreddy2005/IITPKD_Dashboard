@@ -7,8 +7,9 @@ from typing import Any, Dict, Iterable, List, Sequence, Tuple
 from flask import Blueprint, jsonify, request
 from psycopg2.errors import UndefinedTable
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns
 
 placement_bp = Blueprint('placement', __name__)
 
@@ -57,7 +58,7 @@ def table_exists(table_name: str) -> bool:
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 def placement_data_available() -> bool:
@@ -95,7 +96,7 @@ def safe_percentage(numerator: float, denominator: float) -> float:
 
 
 @placement_bp.route('/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_filter_options(current_user_id):
     if not placement_data_available():
         return jsonify({
@@ -111,26 +112,79 @@ def get_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
         cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT
-                ARRAY(SELECT DISTINCT placement_year FROM placement_summary ORDER BY placement_year DESC) AS years,
-                ARRAY(SELECT DISTINCT program FROM placement_summary ORDER BY program) AS programs,
-                ARRAY(SELECT DISTINCT gender FROM placement_summary ORDER BY gender) AS genders,
-                ARRAY(
-                    SELECT DISTINCT sector FROM placement_companies
-                    WHERE sector IS NOT NULL AND sector <> ''
-                    ORDER BY sector
-                ) AS sectors
-            """
-        )
-        row = cur.fetchone() or {}
-        return jsonify({
-            'years': row.get('years') or [],
-            'programs': row.get('programs') or [],
-            'genders': row.get('genders') or [],
-            'sectors': row.get('sectors') or []
-        }), 200
+
+        current_filters = {
+            'year': request.args.get('year'),
+            'program': request.args.get('program'),
+            'gender': request.args.get('gender'),
+            'sector': request.args.get('sector'),
+        }
+
+        # Handle 'All'
+        for k, v in current_filters.items():
+            if v == 'All' or v == '':
+                current_filters[k] = None
+
+        def get_summary_where_except(exclude_key):
+            temp_filters = {k: v for k, v in current_filters.items() if k != exclude_key}
+            where, params = build_where_clause(
+                {'year': 'placement_year', 'program': 'program', 'gender': 'gender::text', 'branch': 'branch'},
+                temp_filters
+            )
+            # Apply sector filter if it exists and is not excluded
+            if temp_filters.get('sector'):
+                subquery = "placement_year IN (SELECT DISTINCT placement_year FROM placement_companies WHERE sector = %s)"
+                where += (" AND " if where else "WHERE ") + subquery
+                params.append(temp_filters['sector'])
+            return where, params
+
+        def get_company_where_except(exclude_key):
+            temp_filters = {k: v for k, v in current_filters.items() if k != exclude_key}
+            where, params = build_where_clause(
+                {'year': 'placement_year', 'sector': 'sector'},
+                temp_filters
+            )
+            # Apply program/gender filter if they exist and are not excluded
+            if temp_filters.get('program') or temp_filters.get('gender'):
+                sub_where, sub_params = build_where_clause(
+                    {'program': 'program', 'gender': 'gender::text', 'branch': 'branch'},
+                    temp_filters
+                )
+                if sub_where:
+                    subquery = f"placement_year IN (SELECT DISTINCT placement_year FROM placement_summary {sub_where})"
+                    where += (" AND " if where else "WHERE ") + subquery
+                    params.extend(sub_params)
+            return where, params
+
+        filter_options = {}
+
+        # Years
+        where, params = get_summary_where_except('year')
+        cur.execute(f"SELECT DISTINCT placement_year FROM {PLACEMENT_SUMMARY_TABLE} {where} ORDER BY placement_year DESC", params)
+        filter_options['years'] = [row['placement_year'] for row in cur.fetchall() if row['placement_year']]
+
+        # Programs
+        where, params = get_summary_where_except('program')
+        cur.execute(f"SELECT DISTINCT program FROM {PLACEMENT_SUMMARY_TABLE} {where} ORDER BY program", params)
+        filter_options['programs'] = [row['program'] for row in cur.fetchall() if row['program']]
+
+        # Genders
+        where, params = get_summary_where_except('gender')
+        cur.execute(f"SELECT DISTINCT gender::text FROM {PLACEMENT_SUMMARY_TABLE} {where} ORDER BY gender::text", params)
+        filter_options['genders'] = [row['gender'] for row in cur.fetchall() if row['gender']]
+
+        # Branches
+        where, params = get_summary_where_except('branch')
+        cur.execute(f"SELECT DISTINCT branch FROM {PLACEMENT_SUMMARY_TABLE} {where} ORDER BY branch", params)
+        filter_options['branches'] = [row['branch'] for row in cur.fetchall() if row['branch']]
+
+        # Sectors
+        where, params = get_company_where_except('sector')
+        cur.execute(f"SELECT DISTINCT sector FROM {PLACEMENT_COMPANY_TABLE} {where} {'AND' if where else 'WHERE'} sector IS NOT NULL AND sector <> '' ORDER BY sector", params)
+        filter_options['sectors'] = [row['sector'] for row in cur.fetchall() if row['sector']]
+
+        return jsonify(filter_options), 200
+
     except UndefinedTable:
         return jsonify({
             'message': (
@@ -144,25 +198,65 @@ def get_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_placement_summary(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
+    year_filter = request.args.get('year')
+    program_filter = request.args.get('program')
+    gender_filter = request.args.get('gender')
+    sector_filter = request.args.get('sector')
+
+    # If year is 'All' or not specified, default to the latest academic year
+    # as per user request to show latest status instead of cumulative.
+    if not year_filter or year_filter == 'All':
+        conn = None
+        cur = None
+        try:
+            conn = get_db_connection()
+            if conn:
+                cur = conn.cursor()
+                # Find the latest academic year using the format '2024-25'
+                cur.execute(f"SELECT placement_year FROM {PLACEMENT_SUMMARY_TABLE} ORDER BY CAST(SPLIT_PART(placement_year, '-', 1) AS INTEGER) DESC LIMIT 1")
+                row = cur.fetchone()
+                if row:
+                    year_filter = row['placement_year']
+        except Exception as e:
+            print(f"Error finding latest placement year: {e}")
+        finally:
+            if cur: cur.close()
+            if conn: release_db_connection(conn)
+
     filters = {
-        'year': request.args.get('year'),
-        'program': request.args.get('program'),
-        'gender': request.args.get('gender'),
+        'year': year_filter,
+        'program': program_filter,
+        'gender': gender_filter,
+        'branch': request.args.get('branch'),
+        'sector': sector_filter,
     }
 
-    where_clause, params = build_where_clause(
-        {'year': 'placement_year', 'program': 'program', 'gender': 'gender'},
+    summary_where, summary_params = build_where_clause(
+        {'year': 'placement_year', 'program': 'program', 'gender': 'gender::text', 'branch': 'branch'},
         filters
     )
+    # placement_packages has year and program but no gender column
+    pkg_where, pkg_params = build_where_clause(
+        {'year': 'placement_year', 'program': 'program'},
+        filters
+    )
+
+    # sector filtering for summary/packages (subquery-based as tables lack direct column)
+    if filters.get('sector') and filters.get('sector') != 'All':
+        sector_subquery = "placement_year IN (SELECT DISTINCT placement_year FROM placement_companies WHERE sector = %s)"
+        summary_where += (" AND " if summary_where else "WHERE ") + sector_subquery
+        summary_params.append(filters.get('sector'))
+        pkg_where += (" AND " if pkg_where else "WHERE ") + sector_subquery
+        pkg_params.append(filters.get('sector'))
 
     conn = None
     cur = None
@@ -175,9 +269,9 @@ def get_placement_summary(current_user_id):
             f"""
             SELECT SUM(registered) AS registered, SUM(placed) AS placed
             FROM {PLACEMENT_SUMMARY_TABLE}
-            {where_clause}
+            {summary_where}
             """,
-            params
+            summary_params
         )
         row = cur.fetchone() or {'registered': 0, 'placed': 0}
         total_registered = row.get('registered') or 0
@@ -186,13 +280,13 @@ def get_placement_summary(current_user_id):
         cur.execute(
             f"""
             SELECT
-                MAX(highest_package) AS highest_package,
-                MIN(lowest_package) AS lowest_package,
-                AVG(average_package) AS average_package
+                MAX(NULLIF(highest_package, 0)) AS highest_package,
+                MIN(NULLIF(lowest_package,  0)) AS lowest_package,
+                AVG(NULLIF(average_package, 0)) AS average_package
             FROM {PLACEMENT_PACKAGES_TABLE}
-            {where_clause}
+            {pkg_where}
             """,
-            params
+            pkg_params
         )
         package_row = cur.fetchone() or {}
         summary = {
@@ -202,6 +296,7 @@ def get_placement_summary(current_user_id):
             'highest_package': package_row.get('highest_package'),
             'lowest_package': package_row.get('lowest_package'),
             'average_package': package_row.get('average_package'),
+            'year': filters.get('year')
         }
         return jsonify({'data': summary}), 200
     except UndefinedTable:
@@ -213,21 +308,23 @@ def get_placement_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/percentage-trend', methods=['GET'])
-@token_required
+@token_optional
 def get_percentage_trend(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
     filters = {
+        'year': request.args.get('year'),
         'program': request.args.get('program'),
         'gender': request.args.get('gender'),
+        'branch': request.args.get('branch'),
     }
     where_clause, params = build_where_clause(
-        {'program': 'program', 'gender': 'gender'},
+        {'year': 'placement_year', 'program': 'program', 'gender': 'gender::text', 'branch': 'branch'},
         filters
     )
 
@@ -269,11 +366,11 @@ def get_percentage_trend(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/gender-breakdown', methods=['GET'])
-@token_required
+@token_optional
 def get_gender_breakdown(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
@@ -281,9 +378,11 @@ def get_gender_breakdown(current_user_id):
     filters = {
         'year': request.args.get('year'),
         'program': request.args.get('program'),
+        'gender': request.args.get('gender'),
+        'branch': request.args.get('branch'),
     }
     where_clause, params = build_where_clause(
-        {'year': 'placement_year', 'program': 'program'},
+        {'year': 'placement_year', 'program': 'program', 'gender': 'gender::text', 'branch': 'branch'},
         filters
     )
 
@@ -296,11 +395,11 @@ def get_gender_breakdown(current_user_id):
         cur = conn.cursor()
         cur.execute(
             f"""
-            SELECT gender, SUM(registered) AS registered, SUM(placed) AS placed
+            SELECT gender::text AS gender, SUM(registered) AS registered, SUM(placed) AS placed
             FROM {PLACEMENT_SUMMARY_TABLE}
             {where_clause}
-            GROUP BY gender
-            ORDER BY gender
+            GROUP BY gender::text
+            ORDER BY gender::text
             """,
             params
         )
@@ -325,21 +424,23 @@ def get_gender_breakdown(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/program-status', methods=['GET'])
-@token_required
+@token_optional
 def get_program_status(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
     filters = {
         'year': request.args.get('year'),
+        'program': request.args.get('program'),
         'gender': request.args.get('gender'),
+        'branch': request.args.get('branch'),
     }
     where_clause, params = build_where_clause(
-        {'year': 'placement_year', 'gender': 'gender'},
+        {'year': 'placement_year', 'program': 'program', 'gender': 'gender', 'branch': 'branch'},
         filters
     )
 
@@ -384,17 +485,18 @@ def get_program_status(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/recruiters', methods=['GET'])
-@token_required
+@token_optional
 def get_recruiter_counts(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
     filters = {
         'year': request.args.get('year'),
+        'program': request.args.get('program'),
         'sector': request.args.get('sector'),
     }
     where_clause, params = build_where_clause(
@@ -437,20 +539,22 @@ def get_recruiter_counts(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/sector-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_sector_distribution(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
     filters = {
         'year': request.args.get('year'),
+        'program': request.args.get('program'),
+        'sector': request.args.get('sector'),
     }
     where_clause, params = build_where_clause(
-        {'year': 'placement_year'},
+        {'year': 'placement_year', 'sector': 'sector'},
         filters
     )
 
@@ -491,25 +595,51 @@ def get_sector_distribution(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/package-trend', methods=['GET'])
-@token_required
+@token_optional
 def get_package_trend(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
-    filters = {
-        'program': request.args.get('program'),
-    }
-    where_clause, params = build_where_clause(
-        {'program': 'program'},
-        filters
+    year    = request.args.get('year')
+    program = request.args.get('program')
+    sector  = request.args.get('sector')
+
+    # Build WHERE conditions manually so we can alias the table and use a sector subquery
+    conditions: List[str] = []
+    params: List[Any] = []
+
+    if year not in (None, '', 'All'):
+        conditions.append("pp.placement_year = %s")
+        params.append(year)
+
+    if program not in (None, '', 'All'):
+        conditions.append("pp.program = %s")
+        params.append(program)
+
+    # Exclude rows where all three package columns are zero or null
+    conditions.append(
+        "(pp.highest_package IS NOT NULL AND pp.highest_package <> 0"
+        " OR pp.lowest_package  IS NOT NULL AND pp.lowest_package  <> 0"
+        " OR pp.average_package IS NOT NULL AND pp.average_package <> 0)"
     )
 
+    if sector not in (None, '', 'All'):
+        # Filter to placement years that have at least one company in the chosen sector
+        conditions.append(
+            "pp.placement_year IN ("
+            "  SELECT DISTINCT placement_year FROM placement_companies WHERE sector = %s"
+            ")"
+        )
+        params.append(sector)
+
+    where_clause = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
     conn = None
-    cur = None
+    cur  = None
     try:
         conn = get_db_connection()
         if conn is None:
@@ -517,25 +647,31 @@ def get_package_trend(current_user_id):
         cur = conn.cursor()
         cur.execute(
             f"""
-            SELECT placement_year,
-                   MAX(highest_package) AS highest_package,
-                   MIN(lowest_package) AS lowest_package,
-                   AVG(average_package) AS average_package
-            FROM {PLACEMENT_PACKAGES_TABLE}
+            SELECT pp.placement_year,
+                   MAX(NULLIF(pp.highest_package, 0)) AS highest_package,
+                   MIN(NULLIF(pp.lowest_package,  0)) AS lowest_package,
+                   AVG(NULLIF(pp.average_package, 0)) AS average_package
+            FROM {PLACEMENT_PACKAGES_TABLE} pp
             {where_clause}
-            GROUP BY placement_year
-            ORDER BY placement_year
+            GROUP BY pp.placement_year
+            ORDER BY pp.placement_year
             """,
             params
         )
         rows = cur.fetchall() or []
         data = []
         for row in rows:
+            highest = row.get('highest_package')
+            lowest  = row.get('lowest_package')
+            average = row.get('average_package')
+            # Skip years where everything is still null after aggregation
+            if not any([highest, lowest, average]):
+                continue
             data.append({
-                'year': row.get('placement_year'),
-                'highest': row.get('highest_package'),
-                'lowest': row.get('lowest_package'),
-                'average': row.get('average_package'),
+                'year':    row.get('placement_year'),
+                'highest': float(highest) if highest is not None else None,
+                'lowest':  float(lowest)  if lowest  is not None else None,
+                'average': float(average) if average is not None else None,
             })
         return jsonify({'data': data}), 200
     except UndefinedTable:
@@ -547,17 +683,18 @@ def get_package_trend(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @placement_bp.route('/top-recruiters', methods=['GET'])
-@token_required
+@token_optional
 def get_top_recruiters(current_user_id):
     if not placement_data_available():
         return jsonify({'message': 'Placement tables are missing.'}), 500
 
     filters = {
         'year': request.args.get('year'),
+        'program': request.args.get('program'),
         'sector': request.args.get('sector'),
     }
     where_clause, params = build_where_clause(
@@ -590,7 +727,7 @@ def get_top_recruiters(current_user_id):
         for row in rows:
             data.append({
                 'year': row.get('placement_year'),
-                'company_name': row.get('company_name'),
+                'company_name': redact_pii_patterns(row.get('company_name')),
                 'sector': row.get('sector'),
                 'offers': int(row.get('offers') or 0),
                 'hires': int(row.get('hires') or 0),
@@ -606,4 +743,4 @@ def get_top_recruiters(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)

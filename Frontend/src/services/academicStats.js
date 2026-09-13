@@ -1,20 +1,41 @@
-import axios from 'axios';
+import axios from '../utils/cachedAxios';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/academic`;
 
 /**
  * Fetches filter options including distinct values for each filter field
- * and the latest year of admission.
+ * and the latest year of admission, supporting cross-filtering.
+ * @param {Object} filters - Active filter object
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Filter options object
  */
-export const fetchFilterOptions = async (token) => {
+export const fetchFilterOptions = async (filters, token) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/stats/filter-options`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const params = new URLSearchParams();
+
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        const value = filters[key];
+        if (value !== null && value !== undefined && value !== '') {
+          if (key === 'pwd' && typeof value === 'boolean') {
+            params.append(key, value.toString());
+          } else if (key === 'yearofadmission' && value === 'All') {
+            params.append(key, 'All');
+          } else {
+            params.append(key, value);
+          }
+        }
+      });
+    }
+
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/filter-options${params.toString() ? `?${params.toString()}` : ''}`, 
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       }
-    });
+    );
     return response.data;
   } catch (error) {
     console.error('Error fetching filter options:', error);
@@ -66,6 +87,39 @@ export const fetchGenderDistributionFiltered = async (filters, token) => {
   }
 };
 
+export const fetchStateDistributionFiltered = async (filters, token) => {
+  try {
+    const params = new URLSearchParams();
+
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (value !== null && value !== undefined && value !== '') {
+        if (key === 'yearofadmission' && value === 'All') {
+          params.append(key, 'All');
+        } else {
+          params.append(key, value);
+        }
+      }
+    });
+
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/state-distribution?${params.toString()}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching state distribution:', error);
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Failed to fetch state distribution');
+    }
+    throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
 /**
  * Fetches student strength data grouped by program based on provided filters.
  * @param {Object} filters - Filter object
@@ -95,10 +149,10 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
         }
       }
     );
-    
+
     // Log the response to see what data is coming back
     console.log('Student Strength API Response:', JSON.stringify(response.data, null, 2));
-    
+
     return response.data;
   } catch (error) {
     console.error('Error fetching student strength:', error);
@@ -111,6 +165,7 @@ export const fetchStudentStrengthFiltered = async (filters, token) => {
 
 /**
  * Fetches gender distribution trends (grouped by year).
+ * Supports: program, batch, branch, department, category, state, pwd
  * @param {Object} filters - Filter object
  * @param {string} token - Authentication token
  * @returns {Promise<Object>} Trend data
@@ -150,9 +205,11 @@ export const fetchGenderTrends = async (filters, token) => {
 
 /**
  * Fetches student strength by program trends (grouped by year).
+ * Supports: program, batch, department, category, state, pwd
+ * Also returns gender_by_group for stacked gender charts per program type.
  * @param {Object} filters - Filter object
  * @param {string} token - Authentication token
- * @returns {Promise<Object>} Trend data
+ * @returns {Promise<Object>} Trend data including gender_by_group
  */
 export const fetchProgramTrends = async (filters, token) => {
   try {
@@ -161,7 +218,11 @@ export const fetchProgramTrends = async (filters, token) => {
     Object.keys(filters).forEach(key => {
       const value = filters[key];
       if (value !== null && value !== undefined && value !== '' && value !== 'All') {
-        params.append(key, value);
+        if (key === 'pwd' && typeof value === 'boolean') {
+          params.append(key, value.toString());
+        } else {
+          params.append(key, value);
+        }
       }
     });
 
@@ -180,6 +241,28 @@ export const fetchProgramTrends = async (filters, token) => {
       throw new Error(error.response.data.message || 'Failed to fetch program trends');
     }
     throw new Error('Network error. Please check if the backend server is running.');
+  }
+};
+
+/**
+ * Fetches on-roll student counts broken down by program type.
+ * UG       : BTech + (On Roll | Slow-Paced)
+ * PG       : PG   + (On Roll | Slow-Paced)
+ * Research : PHD  + (On Roll | Slow-Paced | Thesis Submitted | Viva Voce Completed)
+ * Total    : sum of the three
+ * @param {string} token - Authentication token
+ * @returns {Promise<Object>} { total_onroll, ug_onroll, pg_onroll, research_onroll }
+ */
+export const fetchOnrollSummary = async (token) => {
+  try {
+    const response = await axios.get(
+      `${API_BASE_URL}/stats/onroll-summary`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching on-roll summary:', error);
+    return { total_onroll: 0, ug_onroll: 0, pg_onroll: 0, research_onroll: 0 };
   }
 };
 

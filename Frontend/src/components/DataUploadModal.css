@@ -177,3 +177,113 @@
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+/* ── Template download ── */
+.dum-template-mt { margin-top: 0.5rem; }
+.download-template-btn {
+    background-color: transparent;
+    border: 1px solid #f59e0b;
+    color: #f59e0b;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+/* ── Required format section ── */
+.dum-format-section { margin-bottom: 1rem; font-size: 0.9rem; color: #ccc; }
+.dum-format-code {
+    background-color: #2d3748;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    font-family: monospace;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* ── Preview scroll container ── */
+.dum-preview-scroll { max-height: 200px; overflow-y: auto; overflow-x: auto; }
+
+/* ── Failing row highlight ── */
+.dum-row--error { background-color: rgba(220, 53, 69, 0.25); outline: 2px solid #dc3545; }
+.dum-row--warn  { background-color: rgba(245, 158, 11, 0.2); outline: 2px solid #f59e0b; }
+
+/* ── Schema load status ── */
+.dum-schema-note {
+    font-size: 0.85rem;
+    color: #666;
+    background-color: #f1f3f5;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+}
+.dum-schema-note--warn {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+}
+
+/* ── Required/optional column labels ── */
+.dum-optional-label { display: block; margin-top: 0.75rem; }
+
+/* ── Accepted-values legend ── */
+.dum-enum-legend { margin-top: 0.75rem; font-size: 0.85rem; }
+.dum-enum-legend ul { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+.dum-enum-legend code { background-color: #2d3748; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px; }
+
+/* ── Misc format hints (date format, auto-generated id notes, etc.) ── */
+.dum-hint { margin-top: 0.5rem; font-size: 0.85rem; color: #555; }
+.dum-hint code { background-color: #2d3748; color: #fff; padding: 0.1rem 0.35rem; border-radius: 3px; }
+
+/* ── Pre-flight (client-side) validation panel ── */
+.dum-preflight {
+    background-color: #fff8e6;
+    border: 1px solid #ffeeba;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+.dum-preflight-header { font-weight: 600; color: #856404; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.dum-preflight-item { font-size: 0.85rem; color: #856404; margin-bottom: 0.25rem; }
+
+/* ── Error row label ── */
+.dum-error-row-header { font-weight: bold; margin-bottom: 0.3rem; }
+
+/* ── Success view ── */
+.dum-success-view  { text-align: center; padding: 2rem 0; }
+.dum-success-icon  { font-size: 3rem; margin-bottom: 1rem; }
+.dum-success-h3    { color: #2ecc71; margin-bottom: 1rem; }
+.dum-success-msg   { margin-bottom: 2rem; color: #555; }
+.dum-success-hint  { font-size: 0.9rem; color: #888; margin-bottom: 2rem; }
+.dum-ok-btn {
+    padding: 10px 30px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* ── Download-annotated-CSV button (pre-flight + post-submit error panels) ── */
+.dum-download-errors-btn {
+    margin-top: 0.6rem;
+    background-color: transparent;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.dum-download-errors-btn:hover {
+    background-color: rgba(220, 53, 69, 0.08);
+}
+.dum-preflight .dum-download-errors-btn {
+    border-color: #f59e0b;
+    color: #92660a;
+}
+.dum-preflight .dum-download-errors-btn:hover {
+    background-color: rgba(245, 158, 11, 0.1);
+}

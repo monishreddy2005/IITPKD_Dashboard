@@ -6,8 +6,9 @@ Blueprint providing analytics for the Industry Connect module:
 from flask import Blueprint, jsonify, request
 from psycopg2 import extras
 
-from .auth import token_required
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
+from .pii_guard import redact_pii_patterns
 
 
 industry_connect_bp = Blueprint('industry_connect', __name__)
@@ -52,7 +53,7 @@ def _data_available() -> bool:
             and _table_exists(conn, INDUSTRY_CONCLAVE_TABLE)
         )
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 def _build_events_where_clause(filters: dict) -> tuple[str, list]:
@@ -82,7 +83,7 @@ def _build_events_where_clause(filters: dict) -> tuple[str, list]:
 # ========== ICSR Section Endpoints ==========
 
 @industry_connect_bp.route('/icsr/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_icsr_summary(current_user_id):
     """Get summary statistics for ICSR industry events."""
     if not _data_available():
@@ -124,11 +125,11 @@ def get_icsr_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @industry_connect_bp.route('/icsr/yearly-distribution', methods=['GET'])
-@token_required
+@token_optional
 def get_icsr_yearly_distribution(current_user_id):
     """Get year-wise distribution of industry events."""
     if not _data_available():
@@ -176,11 +177,11 @@ def get_icsr_yearly_distribution(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @industry_connect_bp.route('/icsr/event-types', methods=['GET'])
-@token_required
+@token_optional
 def get_icsr_event_types(current_user_id):
     """Get event types distribution (frequency by type)."""
     if not _data_available():
@@ -225,11 +226,11 @@ def get_icsr_event_types(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @industry_connect_bp.route('/icsr/events', methods=['GET'])
-@token_required
+@token_optional
 def get_icsr_events(current_user_id):
     """Get list of industry events with filtering and pagination."""
     if not _data_available():
@@ -288,12 +289,12 @@ def get_icsr_events(current_user_id):
         for row in events:
             result.append({
                 'project_id': row['project_id'],
-                'event_name': row['event_name'],
+                'event_name': redact_pii_patterns(row['event_name']),
                 'event_type': row['event_type'],
                 'date_of_event': row['date_of_event'].isoformat() if row['date_of_event'] else None,
-                'target_audience': row['target_audience'],
-                'hosted_by': row['hosted_by'],
-                'funding_by': row['funding_by'],
+                'target_audience': redact_pii_patterns(row['target_audience']),
+                'hosted_by': redact_pii_patterns(row['hosted_by']),
+                'funding_by': redact_pii_patterns(row['funding_by']),
                 'amount': float(row['amount']) if row['amount'] else None,
                 'year': row['year']
             })
@@ -315,13 +316,13 @@ def get_icsr_events(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @industry_connect_bp.route('/icsr/filter-options', methods=['GET'])
-@token_required
+@token_optional
 def get_icsr_filter_options(current_user_id):
-    """Get filter options for ICSR events."""
+    """Get filter options for ICSR events with cross-filtering."""
     if not _data_available():
         return jsonify({'message': 'Industry connect tables are missing.'}), 500
 
@@ -332,19 +333,29 @@ def get_icsr_filter_options(current_user_id):
         if conn is None:
             return jsonify({'message': 'Database connection failed.'}), 500
 
+        active_event_type = request.args.get('event_type')
+        active_year = request.args.get('year')
+        def clean(v): return None if (v is None or v in ('', 'All')) else v
+        active_event_type = clean(active_event_type)
+        active_year = clean(active_year)
+
         cur = conn.cursor(cursor_factory=extras.RealDictCursor)
 
-        # Get distinct event types
-        cur.execute(f"SELECT DISTINCT event_type FROM {INDUSTRY_EVENTS_TABLE} WHERE event_type IS NOT NULL ORDER BY event_type;")
+        # Event types: filter by year only
+        year_cond = "WHERE COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) = %s AND event_type IS NOT NULL" if active_year else "WHERE event_type IS NOT NULL"
+        year_params = [int(active_year)] if active_year else []
+        cur.execute(f"SELECT DISTINCT event_type FROM {INDUSTRY_EVENTS_TABLE} {year_cond} ORDER BY event_type;", year_params)
         event_types = [row['event_type'] for row in cur.fetchall()]
 
-        # Get distinct years (from 'year' column or date_of_event)
+        # Years: filter by event_type only
+        type_cond = "WHERE event_type = %s AND COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) IS NOT NULL" if active_event_type else "WHERE COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) IS NOT NULL"
+        type_params = [active_event_type] if active_event_type else []
         cur.execute(f"""
             SELECT DISTINCT COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) as year
             FROM {INDUSTRY_EVENTS_TABLE}
-            WHERE COALESCE(year, EXTRACT(YEAR FROM date_of_event)::INT) IS NOT NULL
+            {type_cond}
             ORDER BY year DESC;
-        """)
+        """, type_params)
         years = [row['year'] for row in cur.fetchall()]
 
         return jsonify({
@@ -359,13 +370,13 @@ def get_icsr_filter_options(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 # ========== Industry-Academia Conclave Endpoints ==========
 
 @industry_connect_bp.route('/conclave/summary', methods=['GET'])
-@token_required
+@token_optional
 def get_conclave_summary(current_user_id):
     """Get summary statistics for Industry-Academia Conclave."""
     if not _data_available():
@@ -400,11 +411,11 @@ def get_conclave_summary(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)
 
 
 @industry_connect_bp.route('/conclave/list', methods=['GET'])
-@token_required
+@token_optional
 def get_conclave_list(current_user_id):
     """Get list of all Industry-Academia Conclaves."""
     if not _data_available():
@@ -445,14 +456,14 @@ def get_conclave_list(current_user_id):
                 'start_date': row['start_date'].isoformat() if row['start_date'] else None,
                 'end_date': row['end_date'].isoformat() if row['end_date'] else None,
                 'year': row['start_date'].year if row['start_date'] else None,
-                'theme': row['theme'],
-                'focus_area': row['focus_area'],
+                'theme': redact_pii_patterns(row['theme']),
+                'focus_area': redact_pii_patterns(row['focus_area']),
                 'number_of_companies': row['number_of_com'] or 0,
                 'sessions_held': row['sessions_held'],
-                'key_speakers': row['key_speakers'],
+                'key_speakers': redact_pii_patterns(row['key_speakers']),
                 'event_photos_url': row['event_photos_url'],
                 'brochure_url': row['brochure_url'],
-                'description': row['description']
+                'description': redact_pii_patterns(row['description'])
             })
 
         return jsonify({'data': result}), 200
@@ -464,4 +475,4 @@ def get_conclave_list(current_user_id):
         if cur:
             cur.close()
         if conn:
-            conn.close()
+            release_db_connection(conn)

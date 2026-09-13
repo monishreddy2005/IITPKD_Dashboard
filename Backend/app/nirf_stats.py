@@ -1,20 +1,23 @@
 from flask import Blueprint, jsonify
-from .db import get_db_connection
+from .auth import token_optional
+from .db import get_db_connection, release_db_connection
 
 nirf_bp = Blueprint('nirf', __name__)
 
 @nirf_bp.route('/nirf_metrics', methods=['GET'])
-def get_nirf_metrics():
+@token_optional
+def get_nirf_metrics(current_user_id=None):
     """Fetch NIRF ranking data for all years."""
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         if conn is None:
             return jsonify({'message': 'Database connection failed!'}), 500
-            
+
         cur = conn.cursor()
         cur.execute("""
-            SELECT year, tlr_score, rpc_score, go_score, oi_score, pr_score 
+            SELECT year, tlr_score, rpc_score, go_score, oi_score, pr_score, rank
             FROM nirf_ranking 
             ORDER BY year ASC;
         """)
@@ -29,15 +32,17 @@ def get_nirf_metrics():
                 'rpc': float(row['rpc_score']) if row['rpc_score'] else 0,
                 'go': float(row['go_score']) if row['go_score'] else 0,
                 'oi': float(row['oi_score']) if row['oi_score'] else 0,
-                'pr': float(row['pr_score']) if row['pr_score'] else 0
+                'pr': float(row['pr_score']) if row['pr_score'] else 0,
+                'rank': int(row['rank']) if row['rank'] else None
             })
             
         return jsonify(data), 200
 
     except Exception as e:
         print(f"NIRF API error: {e}")
-        return jsonify({'message': f'Error fetching NIRF data: {str(e)}'}), 500
+        return jsonify({'message': 'An internal error occurred.'}), 500
     finally:
-        if conn:
+        if cur:
             cur.close()
-            conn.close()
+        if conn:
+            release_db_connection(conn)

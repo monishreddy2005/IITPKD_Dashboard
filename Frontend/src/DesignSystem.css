@@ -1,0 +1,140 @@
+/* DesignSystem.css — re-exports global.css; kept for backward-compat imports */
+/* All tokens, animations, and utilities now live in src/styles/global.css       */
+@import './styles/global.css';
+
+/* ── Performance table (shared across sections) ── */
+.performance-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  isolation: isolate;
+}
+
+.performance-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-bg-card);
+}
+
+/* Legacy aliases — map old class names to new design-system classes */
+.hover-lift             { transition: transform var(--dur-mid) var(--ease-spring), box-shadow var(--dur-mid) var(--ease-spring); }
+.hover-lift:hover       { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.fade-in-up             { animation: ds-fade-in-up 0.7s var(--ease-spring) both; }
+.performance-render-auto{ content-visibility: auto; contain-intrinsic-size: 0 100px; }
+.accelerated-scroll     { -webkit-overflow-scrolling: touch; transform: translateZ(0); will-change: transform; }
+.contain-layout         { contain: layout style; }
+.contain-paint          { contain: paint; }
+
+/* ── Metric value inside summary cards ── */
+.metric-value {
+  font-size: var(--text-metric);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: block;
+  width: 100%;
+  color: #ffffff;
+}
+
+.metric-value-sm {
+  font-size: var(--text-metric-sm);
+  font-weight: 700;
+  line-height: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ── Data content wrapper with loading overlay ── */
+.data-content-wrapper {
+  position: relative;
+  transition: opacity 0.3s var(--ease-std);
+  min-height: 200px;
+}
+
+.data-content-wrapper.is-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading-indicator-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.subtle-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(99, 102, 241, 0.25);
+  border-radius: 50%;
+  border-top-color: var(--color-indigo);
+  animation: ds-spin 1s var(--ease-std) infinite;
+  margin-bottom: var(--space-2);
+}
+
+/* ── Section empty-state overlay (shared with .chart-empty-overlay) ── */
+.section-empty-state,
+.chart-empty-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: #6c757d;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius-md);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  visibility: visible;
+  transition: opacity 0.4s var(--ease-std),
+              transform 0.4s var(--ease-std),
+              visibility 0s linear 0s;
+}
+
+.section-empty-state.hidden,
+.chart-empty-overlay.hidden {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-std) 0.1s,
+              transform 0.5s var(--ease-std) 0.1s,
+              visibility 0s linear 0.6s;
+}
+
+.section-empty-state p,
+.chart-empty-overlay p {
+  margin: 0;
+  padding: 0.875rem 1.75rem;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Chart has-empty blur ── */
+.chart-has-empty .recharts-wrapper {
+  transition: filter 0.4s var(--ease-std), opacity 0.4s var(--ease-std);
+  filter: blur(2px);
+  opacity: 0.4;
+}
