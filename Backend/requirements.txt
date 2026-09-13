@@ -21,7 +21,7 @@ python-dotenv>=1.2.2
 flask-cors>=6.0.0
 
 # Data Generation & Testing
-faker>=20.0.0
+faker>=40.38.0
 pandas>=2.0.0
 
 # Email Validation
